@@ -54,154 +54,173 @@ class BMPStyle(Enum):
 			return BMPStyle.single_bmp_vertical
 		return BMPStyle.single_bmp_framesets
 
-	@property
-	def is_vertical(self) -> bool:
-		match self:
-			case BMPStyle.bmp_per_frame:
-				return False
-			case BMPStyle.single_bmp_framesets:
-				return True
-			case BMPStyle.single_bmp_vertical:
-				return True
+FRAMESET_ROW_SIZE = 17
 
-# TODO: Improve
-def grptobmp(*, path: str, pal: Palette.Palette, uncompressed: bool, bmp_style: BMPStyle, grp: str | GRP.GRP, bmp: str | None = None, frames: Sequence[int] | None = None, mute: bool = False) -> None:
-	if isinstance(grp, str):
-		inp = GRP.GRP(pal.palette, uncompressed)
-		if not mute:
-			print(f"Reading GRP '{grp}'...")
-		inp.load(grp)
-		if not mute:
-			print(f" - '{grp}' read successfully")
+def frames_to_sheet(frames: Sequence[GRP.Pixels], style: BMPStyle, transindex: int) -> GRP.Pixels:
+	if not frames:
+		raise PyMSError('Internal', 'No frames to combine into a sheet')
+	sheet: GRP.Pixels = []
+	match style:
+		case BMPStyle.bmp_per_frame:
+			raise PyMSError('Internal', 'Frames can not be combined into a sheet for one BMP per frame')
+		case BMPStyle.single_bmp_framesets:
+			frame_height = len(frames[0])
+			frame_width = len(frames[0][0])
+			for n,frame in enumerate(frames):
+				if not n % FRAMESET_ROW_SIZE:
+					sheet.extend(list(row) for row in frame)
+				else:
+					for y,row in enumerate(frame):
+						sheet[(n // FRAMESET_ROW_SIZE) * frame_height + y].extend(row)
+			if len(frames) % FRAMESET_ROW_SIZE and len(frames) // FRAMESET_ROW_SIZE:
+				padding = [transindex] * frame_width * (FRAMESET_ROW_SIZE - len(frames) % FRAMESET_ROW_SIZE)
+				for y in range(frame_height):
+					sheet[-y-1].extend(padding)
+		case BMPStyle.single_bmp_vertical:
+			for frame in frames:
+				sheet.extend(list(row) for row in frame)
+	return sheet
+
+def sheet_frame_size(sheet_width: int, sheet_height: int, frame_count: int, style: BMPStyle) -> tuple[int, int]:
+	match style:
+		case BMPStyle.bmp_per_frame:
+			raise PyMSError('Internal', 'A sheet can not be split into frames for one BMP per frame')
+		case BMPStyle.single_bmp_framesets:
+			return (sheet_width // min(frame_count, FRAMESET_ROW_SIZE), sheet_height // int(ceil(frame_count / FRAMESET_ROW_SIZE)))
+		case BMPStyle.single_bmp_vertical:
+			return (sheet_width, sheet_height // frame_count)
+
+def sheet_to_frames(sheet: GRP.Pixels, frame_count: int, style: BMPStyle) -> list[GRP.Pixels]:
+	frame_width,frame_height = sheet_frame_size(len(sheet[0]), len(sheet), frame_count, style)
+	frames: list[GRP.Pixels] = []
+	for n in range(frame_count):
+		frame: GRP.Pixels = []
+		for y in range(frame_height):
+			if style == BMPStyle.single_bmp_vertical:
+				frame.append(list(sheet[n * frame_height + y]))
+			else:
+				x = (n % FRAMESET_ROW_SIZE) * frame_width
+				frame.append(list(sheet[(n // FRAMESET_ROW_SIZE) * frame_height + y][x:x+frame_width]))
+		frames.append(frame)
+	return frames
+
+def frame_bmp_name(basename: str, frame: int) -> str:
+	return f'{basename} {str(frame).zfill(3)}{os.extsep}bmp'
+
+def grp_to_bmps(grp: GRP.GRP, palette: GRP.RawPalette, style: BMPStyle, frame_indices: Sequence[int] | None = None) -> list[BMP.BMP]:
+	if frame_indices is None:
+		frames = list(grp.images)
 	else:
-		inp = grp
+		include = frozenset(frame_indices)
+		frames = [frame for f,frame in enumerate(grp.images) if f in include]
+	bmps: list[BMP.BMP] = []
+	if style == BMPStyle.bmp_per_frame:
+		for frame in frames:
+			bmp = BMP.BMP(palette)
+			bmp.set_pixels(frame)
+			bmps.append(bmp)
+	else:
+		bmp = BMP.BMP(palette)
+		bmp.set_pixels(frames_to_sheet(frames, style, grp.transindex))
+		bmps.append(bmp)
+	return bmps
+
+def check_frame_bmp(bmp: BMP.BMP, filename: str, expected_size: tuple[int, int] | None, issize: tuple[int, int] | None) -> None:
+	if issize and (bmp.width != issize[0] or bmp.height != issize[1]):
+		raise PyMSError('Load', f"Invalid dimensions in the BMP '{filename}' (Expected {issize[0]}x{issize[1]}, got {bmp.width}x{bmp.height})")
+	if expected_size is None:
+		if bmp.width > 256 or bmp.height > 256:
+			raise PyMSError('Load', f"Invalid dimensions in the BMP '{filename}' (Frames have a maximum size of 256x256, got {bmp.width}x{bmp.height})")
+	elif bmp.width != expected_size[0] or bmp.height != expected_size[1]:
+		raise PyMSError('Input', f"Incorrect frame dimensions in BMP '{filename}' (Expected {expected_size[0]}x{expected_size[1]}, got {bmp.width}x{bmp.height})")
+
+def bmp_sheet_to_frames(bmp: BMP.BMP, frame_count: int, style: BMPStyle, filename: str, issize: tuple[int, int] | None = None) -> list[GRP.Pixels]:
+	frame_width,frame_height = sheet_frame_size(bmp.width, bmp.height, frame_count, style)
+	if frame_width > 256 or frame_height > 256:
+		raise PyMSError('Load', f"Invalid dimensions in the BMP '{filename}' (Frames have a maximum size of 256x256, got {frame_width}x{frame_height})")
+	if issize and (frame_width != issize[0] or frame_height != issize[1]):
+		raise PyMSError('Load', f"Invalid dimensions in the BMP '{filename}' (Expected {issize[0]}x{issize[1]}, got {frame_width}x{frame_height})")
+	return sheet_to_frames(bmp.image, frame_count, style)
+
+def frames_to_grp(frames: list[GRP.Pixels], palette: GRP.RawPalette, uncompressed: bool, transindex: int = 0) -> GRP.GRP:
+	grp = GRP.GRP(palette, uncompressed, transindex)
+	grp.load_frames(frames, transindex=transindex)
+	return grp
+
+def find_frame_bmps(path: str, first_file: str) -> tuple[str, list[str]]:
+	file = os.path.basename(first_file)
+	stem = os.extsep.join(file.split(os.extsep)[:-1])
+	m = re.match('(.+) (.+?)', stem)
+	single = not m
+	name = m.group(1) if m else stem
+	files: list[str] = []
+	listing = os.listdir(path)
+	listing.sort()
+	started = False
+	for f in listing:
+		if not started:
+			if f != file:
+				continue
+			started = True
+		if not (f.startswith(name) and len(f) > len(name)+2):
+			break
+		files.append(f)
+		if single:
+			break
+	return (name, files)
+
+def grptobmp(*, path: str, pal: Palette.Palette, uncompressed: bool, bmp_style: BMPStyle, grp: str, bmp: str | None = None) -> None:
+	inp = GRP.GRP(pal.palette, uncompressed)
+	print(f"Reading GRP '{grp}'...")
+	inp.load(grp)
+	print(f" - '{grp}' read successfully")
 	if bmp:
 		bmpname = bmp
-	elif isinstance(grp, str):
+	else:
 		bmpname = os.path.join(path,os.extsep.join(os.path.basename(grp).split(os.extsep)[:-1]))
-	else:
-		raise PyMSError('Internal', 'No bmp name provided')
-	out = BMP.BMP(pal.palette)
-	if frames is None:
-		frames = list(range(inp.frames))
-	n = 0
-	for f,frame in enumerate(inp.images):
-		if f in frames:
-			if bmp_style == BMPStyle.single_bmp_framesets:
-				if not n % 17:
-					out.image.extend([list(y) for y in frame])
-				else:
-					for y,d in enumerate(frame):
-						out.image[(n // 17) * inp.height + y].extend(d)
-			elif bmp_style == BMPStyle.single_bmp_vertical:
-				out.image.extend([list(y) for y in frame])
-			else:
-				name = f'{bmpname} {str(n).zfill(3)}{os.extsep}bmp'
-				if not mute:
-					print(f"Writing BMP '{name}'...")
-				out.set_pixels(frame)
-				out.save(os.path.join(path,name))
-				if not mute:
-					print(f" - '{name}' written succesfully")
-			n += 1
-	if bmp_style != BMPStyle.bmp_per_frame:
-		if bmp_style == BMPStyle.single_bmp_framesets and len(frames) % 17 and len(frames) // 17:
-			for y in range(inp.height):
-				out.image[-y-1].extend([inp.transindex] * inp.width * (17 - len(frames) % 17))
-		out.height = len(out.image)
-		out.width = len(out.image[0])
-		name = f'{bmpname}{os.extsep}bmp'
-		out.save(os.path.join(path,name))
-		if not mute:
+	bmps = grp_to_bmps(inp, pal.palette, bmp_style)
+	if bmp_style == BMPStyle.bmp_per_frame:
+		for n,out in enumerate(bmps):
+			name = frame_bmp_name(bmpname, n)
+			print(f"Writing BMP '{name}'...")
+			out.save(os.path.join(path,name))
 			print(f" - '{name}' written succesfully")
-
-# TODO: Improve
-def bmptogrp(*, path: str, pal: Palette.Palette, uncompressed: bool, frames: int, bmp: str | list[str], grp: str | None = None, issize: tuple[int,int] | None = None, ret: bool = False, mute: bool = False, vertical: bool = False, transindex: int = 0) -> (GRP.GRP | None):
-	out = GRP.GRP(pal.palette, uncompressed, transindex)
-	inp = BMP.BMP()
-	if frames:
-		assert isinstance(bmp, str)
-		fullfile = os.path.join(path,bmp)
-		if not mute:
-			print(f"Reading BMP '{fullfile}'...")
-		inp.load(fullfile)
-		if vertical:
-			out.width = inp.width
-			out.height = inp.height // frames
-		else:
-			out.width = inp.width // min(frames,17)
-			out.height = inp.height // int(ceil(frames / 17.0))
-		if out.width > 256 or out.height > 256:
-			raise PyMSError('Load', f"Invalid dimensions in the BMP '{fullfile}' (Frames have a maximum size of 256x256, got {out.width}x{out.height})")
-		if issize and out.width != issize[0] and out.height != issize[1]:
-			raise PyMSError('Load', f"Invalid dimensions in the BMP '{fullfile}' (Expected {issize[0]}x{issize[1]}, got {out.width}x{out.height})")
-		image = []
-		for n in range(frames):
-			for y in range(out.height):
-				if vertical:
-					image.append(inp.image[n * out.height + y])
-				else:
-					x = (n % 17) * out.width
-					image.append(inp.image[(n // 17) * out.height + y][x:x+out.width])
-		out.add_frame(image)
-		if not mute:
-			print(f" - '{fullfile}' read successfully")
-		if ret:
-			return out
 	else:
-		if isinstance(bmp, (tuple, list)):
-			files = bmp
-			found = 2
-			single = False
-		else:
-			file = os.path.basename(bmp)
-			t = os.extsep.join(file.split(os.extsep)[:-1])
-			m = re.match('(.+) (.+?)',t)
-			single = not m
-			if not m:
-				name = t
-			else:
-				name = m.group(1)
-			found = 0
-			files = os.listdir(path)
-			files.sort()
-		for f in files:
-			if found or f == file:
-				if found > 1 or (f.startswith(name) and len(f) > len(name)+2):
-					fullfile = os.path.join(path,f)
-					if not mute:
-						print(f"Reading BMP '{fullfile}'...")
-					inp.load(fullfile)
-					if found % 2:
-						if issize and inp.width != issize[0] and inp.height != issize[1]:
-							raise PyMSError('Load', f"Invalid dimensions in the BMP '{fullfile}' (Expected {issize[0]}x{issize[1]}, got {inp.width}x{inp.height})")
-						if inp.width != out.width or inp.height != out.height:
-							raise PyMSError('Input', f"Incorrect frame dimensions in BMP '{fullfile}' (Expected {out.width}x{out.height}, got {inp.width}x{inp.height})")
-						out.add_frame(inp.image)
-					else:
-						if issize and inp.width != issize[0] and inp.height != issize[1]:
-							raise PyMSError('Load', f"Invalid dimensions in the BMP '{fullfile}' (Expected {issize[0]}x{issize[1]}, got {inp.width}x{inp.height})")
-						if inp.width > 256 or inp.height > 256:
-							raise PyMSError('Load', f"Invalid dimensions in the BMP '{fullfile}' (Frames have a maximum size of 256x256, got {inp.width}x{inp.height})")
-						out.load_frames([inp.image])
-						found += 1
-					if not mute:
-						print(f" - '{fullfile}' read successfully")
-					if single:
-						break
-				else:
-					break
-		if not found:
+		name = f'{bmpname}{os.extsep}bmp'
+		bmps[0].save(os.path.join(path,name))
+		print(f" - '{name}' written succesfully")
+
+def bmptogrp(*, path: str, pal: Palette.Palette, uncompressed: bool, frames: int, bmp: str, grp: str | None = None) -> None:
+	if frames:
+		name = os.extsep.join(os.path.basename(bmp).split(os.extsep)[:-1])
+		fullfile = os.path.join(path,bmp)
+		print(f"Reading BMP '{fullfile}'...")
+		inp = BMP.BMP()
+		inp.load(fullfile)
+		frame_images = bmp_sheet_to_frames(inp, frames, BMPStyle.single_bmp_framesets, fullfile)
+		out = frames_to_grp(frame_images, pal.palette, uncompressed)
+		print(f" - '{fullfile}' read successfully")
+	else:
+		name, files = find_frame_bmps(path, bmp)
+		if not files:
 			raise PyMSError('Input', f"Could not find files matching format '{name} <frame>.bmp'")
-		if ret:
-			return out
+		frame_images = []
+		expected_size: tuple[int, int] | None = None
+		for f in files:
+			fullfile = os.path.join(path,f)
+			print(f"Reading BMP '{fullfile}'...")
+			inp = BMP.BMP()
+			inp.load(fullfile)
+			check_frame_bmp(inp, fullfile, expected_size, None)
+			if expected_size is None:
+				expected_size = (inp.width, inp.height)
+			frame_images.append(inp.image)
+			print(f" - '{fullfile}' read successfully")
+		out = frames_to_grp(frame_images, pal.palette, uncompressed)
 	if grp:
 		fullfile = os.path.join(path,grp)
 	else:
 		fullfile = os.path.join(path, f'{name}{os.extsep}grp')
-	if not mute:
-		print(f"Writing GRP '{fullfile}'...")
+	print(f"Writing GRP '{fullfile}'...")
 	out.save(fullfile)
-	if not mute:
-		print(f" - '{fullfile}' written successfully")
-	return None
+	print(f" - '{fullfile}' written successfully")

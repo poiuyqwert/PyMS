@@ -1,10 +1,11 @@
 
 from .Config import PyGRPConfig
 from .FramesDialog import FramesDialog
-from .utils import BMPStyle, grptobmp, bmptogrp
+from .utils import BMPStyle, grp_to_bmps, frame_bmp_name, frames_to_grp, bmp_sheet_to_frames, check_frame_bmp
 from .SettingsDialog import SettingsDialog
 
 from ..FileFormats import GRP
+from ..FileFormats import BMP
 from ..FileFormats import Palette
 
 from ..Utilities import registry
@@ -570,7 +571,14 @@ BMP's must be imported with the same style they were exported as.""")
 			name = os.extsep.join(os.path.basename(file).replace(' ','').split(os.extsep)[:-1])
 			self.update_idletasks()
 			try:
-				grptobmp(path=os.path.dirname(file), pal=self.palettes[self.pal], uncompressed=self.uncompressed.get(), bmp_style=self.get_bmp_style(), grp=self.grp, bmp=name, frames=indexs, mute=True)
+				bmp_style = self.get_bmp_style()
+				bmps = grp_to_bmps(self.grp, self.palettes[self.pal].palette, bmp_style, indexs)
+				path = os.path.dirname(file)
+				if bmp_style == BMPStyle.bmp_per_frame:
+					for n,bmp in enumerate(bmps):
+						bmp.save(os.path.join(path, frame_bmp_name(name, n)))
+				else:
+					bmps[0].save(os.path.join(path, f'{name}{os.extsep}bmp'))
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
@@ -581,28 +589,38 @@ BMP's must be imported with the same style they were exported as.""")
 			return
 		self.stopframe()
 		update_preview_limit = self.prevto.get() == self.grp.frames
-		files: str | list[str] | None = None
-		if self.get_bmp_style() == BMPStyle.bmp_per_frame:
-			files = self.config_.last_path.bmp.select_open_multiple(self, title='Import frames...')
-		else:
-			file = self.config_.last_path.bmp.select_open(self)
-			if file is not None:
-				files = file
-		if not files:
-			return
-		frames = 0
-		if self.get_bmp_style() != BMPStyle.bmp_per_frame:
-			t = FramesDialog(self, self.config_.windows.frames)
-			if not t.result.get():
-				return
-			frames = t.result.get()
-		self.status.set('Importing frames, please wait...')
-		size = None
+		bmp_style = self.get_bmp_style()
+		size: tuple[int, int] | None = None
 		if self.grp.frames:
 			size = (self.grp.width, self.grp.height)
 		try:
-			fs = bmptogrp(path=os.path.dirname(files[0]), pal=self.palettes[self.pal], uncompressed=self.uncompressed.get(), frames=frames, bmp=files, grp=None, issize=size, ret=True, mute=True, vertical=self.get_bmp_style().is_vertical, transindex=self.transid.get())
-			assert fs is not None
+			frame_images: list[GRP.Pixels]
+			if bmp_style == BMPStyle.bmp_per_frame:
+				files = self.config_.last_path.bmp.select_open_multiple(self, title='Import frames...')
+				if not files:
+					return
+				self.status.set('Importing frames, please wait...')
+				frame_images = []
+				expected_size: tuple[int, int] | None = None
+				for frame_file in files:
+					bmp = BMP.BMP()
+					bmp.load(frame_file)
+					check_frame_bmp(bmp, frame_file, expected_size, size)
+					if expected_size is None:
+						expected_size = (bmp.width, bmp.height)
+					frame_images.append(bmp.image)
+			else:
+				sheet_file = self.config_.last_path.bmp.select_open(self)
+				if not sheet_file:
+					return
+				frames = FramesDialog(self, self.config_.windows.frames).result.get()
+				if not frames:
+					return
+				self.status.set('Importing frames, please wait...')
+				bmp = BMP.BMP()
+				bmp.load(sheet_file)
+				frame_images = bmp_sheet_to_frames(bmp, frames, bmp_style, sheet_file, size)
+			fs = frames_to_grp(frame_images, self.palettes[self.pal].palette, self.uncompressed.get(), self.transid.get())
 		except PyMSError as e:
 			ErrorDialog(self, e)
 		else:
