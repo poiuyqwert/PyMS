@@ -33,7 +33,7 @@ from ..Utilities.SponsorDialog import SponsorDialog
 
 from enum import IntEnum
 
-from typing import IO as BuiltinIO
+from typing import Sequence, IO as BuiltinIO
 
 LONG_VERSION = 'v' + Assets.version('PyICE')
 
@@ -61,14 +61,13 @@ class PyICE(UI.MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDi
 
 		self.file: str | None = None
 		self.data_context = DataContext()
+		self.unitsdat = DAT.UnitsDAT()
 		self.unitnamestbl: TBL.TBL | None = None
 		self.ibin: IScriptBIN.IScriptBIN | None = None
 		self.edited = False
 
 		self.update_title()
 
-		self.findhistory: list[str] = []
-		self.replacehistory: list[str] = []
 		self.imports: list[str] = []
 
 		#Toolbar
@@ -383,6 +382,42 @@ class PyICE(UI.MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDi
 		self.mark_edited(False)
 		return CheckSaved.saved
 
+	def _compile_and_add_scripts(self, inputs: Sequence[IO.AnyInputText], parent: UI.Misc) -> bool:
+		if not self.ibin:
+			return False
+		scripts: dict[int, IScript] = {}
+		warnings: list[PyMSWarning] = []
+		try:
+			for any_input in inputs:
+				parse_context = self.get_parse_context(any_input)
+				new_scripts = IScriptBIN.IScriptBIN.compile(parse_context)
+				for new_script in new_scripts:
+					# TODO: Duplicate scripts
+					scripts[new_script.id] = new_script
+				warnings.extend(parse_context.warnings)
+			new_size = self.ibin.can_add_scripts(scripts.values())
+			if new_size is not None:
+				size = self.ibin.calculate_size()
+				raise PyMSError('Parse', f"There is not enough room in your iscript.bin to compile these changes. The current file is {size}B out of the max 65535B, these changes would make the file {new_size}B.")
+		except PyMSError as e:
+			ErrorDialog(parent, e)
+			return False
+		if warnings:
+			w = WarningDialog(parent, warnings, True)
+			if not w.cont:
+				return False
+		self.ibin.add_scripts(scripts.values())
+		self.update_iscrips_list()
+		self.action_states()
+		self.mark_edited()
+		return True
+
+	def save_code(self, code: str, parent: UI.AnyWindow) -> bool:
+		if not self._compile_and_add_scripts([code], parent):
+			return False
+		self.status.set('Save Successful!')
+		return True
+
 	def iimport(self, files: str | list[str] | None = None, parent: UI.Misc | None = None) -> None:
 		if not self.ibin:
 			return
@@ -394,32 +429,8 @@ class PyICE(UI.MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDi
 			files = [files]
 		if parent is None:
 			parent = self
-		scripts: dict[int, IScript] = {}
-		warnings: list[PyMSWarning] = []
-		try:
-			for file in files:
-				parse_context = self.get_parse_context(file)
-				new_scripts = IScriptBIN.IScriptBIN.compile(parse_context)
-				for new_script in new_scripts:
-					# TODO: Duplicate scripts
-					scripts[new_script.id] = new_script
-				warnings.extend(parse_context.warnings)
-		except PyMSError as e:
-			ErrorDialog(self, e)
-			return
-		new_size = self.ibin.can_add_scripts(scripts.values())
-		if new_size is not None:
-			size = self.ibin.calculate_size()
-			raise PyMSError('Parse', f"There is not enough room in your iscript.bin to compile these changes. The current file is {size}B out of the max 65535B, these changes would make the file {new_size}B.")
-		if warnings:
-			w = WarningDialog(self, warnings, True)
-			if not w.cont:
-				return
-		self.ibin.add_scripts(scripts.values())
-		self.update_iscrips_list()
-		self.status.set('Import Successful!')
-		self.action_states()
-		self.mark_edited()
+		if self._compile_and_add_scripts(files, parent):
+			self.status.set('Import Successful!')
 
 	def export(self) -> None:
 		if not self.ibin:

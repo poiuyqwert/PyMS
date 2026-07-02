@@ -47,7 +47,9 @@ for _cmd in CodeCommands.all_basic_commands:
 			PREVIEWER_CMDS[EntryType.flingy_dat].append(_cmd.name)
 
 PALETTES: dict[str, RawPalette] = {}
+PALETTE_PATHS: dict[str, str] = {}
 GRP_CACHE: dict[str, dict[int, dict[str, UI.Image]]] = {}
+GRP_CACHE_MAX_GRPS = 32
 
 @dataclass
 class Preview:
@@ -250,24 +252,33 @@ class PreviewerDialog(PyMSDialog):
 		opts.pack(fill=UI.X)
 		right.pack(side=UI.LEFT, fill=UI.Y, expand=1)
 
-		if not PALETTES:
-			pal = Palette.Palette()
-			palette_configs = [
-				('Units', self.config_.settings.files.palettes.units),
-				('bfire', self.config_.settings.files.palettes.bfire),
-				('gfire', self.config_.settings.files.palettes.gfire),
-				('ofire', self.config_.settings.files.palettes.ofire),
-				('Terrain', self.config_.settings.files.palettes.terrain),
-				('Icons', self.config_.settings.files.palettes.icons),
-			]
-			for name,palette_config in palette_configs:
-				try:
-					pal.load(palette_config.file_path)
-				except Exception:
-					continue
-				PALETTES[name] = pal.palette
+		self.load_palettes()
 
 		return ok
+
+	def load_palettes(self) -> None:
+		pal = Palette.Palette()
+		palette_configs = [
+			('Units', self.config_.settings.files.palettes.units),
+			('bfire', self.config_.settings.files.palettes.bfire),
+			('gfire', self.config_.settings.files.palettes.gfire),
+			('ofire', self.config_.settings.files.palettes.ofire),
+			('Terrain', self.config_.settings.files.palettes.terrain),
+			('Icons', self.config_.settings.files.palettes.icons),
+		]
+		for name,palette_config in palette_configs:
+			file_path = palette_config.file_path
+			if name in PALETTES and PALETTE_PATHS.get(name) == file_path:
+				continue
+			try:
+				pal.load(file_path)
+			except Exception:
+				continue
+			PALETTES[name] = pal.palette
+			PALETTE_PATHS[name] = file_path
+			for frames in GRP_CACHE.values():
+				for palettes in frames.values():
+					palettes.pop(name, None)
 
 	def entry_type(self) -> EntryType:
 		return EntryType(self.type.get())
@@ -401,7 +412,7 @@ class PreviewerDialog(PyMSDialog):
 			m = re.match('(\\s*)(\\S+)(\\s+)([^\\s#]+)(\\s+.*)?', self.text.get(s, f'{UI.INSERT} lineend'))
 			if m and m.group(2) in PREVIEWER_CMDS[entry_type]:
 				self.text.delete(s, f'{UI.INSERT} lineend')
-				self.text.insert(s, m.group(1)+m.group(2)+m.group(3)+i+m.group(5))
+				self.text.insert(s, m.group(1)+m.group(2)+m.group(3)+i+(m.group(5) or ''))
 		else:
 			self.text.insert(UI.INSERT, i)
 		if self.closeafter.get():
@@ -415,24 +426,23 @@ class PreviewerDialog(PyMSDialog):
 			if entry_type == EntryType.images_dat:
 				listbox = self.delegate.imageslist
 				id_variable = self.image
-				cmd_id = self.imagecmd.get()
+				cmd_index = self.imagecmd.get()
 			elif entry_type == EntryType.sprites_dat:
 				listbox = self.delegate.spriteslist
 				id_variable = self.sprites
-				cmd_id = self.spritescmd.get()
+				cmd_index = self.spritescmd.get()
 			else: # if entry_type == EntryType.flingy_dat
 				listbox = self.delegate.flingylist
 				id_variable = self.flingys
-				cmd_id = self.flingyscmd.get()
+				cmd_index = self.flingyscmd.get()
 			value = int(listbox.get(id_variable.get()).strip().split(' ')[0])
 		else:
 			value = self.previewing.frame
-			cmd_id = self.curcmd.get()
-		cmd_def: CodeCommand.CodeCommandDefinition | None = None
-		for cmd in CodeCommands.all_basic_commands:
-			if cmd.byte_code_id == cmd_id:
-				cmd_def = cmd
-				break
+			cmd_index = self.curcmd.get()
+		cmd_names = PREVIEWER_CMDS[entry_type]
+		if cmd_index < 0 or cmd_index >= len(cmd_names):
+			return
+		cmd_def = CodeCommand.CodeCommandDefinition.find_by_name(cmd_names[cmd_index], CodeCommands.all_basic_commands)
 		if not cmd_def:
 			return
 		output = io.StringIO()
@@ -494,10 +504,13 @@ class PreviewerDialog(PyMSDialog):
 				self.preview_limits()
 			if draw:
 				if not path in GRP_CACHE:
+					if len(GRP_CACHE) >= GRP_CACHE_MAX_GRPS:
+						del GRP_CACHE[next(iter(GRP_CACHE))]
 					GRP_CACHE[path] = {}
-				if not frame in GRP_CACHE:
+				if not frame in GRP_CACHE[path]:
 					GRP_CACHE[path][frame] = {}
 				GRP_CACHE[path][frame][pal] = cast(UI.Image, GRP.frame_to_photo(PALETTES[pal], grp, frame, size=False))
+		GRP_CACHE[path] = GRP_CACHE.pop(path)
 		return GRP_CACHE[path][frame][pal]
 
 	def select(self, entry_id: int, entry_type: EntryType, frame: int = 0) -> None:

@@ -71,7 +71,7 @@ class SoundDialog(PyMSDialog):
 			m = re.match('(\\s*)(\\S+)(\\s+)([^\\s#]+)(\\s+.*)?', self.text.get(s,f'{UI.INSERT} lineend'))
 			if m and m.group(2) == 'playsnd':
 				self.text.delete(s, f'{UI.INSERT} lineend')
-				self.text.insert(s, m.group(1)+m.group(2)+m.group(3)+str(self.id.get())+m.group(5))
+				self.text.insert(s, m.group(1)+m.group(2)+m.group(3)+str(self.id.get())+(m.group(5) or ''))
 		else:
 			self.text.insert(UI.INSERT, str(self.id.get()))
 		if self.closeafter.get():

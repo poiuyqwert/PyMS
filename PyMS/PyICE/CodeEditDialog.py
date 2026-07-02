@@ -331,6 +331,7 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 		if not self.previewer or self.previewer.state() == 'withdrawn':
 			if self.previewer is None:
 				self.previewer = PreviewerDialog(self, self.delegate, self.config_, self.text)
+			self.previewer.load_palettes()
 			self.previewer.updatecurrentimages()
 			t = re.split('\\s+',self.text.get(f'{UI.INSERT} linestart', f'{UI.INSERT} lineend').split('#',1)[0].strip())
 			parse_context = self.delegate.get_parse_context(t[1])
