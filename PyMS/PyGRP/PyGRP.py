@@ -328,7 +328,6 @@ BMP's must be imported with the same style they were exported as.""")
 				self.frame_index = frame
 				if not self.pal in self.frames[frame]:
 					image = GRP.image_to_tk(self.grp.images[frame], self.palettes[self.pal].palette)
-					# image = GRP.frame_to_photo(self.palettes[self.pal].palette, self.grp, frame)
 					self.frames[frame][self.pal] = image
 				else:
 					image = self.frames[frame][self.pal]
@@ -465,7 +464,8 @@ BMP's must be imported with the same style they were exported as.""")
 		for frame in range(self.grp.frames):
 			self.append_frame(frame)
 		for i in s:
-			self.listbox.select_set(i)
+			if int(i) < self.grp.frames:
+				self.listbox.select_set(i)
 		self.listbox.yview_moveto(y)
 
 	def new(self, _event: UI.Event | None = None) -> None:
@@ -505,7 +505,6 @@ BMP's must be imported with the same style they were exported as.""")
 		self.file = file
 		self.frames = [{} for _ in range(grp.frames)]
 		self.edited = False
-		self.status.set('Load successful!')
 		self.status.set(file)
 		self.update_list()
 		self.listbox.select_set(0)
@@ -653,9 +652,6 @@ BMP's must be imported with the same style they were exported as.""")
 		self.stopframe()
 		indexs = [int(i) for i in self.listbox.curselection()]
 		i = indexs[0]
-		size: int = self.listbox.size() # type: ignore[assignment]
-		if i == size-1:
-			i -= 1
 		for n,index in enumerate(indexs):
 			del self.grp.images[index-n]
 			del self.grp.images_bounds[index-n]
@@ -664,16 +660,22 @@ BMP's must be imported with the same style they were exported as.""")
 		if not self.grp.frames:
 			self.grp.width = 0
 			self.grp.height = 0
-		self.listbox.delete(0,UI.END)
+		# The old selection is being replaced, so clear it before `update_list`
+		# rebuilds the rows (it restores any selection still present)
+		self.listbox.select_clear(0,UI.END)
 		self.update_list()
 		self.edited = True
-		if self.listbox.size():
+		size: int = self.listbox.size() # type: ignore[assignment]
+		if size:
+			i = min(i, size-1)
 			self.listbox.select_set(i)
 			self.listbox.see(i)
 		else:
 			self.frame_index = None
 		self.preview_limits()
-		self.preview(force=True) # TODO: Why force?
+		# The selected index now maps to a different frame while frame_index is
+		# unchanged, so the preview's same-frame redraw guard must be bypassed
+		self.preview(force=True)
 		self.action_states()
 		self.grpoutline()
 		self.frameoutline()

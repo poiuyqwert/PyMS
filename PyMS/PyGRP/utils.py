@@ -107,6 +107,10 @@ def sheet_to_frames(sheet: GRP.Pixels, frame_count: int, style: BMPStyle) -> lis
 def frame_bmp_name(basename: str, frame: int) -> str:
 	return f'{basename} {str(frame).zfill(3)}{os.extsep}bmp'
 
+# Matches the stem of a frame BMP named by `frame_bmp_name` ('basename <frame>'),
+# capturing the basename
+_frame_bmp_stem_re = re.compile(r'(.+) \d+$')
+
 def grp_to_bmps(grp: GRP.GRP, palette: GRP.RawPalette, style: BMPStyle, frame_indices: Sequence[int] | None = None) -> list[BMP.BMP]:
 	if frame_indices is None:
 		frames = list(grp.images)
@@ -150,7 +154,7 @@ def frames_to_grp(frames: list[GRP.Pixels], palette: GRP.RawPalette, uncompresse
 def find_frame_bmps(path: str, first_file: str) -> tuple[str, list[str]]:
 	file = os.path.basename(first_file)
 	stem = os.extsep.join(file.split(os.extsep)[:-1])
-	m = re.match('(.+) (.+?)', stem)
+	m = _frame_bmp_stem_re.match(stem)
 	single = not m
 	name = m.group(1) if m else stem
 	files: list[str] = []

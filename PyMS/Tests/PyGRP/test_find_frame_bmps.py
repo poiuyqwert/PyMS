@@ -37,6 +37,20 @@ class Test_Find_Frame_BMPs(unittest.TestCase):
 		self.assertEqual(name, 'my unit')
 		self.assertEqual(files, ['my unit 000.bmp', 'my unit 001.bmp'])
 
+	def test_name_with_space_but_no_frame_number_is_single(self) -> None:
+		listing = ['my unit.bmp', 'my zebra.bmp']
+		with mock.patch('os.listdir', return_value=listing):
+			name, files = find_frame_bmps('dir', 'my unit.bmp')
+		self.assertEqual(name, 'my unit')
+		self.assertEqual(files, ['my unit.bmp'])
+
+	def test_trailing_word_with_digits_is_not_a_frame_number(self) -> None:
+		listing = ['unit v2.bmp']
+		with mock.patch('os.listdir', return_value=listing):
+			name, files = find_frame_bmps('dir', 'unit v2.bmp')
+		self.assertEqual(name, 'unit v2')
+		self.assertEqual(files, ['unit v2.bmp'])
+
 	def test_name_without_space_matches_only_the_named_file(self) -> None:
 		listing = ['sprite.bmp', 'sprite2.bmp']
 		with mock.patch('os.listdir', return_value=listing):
