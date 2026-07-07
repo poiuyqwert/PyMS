@@ -166,6 +166,39 @@ class Test_Keysym(unittest.TestCase):
 		self.assertEqual(repr(Keysym('a')), "<Keysym 'a'>")
 
 
+class Test_Keysym_equals_pattern(unittest.TestCase):
+	def test_equal_to_pattern_with_matching_keysym(self) -> None:
+		self.assertEqual(Keysym('Return'), Key.Return)
+
+	def test_not_equal_to_pattern_with_different_keysym(self) -> None:
+		self.assertNotEqual(Keysym('Escape'), Key.Return)
+
+	def test_comparison_is_case_sensitive(self) -> None:
+		self.assertEqual(Keysym('BackSpace'), Key.Backspace)
+		self.assertNotEqual(Keysym('Backspace'), Key.Backspace)
+
+	def test_not_equal_to_modified_pattern(self) -> None:
+		# A keysym alone can't verify modifiers, so `Ctrl.Return` never matches
+		self.assertNotEqual(Keysym('Return'), Ctrl.Return)
+
+	def test_not_equal_to_pattern_without_keysym(self) -> None:
+		self.assertNotEqual(Keysym('Return'), EventPattern(Field('Return')))
+
+	def test_not_equal_to_empty_pattern(self) -> None:
+		self.assertNotEqual(Keysym('Return'), EventPattern())
+
+	def test_reflected_comparison_matches(self) -> None:
+		self.assertEqual(Key.Return, Keysym('Return'))
+		self.assertNotEqual(Key.Return, Keysym('Escape'))
+
+	def test_still_equal_to_keysym_by_value(self) -> None:
+		self.assertEqual(Keysym('Return'), Keysym('Return'))
+		self.assertNotEqual(Keysym('Return'), Keysym('Escape'))
+
+	def test_still_not_equal_to_non_field(self) -> None:
+		self.assertNotEqual(Keysym('Return'), 'Return')
+
+
 class Test_exported_patterns(unittest.TestCase):
 	def test_key_letter_event(self) -> None:
 		self.assertEqual(Key.a.event(), '<a>')

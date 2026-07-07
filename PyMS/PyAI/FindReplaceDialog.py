@@ -137,7 +137,7 @@ class FindReplaceDialog(PyMSDialog):
 					code_text.insert(item[0], ins)
 		m: re.Match[str] | None
 		p: UI.Misc = self
-		if event and event.keycode == 13:
+		if event and UI.Keysym(event.keysym) == UI.Key.Return:
 			p = self.parent
 		if self.multiline.get():
 			m = r.search(code_text.get(UI.INSERT, UI.END))

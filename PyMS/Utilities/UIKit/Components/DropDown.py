@@ -5,7 +5,7 @@ from ..Constants import END, LEFT, NORMAL, RIGHT, SUNKEN, X, Y
 from ..Variables import IntVar, IntegerVar, StringVar, Variable
 from ..Event import Event
 from ..Font import Font
-from ..EventPattern import EventPropogation, Focus, Key, Mouse
+from ..EventPattern import EventPropogation, Focus, Key, Keysym, Mouse
 
 from ... import Assets
 
@@ -141,9 +141,9 @@ class DropDown(Frame):
 		if self._typed_timer:
 			self.after_managed_cancel(self._typed_timer)
 			self._typed_timer = None
-		if event.keysym == Key.Backspace.name():
+		if Keysym(event.keysym) == Key.Backspace:
 			self._typed = self._typed[:-1]
-		elif event.keysym == Key.Tab.name() or event.char == '\t':
+		elif Keysym(event.keysym) == Key.Tab or event.char == '\t':
 			return EventPropogation.Continue
 		elif event.char:
 			self._typed += event.char.lower()

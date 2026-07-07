@@ -133,6 +133,16 @@ class Keysym(Field):
 			return self
 		return Keysym(self._capitalized_key, self._capitalized_key_description)
 
+	# Support comparing directly against a `Key` pattern (e.g. `Keysym(event.keysym) == Key.Return`).
+	# Only unmodified single-keysym patterns can match — a keysym alone can't verify modifiers like `Ctrl.Return`.
+	def __eq__(self, other: object) -> bool:
+		if isinstance(other, EventPattern):
+			if len(other.fields) != 1:
+				return False
+			keysym = other.get_keysym()
+			return keysym is not None and keysym.value == self.value
+		return super().__eq__(other)
+
 	def __repr__(self) -> str:
 		return f"<Keysym '{self.value}'>"
 

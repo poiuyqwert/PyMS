@@ -110,7 +110,7 @@ class FindDialog(PyMSDialog):
 					return
 				i = next_i(i, down, size)
 		p: UI.Misc = self
-		if event and event.keycode != 13:
+		if event and UI.Keysym(event.keysym) != UI.Key.Return:
 			p = self.parent
 		UI.MessageBox.showinfo('Find', "Can't find text.", parent=p)
 

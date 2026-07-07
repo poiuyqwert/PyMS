@@ -134,7 +134,7 @@ class FindReplaceDialog(PyMSDialog):
 					self.check(3)
 				else:
 					p: UI.Misc = self
-					if key and key.keysym == UI.Key.Return.name():
+					if key and UI.Keysym(key.keysym) == UI.Key.Return:
 						p = self.parent
 					UI.MessageBox.showinfo(parent=p, title='Find', message="Can't find text.")
 			else:
@@ -174,14 +174,14 @@ class FindReplaceDialog(PyMSDialog):
 						break
 					if (not u and n == -1 and self.text.index(f'{i} lineend') == e) or i == e:
 						p = self
-						if key and key.keysym == UI.Key.Return.name():
+						if key and UI.Keysym(key.keysym) == UI.Key.Return:
 							p = self.parent
 						UI.MessageBox.showinfo(parent=p, title='Find', message="Can't find text.")
 						break
 					i = self.text.index(f'{i} {s}1lines {lse}')
 				else:
 					p = self
-					if key and key.keysym == UI.Key.Return.name():
+					if key and UI.Keysym(key.keysym) == UI.Key.Return:
 						p = self.parent
 					UI.MessageBox.showinfo(parent=p, title='Find', message="Can't find text.")
 

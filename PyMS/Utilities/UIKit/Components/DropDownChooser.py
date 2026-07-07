@@ -3,7 +3,7 @@ from ..Widgets import Listbox, Misc, Scrollbar, Toplevel
 from ..Constants import BOTH, DOTBOX, END, LEFT, RIGHT, SINGLE, SOLID, Y
 from ..Event import Event
 from ..Font import Font
-from ..EventPattern import ButtonRelease, Cursor, Focus, Key, Mouse
+from ..EventPattern import ButtonRelease, Cursor, Focus, Key, Keysym, Mouse
 from ..Utils import remove_bind
 
 from typing import Callable, Literal
@@ -127,7 +127,7 @@ class DropDownChooser(Toplevel):
 	def key_pressed(self, event: Event) -> None:
 		if self._typed_timer:
 			self.after_managed_cancel(self._typed_timer)
-		if event.keysym == Key.Backspace.name():
+		if Keysym(event.keysym) == Key.Backspace:
 			self._typed = self._typed[:-1]
 		elif event.char:
 			self._typed += event.char.lower()
