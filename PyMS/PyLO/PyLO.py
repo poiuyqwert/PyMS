@@ -1,7 +1,5 @@
 
 from .Config import PyLOConfig
-from .Delegates import FindDelegate
-from .FindReplaceDialog import FindReplaceDialog
 from .Constants import SIGNED_INT, RE_COORDINATES, RE_DRAG_COORDS
 from .SettingsDialog import SettingsDialog
 from .CodeTooltip import SelectionTooltip
@@ -20,6 +18,7 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.AboutDialog import AboutDialog
+from ..Utilities.FindReplaceDialog import FindReplaceDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
@@ -40,7 +39,7 @@ class MouseEvent(Enum):
 	drag = 1
 	release = 2
 
-class PyLO(UI.MainWindow, FindDelegate, UI.CodeTextDelegate):
+class PyLO(UI.MainWindow, UI.CodeTextDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
 		UI.MainWindow.__init__(self)
 		self.guifile = guifile
@@ -627,11 +626,10 @@ class PyLO(UI.MainWindow, FindDelegate, UI.CodeTextDelegate):
 
 	def find(self) -> None:
 		if not self.findwindow:
-			self.findwindow = FindReplaceDialog(self, self.config_.windows.find, self)
+			self.findwindow = FindReplaceDialog(self, self.text, self.config_.windows.find)
 			self.bind(UI.Key.F3(), self.findwindow.findnext)
-		elif self.findwindow.state() == 'withdrawn':
-			self.findwindow.deiconify()
-		self.findwindow.focus_set()
+		else:
+			self.findwindow.show()
 
 	def colors(self) -> None:
 		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())
@@ -673,10 +671,6 @@ class PyLO(UI.MainWindow, FindDelegate, UI.CodeTextDelegate):
 		if self.findwindow:
 			UI.Toplevel.destroy(self.findwindow)
 		UI.MainWindow.destroy(self)
-
-	# FindDelegate
-	def get_text(self) -> UI.CodeText:
-		return self.text
 
 	# CodeTextDelegate
 	def comment_symbols(self) -> list[str]:

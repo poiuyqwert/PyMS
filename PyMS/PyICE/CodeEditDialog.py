@@ -1,7 +1,6 @@
 
 from .Delegates import MainDelegate, CodeGeneratorDelegate
 from .Config import PyICEConfig
-from .FindReplaceDialog import FindReplaceDialog
 from .CodeGeneratorDialog import CodeGeneratorDialog
 from .PreviewerDialog import PreviewerDialog, PREVIEWER_CMDS, EntryType
 from .SoundDialog import SoundDialog
@@ -13,6 +12,7 @@ from ..FileFormats.IScriptBIN.CodeHandlers import CodeCommands, CodeTypes
 
 from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
+from ..Utilities.FindReplaceDialog import FindReplaceDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
@@ -312,12 +312,10 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 
 	def find(self, _event: UI.Event | None = None) -> None:
 		if self.findwindow is None:
-			findwindow = FindReplaceDialog(self, self.text, self.config_.windows.find_replace)
-			self.findwindow = findwindow
-			self.bind(UI.Key.F3(), findwindow.findnext)
-		elif self.findwindow.state() == 'withdrawn':
-			self.findwindow.deiconify()
-		self.findwindow.focus_set()
+			self.findwindow = FindReplaceDialog(self, self.text, self.config_.windows.find_replace)
+			self.bind(UI.Key.F3(), self.findwindow.findnext)
+		else:
+			self.findwindow.show()
 
 	def colors(self, _event: UI.Event | None = None) -> None:
 		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())

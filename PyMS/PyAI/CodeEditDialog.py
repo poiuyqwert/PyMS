@@ -1,7 +1,6 @@
 
-from .FindReplaceDialog import FindReplaceDialog
 from .Config import PyAIConfig
-from .Delegates import MainDelegate, FindReplaceDelegate
+from .Delegates import MainDelegate
 from .CodeTooltip import CommandCodeTooltip, AISECommandCodeTooltip, TypeCodeTooltip, DirectiveTooltip
 
 from ..FileFormats.AIBIN import AIBIN
@@ -9,6 +8,7 @@ from ..FileFormats.AIBIN.CodeHandlers import CodeCommands, AISECodeCommands, Cod
 
 from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
+from ..Utilities.FindReplaceDialog import FindReplaceDialog
 from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
@@ -23,7 +23,7 @@ import re, io
 
 from typing import Sequence
 
-class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, UI.CodeTextDelegate, FindReplaceDelegate):
+class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, UI.CodeTextDelegate):
 	@staticmethod
 	def build_syntax_highlighting(highlights_config: PyAIConfig.Code.Highlights) -> UI.SyntaxHighlighting:
 		cmd_names = [cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands]
@@ -378,11 +378,10 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, UI.CodeTextDelegate,
 
 	def find(self, _: UI.Event | None = None) -> None:
 		if not self.findwindow:
-			self.findwindow = FindReplaceDialog(self, self, self.config_.windows.find.find_replace)
+			self.findwindow = FindReplaceDialog(self, self.text, self.config_.windows.find.find_replace, find_history=self.delegate.get_find_history(), replace_history=self.delegate.get_replace_history())
 			self.bind(UI.Key.F3(), self.findwindow.findnext)
-		elif self.findwindow.state() == 'withdrawn':
-			self.findwindow.deiconify()
-		self.findwindow.focus_set()
+		else:
+			self.findwindow.show()
 
 	def colors(self, _: UI.Event | None = None) -> None:
 		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())
@@ -654,13 +653,3 @@ script {header_id} {{
 
 	def jump_sections(self) -> Sequence[str] | None:
 		return ('AIID', 'Block')
-
-	# FindReplaceDelegate
-	def get_find_history(self) -> list[str]:
-		return self.delegate.get_find_history()
-
-	def get_replace_history(self) -> list[str]:
-		return self.delegate.get_replace_history()
-
-	def get_code_text(self) -> UI.CodeText:
-		return self.text

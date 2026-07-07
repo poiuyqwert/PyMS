@@ -1,7 +1,7 @@
 
 import unittest
 
-from ...PyAI.FindReplaceDialog import FindReplaceDialog
+from ...Utilities.FindReplaceDialog import FindReplaceDialog
 
 
 class Test_RecordHistory(unittest.TestCase):
@@ -28,6 +28,14 @@ class Test_RecordHistory(unittest.TestCase):
 		# The oldest entries are dropped, the most recent retained.
 		self.assertEqual(history[-1], f'entry{FindReplaceDialog.HISTORY_LIMIT + 4}')
 		self.assertNotIn('entry0', history)
+
+	def test_recording_mutates_the_given_list(self) -> None:
+		# The dialog and its TextDropDowns share the caller's list object, so
+		# recording must mutate in place rather than rebind.
+		history: list[str] = []
+		alias = history
+		FindReplaceDialog.record_history(history, 'a')
+		self.assertEqual(alias, ['a'])
 
 
 if __name__ == '__main__':

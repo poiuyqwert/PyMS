@@ -65,13 +65,3 @@ class EditScriptDelegate(Protocol):
 
 	def get_data_context(self) -> DataContext:
 		...
-
-class FindReplaceDelegate(Protocol):
-	def get_code_text(self) -> UI.CodeText:
-		...
-
-	def get_find_history(self) -> list[str]:
-		...
-
-	def get_replace_history(self) -> list[str]:
-		...

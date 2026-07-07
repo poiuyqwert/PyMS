@@ -1,7 +1,6 @@
 
 from .Config import PyTRGConfig
 from .Delegates import MainDelegate
-from .FindReplaceDialog import FindReplaceDialog
 from .SettingsUI.SettingsDialog import SettingsDialog
 from .Tooltips import ActionsTooltip, ConditionsTooltip
 
@@ -20,6 +19,7 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.AboutDialog import AboutDialog
+from ..Utilities.FindReplaceDialog import FindReplaceDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
@@ -535,8 +535,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 			self.findwindow = FindReplaceDialog(self, self.text, self.config_.windows.find_replace)
 			self.bind(UI.Key.F3(), self.findwindow.findnext)
 		else:
-			self.findwindow.make_active() # type: ignore[attr-defined]
-			self.findwindow.findentry.focus_set(highlight=True)
+			self.findwindow.show()
 
 	def colors(self) -> None:
 		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())

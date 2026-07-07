@@ -14,7 +14,8 @@ class TextDropDown(Frame):
 	def __init__(self, parent: Misc, variable: StringVar, history: list[str] | None = None, width: int | None = None, *, state: WidgetState = NORMAL):
 		self.variable = variable
 		self.set = self.variable.set
-		self.history = history or []
+		# Keep the caller's list object so entries recorded into it later show in the dropdown
+		self.history = [] if history is None else history
 		Frame.__init__(self, parent, borderwidth=2, relief=SUNKEN)
 		self.entry = Entry(self, textvariable=self.variable, width=width, highlightthickness=0) # type: ignore[arg-type]
 		self.entry.config(bd=0)
