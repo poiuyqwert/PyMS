@@ -11,8 +11,6 @@ except Exception:
 	e.startup()
 	sys.exit()
 
-from tkinter import Image
-
 from .CV5 import CV5, CV5Group
 from .VF4 import VF4, VF4Megatile
 from .VX4 import VX4, VX4Megatile, VX4Minitile
@@ -32,10 +30,9 @@ from dataclasses import dataclass
 from enum import Enum
 
 from collections.abc import Callable, Sequence
-from typing import cast
 
 
-def megatile_to_photo(tileset: Tileset, megatile_id: int) -> Image:
+def megatile_to_photo(tileset: Tileset, megatile_id: int) -> ImageTk.PhotoImage:
 	megatile = tileset.vx4.get_megatile(megatile_id)
 	pi = PILImage.new('P', (32,32))
 	pal: list[int] = []
@@ -52,9 +49,9 @@ def megatile_to_photo(tileset: Tileset, megatile_id: int) -> Image:
 	for row in image:
 		put.extend(row)
 	pi.putdata(put)
-	return cast(Image, ImageTk.PhotoImage(pi))
+	return ImageTk.PhotoImage(pi)
 
-def minitile_to_photo(tileset: Tileset, minitile: VX4Minitile) -> Image:
+def minitile_to_photo(tileset: Tileset, minitile: VX4Minitile) -> ImageTk.PhotoImage:
 	image = tileset.vr4.get_image(minitile.image_id)
 	pi = PILImage.new('P', (24,24))
 	pal: list[int] = []
@@ -68,7 +65,7 @@ def minitile_to_photo(tileset: Tileset, minitile: VX4Minitile) -> Image:
 		for x in p * 3:
 			put.extend((x,x,x))
 	pi.putdata(put)
-	return cast(Image, ImageTk.PhotoImage(pi))
+	return ImageTk.PhotoImage(pi)
 
 class TileType(Enum):
 	group = 0

@@ -9,9 +9,7 @@ import tkinter as _tk
 
 __all__ = [
 	'AnyWindow',
-	'AnyImage',
 	'AnyPhotoImage',
-	'AnyBitmapImage',
 	'WidgetState',
 	'Relief',
 	'Anchor',
@@ -24,16 +22,11 @@ __all__ = [
 AnyWindow: _TypeAlias = _MainWindow | _Toplevel
 
 try:
-	from PIL import Image as _PILImage
 	from PIL import ImageTk as _ImageTk
 
-	AnyImage: _TypeAlias = _tk.Image | _ImageTk.PhotoImage | _ImageTk.BitmapImage | _PILImage.Image
-	AnyPhotoImage: _TypeAlias = _tk.PhotoImage | _ImageTk.PhotoImage | _PILImage.Image
-	AnyBitmapImage: _TypeAlias = _tk.BitmapImage | _ImageTk.BitmapImage
+	AnyPhotoImage: _TypeAlias = _tk.PhotoImage | _ImageTk.PhotoImage
 except Exception:
-	AnyImage: _TypeAlias = _tk.Image # type: ignore
 	AnyPhotoImage: _TypeAlias = _tk.PhotoImage # type: ignore
-	AnyBitmapImage: _TypeAlias = _tk.BitmapImage # type: ignore
 
 WidgetState = _Literal['normal', 'disabled']
 

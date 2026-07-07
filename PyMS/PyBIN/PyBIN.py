@@ -32,7 +32,7 @@ from ..Utilities.SponsorDialog import SponsorDialog
 import time
 from enum import Enum
 
-from typing import Callable, cast
+from typing import Callable
 
 LONG_VERSION = 'v' + Assets.version('PyBIN')
 
@@ -535,7 +535,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		delete = True
 		if self.bin and self.show_background.get() and self.background:
 			if not self.background_image:
-				self.background_image = cast(UI.PhotoImage, GRP.frame_to_photo(self.background.palette, self.background, -1, size=False))
+				self.background_image = GRP.frame_to_photo(self.background.palette, self.background, -1, size=False)
 			if self.background_image:
 				delete = False
 				if self.item_background:
@@ -1372,10 +1372,10 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 	def get_tfont(self) -> (PCX.PCX | None):
 		return self.tfont
 
-	def node_render_image_create(self, *, x: int, y: int, image: UI.ImageTk.PhotoImage, anchor: UI.Anchor) -> UI.Canvas.Item: # type: ignore[name-defined]
+	def node_render_image_create(self, *, x: int, y: int, image: UI.AnyPhotoImage, anchor: UI.Anchor) -> UI.Canvas.Item: # type: ignore[name-defined]
 		return self.widgetCanvas.create_image(x, y, image=image, anchor=anchor)
 
-	def node_render_image_update(self, *, item: UI.Canvas.Item, x: int, y: int, image: UI.ImageTk.PhotoImage | None) -> None: # type: ignore[name-defined]
+	def node_render_image_update(self, *, item: UI.Canvas.Item, x: int, y: int, image: UI.AnyPhotoImage | None) -> None: # type: ignore[name-defined]
 		if image:
 			item.config(image=image)
 		item.coords(x, y)

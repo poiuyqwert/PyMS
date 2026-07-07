@@ -245,7 +245,7 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 	def get_tileset(self) -> Tileset | None:
 		return self.delegate.get_tileset()
 
-	def get_tile(self, tile_id: int | VX4Minitile) -> UI.Image:
+	def get_tile(self, tile_id: int | VX4Minitile) -> UI.AnyPhotoImage:
 		return self.delegate.get_tile(tile_id)
 
 	def mark_edited(self) -> None:

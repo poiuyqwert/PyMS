@@ -11,8 +11,6 @@ except Exception:
 	e.startup()
 	sys.exit()
 
-from tkinter import Image
-
 from .Images import Pixels, RawPalette, RGBA, RGB, Bounds
 from .BMP import BMP
 from .PCX import PCX
@@ -24,7 +22,7 @@ import struct
 from copy import deepcopy
 from enum import Enum
 
-from typing import Callable, TypeVar, cast, Sequence
+from typing import Callable, Literal, TypeVar, Sequence, overload
 
 T = TypeVar('T')
 RLEFunc = Callable[[RawPalette, int, T], RGBA]
@@ -96,13 +94,17 @@ def image_to_pil(image: Pixels, palette: RawPalette, *, transindex: int = 0, bou
 	i.putdata(data) # type: ignore[arg-type]
 	return i
 
-def image_to_tk(image: Pixels, palette: RawPalette, *, transindex: int = 0, bounds: Bounds | None = None, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> Image:
+def image_to_tk(image: Pixels, palette: RawPalette, *, transindex: int = 0, bounds: Bounds | None = None, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> ImageTk.PhotoImage:
 	pil = image_to_pil(image, palette, transindex=transindex, bounds=bounds, flipHor=flipHor, draw_function=draw_function, draw_info=draw_info)
-	return cast(Image, ImageTk.PhotoImage(pil))
+	return ImageTk.PhotoImage(pil)
 
-ImageWithBounds = tuple[Image, int, int, int, int]
+ImageWithBounds = tuple[ImageTk.PhotoImage, int, int, int, int]
 
-def frame_to_photo(p: RawPalette, g: GRP | CacheGRP | BMP | PCX | Pixels, f: int | None = None, *, size: bool = True, transindex: int = 0, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> Image | ImageWithBounds:
+@overload
+def frame_to_photo(p: RawPalette, g: GRP | CacheGRP | BMP | PCX | Pixels, f: int | None = None, *, size: Literal[True] = ..., transindex: int = ..., flipHor: bool = ..., draw_function: RLEFunc = ..., draw_info: T | None = ...) -> ImageWithBounds: ...
+@overload
+def frame_to_photo(p: RawPalette, g: GRP | CacheGRP | BMP | PCX | Pixels, f: int | None = None, *, size: Literal[False], transindex: int = ..., flipHor: bool = ..., draw_function: RLEFunc = ..., draw_info: T | None = ...) -> ImageTk.PhotoImage: ...
+def frame_to_photo(p: RawPalette, g: GRP | CacheGRP | BMP | PCX | Pixels, f: int | None = None, *, size: bool = True, transindex: int = 0, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> ImageTk.PhotoImage | ImageWithBounds:
 	if isinstance(g, CacheGRP):
 		d = g[f or 0]
 	elif isinstance(g, GRP):
@@ -141,7 +143,7 @@ def frame_to_photo(p: RawPalette, g: GRP | CacheGRP | BMP | PCX | Pixels, f: int
 		else:
 			data.extend([(0,0,0,0) for _ in range(width)])
 	i.putdata(data) # type: ignore[arg-type]
-	image = cast(Image, ImageTk.PhotoImage(i))
+	image = ImageTk.PhotoImage(i)
 	return (image, bounds[0], bounds[1], bounds[2], bounds[3])
 
 class RLE:

@@ -5,8 +5,10 @@ import os as _os
 import sys as _sys
 from uuid import uuid4 as _uuid4
 
-from typing import cast
-from .UIKit import Image, PhotoImage
+from typing import TYPE_CHECKING
+from .UIKit import PhotoImage
+if TYPE_CHECKING:
+	from .UIKit import AnyPhotoImage
 
 if hasattr(_sys, 'frozen'):
 	base_dir = _os.path.dirname(_sys.executable)
@@ -271,9 +273,8 @@ def help_file_path(path: str) -> str | None:
 		return None
 	return full_path
 
-_HELP_IMAGE_CACHE: dict[str, Image] = {}
-def help_image(path: str) -> Image | None:
-	from .UIKit import PhotoImage as _PhotoImage  # pylint: disable=cyclic-import
+_HELP_IMAGE_CACHE: dict[str, AnyPhotoImage] = {}
+def help_image(path: str) -> AnyPhotoImage | None:
 	from .UIKit import PILImage as _PILImage  # pylint: disable=cyclic-import
 	from .UIKit import ImageTk as _ImageTk  # pylint: disable=cyclic-import
 	path_components = path.split('/')
@@ -286,13 +287,13 @@ def help_image(path: str) -> Image | None:
 		return None
 	if full_path in _HELP_IMAGE_CACHE:
 		return _HELP_IMAGE_CACHE[full_path]
-	image: Image
+	image: AnyPhotoImage
 	try:
-		image = _PhotoImage(file=full_path)
+		image = PhotoImage(file=full_path)
 	except Exception:
 		try:
 			pil_image = _PILImage.open(full_path)
-			image = cast(Image, _ImageTk.PhotoImage(pil_image))
+			image = _ImageTk.PhotoImage(pil_image)
 		except Exception:
 			return None
 	_HELP_IMAGE_CACHE[full_path] = image

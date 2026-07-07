@@ -37,7 +37,7 @@ class DataSource:
 					return False
 		return True
 
-	def _icon_for(self, value: JSON.JSON.Value) -> UI.Image | None:
+	def _icon_for(self, value: JSON.JSON.Value) -> UI.PhotoImage | None:
 		if isinstance(value, dict):
 			return Assets.get_image('debug')
 		elif isinstance(value, list):

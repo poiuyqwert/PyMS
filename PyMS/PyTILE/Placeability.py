@@ -16,7 +16,7 @@ class Placeability(PyMSDialog, TilePaletteDelegate):
 		self.delegate = delegate
 		self.id = doodad_id
 		self.canvass: list[UI.Canvas] = []
-		self.canvas_images: list[list[UI.Image]] = []
+		self.canvas_images: list[list[UI.AnyPhotoImage]] = []
 		self.groups: list[list[UI.IntegerVar]] = []
 		self.selecting: tuple[int, int] | None = None
 		self.width = 0
@@ -101,7 +101,7 @@ class Placeability(PyMSDialog, TilePaletteDelegate):
 	def get_tileset(self) -> Tileset | None:
 		return self.delegate.get_tileset()
 
-	def get_tile(self, tile_id: int | VX4Minitile) -> UI.Image:
+	def get_tile(self, tile_id: int | VX4Minitile) -> UI.AnyPhotoImage:
 		return self.delegate.get_tile(tile_id)
 
 	def megaload(self) -> None:

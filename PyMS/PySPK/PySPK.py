@@ -31,7 +31,7 @@ from ..Utilities.SponsorDialog import SponsorDialog
 
 from enum import Enum
 
-from typing import Callable, cast, Any
+from typing import Callable, Any
 
 LONG_VERSION = 'v' + Assets.version('PySPK')
 
@@ -71,7 +71,7 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 		self.platform_wpe: Palette.Palette
 
-		self.images: dict[SPK.SPKImage, UI.Image] = {}
+		self.images: dict[SPK.SPKImage, UI.AnyPhotoImage] = {}
 		self.star_map: dict[UI.Canvas.Item, SPK.SPKStar] = {} # type: ignore[name-defined]
 		self.item_map: dict[SPK.SPKStar, UI.Canvas.Item] = {} # type: ignore[name-defined]
 
@@ -400,9 +400,9 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.skyCanvas.tag_lower(f'layer{l}')
 		self.skyCanvas.lift('selection')
 
-	def get_image(self, spkimage: SPK.SPKImage) -> (UI.Image | None):
+	def get_image(self, spkimage: SPK.SPKImage) -> (UI.AnyPhotoImage | None):
 		if not spkimage in self.images:
-			image = cast(UI.Image, GRP.frame_to_photo(self.platform_wpe.palette, spkimage.pixels, None, size=False))
+			image = GRP.frame_to_photo(self.platform_wpe.palette, spkimage.pixels, None, size=False)
 			self.images[spkimage] = image
 		return self.images.get(spkimage)
 

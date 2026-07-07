@@ -18,7 +18,7 @@ from ..Utilities import Config
 
 class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, MegaEditorDelegate, MiniEditorDelegate, GraphicsImporterDelegate):
 	OPEN_PALETTE_COUNT = 0
-	TILE_CACHE: dict[int | VX4Minitile, UI.Image] = {}
+	TILE_CACHE: dict[int | VX4Minitile, UI.AnyPhotoImage] = {}
 
 	def __init__(self, *, parent: UI.Misc, config: PyTILEConfig, delegate: TilePaletteDelegate, tiletype: TileType = TileType.group, select: int | list[int] | None = None, editing: bool = False) -> None:
 		TilePalette.OPEN_PALETTE_COUNT += 1
@@ -79,7 +79,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 	def get_tileset(self) -> Tileset | None:
 		return self.delegate.get_tileset()
 
-	def get_tile(self, tile_id: int | VX4Minitile) -> UI.Image:
+	def get_tile(self, tile_id: int | VX4Minitile) -> UI.AnyPhotoImage:
 		return self.delegate.get_tile(tile_id)
 
 	def tile_palette_binding_widget(self) -> UI.Misc:

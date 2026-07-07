@@ -54,7 +54,7 @@ class MegaEditorView(UI.Frame, TilePaletteDelegate, MiniEditorDelegate):
 		self.parent.bind(UI.Key.r(), lambda _: set_edit_mode(MegaEditorMode.ramp))
 
 		self.canvas = UI.Canvas(frame, width=96, height=96, background='#000000', theme_tag='preview') # type: ignore[call-arg]
-		self.canvas_images: list[UI.Image] = []
+		self.canvas_images: list[UI.AnyPhotoImage] = []
 		def mouse_to_mini(e: UI.Event) -> int | None:
 			if e.x < 1 or e.x > 96 or e.y < 1 or e.y > 96:
 				return None
@@ -116,7 +116,7 @@ class MegaEditorView(UI.Frame, TilePaletteDelegate, MiniEditorDelegate):
 	def get_tileset(self) -> Tileset | None:
 		return self.delegate.get_tileset()
 
-	def get_tile(self, tile_id: int | VX4Minitile) -> UI.Image:
+	def get_tile(self, tile_id: int | VX4Minitile) -> UI.AnyPhotoImage:
 		return self.delegate.get_tile(tile_id)
 
 	def get_edit_mode(self) -> MegaEditorMode:

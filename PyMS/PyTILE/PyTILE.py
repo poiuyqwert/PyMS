@@ -662,7 +662,7 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 		self.edited = edited
 		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 
-	def get_tile(self, id_or_minitile: int | VX4Minitile) -> UI.Image:
+	def get_tile(self, id_or_minitile: int | VX4Minitile) -> UI.AnyPhotoImage:
 		if id_or_minitile in TilePalette.TILE_CACHE:
 			return TilePalette.TILE_CACHE[id_or_minitile]
 		assert self.tileset is not None

@@ -10,10 +10,9 @@ from ..Utilities import UIKit as UI
 
 import sys
 
-from typing import cast
 
 class WidgetNode:
-	SMK_FRAME_CACHE: dict[str, dict[int, UI.ImageTk.PhotoImage]] = {}
+	SMK_FRAME_CACHE: dict[str, dict[int, UI.AnyPhotoImage]] = {}
 
 	def __init__(self, delegate: NodeDelegate, widget: DialogBIN.BINWidget | None = None) -> None:
 		self.delegate = delegate
@@ -28,11 +27,11 @@ class WidgetNode:
 			self.children = []
 
 		self.string: StringPreview | None = None
-		self.photo: UI.ImageTk.PhotoImage | None = None
+		self.photo: UI.AnyPhotoImage | None = None
 		self.image_load_failed: str | None = None
 		self.smks: dict[str, SMK.SMK] | None = None
 		self.smk_loads_failed: set[str] = set()
-		self.dialog_image: UI.ImageTk.PhotoImage | None = None
+		self.dialog_image: UI.AnyPhotoImage | None = None
 		self.frame_delay: int | None = None
 		self.frame_waited = 0.0
 
@@ -376,7 +375,7 @@ class WidgetNode:
 			if bin_smk.filename in WidgetNode.SMK_FRAME_CACHE and smk.current_frame in WidgetNode.SMK_FRAME_CACHE[bin_smk.filename]:
 				image = WidgetNode.SMK_FRAME_CACHE[bin_smk.filename][smk.current_frame]
 			else:
-				image = cast(UI.ImageTk.PhotoImage, GRP.frame_to_photo(frame.palette, frame.image, None, size=False))
+				image = GRP.frame_to_photo(frame.palette, frame.image, None, size=False)
 				if not bin_smk.filename in WidgetNode.SMK_FRAME_CACHE:
 					WidgetNode.SMK_FRAME_CACHE[bin_smk.filename] = {}
 				WidgetNode.SMK_FRAME_CACHE[bin_smk.filename][smk.current_frame] = image
@@ -401,7 +400,7 @@ class WidgetNode:
 				try:
 					pcx = PCX.PCX()
 					pcx.load(self.delegate.get_mpqhandler().load_file('MPQ:' + self.widget.string))
-					self.photo = cast(UI.ImageTk.PhotoImage, GRP.frame_to_photo(pcx.palette, pcx, -1, size=False))
+					self.photo = GRP.frame_to_photo(pcx.palette, pcx, -1, size=False)
 				except Exception:
 					self.image_load_failed = self.widget.string
 					self.delegate.record_asset_load_failure(self.widget.string, self.get_usage_label())

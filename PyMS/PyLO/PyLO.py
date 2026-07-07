@@ -31,7 +31,7 @@ from ..Utilities.SponsorDialog import SponsorDialog
 import io
 from enum import Enum
 
-from typing import Sequence, cast, Callable, Any
+from typing import Sequence, Callable, Any
 
 LONG_VERSION = 'v' + Assets.version('PyLO')
 
@@ -60,9 +60,9 @@ class PyLO(UI.MainWindow, FindDelegate, UI.CodeTextDelegate):
 		self.file: str | None = None
 		self.findwindow: FindReplaceDialog | None = None
 		self.basegrp: CacheGRP | None = None
-		self.basegrp_cache: dict[int, UI.Image | None] = {}
+		self.basegrp_cache: dict[int, UI.AnyPhotoImage | None] = {}
 		self.overlaygrp: CacheGRP | None = None
-		self.overlaygrp_cache: dict[int, UI.Image | None] = {}
+		self.overlaygrp_cache: dict[int, UI.AnyPhotoImage | None] = {}
 		self.unitpal = Palette()
 		self.unitpal.load(Assets.palette_file_path('Units.pal'))
 		self.previewing_basegrp_frame: int | None = None
@@ -434,22 +434,22 @@ class PyLO(UI.MainWindow, FindDelegate, UI.CodeTextDelegate):
 		self.canvas.delete(UI.ALL)
 		self.clear_preview()
 
-	def base_grp_frame(self, frame_index: int | None) -> (UI.Image | None):
+	def base_grp_frame(self, frame_index: int | None) -> (UI.AnyPhotoImage | None):
 		if frame_index is None or self.basegrp is None:
 			return None
 		if not frame_index in self.basegrp_cache:
 			try:
-				self.basegrp_cache[frame_index] = cast(UI.Image, frame_to_photo(self.unitpal.palette, self.basegrp, frame_index, size=False))
+				self.basegrp_cache[frame_index] = frame_to_photo(self.unitpal.palette, self.basegrp, frame_index, size=False)
 			except Exception:
 				self.basegrp_cache[frame_index] = None
 		return self.basegrp_cache[frame_index]
 
-	def overlay_grp_frame(self, frame_index: int | None) -> (UI.Image | None):
+	def overlay_grp_frame(self, frame_index: int | None) -> (UI.AnyPhotoImage | None):
 		if frame_index is None or self.overlaygrp is None:
 			return None
 		if not frame_index in self.overlaygrp_cache:
 			try:
-				self.overlaygrp_cache[frame_index] = cast(UI.Image, frame_to_photo(self.unitpal.palette, self.overlaygrp, frame_index, size=False))
+				self.overlaygrp_cache[frame_index] = frame_to_photo(self.unitpal.palette, self.overlaygrp, frame_index, size=False)
 			except Exception:
 				self.overlaygrp_cache[frame_index] = None
 		return self.overlaygrp_cache[frame_index]

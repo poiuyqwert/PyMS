@@ -1,7 +1,7 @@
 
 from ..Widgets import Frame, Misc, Scrollbar, Text
 from ..Constants import ALL, END, EW, EXTENDED, HORIZONTAL, MULTIPLE, NONE, NS, NSEW, SINGLE, SUNKEN
-from ..Images import Image
+from ..Images import PhotoImage
 from ..Event import Event
 from ..Font import Font
 from ... import Assets
@@ -50,7 +50,7 @@ class TreeGroup(TreeNode):
 class TreeList(Frame):
 	selregex = re.compile('\\bsel\\b')
 
-	def __init__(self, parent: Misc, selectmode: SelectMode = SINGLE, groupsel: bool = True, *, closeicon: Image | None = None, openicon: Image | None = None, height: int = 1, width: int = 1):
+	def __init__(self, parent: Misc, selectmode: SelectMode = SINGLE, groupsel: bool = True, *, closeicon: PhotoImage | None = None, openicon: PhotoImage | None = None, height: int = 1, width: int = 1):
 		self.selectmode = selectmode
 		self.lastsel: int | None = None
 		self.groupsel = groupsel

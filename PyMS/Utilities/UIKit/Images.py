@@ -1,8 +1,6 @@
 
-from tkinter import Image, PhotoImage, BitmapImage
+from tkinter import PhotoImage
 
 __all__ = [
-	'BitmapImage',
-	'Image',
 	'PhotoImage',
 ]

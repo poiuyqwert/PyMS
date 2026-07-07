@@ -62,7 +62,7 @@ class PyGRP(UI.MainWindow):
 		self.frame_index: int | None = None
 		self.pal: str = ''
 		self.palettes: dict[str, Palette.Palette] = {}
-		self.frames: list[dict[str, UI.Image]] = []
+		self.frames: list[dict[str, UI.AnyPhotoImage]] = []
 		self.item: UI.Canvas.Item | None = None # type: ignore[name-defined]
 		self.grp: GRP.GRP | None = None
 		self.file: str | None = None
@@ -327,7 +327,7 @@ BMP's must be imported with the same style they were exported as.""")
 			if frame != self.frame_index or force or not self.item:
 				self.frame_index = frame
 				if not self.pal in self.frames[frame]:
-					image = GRP.image_to_tk(self.grp.images[frame], self.palettes[self.pal].palette)
+					image: UI.AnyPhotoImage = GRP.image_to_tk(self.grp.images[frame], self.palettes[self.pal].palette)
 					self.frames[frame][self.pal] = image
 				else:
 					image = self.frames[frame][self.pal]

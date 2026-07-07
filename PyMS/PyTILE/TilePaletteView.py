@@ -36,7 +36,7 @@ class TilePaletteView(UI.Frame):
 
 		tile_size = self.get_tile_size()
 		self.canvas = UI.Canvas(self, width=2 + tile_size[0] * 16, height=2 + tile_size[1] * 8, background='#000000', theme_tag='preview') # type: ignore[call-arg]
-		self.canvas_images: dict[int, UI.Image] = {}
+		self.canvas_images: dict[int, UI.AnyPhotoImage] = {}
 		self.canvas.pack(side=UI.LEFT, fill=UI.BOTH, expand=1)
 		scrollbar = UI.Scrollbar(self, command=self.canvas.yview)
 		scrollbar.pack(side=UI.LEFT, fill=UI.Y)

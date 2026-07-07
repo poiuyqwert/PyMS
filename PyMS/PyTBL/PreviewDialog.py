@@ -10,9 +10,8 @@ from ..Utilities import UIKit as UI
 
 import re
 
-from typing import cast
 
-Character = tuple[UI.Image, FNT.Size]
+Character = tuple[UI.AnyPhotoImage, FNT.Size]
 
 class PreviewDialog(PyMSDialog):
 	letter_space = 1
@@ -20,7 +19,7 @@ class PreviewDialog(PyMSDialog):
 
 	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
 		self.delegate = delegate
-		self.icons: dict[str, tuple[UI.Image, tuple[int, int, int, int]]] = {}
+		self.icons: dict[str, tuple[UI.AnyPhotoImage, tuple[int, int, int, int]]] = {}
 		self.characters: dict[str, dict[int, Character]] = {}
 		self.hotkey = UI.BooleanVar()
 		self.hotkey.set(self.delegate.config_.preview.hotkey.value)
@@ -28,9 +27,9 @@ class PreviewDialog(PyMSDialog):
 		self.endatnull.set(self.delegate.config_.preview.end_at_null.value)
 		PyMSDialog.__init__(self, parent, 'Text Previewer', resizable=(False,False))
 
-	def geticon(self, icon_name: str, frame_index: int) -> tuple[UI.Image, tuple[int, int, int, int]]:
+	def geticon(self, icon_name: str, frame_index: int) -> tuple[UI.AnyPhotoImage, tuple[int, int, int, int]]:
 		if not icon_name in self.icons:
-			i = cast(GRP.ImageWithBounds, GRP.frame_to_photo(self.delegate.unitpal.palette, self.delegate.icons, frame_index))
+			i = GRP.frame_to_photo(self.delegate.unitpal.palette, self.delegate.icons, frame_index)
 			self.icons[icon_name] = (i[0],(i[2]+1,i[4],0,0))
 		return self.icons[icon_name]
 
@@ -75,7 +74,7 @@ class PreviewDialog(PyMSDialog):
 					if not c in self.characters:
 						self.characters[c] = {}
 					if not color in self.characters[c]:
-						self.characters[c][color] = (cast(UI.Image, FNT.letter_to_photo(self.delegate.tfontgam, fnt.letters[a], color)), fnt.sizes[a])
+						self.characters[c][color] = (FNT.letter_to_photo(self.delegate.tfontgam, fnt.letters[a], color), fnt.sizes[a])
 					display[-1].append(self.characters[c][color])
 				elif a in FNT.COLOR_CODES_INGAME and not color in FNT.COLOR_OVERPOWER:
 					color = a

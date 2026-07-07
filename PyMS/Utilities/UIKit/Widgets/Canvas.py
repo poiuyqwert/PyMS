@@ -9,7 +9,7 @@ import tkinter as _Tk
 
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
-	from ..Types import AnyImage, AnyBitmapImage
+	from ..Types import AnyPhotoImage
 
 CoordinateAdjuster = Callable[[int, int], tuple[int, int]]
 
@@ -92,12 +92,7 @@ class Canvas(_Tk.Canvas, MiscExtensions):
 		x2,y2 = self.coordinate_adjust(x2,y2)
 		return Canvas.Item(self, _Tk.Canvas.create_arc(self, x1,y1, x2,y2, **kwargs))
 
-	def create_bitmap(self, x: int, y: int, bitmap: AnyBitmapImage | None = None, **kwargs: Any) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
-		x,y = self.coordinate_adjust(x,y)
-		kwargs['bitmap'] = bitmap
-		return Canvas.Item(self, _Tk.Canvas.create_bitmap(self, x,y, **kwargs))
-
-	def create_image(self, x: int, y: int, image: AnyImage | None = None, **kwargs: Any) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
+	def create_image(self, x: int, y: int, image: AnyPhotoImage | None = None, **kwargs: Any) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
 		x,y = self.coordinate_adjust(x,y)
 		kwargs['image'] = image
 		return Canvas.Item(self, _Tk.Canvas.create_image(self, x,y, **kwargs))

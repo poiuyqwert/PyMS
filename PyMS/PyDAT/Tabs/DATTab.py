@@ -27,8 +27,8 @@ if TYPE_CHECKING:
 ET = TypeVar('ET', bound=AbstractDATEntry)
 class DATTab(UI.NotebookTab, DATTabConveniences, Generic[ET]):
 	ARROWS_LOADED = False
-	ARROW_DOWN: UI.Image
-	ARROW_UP: UI.Image
+	ARROW_DOWN: UI.PhotoImage
+	ARROW_UP: UI.PhotoImage
 	DAT_ID: DATID
 
 	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:

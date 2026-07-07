@@ -17,7 +17,7 @@ from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.Callback import Callback
 
-from typing import cast, Any
+from typing import Any
 
 class TicksPerSecond:
 	fastest = 24
@@ -245,7 +245,7 @@ class DataContext:
 				palette = list(palette)
 				for i in range(remap_count):
 					palette[i] = palette[ticon[32+i]]
-		image = cast(ImageWithBounds, frame_to_photo(palette, self.cmdicons.grp, index))
+		image = frame_to_photo(palette, self.cmdicons.grp, index)
 		if not highlighted in self.cmdicons.images:
 			self.cmdicons.images[highlighted] = {}
 		self.cmdicons.images[highlighted][index] = image
@@ -286,7 +286,7 @@ class DataContext:
 					draw_info = (50,50,50, 255)
 			else:
 				rle_function = rle_normal
-			self.grp_cache[path][palette][draw_function] = cast(ImageWithBounds, frame_to_photo(self.palettes[palette], grp, frame, draw_function=rle_function, draw_info=draw_info))
+			self.grp_cache[path][palette][draw_function] = frame_to_photo(self.palettes[palette], grp, frame, draw_function=rle_function, draw_info=draw_info)
 		return self.grp_cache[path][palette][draw_function]
 
 	def get_image_frame(self, image_id: int, *, draw_function: int | None = None, remapping: int | None = None, draw_info: Any | None = None, palette: str | None = None, frame: int = 0) -> ImageWithBounds | None:

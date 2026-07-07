@@ -21,7 +21,7 @@ import re, io
 from enum import Enum, Flag
 from dataclasses import dataclass
 
-from typing import Callable, cast
+from typing import Callable
 
 class EntryType(Enum):
 	iscript = 0
@@ -48,7 +48,7 @@ for _cmd in CodeCommands.all_basic_commands:
 
 PALETTES: dict[str, RawPalette] = {}
 PALETTE_PATHS: dict[str, str] = {}
-GRP_CACHE: dict[str, dict[int, dict[str, UI.Image]]] = {}
+GRP_CACHE: dict[str, dict[int, dict[str, UI.AnyPhotoImage]]] = {}
 GRP_CACHE_MAX_GRPS = 32
 
 @dataclass
@@ -486,7 +486,7 @@ class PreviewerDialog(PyMSDialog):
 			self.prevfrom.set(0)
 			self.prevto.set(0)
 
-	def grp(self, image_id: int, pal: str, frame: int, *path_components: str) -> UI.Image | None:
+	def grp(self, image_id: int, pal: str, frame: int, *path_components: str) -> UI.AnyPhotoImage | None:
 		if not MPQ.supported() or not pal in PALETTES:
 			return None
 		path = Assets.mpq_file_name(*path_components)
@@ -509,7 +509,7 @@ class PreviewerDialog(PyMSDialog):
 					GRP_CACHE[path] = {}
 				if not frame in GRP_CACHE[path]:
 					GRP_CACHE[path][frame] = {}
-				GRP_CACHE[path][frame][pal] = cast(UI.Image, GRP.frame_to_photo(PALETTES[pal], grp, frame, size=False))
+				GRP_CACHE[path][frame][pal] = GRP.frame_to_photo(PALETTES[pal], grp, frame, size=False)
 		GRP_CACHE[path] = GRP_CACHE.pop(path)
 		return GRP_CACHE[path][frame][pal]
 
@@ -574,7 +574,7 @@ class PreviewerDialog(PyMSDialog):
 				pal = ['o','b','g'][remapping-1] + 'fire'
 		sprite = self.grp(image_id, pal, self.previewing.frame, 'unit', grp_file_path)
 		if sprite:
-			self.preview.create_image(130, 130, image=sprite[0])
+			self.preview.create_image(130, 130, image=sprite)
 
 	def destroy(self) -> None:
 		self.stopframe()

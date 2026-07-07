@@ -4,7 +4,7 @@ from .Config import PySPKConfig
 from ..FileFormats import SPK
 from ..FileFormats import Palette
 
-from ..Utilities.UIKit import IntVar, Image
+from ..Utilities.UIKit import IntVar, AnyPhotoImage
 
 from typing import Protocol
 
@@ -30,7 +30,7 @@ class MainDelegate(Protocol):
 	def update_selection(self) -> None:
 		...
 
-	def get_image(self, spkimage: SPK.SPKImage) -> (Image | None):
+	def get_image(self, spkimage: SPK.SPKImage) -> (AnyPhotoImage | None):
 		...
 
 	def action_states(self) -> None:

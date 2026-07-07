@@ -5,7 +5,7 @@ from ..FileFormats.DialogBIN import DialogBIN
 from ..FileFormats.FNT import FNT
 from ..FileFormats.PCX import PCX
 from ..Utilities.MPQHandler import MPQHandler
-from ..Utilities.UIKit import PILImage, ImageTk, Anchor, Canvas
+from ..Utilities.UIKit import PILImage, AnyPhotoImage, Anchor, Canvas
 
 from typing import Protocol
 
@@ -89,10 +89,10 @@ class NodeDelegate(Protocol):
 	def get_tfont(self) -> (PCX | None):
 		...
 
-	def node_render_image_create(self, *, x: int, y: int, image: ImageTk.PhotoImage, anchor: Anchor) -> Canvas.Item: # type: ignore[name-defined]
+	def node_render_image_create(self, *, x: int, y: int, image: AnyPhotoImage, anchor: Anchor) -> Canvas.Item: # type: ignore[name-defined]
 		...
 
-	def node_render_image_update(self, *, item: Canvas.Item, x: int, y: int, image: ImageTk.PhotoImage | None) -> None: # type: ignore[name-defined]
+	def node_render_image_update(self, *, item: Canvas.Item, x: int, y: int, image: AnyPhotoImage | None) -> None: # type: ignore[name-defined]
 		...
 
 	def node_render_rect_create(self, *, x1: int, y1: int, x2: int, y2: int, color: str) -> Canvas.Item: # type: ignore[name-defined]

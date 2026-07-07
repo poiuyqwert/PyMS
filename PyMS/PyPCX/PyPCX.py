@@ -21,7 +21,6 @@ from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities.SponsorDialog import SponsorDialog
 
-from typing import cast
 
 LONG_VERSION = 'v' + Assets.version('PyPCX')
 
@@ -40,7 +39,7 @@ class PyPCX(UI.MainWindow):
 
 		self.pcx: PCX | None = None
 		self.file: str | None = None
-		self.image: UI.Image | None = None
+		self.image: UI.AnyPhotoImage | None = None
 		self.edited = False
 
 		self.update_title()
@@ -110,7 +109,7 @@ class PyPCX(UI.MainWindow):
 			return
 		self.canvas.config(width=self.pcx.width,height=self.pcx.height)
 		self.canvas.pack(side=UI.TOP)
-		self.image = cast(UI.Image, frame_to_photo(self.pcx.palette, self.pcx, -1, size=False))
+		self.image = frame_to_photo(self.pcx.palette, self.pcx, -1, size=False)
 		self.canvas.create_image(0, 0, image=self.image, anchor=UI.NW)
 		self.action_states()
 

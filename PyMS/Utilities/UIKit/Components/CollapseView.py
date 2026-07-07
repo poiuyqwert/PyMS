@@ -2,15 +2,15 @@
 from __future__ import annotations
 
 from ..Widgets import Button as BaseButton, Frame, Misc
-from ..Images import Image
+from ..Images import PhotoImage
 from ... import Assets
 
 from typing import Any, Callable
 
 class CollapseView(Frame):
 	class Button(BaseButton):
-		ARROW_DOWN: Image | None = None
-		ARROW_UP: Image | None = None
+		ARROW_DOWN: PhotoImage | None = None
+		ARROW_UP: PhotoImage | None = None
 
 		def __init__(self, parent: Misc):
 			self.collapse_view: CollapseView | None = None
