@@ -309,13 +309,13 @@ BMP's must be imported with the same style they were exported as.""")
 		x1,y1,x2,y2 = 0,0,0,0
 		if self.grp and self.frameo.get() and self.listbox.curselection() and self.showpreview.get():
 			frame = int(self.listbox.curselection()[0])
-			x1,y1,x2,y2 = self.grp.images_bounds[frame]
+			bounds = self.grp.images_bounds[frame]
 			dx = 131 - self.grp.width//2
 			dy = 131 - self.grp.height//2
-			x1 += dx
-			x2 += dx + 1
-			y1 += dy
-			y2 += dy + 1
+			x1 = bounds.x_min + dx
+			x2 = bounds.x_max + dx + 1
+			y1 = bounds.y_min + dy
+			y2 = bounds.y_max + dy + 1
 		self.framebrdr.coords(x1,y1, x2,y2)
 
 	def preview(self, _event: UI.Event | None = None, force: bool = False) -> None:
@@ -327,7 +327,7 @@ BMP's must be imported with the same style they were exported as.""")
 			if frame != self.frame_index or force or not self.item:
 				self.frame_index = frame
 				if not self.pal in self.frames[frame]:
-					image: UI.AnyPhotoImage = GRP.image_to_tk(self.grp.images[frame], self.palettes[self.pal].palette)
+					image: UI.AnyPhotoImage = GRP.frame_to_photo(self.palettes[self.pal].palette, self.grp, frame)
 					self.frames[frame][self.pal] = image
 				else:
 					image = self.frames[frame][self.pal]

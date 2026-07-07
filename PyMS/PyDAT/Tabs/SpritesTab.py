@@ -138,10 +138,11 @@ class SpritesTab(DATTab):
 					image_id = 561 + i
 					frame = self.delegate.data_context.get_image_frame(image_id)
 					if frame:
+						photo, bounds = frame
 						y = 130+int(self.vertpos.get())
-						self.preview.create_image(130, y, image=frame[0])
+						self.preview.create_image(130, y, image=photo)
 						w = 3*int(self.boxes.get())
-						hp = [130-(w//2),y+6+(frame[4]-frame[3])//2]
+						hp = [130-(w//2),y+6+bounds.height//2]
 						self.preview.create_rectangle(hp[0], hp[1], hp[0]+w, hp[1]+4, fill='#000000')
 						hp[0] += 1
 						hp[1] += 1

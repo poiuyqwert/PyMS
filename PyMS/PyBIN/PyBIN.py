@@ -535,7 +535,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		delete = True
 		if self.bin and self.show_background.get() and self.background:
 			if not self.background_image:
-				self.background_image = GRP.frame_to_photo(self.background.palette, self.background, -1, size=False)
+				self.background_image = GRP.frame_to_photo(self.background.palette, self.background)
 			if self.background_image:
 				delete = False
 				if self.item_background:

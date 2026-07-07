@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from .DataID import DataID
 
-from ..FileFormats.GRP import CacheGRP, ImageWithBounds
+from ..FileFormats.GRP import CacheGRP
 from ..FileFormats.PCX import PCX
 
 from ..Utilities.Callback import Callback
@@ -12,7 +12,7 @@ from ..Utilities import IO
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-	from .DataContext import DataContext
+	from .DataContext import DataContext, ImageWithBounds
 
 class IconData:
 	def __init__(self, data_context: DataContext) -> None:

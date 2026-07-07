@@ -44,7 +44,7 @@ class Test_Frames_To_GRP(unittest.TestCase):
 		grp = frames_to_grp(frames, _palette(), False, transindex=5)
 
 		self.assertEqual(grp.transindex, 5)
-		self.assertEqual(grp.images_bounds[0], (0, 0, 0, 0))
+		self.assertEqual(grp.images_bounds[0], GRP.Bounds(x_min=0, y_min=0, x_max=0, y_max=0))
 
 	def test_mismatched_frame_dimensions_raise(self) -> None:
 		frames = [_frame(4, 2, 1), _frame(4, 3, 2)]

@@ -509,7 +509,7 @@ class PreviewerDialog(PyMSDialog):
 					GRP_CACHE[path] = {}
 				if not frame in GRP_CACHE[path]:
 					GRP_CACHE[path][frame] = {}
-				GRP_CACHE[path][frame][pal] = GRP.frame_to_photo(PALETTES[pal], grp, frame, size=False)
+				GRP_CACHE[path][frame][pal] = GRP.frame_to_photo(PALETTES[pal], grp, frame)
 		GRP_CACHE[path] = GRP_CACHE.pop(path)
 		return GRP_CACHE[path][frame][pal]
 

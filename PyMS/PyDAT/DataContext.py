@@ -7,17 +7,20 @@ from .DataID import DATID, DataID, AnyID
 
 from ..FileFormats.DAT import DATImage
 from ..FileFormats.Palette import Palette
-from ..FileFormats.GRP import frame_to_photo, CacheGRP, RLEFunc, rle_normal, rle_outline, rle_shadow, Outline, ImageWithBounds
+from ..FileFormats.GRP import frame_to_photo, frame_pixels, image_bounds, CacheGRP, RLEFunc, rle_normal, rle_outline, rle_shadow, Outline
 from ..FileFormats.MPQ.MPQ import MPQ
 from ..FileFormats.IScriptBIN.IScriptBIN import IScriptBIN
-from ..FileFormats.Images import RawPalette
+from ..FileFormats.Images import RawPalette, Bounds
 
 from ..Utilities import Assets
+from ..Utilities import UIKit as UI
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.Callback import Callback
 
 from typing import Any
+
+ImageWithBounds = tuple[UI.AnyPhotoImage, Bounds]
 
 class TicksPerSecond:
 	fastest = 24
@@ -245,7 +248,8 @@ class DataContext:
 				palette = list(palette)
 				for i in range(remap_count):
 					palette[i] = palette[ticon[32+i]]
-		image = frame_to_photo(palette, self.cmdicons.grp, index)
+		pixels, transindex = frame_pixels(self.cmdicons.grp, index)
+		image = (frame_to_photo(palette, pixels, transindex=transindex), image_bounds(pixels, transindex))
 		if not highlighted in self.cmdicons.images:
 			self.cmdicons.images[highlighted] = {}
 		self.cmdicons.images[highlighted][index] = image
@@ -286,7 +290,9 @@ class DataContext:
 					draw_info = (50,50,50, 255)
 			else:
 				rle_function = rle_normal
-			self.grp_cache[path][palette][draw_function] = frame_to_photo(self.palettes[palette], grp, frame, draw_function=rle_function, draw_info=draw_info)
+			pixels, transindex = frame_pixels(grp, frame)
+			photo = frame_to_photo(self.palettes[palette], pixels, transindex=transindex, draw_function=rle_function, draw_info=draw_info)
+			self.grp_cache[path][palette][draw_function] = (photo, image_bounds(pixels, transindex))
 		return self.grp_cache[path][palette][draw_function]
 
 	def get_image_frame(self, image_id: int, *, draw_function: int | None = None, remapping: int | None = None, draw_info: Any | None = None, palette: str | None = None, frame: int = 0) -> ImageWithBounds | None:

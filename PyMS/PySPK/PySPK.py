@@ -402,7 +402,7 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 	def get_image(self, spkimage: SPK.SPKImage) -> (UI.AnyPhotoImage | None):
 		if not spkimage in self.images:
-			image = GRP.frame_to_photo(self.platform_wpe.palette, spkimage.pixels, None, size=False)
+			image = GRP.frame_to_photo(self.platform_wpe.palette, spkimage.pixels)
 			self.images[spkimage] = image
 		return self.images.get(spkimage)
 

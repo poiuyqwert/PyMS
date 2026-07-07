@@ -29,8 +29,10 @@ class PreviewDialog(PyMSDialog):
 
 	def geticon(self, icon_name: str, frame_index: int) -> tuple[UI.AnyPhotoImage, tuple[int, int, int, int]]:
 		if not icon_name in self.icons:
-			i = GRP.frame_to_photo(self.delegate.unitpal.palette, self.delegate.icons, frame_index)
-			self.icons[icon_name] = (i[0],(i[2]+1,i[4],0,0))
+			pixels, transindex = GRP.frame_pixels(self.delegate.icons, frame_index)
+			photo = GRP.frame_to_photo(self.delegate.unitpal.palette, pixels, transindex=transindex)
+			bounds = GRP.image_bounds(pixels, transindex)
+			self.icons[icon_name] = (photo,(bounds.x_max+1,bounds.y_max,0,0))
 		return self.icons[icon_name]
 
 	def preview(self) -> None:

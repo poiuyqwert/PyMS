@@ -439,7 +439,7 @@ class PyLO(UI.MainWindow, FindDelegate, UI.CodeTextDelegate):
 			return None
 		if not frame_index in self.basegrp_cache:
 			try:
-				self.basegrp_cache[frame_index] = frame_to_photo(self.unitpal.palette, self.basegrp, frame_index, size=False)
+				self.basegrp_cache[frame_index] = frame_to_photo(self.unitpal.palette, self.basegrp, frame_index)
 			except Exception:
 				self.basegrp_cache[frame_index] = None
 		return self.basegrp_cache[frame_index]
@@ -449,7 +449,7 @@ class PyLO(UI.MainWindow, FindDelegate, UI.CodeTextDelegate):
 			return None
 		if not frame_index in self.overlaygrp_cache:
 			try:
-				self.overlaygrp_cache[frame_index] = frame_to_photo(self.unitpal.palette, self.overlaygrp, frame_index, size=False)
+				self.overlaygrp_cache[frame_index] = frame_to_photo(self.unitpal.palette, self.overlaygrp, frame_index)
 			except Exception:
 				self.overlaygrp_cache[frame_index] = None
 		return self.overlaygrp_cache[frame_index]

@@ -375,7 +375,7 @@ class WidgetNode:
 			if bin_smk.filename in WidgetNode.SMK_FRAME_CACHE and smk.current_frame in WidgetNode.SMK_FRAME_CACHE[bin_smk.filename]:
 				image = WidgetNode.SMK_FRAME_CACHE[bin_smk.filename][smk.current_frame]
 			else:
-				image = GRP.frame_to_photo(frame.palette, frame.image, None, size=False)
+				image = GRP.frame_to_photo(frame.palette, frame.image)
 				if not bin_smk.filename in WidgetNode.SMK_FRAME_CACHE:
 					WidgetNode.SMK_FRAME_CACHE[bin_smk.filename] = {}
 				WidgetNode.SMK_FRAME_CACHE[bin_smk.filename][smk.current_frame] = image
@@ -400,7 +400,7 @@ class WidgetNode:
 				try:
 					pcx = PCX.PCX()
 					pcx.load(self.delegate.get_mpqhandler().load_file('MPQ:' + self.widget.string))
-					self.photo = GRP.frame_to_photo(pcx.palette, pcx, -1, size=False)
+					self.photo = GRP.frame_to_photo(pcx.palette, pcx)
 				except Exception:
 					self.image_load_failed = self.widget.string
 					self.delegate.record_asset_load_failure(self.widget.string, self.get_usage_label())

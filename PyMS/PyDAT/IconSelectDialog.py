@@ -170,9 +170,9 @@ class IconSelectDialog(PyMSDialog):
 				image_with_bounds = self.data_context.get_cmdicon(frame_index, highlighted=(self._display_index_to_selected_index(index) == self.selected_index))
 				if not image_with_bounds:
 					continue
-				icon, dx, dx2, dy, dy2 = image_with_bounds
-				x += icon_size[0] // 2 - dx - (dx2 - dx) // 2
-				y += icon_size[1] // 2 - dy - (dy2 - dy) // 2
+				icon, bounds = image_with_bounds
+				x += icon_size[0] // 2 - bounds.x_min - bounds.width // 2
+				y += icon_size[1] // 2 - bounds.y_min - bounds.height // 2
 				if was_visible:
 					self.scrolled_canvas.canvas.coords(tag, x,y)
 				else:
@@ -191,14 +191,14 @@ class IconSelectDialog(PyMSDialog):
 				frame_index = self._display_index_to_frame_index(old_display_index)
 				image_with_bounds = self.data_context.get_cmdicon(frame_index, highlighted=False)
 				if image_with_bounds:
-					icon, _, _, _, _ = image_with_bounds
+					icon, _ = image_with_bounds
 					self.scrolled_canvas.canvas.itemconfigure(self._display_index_to_tag(old_display_index), image=icon)
 		new_display_index = self._selected_index_to_display_index(new_selection)
 		if start_index <= new_display_index <= end_index:
 			frame_index = self._display_index_to_frame_index(new_display_index)
 			image_with_bounds = self.data_context.get_cmdicon(frame_index, highlighted=True)
 			if image_with_bounds:
-				icon, _, _, _, _ = image_with_bounds
+				icon, _ = image_with_bounds
 				self.scrolled_canvas.canvas.itemconfigure(self._display_index_to_tag(new_display_index), image=icon)
 
 	def _canvas_resized(self) -> None:

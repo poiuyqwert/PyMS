@@ -1,5 +1,6 @@
 
 from ...FileFormats.GRP import image_bounds
+from ...FileFormats.Images import Bounds
 
 import unittest
 
@@ -12,7 +13,7 @@ class Test_Image_Bounds(unittest.TestCase):
 				[0,0,0,0,0],
 				[0,0,0,0,0],
 			]
-		expected = (0,0,0,0)
+		expected = Bounds(x_min=0, y_min=0, x_max=0, y_max=0)
 
 		result = image_bounds(image, 0)
 
@@ -26,7 +27,7 @@ class Test_Image_Bounds(unittest.TestCase):
 				[0,1,0,0,0],
 				[0,0,0,0,0],
 			]
-		expected = (1,1,4,4)
+		expected = Bounds(x_min=1, y_min=1, x_max=4, y_max=4)
 
 		result = image_bounds(image, 0)
 
@@ -41,7 +42,7 @@ class Test_Image_Bounds(unittest.TestCase):
 				[1,1,1,1,1],
 			]
 		transparent_index = 1
-		expected = (1,1,4,4)
+		expected = Bounds(x_min=1, y_min=1, x_max=4, y_max=4)
 
 		result = image_bounds(image, transparent_index)
 
@@ -55,7 +56,7 @@ class Test_Image_Bounds(unittest.TestCase):
 				[0,0,0,1,0],
 				[0,0,0,0,0],
 			]
-		expected = (1,1,4,4)
+		expected = Bounds(x_min=1, y_min=1, x_max=4, y_max=4)
 
 		result = image_bounds(image, 0)
 
@@ -69,7 +70,7 @@ class Test_Image_Bounds(unittest.TestCase):
 				[0,1,0,1,0],
 				[0,0,0,0,0],
 			]
-		expected = (1,1,4,4)
+		expected = Bounds(x_min=1, y_min=1, x_max=4, y_max=4)
 
 		result = image_bounds(image, 0)
 
@@ -83,7 +84,7 @@ class Test_Image_Bounds(unittest.TestCase):
 				[0,0,1,0,0],
 				[0,0,0,0,0],
 			]
-		expected = (1,1,4,4)
+		expected = Bounds(x_min=1, y_min=1, x_max=4, y_max=4)
 
 		result = image_bounds(image, 0)
 
@@ -97,7 +98,7 @@ class Test_Image_Bounds(unittest.TestCase):
 				[0,0,1,0,0],
 				[0,0,0,0,0],
 			]
-		expected = (2,1,3,4)
+		expected = Bounds(x_min=2, y_min=1, x_max=3, y_max=4)
 
 		result = image_bounds(image, 0)
 
@@ -111,7 +112,7 @@ class Test_Image_Bounds(unittest.TestCase):
 				[0,0,0,0,0],
 				[0,0,0,0,0],
 			]
-		expected = (1,2,4,3)
+		expected = Bounds(x_min=1, y_min=2, x_max=4, y_max=3)
 
 		result = image_bounds(image, 0)
 
@@ -125,7 +126,7 @@ class Test_Image_Bounds(unittest.TestCase):
 				[0,0,0,0,0],
 				[0,0,0,0,0],
 			]
-		expected = (2,2,3,3)
+		expected = Bounds(x_min=2, y_min=2, x_max=3, y_max=3)
 
 		result = image_bounds(image, 0)
 
@@ -139,7 +140,7 @@ class Test_Image_Bounds(unittest.TestCase):
 				[1,0,1,0,1],
 				[0,1,0,1,0],
 			]
-		expected = (0,0,5,5)
+		expected = Bounds(x_min=0, y_min=0, x_max=5, y_max=5)
 
 		result = image_bounds(image, 0)
 
@@ -153,7 +154,7 @@ class Test_Image_Bounds(unittest.TestCase):
 				[0,1,0,1,0],
 				[1,0,1,0,1],
 			]
-		expected = (0,0,5,5)
+		expected = Bounds(x_min=0, y_min=0, x_max=5, y_max=5)
 
 		result = image_bounds(image, 0)
 

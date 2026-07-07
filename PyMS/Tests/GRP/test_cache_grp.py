@@ -35,7 +35,7 @@ def _build_frame_with_partial_failure() -> GRP.CacheGRP:
 	grp.frames = 1
 	grp.width = width
 	grp.height = height
-	grp.imagebuffer = [((xoffset, yoffset, linewidth, lines), line_offsets)]
+	grp.imagebuffer = [(GRP.Bounds(x_min=xoffset, y_min=yoffset, x_max=xoffset + linewidth, y_max=yoffset + lines), line_offsets)]
 	grp.databuffer = databuffer
 	grp.uncompressed = None
 	return grp
