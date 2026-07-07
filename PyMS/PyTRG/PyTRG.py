@@ -370,7 +370,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 	def statusupdate(self, _event: UI.Event | None = None) -> None:
 		line,column = self.text.index(UI.INSERT).split('.')
 		selected = 0
-		item = self.text.tag_ranges('Selection')
+		item = self.text.tag_ranges('sel')
 		if item:
 			selected = len(self.text.get(*item))
 		self.codestatus.set(f'Line: {line}  Column: {column}  Selected: {selected}')
@@ -568,7 +568,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 		self.destroy()
 
 	def autocomplete(self) -> bool:
-		i = self.text.tag_ranges('Selection')
+		i = self.text.tag_ranges('sel')
 		if i and '\n' in self.text.get(*i):
 			return False
 		def docomplete() -> None:
@@ -579,8 +579,8 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 			complete_end = f'{self.complete.initial_start}+{len(complete_text)}c'
 			self.text.delete(self.complete.initial_start, current_end)
 			self.text.insert(self.complete.initial_start, complete_text)
-			self.text.tag_remove('Selection', '1.0', UI.END)
-			self.text.tag_add('Selection', self.complete.initial_end, complete_end)
+			self.text.tag_remove('sel', '1.0', UI.END)
+			self.text.tag_add('sel', self.complete.initial_end, complete_end)
 		start = self.text.index(f'{UI.INSERT} -1c wordstart')
 		end = self.text.index(f'{UI.INSERT} -1c wordend')
 		text = self.text.get(start, end)
