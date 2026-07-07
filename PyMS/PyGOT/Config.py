@@ -1,6 +1,6 @@
 
 from ..Utilities import Config
-from ..Utilities.UIKit import Size, FileType
+from ..Utilities import UIKit as UI
 
 def _migrate_1_to_2(data: dict) -> None:
 	Config.migrate_fields(data, (
@@ -17,7 +17,7 @@ class PyGOTConfig(Config.Config):
 	class Windows(Config.Group):
 		class Settings(Config.Group):
 			def __init__(self) -> None:
-				self.main = Config.WindowGeometry(default_size=Size(550,380))
+				self.main = Config.WindowGeometry(default_size=UI.Size(550,380))
 				super().__init__()
 
 		def __init__(self) -> None:
@@ -28,9 +28,9 @@ class PyGOTConfig(Config.Config):
 
 	class LastPath(Config.Group):
 		def __init__(self) -> None:
-			self.got = Config.SelectFile(name='GOT', filetypes=[FileType.got()])
-			self.txt = Config.SelectFile(name='TXT', filetypes=[FileType.txt()], op_type=Config.FileOpType.import_export)
-			self.trg = Config.SelectFile(name='TRG', filetypes=[FileType.trg()])
+			self.got = Config.SelectFile(name='GOT', filetypes=[UI.FileType.got()])
+			self.txt = Config.SelectFile(name='TXT', filetypes=[UI.FileType.txt()], op_type=Config.FileOpType.import_export)
+			self.trg = Config.SelectFile(name='TRG', filetypes=[UI.FileType.trg()])
 			super().__init__()
 
 	def __init__(self) -> None:

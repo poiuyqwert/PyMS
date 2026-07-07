@@ -12,18 +12,18 @@ if TYPE_CHECKING:
 
 	from ..Utilities import IO
 	from ..Utilities.MPQHandler import MPQHandler
-	from ..Utilities.UIKit import ScrolledListbox, Toplevel, Misc, AnyWindow
+	from ..Utilities import UIKit as UI
 
 class MainDelegate(Protocol):
 	unitsdat: DAT.UnitsDAT # TODO: units.dat?
 
 	mpqhandler: MPQHandler
 
-	iscriptlist: ScrolledListbox
-	imageslist: ScrolledListbox
-	spriteslist: ScrolledListbox
-	flingylist: ScrolledListbox
-	unitlist: ScrolledListbox
+	iscriptlist: UI.ScrolledListbox
+	imageslist: UI.ScrolledListbox
+	spriteslist: UI.ScrolledListbox
+	flingylist: UI.ScrolledListbox
+	unitlist: UI.ScrolledListbox
 
 	def get_iscript_bin(self) -> IScriptBIN.IScriptBIN:
 		...
@@ -37,7 +37,7 @@ class MainDelegate(Protocol):
 	def get_parse_context(self, any_input: IO.AnyInputText) -> ICEParseContext:
 		...
 
-	def save_code(self, code: str, parent: AnyWindow) -> bool:
+	def save_code(self, code: str, parent: UI.AnyWindow) -> bool:
 		...
 
 class CodeGeneratorDelegate(Protocol):
@@ -45,7 +45,7 @@ class CodeGeneratorDelegate(Protocol):
 		pass
 
 class ManagePresetsDelegate(Protocol):
-	def load_preset(self, preset: GeneratorPreset, window: Toplevel | None) -> bool:
+	def load_preset(self, preset: GeneratorPreset, window: UI.Toplevel | None) -> bool:
 		...
 
 class VariableEditorDelegate(Protocol):
@@ -58,5 +58,5 @@ class VariableEditorDelegate(Protocol):
 class ImportListDelegate(Protocol):
 	imports: list[str]
 
-	def iimport(self, files: str | list[str] | None = None, parent: Misc | None = None) -> None:
+	def iimport(self, files: str | list[str] | None = None, parent: UI.Misc | None = None) -> None:
 		...

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from ..Config import PyICEConfig
 
-from ...Utilities.UIKit import Frame, Misc
+from ...Utilities import UIKit as UI
 from ...Utilities import JSON
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import Config
@@ -34,15 +34,15 @@ class CodeGeneratorType(JSON.Codable):
 	def description(self) -> str:
 		raise NotImplementedError(self.__class__.__name__ + '.description()')
 
-	def build_editor(self, parent: Misc, config: PyICEConfig) -> CodeGeneratorEditor:
+	def build_editor(self, parent: UI.Misc, config: PyICEConfig) -> CodeGeneratorEditor:
 		raise NotImplementedError(self.__class__.__name__ + '.editor()')
 
 T = TypeVar('T', bound=CodeGeneratorType)
-class CodeGeneratorEditor(Frame, Generic[T]):
-	def __init__(self, parent: Misc, generator: T, window_geometry_config: Config.WindowGeometry):
+class CodeGeneratorEditor(UI.Frame, Generic[T]):
+	def __init__(self, parent: UI.Misc, generator: T, window_geometry_config: Config.WindowGeometry):
 		self.generator = generator
 		self.window_geometry_config = window_geometry_config
-		Frame.__init__(self, parent)
+		UI.Frame.__init__(self, parent)
 
 	def save(self) -> None:
 		raise NotImplementedError(self.__class__.__name__ + '.save()')

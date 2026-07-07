@@ -3,7 +3,7 @@ from .Resolution import Resolution
 
 from ....FileFormats.AIBIN.AIBIN import AIBIN, LoadIssue, AIScript
 
-from ....Utilities.UIKit import Misc, Widget
+from ....Utilities import UIKit as UI
 from ....Utilities.Callback import Callback
 
 class DeleteResolution(Resolution):
@@ -16,7 +16,7 @@ class DeleteResolution(Resolution):
 			return 'Delete script from bwscript.bin'
 		return 'Replace script in aiscript.bin with one in bwscript.bin'
 
-	def ui(self, parent: Misc) -> Widget | None:
+	def ui(self, parent: UI.Misc) -> UI.Widget | None:
 		return None
 
 	def can_resolve(self, ai: AIBIN, issue: LoadIssue) -> str | None:

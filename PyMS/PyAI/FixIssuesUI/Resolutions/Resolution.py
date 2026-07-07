@@ -1,7 +1,7 @@
 
 from ....FileFormats.AIBIN.AIBIN import AIBIN, LoadIssue
 
-from ....Utilities.UIKit import Misc, Widget
+from ....Utilities import UIKit as UI
 from ....Utilities.Callback import Callback
 
 from typing import Protocol
@@ -12,7 +12,7 @@ class Resolution(Protocol):
 	def name(self) -> str:
 		...
 
-	def ui(self, parent: Misc) -> Widget | None:
+	def ui(self, parent: UI.Misc) -> UI.Widget | None:
 		...
 
 	# Return a `str` for reason why can't resolve, or `None` for can resolve

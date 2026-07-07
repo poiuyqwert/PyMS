@@ -1,8 +1,6 @@
 
 from __future__ import annotations
 
-from PyMS.Utilities import IO
-
 from .Parameters import ActionParameter, LongParameter, ShortParamater, ByteParameter, MemoryParameter, ModifierParameter, NumberParameter, MaskParameter
 from .Action import Action
 from .Constants import Matches, ActionType, ActionFlag, PlayerGroup, Mask

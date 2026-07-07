@@ -1,6 +1,6 @@
 
 from ..Utilities import Config
-from ..Utilities.UIKit import Size, FileType
+from ..Utilities import UIKit as UI
 
 def _migrate_1_to_2(data: dict) -> None:
 	Config.migrate_fields(data, (
@@ -18,7 +18,7 @@ class PyBINConfig(Config.Config):
 	class Windows(Config.Group):
 		class Settings(Config.Group):
 			def __init__(self) -> None:
-				self.main = Config.WindowGeometry(default_size=Size(550,430))
+				self.main = Config.WindowGeometry(default_size=UI.Size(550,430))
 				self.mpq_select = Config.WindowGeometry()
 				super().__init__()
 
@@ -43,23 +43,23 @@ class PyBINConfig(Config.Config):
 
 	class LastPath(Config.Group):
 		def __init__(self) -> None:
-			self.bin = Config.SelectFile(name='Dialog BIN', filetypes=[FileType.bin_dialog()])
-			self.txt = Config.SelectFile(name='TXT', filetypes=[FileType.txt()], op_type=Config.FileOpType.import_export)
+			self.bin = Config.SelectFile(name='Dialog BIN', filetypes=[UI.FileType.bin_dialog()])
+			self.txt = Config.SelectFile(name='TXT', filetypes=[UI.FileType.txt()], op_type=Config.FileOpType.import_export)
 			super().__init__()
 
 	class Settings(Config.Group):
 		class Files(Config.Group):
 			def __init__(self) -> None:
-				self.tfontgam = Config.File(default='MPQ:game\\tfontgam.pcx', name='tfontgam.pcx', filetypes=[FileType.pcx()])
-				self.font10 = Config.File(default='MPQ:font\\font10.fnt', name='font10.fnt', filetypes=[FileType.fnt()])
-				self.font14 = Config.File(default='MPQ:font\\font14.fnt', name='font14.fnt', filetypes=[FileType.fnt()])
-				self.font16 = Config.File(default='MPQ:font\\font16.fnt', name='font16.fnt', filetypes=[FileType.fnt()])
-				self.font16x = Config.File(default='MPQ:font\\font16x.fnt', name='font16x.fnt', filetypes=[FileType.fnt()])
+				self.tfontgam = Config.File(default='MPQ:game\\tfontgam.pcx', name='tfontgam.pcx', filetypes=[UI.FileType.pcx()])
+				self.font10 = Config.File(default='MPQ:font\\font10.fnt', name='font10.fnt', filetypes=[UI.FileType.fnt()])
+				self.font14 = Config.File(default='MPQ:font\\font14.fnt', name='font14.fnt', filetypes=[UI.FileType.fnt()])
+				self.font16 = Config.File(default='MPQ:font\\font16.fnt', name='font16.fnt', filetypes=[UI.FileType.fnt()])
+				self.font16x = Config.File(default='MPQ:font\\font16x.fnt', name='font16x.fnt', filetypes=[UI.FileType.fnt()])
 				super().__init__()
 
 		class LastPath(Config.Group):
 			def __init__(self) -> None:
-				self.mpqs = Config.SelectFile(name='MPQ', filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
+				self.mpqs = Config.SelectFile(name='MPQ', filetypes=[UI.FileType.mpq_all(),UI.FileType.mpq(),UI.FileType.exe_mpq(),UI.FileType.scm(),UI.FileType.scx()])
 				super().__init__()
 
 		def __init__(self) -> None:

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from . import Assets
 from .InternalErrorDialog import InternalErrorDialog
-from .UIKit import MainWindow, Toplevel, AnyWindow
+from . import UIKit as UI
 
 import sys, os
 
@@ -31,7 +31,7 @@ class Tracer:
 		def flush(self) -> None:
 			pass
 
-	def __init__(self, program_name: str, main_window: MainWindow) -> None:
+	def __init__(self, program_name: str, main_window: UI.MainWindow) -> None:
 		self.stdout = Tracer.STDStream(self, sys.stdout)
 		self.stderr = Tracer.STDStream(self, sys.stderr)
 		self.program_name = program_name
@@ -46,10 +46,10 @@ class Tracer:
 		except Exception:
 			pass
 
-	def _find_presenter(self) -> AnyWindow:
-		presenter: AnyWindow = self.main_window
+	def _find_presenter(self) -> UI.AnyWindow:
+		presenter: UI.AnyWindow = self.main_window
 		children = presenter.winfo_children()
-		while len(children) and isinstance(children[-1], Toplevel):
+		while len(children) and isinstance(children[-1], UI.Toplevel):
 			presenter = children[-1]
 			children = presenter.winfo_children()
 		return presenter
@@ -98,7 +98,7 @@ class Tracer:
 		self.write(''.join(traceback.format_exception(*sys.exc_info())))
 
 _TRACER: Tracer | None = None
-def setup_trace(program_name: str, main_window: MainWindow) -> None:
+def setup_trace(program_name: str, main_window: UI.MainWindow) -> None:
 	global _TRACER # pylint: disable=global-statement
 	if _TRACER is not None:
 		return

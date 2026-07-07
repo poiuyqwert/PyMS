@@ -1,6 +1,6 @@
 
 from ..Utilities import Config
-from ..Utilities.UIKit import Size, FileType
+from ..Utilities import UIKit as UI
 
 class PyJSONConfig(Config.Config):
 	_name = 'PyJSON'
@@ -9,18 +9,18 @@ class PyJSONConfig(Config.Config):
 	class Windows(Config.Group):
 		class Settings(Config.Group):
 			def __init__(self) -> None:
-				self.main = Config.WindowGeometry(default_size=Size(550,380))
+				self.main = Config.WindowGeometry(default_size=UI.Size(550,380))
 				super().__init__()
 
 		def __init__(self) -> None:
-			self.main = Config.WindowGeometry(default_size=Size(740, 400))
+			self.main = Config.WindowGeometry(default_size=UI.Size(740, 400))
 			self.help = Config.WindowGeometry()
 			self.settings = PyJSONConfig.Windows.Settings()
 			super().__init__()
 
 	class LastPath(Config.Group):
 		def __init__(self) -> None:
-			self.json = Config.SelectFile(name='JSON', filetypes=[FileType.json()])
+			self.json = Config.SelectFile(name='JSON', filetypes=[UI.FileType.json()])
 			super().__init__()
 
 	class Panes(Config.Group):

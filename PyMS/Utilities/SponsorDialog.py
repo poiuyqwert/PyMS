@@ -1,13 +1,12 @@
 
-from PyMS.Utilities.UIKit import Misc
 from . import UIKit as UI
 from .PyMSDialog import PyMSDialog
 
 class SponsorDialog(PyMSDialog):
-	def __init__(self, parent: Misc) -> None:
+	def __init__(self, parent: UI.Misc) -> None:
 		super().__init__(parent, "Donate", center=True, grabwait=True, escape=True, resizable=(False, False))
 
-	def widgetize(self) -> Misc | None:
+	def widgetize(self) -> UI.Misc | None:
 		UI.Label(self, wraplength=500, justify=UI.LEFT, text="""Hey, this is poiuy_qwert, the creator and maintainer of PyMS (and BWAILauncher). I am a StarCraft Broodwar Modding and Mapping enthusiast. At this point I don't do much modding or mapping myself, but I do build and maintain tools to help other people realize their own mods/maps.
 
 I have been building/maintaining PyMS since 2007, and continue to add tools/features, fix bugs and improve the tools, as well as support users in using the tools. I hope to continue working on these tools, and continuing to make them the best tools available.

@@ -1,13 +1,13 @@
 
 from .Config import PyDATConfig
-from .DATData import DATData, UnitsDATData, WeaponsDATData, FlingyDATData, SpritesDATData, ImagesDATData, UpgradesDATData, TechDATData, SoundsDATData, PortraitsDATData, CampaignDATData, OrdersDATData
+from . import DATData
 from .TBLData import TBLData
 from .IconData import IconData
 from .DataID import DATID, DataID, AnyID
 
 from ..FileFormats.DAT import DATImage
 from ..FileFormats.Palette import Palette
-from ..FileFormats.GRP import frame_to_photo, frame_pixels, image_bounds, CacheGRP, RLEFunc, rle_normal, rle_outline, rle_shadow, Outline
+from ..FileFormats import GRP
 from ..FileFormats.MPQ.MPQ import MPQ
 from ..FileFormats.IScriptBIN.IScriptBIN import IScriptBIN
 from ..FileFormats.Images import RawPalette, Bounds
@@ -56,27 +56,27 @@ class DataContext:
 		self.cmdicons = IconData(self)
 		self.cmdicons.update_cb += self.update_cb
 
-		self.units = UnitsDATData(self)
+		self.units = DATData.UnitsDATData(self)
 		self.units.update_cb += self.update_cb
-		self.weapons = WeaponsDATData(self)
+		self.weapons = DATData.WeaponsDATData(self)
 		self.weapons.update_cb += self.update_cb
-		self.flingy = FlingyDATData(self)
+		self.flingy = DATData.FlingyDATData(self)
 		self.flingy.update_cb += self.update_cb
-		self.sprites = SpritesDATData(self)
+		self.sprites = DATData.SpritesDATData(self)
 		self.sprites.update_cb += self.update_cb
-		self.images = ImagesDATData(self)
+		self.images = DATData.ImagesDATData(self)
 		self.images.update_cb += self.update_cb
-		self.upgrades = UpgradesDATData(self)
+		self.upgrades = DATData.UpgradesDATData(self)
 		self.upgrades.update_cb += self.update_cb
-		self.technology = TechDATData(self)
+		self.technology = DATData.TechDATData(self)
 		self.technology.update_cb += self.update_cb
-		self.sounds = SoundsDATData(self)
+		self.sounds = DATData.SoundsDATData(self)
 		self.sounds.update_cb += self.update_cb
-		self.portraits = PortraitsDATData(self)
+		self.portraits = DATData.PortraitsDATData(self)
 		self.portraits.update_cb += self.update_cb
-		self.campaign = CampaignDATData(self)
+		self.campaign = DATData.CampaignDATData(self)
 		self.campaign.update_cb += self.update_cb
-		self.orders = OrdersDATData(self)
+		self.orders = DATData.OrdersDATData(self)
 		self.orders.update_cb += self.update_cb
 
 		self.palettes: dict[str, RawPalette] = {}
@@ -142,7 +142,7 @@ class DataContext:
 	# @overload
 	# def dat_data(self, datid: Literal[DATID.mapdata]) -> CampaignDATData: ...
 
-	def dat_data(self, datid: DATID) -> DATData:
+	def dat_data(self, datid: DATID) -> DATData.DATData:
 		match datid:
 			case DATID.units:
 				return self.units
@@ -248,8 +248,8 @@ class DataContext:
 				palette = list(palette)
 				for i in range(remap_count):
 					palette[i] = palette[ticon[32+i]]
-		pixels, transindex = frame_pixels(self.cmdicons.grp, index)
-		image = (frame_to_photo(palette, pixels, transindex=transindex), image_bounds(pixels, transindex))
+		pixels, transindex = GRP.frame_pixels(self.cmdicons.grp, index)
+		image = (GRP.frame_to_photo(palette, pixels, transindex=transindex), GRP.image_bounds(pixels, transindex))
 		if not highlighted in self.cmdicons.images:
 			self.cmdicons.images[highlighted] = {}
 		self.cmdicons.images[highlighted][index] = image
@@ -271,7 +271,7 @@ class DataContext:
 			draw_function = DATImage.DrawFunction.normal
 		if not path in self.grp_cache or not palette in self.grp_cache[path] or not draw_function in self.grp_cache[path][palette]:
 			try:
-				grp = CacheGRP()
+				grp = GRP.CacheGRP()
 				grp.load(self.mpq_handler.load_file('MPQ:' + path),restrict=1)
 			except PyMSError:
 				return None
@@ -279,20 +279,20 @@ class DataContext:
 				self.grp_cache[path] = {}
 			if not palette in self.grp_cache[path]:
 				self.grp_cache[path][palette] = {}
-			rle_function: RLEFunc
+			rle_function: GRP.RLEFunc
 			if draw_function == DATImage.DrawFunction.selection_circle:
-				rle_function = rle_outline
+				rle_function = GRP.rle_outline
 				if draw_info is None:
-					draw_info = Outline.self
+					draw_info = GRP.Outline.self
 			elif draw_function == DATImage.DrawFunction.shadow:
-				rle_function = rle_shadow
+				rle_function = GRP.rle_shadow
 				if draw_info is None:
 					draw_info = (50,50,50, 255)
 			else:
-				rle_function = rle_normal
-			pixels, transindex = frame_pixels(grp, frame)
-			photo = frame_to_photo(self.palettes[palette], pixels, transindex=transindex, draw_function=rle_function, draw_info=draw_info)
-			self.grp_cache[path][palette][draw_function] = (photo, image_bounds(pixels, transindex))
+				rle_function = GRP.rle_normal
+			pixels, transindex = GRP.frame_pixels(grp, frame)
+			photo = GRP.frame_to_photo(self.palettes[palette], pixels, transindex=transindex, draw_function=rle_function, draw_info=draw_info)
+			self.grp_cache[path][palette][draw_function] = (photo, GRP.image_bounds(pixels, transindex))
 		return self.grp_cache[path][palette][draw_function]
 
 	def get_image_frame(self, image_id: int, *, draw_function: int | None = None, remapping: int | None = None, draw_info: Any | None = None, palette: str | None = None, frame: int = 0) -> ImageWithBounds | None:

@@ -6,7 +6,7 @@ from .MegaEditorMode import MegaEditorMode
 from ..FileFormats.Tileset.Tileset import Tileset, TileType
 from ..FileFormats.Tileset.VX4 import VX4Minitile
 
-from ..Utilities.UIKit import AnyPhotoImage, Misc
+from ..Utilities import UIKit as UI
 
 from typing import Protocol
 
@@ -14,7 +14,7 @@ class MainDelegate(Protocol):
 	def get_tileset(self) -> (Tileset | None):
 		...
 
-	def get_tile(self, tile_id: int | VX4Minitile) -> AnyPhotoImage:
+	def get_tile(self, tile_id: int | VX4Minitile) -> UI.AnyPhotoImage:
 		...
 
 	def mark_edited(self) -> None:
@@ -31,7 +31,7 @@ class TilePaletteDelegate(MainDelegate, Protocol):
 		...
 
 class TilePaletteViewDelegate(MainDelegate, Protocol):
-	def tile_palette_binding_widget(self) -> Misc:
+	def tile_palette_binding_widget(self) -> UI.Misc:
 		...
 
 	def tile_palette_bind_updown(self) -> bool:

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from ..FileFormats import DialogBIN, FNT, PCX
 
-from ..Utilities.UIKit import ImageTk
+from ..Utilities import UIKit as UI
 
 class StringPreview:
 	# GLYPH_CACHE = {}
@@ -15,9 +15,9 @@ class StringPreview:
 		self.remap = remap
 		self.remap_palette = remap_palette
 		self.default_color = default_color
-		self.glyphs: list[ImageTk.PhotoImage] | None = None
+		self.glyphs: list[UI.ImageTk.PhotoImage] | None = None
 
-	def get_glyphs(self) -> list[ImageTk.PhotoImage]:
+	def get_glyphs(self) -> list[UI.ImageTk.PhotoImage]:
 		if self.glyphs is None:
 			self.glyphs = []
 			color = self.default_color

@@ -1,8 +1,6 @@
 
 from __future__ import annotations
 
-from PyMS.Utilities.PyMSWarning import PyMSWarning
-
 from . import Constants
 
 from ...FileFormats import TBL

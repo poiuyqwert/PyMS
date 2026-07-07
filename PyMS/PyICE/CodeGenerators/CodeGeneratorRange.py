@@ -1,8 +1,6 @@
 
 from __future__ import annotations
 
-from PyMS.Utilities.UIKit import Misc
-
 from . import CodeGenerator
 from ..Config import PyICEConfig
 
@@ -54,11 +52,11 @@ class CodeGeneratorTypeRange(CodeGenerator.CodeGeneratorType):
 	def description(self) -> str:
 		return f'{self.start} to {self.stop}, by adding {self.step}'
 
-	def build_editor(self, parent: Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
+	def build_editor(self, parent: UI.Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
 		return CodeGeneratorEditorRange(parent, self, config.windows.generator.editor.range)
 
 class CodeGeneratorEditorRange(CodeGenerator.CodeGeneratorEditor[CodeGeneratorTypeRange]):
-	def __init__(self, parent: Misc, generator: CodeGeneratorTypeRange, window_geometry_config: Config.WindowGeometry) -> None:
+	def __init__(self, parent: UI.Misc, generator: CodeGeneratorTypeRange, window_geometry_config: Config.WindowGeometry) -> None:
 		CodeGenerator.CodeGeneratorEditor.__init__(self, parent, generator, window_geometry_config)
 
 		self.start = UI.IntegerVar(0,[0,None])

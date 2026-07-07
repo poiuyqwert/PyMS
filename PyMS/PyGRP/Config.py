@@ -2,7 +2,7 @@
 from .utils import BMPStyle
 
 from ..Utilities import Config
-from ..Utilities.UIKit import Size, FileType
+from ..Utilities import UIKit as UI
 
 def _migrate_1_to_2(data: dict) -> None:
 	Config.migrate_fields(data, (
@@ -25,7 +25,7 @@ class PyGRPConfig(Config.Config):
 	class Windows(Config.Group):
 		class Settings(Config.Group):
 			def __init__(self) -> None:
-				self.main = Config.WindowGeometry(default_size=Size(550,380))
+				self.main = Config.WindowGeometry(default_size=UI.Size(550,380))
 				super().__init__()
 
 		def __init__(self) -> None:
@@ -37,8 +37,8 @@ class PyGRPConfig(Config.Config):
 
 	class LastPath(Config.Group):
 		def __init__(self) -> None:
-			self.grp = Config.SelectFile(name='GRP', filetypes=[FileType.grp()])
-			self.bmp = Config.SelectFile(name='BMP', filetypes=[FileType.bmp()], op_type=Config.FileOpType.import_export)
+			self.grp = Config.SelectFile(name='GRP', filetypes=[UI.FileType.grp()])
+			self.bmp = Config.SelectFile(name='BMP', filetypes=[UI.FileType.bmp()], op_type=Config.FileOpType.import_export)
 			super().__init__()
 
 	class Preview(Config.Group):

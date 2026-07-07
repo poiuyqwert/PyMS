@@ -3,7 +3,7 @@ from .Resolution import Resolution
 
 from ....FileFormats.AIBIN.AIBIN import AIBIN, LoadIssue, AIScript
 
-from ....Utilities.UIKit import Misc, Widget
+from ....Utilities import UIKit as UI
 from ....Utilities.Callback import Callback
 
 class AddRefResolution(Resolution):
@@ -13,7 +13,7 @@ class AddRefResolution(Resolution):
 	def name(self) -> str:
 		return 'Add definition to aiscript.bin'
 
-	def ui(self, parent: Misc) -> Widget | None:
+	def ui(self, parent: UI.Misc) -> UI.Widget | None:
 		return None
 
 	def can_resolve(self, ai: AIBIN, issue: LoadIssue) -> str | None:

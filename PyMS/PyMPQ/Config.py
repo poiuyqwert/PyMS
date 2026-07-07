@@ -3,7 +3,7 @@ from .CompressionSetting import CompressionOption
 
 from ..Utilities import Config
 from ..Utilities import Assets
-from ..Utilities.UIKit import FileType, Size
+from ..Utilities import UIKit as UI
 
 def _migrate_2_to_3(data: dict) -> None:
 	Config.migrate_fields(data, (
@@ -26,11 +26,11 @@ class PyMPQConfig(Config.Config):
 	class Windows(Config.Group):
 		class Settings(Config.Group):
 			def __init__(self) -> None:
-				self.main = Config.WindowGeometry(default_size=Size(550,380))
+				self.main = Config.WindowGeometry(default_size=UI.Size(550,380))
 				super().__init__()
 
 		def __init__(self) -> None:
-			self.main = Config.WindowGeometry(default_size=Size(700,500))
+			self.main = Config.WindowGeometry(default_size=UI.Size(700,500))
 			self.help = Config.WindowGeometry()
 			self.settings = PyMPQConfig.Windows.Settings()
 			super().__init__()
@@ -50,7 +50,7 @@ class PyMPQConfig(Config.Config):
 
 		class LastPath(Config.Group):
 			def __init__(self) -> None:
-				self.listfiles = Config.SelectFile(name='Listfile', filetypes=[FileType.txt()])
+				self.listfiles = Config.SelectFile(name='Listfile', filetypes=[UI.FileType.txt()])
 				super().__init__()
 
 		def __init__(self) -> None:
@@ -74,14 +74,14 @@ class PyMPQConfig(Config.Config):
 	class LastPath(Config.Group):
 		class Import(Config.Group):
 			def __init__(self) -> None:
-				self.files = Config.SelectFile(name='files', filetypes=[FileType.all_files()])
+				self.files = Config.SelectFile(name='files', filetypes=[UI.FileType.all_files()])
 				self.folder = Config.SelectDirectory(title='Add files from folder...')
 				super().__init__()
 
 		def __init__(self) -> None:
 			self.import_ = PyMPQConfig.LastPath.Import()
 			self.export = Config.SelectDirectory(title='Extract files...')
-			self.mpq = Config.SelectFile(name='MPQ', filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
+			self.mpq = Config.SelectFile(name='MPQ', filetypes=[UI.FileType.mpq_all(),UI.FileType.mpq(),UI.FileType.exe_mpq(),UI.FileType.scm(),UI.FileType.scx()])
 			super().__init__()
 
 	class Import(Config.Group):

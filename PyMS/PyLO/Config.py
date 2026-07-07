@@ -1,6 +1,6 @@
 
 from ..Utilities import Config
-from ..Utilities.UIKit import Size, FileType
+from ..Utilities import UIKit as UI
 
 def _migrate_1_to_2(data: dict) -> None:
 	Config.migrate_fields(data, (
@@ -23,12 +23,12 @@ class PyLOConfig(Config.Config):
 	class Windows(Config.Group):
 		class Settings(Config.Group):
 			def __init__(self) -> None:
-				self.main = Config.WindowGeometry(default_size=Size(550,380))
+				self.main = Config.WindowGeometry(default_size=UI.Size(550,380))
 				self.mpq_select = Config.WindowGeometry()
 				super().__init__()
 
 		def __init__(self) -> None:
-			self.main = Config.WindowGeometry(default_size=Size(740, 400))
+			self.main = Config.WindowGeometry(default_size=UI.Size(740, 400))
 			self.find = Config.WindowGeometry()
 			self.help = Config.WindowGeometry()
 			self.settings = PyLOConfig.Windows.Settings()
@@ -36,20 +36,20 @@ class PyLOConfig(Config.Config):
 
 	class LastPath(Config.Group):
 		def __init__(self) -> None:
-			self.lo = Config.SelectFile(name='LO', filetypes=[FileType.lo(),FileType.loa(),FileType.lob(),FileType.lod(),FileType.lof(),FileType.loo(),FileType.los(),FileType.lou(),FileType.log(),FileType.lol(),FileType.lox()])
-			self.txt = Config.SelectFile(name='TXT', filetypes=[FileType.txt()], op_type=Config.FileOpType.import_export)
+			self.lo = Config.SelectFile(name='LO', filetypes=[UI.FileType.lo(),UI.FileType.loa(),UI.FileType.lob(),UI.FileType.lod(),UI.FileType.lof(),UI.FileType.loo(),UI.FileType.los(),UI.FileType.lou(),UI.FileType.log(),UI.FileType.lol(),UI.FileType.lox()])
+			self.txt = Config.SelectFile(name='TXT', filetypes=[UI.FileType.txt()], op_type=Config.FileOpType.import_export)
 			super().__init__()
 
 	class Settings(Config.Group):
 		class Files(Config.Group):
 			def __init__(self) -> None:
-				self.base_grp = Config.File(default='MPQ:unit\\terran\\wessel.grp', name='Base GRP', filetypes=[FileType.grp()])
-				self.overlay_grp = Config.File(default='MPQ:unit\\terran\\wesselt.grp', name='Overlay GRP', filetypes=[FileType.grp()])
+				self.base_grp = Config.File(default='MPQ:unit\\terran\\wessel.grp', name='Base GRP', filetypes=[UI.FileType.grp()])
+				self.overlay_grp = Config.File(default='MPQ:unit\\terran\\wesselt.grp', name='Overlay GRP', filetypes=[UI.FileType.grp()])
 				super().__init__()
 
 		class LastPath(Config.Group):
 			def __init__(self) -> None:
-				self.mpqs = Config.SelectFile(name='MPQ', filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
+				self.mpqs = Config.SelectFile(name='MPQ', filetypes=[UI.FileType.mpq_all(),UI.FileType.mpq(),UI.FileType.exe_mpq(),UI.FileType.scm(),UI.FileType.scx()])
 				super().__init__()
 
 		def __init__(self) -> None:

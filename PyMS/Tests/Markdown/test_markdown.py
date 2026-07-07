@@ -1,9 +1,6 @@
 
-from ...Utilities.Markdown import (
-	Document, _Scanner,
-	ATXHeading, ThematicBreak, IndentedCodeBlock, FencedCodeBlock, BlockQuote, ListBlock, ListItemBlock, Paragraph,
-	Span, CodeSpan, Bold, Italic, Strikethrough, Link, Image,
-)
+from ...Utilities import Markdown
+from ...Utilities.Markdown import _Scanner
 
 import re
 import unittest
@@ -77,120 +74,120 @@ class Test_Scanner(unittest.TestCase):
 class Test_ATXHeading_start(unittest.TestCase):
 	def test_level_one(self) -> None:
 		scanner = _scanner('# Title')
-		heading = ATXHeading.start(scanner)
+		heading = Markdown.ATXHeading.start(scanner)
 		assert heading is not None
 		self.assertEqual(heading.level, 1)
 		self.assertEqual(scanner.remainder(), 'Title')
 
 	def test_level_six(self) -> None:
-		heading = ATXHeading.start(_scanner('###### Six'))
+		heading = Markdown.ATXHeading.start(_scanner('###### Six'))
 		assert heading is not None
 		self.assertEqual(heading.level, 6)
 
 	def test_requires_space_after_hashes(self) -> None:
-		self.assertIsNone(ATXHeading.start(_scanner('#Foo')))
+		self.assertIsNone(Markdown.ATXHeading.start(_scanner('#Foo')))
 
 	def test_seven_hashes_is_not_heading(self) -> None:
-		self.assertIsNone(ATXHeading.start(_scanner('####### Seven')))
+		self.assertIsNone(Markdown.ATXHeading.start(_scanner('####### Seven')))
 
 	def test_non_heading(self) -> None:
-		self.assertIsNone(ATXHeading.start(_scanner('not a heading')))
+		self.assertIsNone(Markdown.ATXHeading.start(_scanner('not a heading')))
 
 	def test_strips_closing_hashes(self) -> None:
 		scanner = _scanner('# Foo #')
-		heading = ATXHeading.start(scanner)
+		heading = Markdown.ATXHeading.start(scanner)
 		assert heading is not None
 		self.assertEqual(scanner.remainder(), 'Foo')
 
 	def test_strips_multiple_closing_hashes(self) -> None:
 		scanner = _scanner('## Bar ###')
-		ATXHeading.start(scanner)
+		Markdown.ATXHeading.start(scanner)
 		self.assertEqual(scanner.remainder(), 'Bar')
 
 
 class Test_ATXHeading_anchor(unittest.TestCase):
 	def test_lowercases_and_dashes_spaces(self) -> None:
-		heading = ATXHeading(1)
+		heading = Markdown.ATXHeading(1)
 		heading.add_span('Hello World')
 		self.assertEqual(heading.anchor(), 'hello-world')
 
 	def test_strips_non_alpha(self) -> None:
-		heading = ATXHeading(1)
+		heading = Markdown.ATXHeading(1)
 		heading.add_span('Hello, World!')
 		self.assertEqual(heading.anchor(), 'hello-world')
 
 
 class Test_ThematicBreak_start(unittest.TestCase):
 	def test_dashes(self) -> None:
-		self.assertIsInstance(ThematicBreak.start(_scanner('---')), ThematicBreak)
+		self.assertIsInstance(Markdown.ThematicBreak.start(_scanner('---')), Markdown.ThematicBreak)
 
 	def test_asterisks(self) -> None:
-		self.assertIsInstance(ThematicBreak.start(_scanner('***')), ThematicBreak)
+		self.assertIsInstance(Markdown.ThematicBreak.start(_scanner('***')), Markdown.ThematicBreak)
 
 	def test_underscores(self) -> None:
-		self.assertIsInstance(ThematicBreak.start(_scanner('___')), ThematicBreak)
+		self.assertIsInstance(Markdown.ThematicBreak.start(_scanner('___')), Markdown.ThematicBreak)
 
 	def test_spaced_markers(self) -> None:
-		self.assertIsInstance(ThematicBreak.start(_scanner('- - -')), ThematicBreak)
+		self.assertIsInstance(Markdown.ThematicBreak.start(_scanner('- - -')), Markdown.ThematicBreak)
 
 	def test_two_markers_is_not_break(self) -> None:
-		self.assertIsNone(ThematicBreak.start(_scanner('--')))
+		self.assertIsNone(Markdown.ThematicBreak.start(_scanner('--')))
 
 	def test_text_is_not_break(self) -> None:
-		self.assertIsNone(ThematicBreak.start(_scanner('abc')))
+		self.assertIsNone(Markdown.ThematicBreak.start(_scanner('abc')))
 
 
 class Test_IndentedCodeBlock(unittest.TestCase):
 	def test_start_requires_four_spaces(self) -> None:
 		scanner = _scanner('    code')
-		block = IndentedCodeBlock.start(scanner)
-		self.assertIsInstance(block, IndentedCodeBlock)
+		block = Markdown.IndentedCodeBlock.start(scanner)
+		self.assertIsInstance(block, Markdown.IndentedCodeBlock)
 		self.assertEqual(scanner.remainder(), 'code')
 
 	def test_start_rejects_three_spaces(self) -> None:
-		self.assertIsNone(IndentedCodeBlock.start(_scanner('   code')))
+		self.assertIsNone(Markdown.IndentedCodeBlock.start(_scanner('   code')))
 
 	def test_is_continued_on_indented_line(self) -> None:
-		block = IndentedCodeBlock()
+		block = Markdown.IndentedCodeBlock()
 		scanner = _scanner('    more')
 		self.assertTrue(block.is_continued(scanner))
 		self.assertEqual(scanner.remainder(), 'more')
 
 	def test_is_not_continued_on_unindented_line(self) -> None:
-		block = IndentedCodeBlock()
+		block = Markdown.IndentedCodeBlock()
 		self.assertFalse(block.is_continued(_scanner('not indented')))
 
 
 class Test_FencedCodeBlock_start(unittest.TestCase):
 	def test_backtick_fence(self) -> None:
-		block = FencedCodeBlock.start(_scanner('```'))
+		block = Markdown.FencedCodeBlock.start(_scanner('```'))
 		assert block is not None
 		self.assertIsNone(block.info_string)
 
 	def test_info_string(self) -> None:
-		block = FencedCodeBlock.start(_scanner('```python'))
+		block = Markdown.FencedCodeBlock.start(_scanner('```python'))
 		assert block is not None
 		self.assertEqual(block.info_string, 'python')
 
 	def test_tilde_fence(self) -> None:
-		self.assertIsInstance(FencedCodeBlock.start(_scanner('~~~')), FencedCodeBlock)
+		self.assertIsInstance(Markdown.FencedCodeBlock.start(_scanner('~~~')), Markdown.FencedCodeBlock)
 
 	def test_two_backticks_is_not_fence(self) -> None:
-		self.assertIsNone(FencedCodeBlock.start(_scanner('``')))
+		self.assertIsNone(Markdown.FencedCodeBlock.start(_scanner('``')))
 
 	def test_content_line_continues_block(self) -> None:
-		block = FencedCodeBlock.start(_scanner('```'))
+		block = Markdown.FencedCodeBlock.start(_scanner('```'))
 		assert block is not None
 		self.assertTrue(block.is_continued(_scanner('some code')))
 
 	def test_closing_fence_ends_block(self) -> None:
-		block = FencedCodeBlock.start(_scanner('```'))
+		block = Markdown.FencedCodeBlock.start(_scanner('```'))
 		assert block is not None
 		self.assertFalse(block.is_continued(_scanner('```')))
 		self.assertFalse(block.open)
 
 	def test_closing_fence_with_trailing_whitespace(self) -> None:
-		block = FencedCodeBlock.start(_scanner('```'))
+		block = Markdown.FencedCodeBlock.start(_scanner('```'))
 		assert block is not None
 		self.assertFalse(block.is_continued(_scanner('```   ')))
 
@@ -198,74 +195,74 @@ class Test_FencedCodeBlock_start(unittest.TestCase):
 class Test_BlockQuote_start(unittest.TestCase):
 	def test_with_space(self) -> None:
 		scanner = _scanner('> quote')
-		block = BlockQuote.start(scanner)
-		self.assertIsInstance(block, BlockQuote)
+		block = Markdown.BlockQuote.start(scanner)
+		self.assertIsInstance(block, Markdown.BlockQuote)
 		self.assertEqual(scanner.remainder(), 'quote')
 
 	def test_marker_only(self) -> None:
-		self.assertIsInstance(BlockQuote.start(_scanner('>')), BlockQuote)
+		self.assertIsInstance(Markdown.BlockQuote.start(_scanner('>')), Markdown.BlockQuote)
 
 	def test_requires_marker(self) -> None:
-		self.assertIsNone(BlockQuote.start(_scanner('not a quote')))
+		self.assertIsNone(Markdown.BlockQuote.start(_scanner('not a quote')))
 
 
 class Test_ListItemBlock_start(unittest.TestCase):
 	def test_bullet_markers(self) -> None:
 		for marker in ('- item', '* item', '+ item'):
 			with self.subTest(marker=marker):
-				block = ListItemBlock.start(_scanner(marker))
-				self.assertIsInstance(block, ListBlock)
-				assert isinstance(block, ListBlock)
-				self.assertEqual(block.marker, ListBlock.MARKER_BULLET)
+				block = Markdown.ListItemBlock.start(_scanner(marker))
+				self.assertIsInstance(block, Markdown.ListBlock)
+				assert isinstance(block, Markdown.ListBlock)
+				self.assertEqual(block.marker, Markdown.ListBlock.MARKER_BULLET)
 
 	def test_numeric_markers(self) -> None:
 		for marker in ('1. item', '1) item'):
 			with self.subTest(marker=marker):
-				block = ListItemBlock.start(_scanner(marker))
-				assert isinstance(block, ListBlock)
-				self.assertEqual(block.marker, ListBlock.MARKER_NUMERIC)
+				block = Markdown.ListItemBlock.start(_scanner(marker))
+				assert isinstance(block, Markdown.ListBlock)
+				self.assertEqual(block.marker, Markdown.ListBlock.MARKER_NUMERIC)
 
 	def test_creates_list_item_child(self) -> None:
-		block = ListItemBlock.start(_scanner('- item'))
-		assert isinstance(block, ListBlock)
+		block = Markdown.ListItemBlock.start(_scanner('- item'))
+		assert isinstance(block, Markdown.ListBlock)
 		self.assertEqual([type(child).__name__ for child in block.children], ['ListItemBlock'])
 
 	def test_non_list(self) -> None:
-		self.assertIsNone(ListItemBlock.start(_scanner('item')))
+		self.assertIsNone(Markdown.ListItemBlock.start(_scanner('item')))
 
 
 class Test_inline_apply(unittest.TestCase):
 	def test_code_span(self) -> None:
-		result = CodeSpan.apply('a `code` b')
+		result = Markdown.CodeSpan.apply('a `code` b')
 		assert result is not None
 		start, end, span = result
 		self.assertEqual((start, end), (2, 8))
 		self.assertEqual(span.contents, ['code'])
 
 	def test_code_span_none(self) -> None:
-		self.assertIsNone(CodeSpan.apply('no code here'))
+		self.assertIsNone(Markdown.CodeSpan.apply('no code here'))
 
 	def test_bold(self) -> None:
-		result = Bold.apply('a **bold** b')
+		result = Markdown.Bold.apply('a **bold** b')
 		assert result is not None
 		start, end, span = result
 		self.assertEqual((start, end), (2, 10))
 		self.assertEqual(span.contents, ['bold'])
 
 	def test_italic(self) -> None:
-		result = Italic.apply('a *it* b')
+		result = Markdown.Italic.apply('a *it* b')
 		assert result is not None
 		_, _, span = result
 		self.assertEqual(span.contents, ['it'])
 
 	def test_strikethrough(self) -> None:
-		result = Strikethrough.apply('a ~~s~~ b')
+		result = Markdown.Strikethrough.apply('a ~~s~~ b')
 		assert result is not None
 		_, _, span = result
 		self.assertEqual(span.contents, ['s'])
 
 	def test_link(self) -> None:
-		result = Link.apply('[text](url)')
+		result = Markdown.Link.apply('[text](url)')
 		assert result is not None
 		_, _, span = result
 		self.assertEqual(span.link, 'url')
@@ -273,106 +270,106 @@ class Test_inline_apply(unittest.TestCase):
 		self.assertEqual(span.contents, ['text'])
 
 	def test_link_with_title(self) -> None:
-		result = Link.apply('[t](url "ti")')
+		result = Markdown.Link.apply('[t](url "ti")')
 		assert result is not None
 		_, _, span = result
 		self.assertEqual(span.link, 'url')
 		self.assertEqual(span.title, 'ti')
 
 	def test_link_strips_angle_brackets(self) -> None:
-		result = Link.apply('[t](<my url>)')
+		result = Markdown.Link.apply('[t](<my url>)')
 		assert result is not None
 		_, _, span = result
 		self.assertEqual(span.link, 'my url')
 
 	def test_link_does_not_match_image(self) -> None:
-		self.assertIsNone(Link.apply('![alt](img.png)'))
+		self.assertIsNone(Markdown.Link.apply('![alt](img.png)'))
 
 	def test_image(self) -> None:
-		result = Image.apply('![alt](img.png)')
+		result = Markdown.Image.apply('![alt](img.png)')
 		assert result is not None
 		_, _, span = result
 		self.assertEqual(span.alt_text, 'alt')
 		self.assertEqual(span.link, 'img.png')
 
 	def test_image_requires_bang(self) -> None:
-		self.assertIsNone(Image.apply('[text](url)'))
+		self.assertIsNone(Markdown.Image.apply('[text](url)'))
 
 
 class Test_Span_scan(unittest.TestCase):
 	def test_splits_string_into_span(self) -> None:
-		span = Span('a **b** c')
-		found = span.scan(Bold)
+		span = Markdown.Span('a **b** c')
+		found = span.scan(Markdown.Bold)
 		self.assertTrue(found)
 		self.assertEqual(len(span.contents), 3)
 		self.assertEqual(span.contents[0], 'a ')
 		self.assertEqual(span.contents[2], ' c')
 		bold = span.contents[1]
-		assert isinstance(bold, Bold)
+		assert isinstance(bold, Markdown.Bold)
 		self.assertEqual(bold.contents, ['b'])
 
 	def test_no_match_returns_false(self) -> None:
-		span = Span('plain text')
-		self.assertFalse(span.scan(Bold))
+		span = Markdown.Span('plain text')
+		self.assertFalse(span.scan(Markdown.Bold))
 		self.assertEqual(span.contents, ['plain text'])
 
 	def test_code_span_never_rescans(self) -> None:
-		self.assertFalse(CodeSpan('**not bold**').scan(Bold))
+		self.assertFalse(Markdown.CodeSpan('**not bold**').scan(Markdown.Bold))
 
 	def test_skips_same_span_type(self) -> None:
-		self.assertFalse(Bold('text').scan(Bold))
+		self.assertFalse(Markdown.Bold('text').scan(Markdown.Bold))
 
 
 class Test_Document_parse(unittest.TestCase):
 	def test_heading(self) -> None:
-		heading = Document.parse('# Title').children[0]
-		self.assertIsInstance(heading, ATXHeading)
-		assert isinstance(heading, ATXHeading)
+		heading = Markdown.Document.parse('# Title').children[0]
+		self.assertIsInstance(heading, Markdown.ATXHeading)
+		assert isinstance(heading, Markdown.ATXHeading)
 		self.assertEqual(heading.level, 1)
 		self.assertEqual(heading.spans[0].contents, ['Title'])
 
 	def test_heading_anchor(self) -> None:
-		heading = Document.parse('## Hello World').children[0]
-		assert isinstance(heading, ATXHeading)
+		heading = Markdown.Document.parse('## Hello World').children[0]
+		assert isinstance(heading, Markdown.ATXHeading)
 		self.assertEqual(heading.anchor(), 'hello-world')
 
 	def test_paragraph(self) -> None:
-		self.assertIsInstance(Document.parse('hello world').children[0], Paragraph)
+		self.assertIsInstance(Markdown.Document.parse('hello world').children[0], Markdown.Paragraph)
 
 	def test_thematic_break(self) -> None:
-		self.assertIsInstance(Document.parse('---').children[0], ThematicBreak)
+		self.assertIsInstance(Markdown.Document.parse('---').children[0], Markdown.ThematicBreak)
 
 	def test_indented_code_block(self) -> None:
-		self.assertIsInstance(Document.parse('    code').children[0], IndentedCodeBlock)
+		self.assertIsInstance(Markdown.Document.parse('    code').children[0], Markdown.IndentedCodeBlock)
 
 	def test_block_quote(self) -> None:
-		quote = Document.parse('> quote').children[0]
-		assert isinstance(quote, BlockQuote)
-		self.assertIsInstance(quote.children[0], Paragraph)
+		quote = Markdown.Document.parse('> quote').children[0]
+		assert isinstance(quote, Markdown.BlockQuote)
+		self.assertIsInstance(quote.children[0], Markdown.Paragraph)
 
 	def test_list(self) -> None:
-		block = Document.parse('- a\n- b').children[0]
-		assert isinstance(block, ListBlock)
-		self.assertEqual(block.marker, ListBlock.MARKER_BULLET)
+		block = Markdown.Document.parse('- a\n- b').children[0]
+		assert isinstance(block, Markdown.ListBlock)
+		self.assertEqual(block.marker, Markdown.ListBlock.MARKER_BULLET)
 		self.assertEqual([type(child).__name__ for child in block.children], ['ListItemBlock', 'ListItemBlock'])
 
 	def test_inline_parsing_in_paragraph(self) -> None:
-		paragraph = Document.parse('a **bold** c').children[0]
-		assert isinstance(paragraph, Paragraph)
+		paragraph = Markdown.Document.parse('a **bold** c').children[0]
+		assert isinstance(paragraph, Markdown.Paragraph)
 		contents = paragraph.spans[0].contents
 		self.assertEqual(contents[0], 'a ')
 		bold = contents[1]
-		assert isinstance(bold, Bold)
+		assert isinstance(bold, Markdown.Bold)
 		self.assertEqual(bold.contents, ['bold'])
 
 	def test_heading_strips_closing_hashes(self) -> None:
-		heading = Document.parse('# Title #').children[0]
-		assert isinstance(heading, ATXHeading)
+		heading = Markdown.Document.parse('# Title #').children[0]
+		assert isinstance(heading, Markdown.ATXHeading)
 		self.assertEqual(heading.spans[0].contents, ['Title'])
 
 	def test_fenced_code_block_closes_before_following_text(self) -> None:
-		document = Document.parse('```\ncode line\n```\nafter')
+		document = Markdown.Document.parse('```\ncode line\n```\nafter')
 		self.assertEqual([type(child).__name__ for child in document.children], ['FencedCodeBlock', 'Paragraph'])
 		fenced = document.children[0]
-		assert isinstance(fenced, FencedCodeBlock)
+		assert isinstance(fenced, Markdown.FencedCodeBlock)
 		self.assertEqual([span.contents for span in fenced.spans], [['code line']])

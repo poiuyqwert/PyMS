@@ -1,6 +1,6 @@
 
 from ..Utilities import Config
-from ..Utilities.UIKit import Size, FileType
+from ..Utilities import UIKit as UI
 from ..Utilities import Assets
 
 def _migrate_1_to_2(data: dict) -> None:
@@ -37,7 +37,7 @@ class PyICEConfig(Config.Config):
 	class Windows(Config.Group):
 		class Settings(Config.Group):
 			def __init__(self) -> None:
-				self.main = Config.WindowGeometry(default_size=Size(640,600))
+				self.main = Config.WindowGeometry(default_size=UI.Size(640,600))
 				self.mpq_select = Config.WindowGeometry()
 				super().__init__()
 
@@ -70,12 +70,12 @@ class PyICEConfig(Config.Config):
 	class LastPath(Config.Group):
 		class Generators(Config.Group):
 			def __init__(self) -> None:
-				self.txt = Config.SelectFile(name='Preset', op_type=Config.FileOpType.import_export, filetypes=[FileType.txt()])
+				self.txt = Config.SelectFile(name='Preset', op_type=Config.FileOpType.import_export, filetypes=[UI.FileType.txt()])
 				super().__init__()
 
 		def __init__(self) -> None:
-			self.bin = Config.SelectFile(name='IScript .bin', filetypes=[FileType.bin_iscript()])
-			self.txt = Config.SelectFile(name='TXT', op_type=Config.FileOpType.import_export, filetypes=[FileType.txt()])
+			self.bin = Config.SelectFile(name='IScript .bin', filetypes=[UI.FileType.bin_iscript()])
+			self.txt = Config.SelectFile(name='TXT', op_type=Config.FileOpType.import_export, filetypes=[UI.FileType.txt()])
 			self.generators = PyICEConfig.LastPath.Generators()
 			super().__init__()
 
@@ -83,30 +83,30 @@ class PyICEConfig(Config.Config):
 		class Files(Config.Group):
 			class DAT(Config.Group):
 				def __init__(self) -> None:
-					self.units = Config.File(default=Assets.mpq_file_path('arr', 'units.dat'), name='units.dat', filetypes=[FileType.dat()])
-					self.weapons = Config.File(default=Assets.mpq_file_path('arr', 'weapons.dat'), name='weapons.dat', filetypes=[FileType.dat()])
-					self.sprites = Config.File(default=Assets.mpq_file_path('arr', 'sprites.dat'), name='sprites.dat', filetypes=[FileType.dat()])
-					self.flingy = Config.File(default=Assets.mpq_file_path('arr', 'flingy.dat'), name='flingy.dat', filetypes=[FileType.dat()])
-					self.images = Config.File(default=Assets.mpq_file_path('arr', 'images.dat'), name='images.dat', filetypes=[FileType.dat()])
-					self.sfxdata = Config.File(default=Assets.mpq_file_path('arr', 'sfxdata.dat'), name='sfxdata.dat', filetypes=[FileType.dat()])
+					self.units = Config.File(default=Assets.mpq_file_path('arr', 'units.dat'), name='units.dat', filetypes=[UI.FileType.dat()])
+					self.weapons = Config.File(default=Assets.mpq_file_path('arr', 'weapons.dat'), name='weapons.dat', filetypes=[UI.FileType.dat()])
+					self.sprites = Config.File(default=Assets.mpq_file_path('arr', 'sprites.dat'), name='sprites.dat', filetypes=[UI.FileType.dat()])
+					self.flingy = Config.File(default=Assets.mpq_file_path('arr', 'flingy.dat'), name='flingy.dat', filetypes=[UI.FileType.dat()])
+					self.images = Config.File(default=Assets.mpq_file_path('arr', 'images.dat'), name='images.dat', filetypes=[UI.FileType.dat()])
+					self.sfxdata = Config.File(default=Assets.mpq_file_path('arr', 'sfxdata.dat'), name='sfxdata.dat', filetypes=[UI.FileType.dat()])
 					super().__init__()
 
 			class TBL(Config.Group):
 				def __init__(self) -> None:
-					self.stat_txt = Config.File(default=Assets.mpq_file_path('rez', 'stat_txt.tbl'), name='stat_txt.tbl', filetypes=[FileType.tbl()])
-					self.images = Config.File(default=Assets.mpq_file_path('arr', 'images.tbl'), name='images.tbl', filetypes=[FileType.tbl()])
-					self.sfxdata = Config.File(default=Assets.mpq_file_path('arr', 'sfxdata.tbl'), name='sfxdata.tbl', filetypes=[FileType.tbl()])
-					self.unitnames = Config.File(default=Assets.mpq_file_path('rez', 'unitnames.tbl'), name='unitnames.tbl', filetypes=[FileType.tbl()])
+					self.stat_txt = Config.File(default=Assets.mpq_file_path('rez', 'stat_txt.tbl'), name='stat_txt.tbl', filetypes=[UI.FileType.tbl()])
+					self.images = Config.File(default=Assets.mpq_file_path('arr', 'images.tbl'), name='images.tbl', filetypes=[UI.FileType.tbl()])
+					self.sfxdata = Config.File(default=Assets.mpq_file_path('arr', 'sfxdata.tbl'), name='sfxdata.tbl', filetypes=[UI.FileType.tbl()])
+					self.unitnames = Config.File(default=Assets.mpq_file_path('rez', 'unitnames.tbl'), name='unitnames.tbl', filetypes=[UI.FileType.tbl()])
 					super().__init__()
 
 			class Palettes(Config.Group):
 				def __init__(self) -> None:
-					self.units = Config.File(default=Assets.palette_file_path('Units.pal'), name='Units.pal', filetypes=[FileType.pal()])
-					self.bfire = Config.File(default=Assets.palette_file_path('bfire.pal'), name='bfire.pal', filetypes=[FileType.pal()])
-					self.gfire = Config.File(default=Assets.palette_file_path('gfire.pal'), name='gfire.pal', filetypes=[FileType.pal()])
-					self.ofire = Config.File(default=Assets.palette_file_path('ofire.pal'), name='ofire.pal', filetypes=[FileType.pal()])
-					self.terrain = Config.File(default=Assets.palette_file_path('Terrain.pal'), name='Terrain.pal', filetypes=[FileType.pal()])
-					self.icons = Config.File(default=Assets.palette_file_path('Icons.pal'), name='Icons.pal', filetypes=[FileType.pal()])
+					self.units = Config.File(default=Assets.palette_file_path('Units.pal'), name='Units.pal', filetypes=[UI.FileType.pal()])
+					self.bfire = Config.File(default=Assets.palette_file_path('bfire.pal'), name='bfire.pal', filetypes=[UI.FileType.pal()])
+					self.gfire = Config.File(default=Assets.palette_file_path('gfire.pal'), name='gfire.pal', filetypes=[UI.FileType.pal()])
+					self.ofire = Config.File(default=Assets.palette_file_path('ofire.pal'), name='ofire.pal', filetypes=[UI.FileType.pal()])
+					self.terrain = Config.File(default=Assets.palette_file_path('Terrain.pal'), name='Terrain.pal', filetypes=[UI.FileType.pal()])
+					self.icons = Config.File(default=Assets.palette_file_path('Icons.pal'), name='Icons.pal', filetypes=[UI.FileType.pal()])
 					super().__init__()
 
 			def __init__(self) -> None:
@@ -117,7 +117,7 @@ class PyICEConfig(Config.Config):
 
 		class LastPath(Config.Group):
 			def __init__(self) -> None:
-				self.mpqs = Config.SelectFile(name='MPQ', filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
+				self.mpqs = Config.SelectFile(name='MPQ', filetypes=[UI.FileType.mpq_all(),UI.FileType.mpq(),UI.FileType.exe_mpq(),UI.FileType.scm(),UI.FileType.scx()])
 				super().__init__()
 
 		def __init__(self) -> None:

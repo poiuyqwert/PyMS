@@ -8,7 +8,7 @@ from ..FileFormats import FNT
 from ..FileFormats import PCX
 
 # from ..Utilities import Config
-from ..Utilities.UIKit import Text, ScrolledListbox
+from ..Utilities import UIKit as UI
 
 from typing import Protocol
 
@@ -21,8 +21,8 @@ class MainDelegate(Protocol):
 	font10: FNT.FNT
 	tfontgam: PCX.PCX
 
-	text: Text
-	listbox: ScrolledListbox
+	text: UI.Text
+	listbox: UI.ScrolledListbox
 
 	def update(self) -> None:
 		...

@@ -1,17 +1,7 @@
 
 from ....PyICE.CodeGenerators import CodeGenerator as CG
-from ....PyICE.CodeGenerators.CodeGeneratorList import (
-	CodeGeneratorTypeList,
-	_REPEATERS,
-	CodeGeneratorTypeListRepeaterDont,
-	CodeGeneratorTypeListRepeaterRepeatOnce,
-	CodeGeneratorTypeListRepeaterRepeatForever,
-	CodeGeneratorTypeListRepeaterRepeatLast,
-	CodeGeneratorTypeListRepeaterRepeatInvertedOnce,
-	CodeGeneratorTypeListRepeaterRepeatInvertedForever,
-	CodeGeneratorTypeListRepeaterRepeatInvertedOnceRepeatEnd,
-	CodeGeneratorTypeListRepeaterRepeatInvertedForeverRepeatEnd,
-)
+from ....PyICE.CodeGenerators import CodeGeneratorList
+from ....PyICE.CodeGenerators.CodeGeneratorList import _REPEATERS
 from ....Utilities.PyMSError import PyMSError
 
 import unittest
@@ -25,42 +15,42 @@ def _indices(repeater, count: int = 10) -> list:
 
 class Test_repeaters(unittest.TestCase):
 	def test_dont_visits_each_once_then_stops(self) -> None:
-		repeater = CodeGeneratorTypeListRepeaterDont()
+		repeater = CodeGeneratorList.CodeGeneratorTypeListRepeaterDont()
 		self.assertEqual(repeater.count(SIZE), 3)
 		self.assertEqual(_indices(repeater), [0, 1, 2, None, None, None, None, None, None, None])
 
 	def test_once_replays_the_list_twice(self) -> None:
-		repeater = CodeGeneratorTypeListRepeaterRepeatOnce()
+		repeater = CodeGeneratorList.CodeGeneratorTypeListRepeaterRepeatOnce()
 		self.assertEqual(repeater.count(SIZE), 6)
 		self.assertEqual(_indices(repeater), [0, 1, 2, 0, 1, 2, None, None, None, None])
 
 	def test_forever_cycles_indefinitely(self) -> None:
-		repeater = CodeGeneratorTypeListRepeaterRepeatForever()
+		repeater = CodeGeneratorList.CodeGeneratorTypeListRepeaterRepeatForever()
 		self.assertIsNone(repeater.count(SIZE))
 		self.assertEqual(_indices(repeater), [0, 1, 2, 0, 1, 2, 0, 1, 2, 0])
 
 	def test_last_forever_holds_the_final_index(self) -> None:
-		repeater = CodeGeneratorTypeListRepeaterRepeatLast()
+		repeater = CodeGeneratorList.CodeGeneratorTypeListRepeaterRepeatLast()
 		self.assertIsNone(repeater.count(SIZE))
 		self.assertEqual(_indices(repeater), [0, 1, 2, 2, 2, 2, 2, 2, 2, 2])
 
 	def test_inverted_once_bounces_back_without_repeating_ends(self) -> None:
-		repeater = CodeGeneratorTypeListRepeaterRepeatInvertedOnce()
+		repeater = CodeGeneratorList.CodeGeneratorTypeListRepeaterRepeatInvertedOnce()
 		self.assertEqual(repeater.count(SIZE), 4)
 		self.assertEqual(_indices(repeater), [0, 1, 2, 1, None, None, None, None, None, None])
 
 	def test_inverted_forever_bounces_indefinitely(self) -> None:
-		repeater = CodeGeneratorTypeListRepeaterRepeatInvertedForever()
+		repeater = CodeGeneratorList.CodeGeneratorTypeListRepeaterRepeatInvertedForever()
 		self.assertIsNone(repeater.count(SIZE))
 		self.assertEqual(_indices(repeater), [0, 1, 2, 1, 0, 1, 2, 1, 0, 1])
 
 	def test_inverted_once_repeat_end_bounces_repeating_ends(self) -> None:
-		repeater = CodeGeneratorTypeListRepeaterRepeatInvertedOnceRepeatEnd()
+		repeater = CodeGeneratorList.CodeGeneratorTypeListRepeaterRepeatInvertedOnceRepeatEnd()
 		self.assertEqual(repeater.count(SIZE), 6)
 		self.assertEqual(_indices(repeater), [0, 1, 2, 2, 1, 0, None, None, None, None])
 
 	def test_inverted_forever_repeat_end_bounces_repeating_ends(self) -> None:
-		repeater = CodeGeneratorTypeListRepeaterRepeatInvertedForeverRepeatEnd()
+		repeater = CodeGeneratorList.CodeGeneratorTypeListRepeaterRepeatInvertedForeverRepeatEnd()
 		self.assertIsNone(repeater.count(SIZE))
 		self.assertEqual(_indices(repeater), [0, 1, 2, 2, 1, 0, 0, 1, 2, 2])
 
@@ -77,17 +67,17 @@ class Test_repeaters(unittest.TestCase):
 
 
 class Test_CodeGeneratorTypeList(unittest.TestCase):
-	def _list(self, values=None, repeater=None) -> CodeGeneratorTypeList:
-		return CodeGeneratorTypeList(
+	def _list(self, values=None, repeater=None) -> CodeGeneratorList.CodeGeneratorTypeList:
+		return CodeGeneratorList.CodeGeneratorTypeList(
 			values if values is not None else ['a', 'b', 'c'],
-			repeater or CodeGeneratorTypeListRepeaterRepeatForever(),
+			repeater or CodeGeneratorList.CodeGeneratorTypeListRepeaterRepeatForever(),
 		)
 
 	def test_type_name(self) -> None:
-		self.assertEqual(CodeGeneratorTypeList.type_name(), 'list')
+		self.assertEqual(CodeGeneratorList.CodeGeneratorTypeList.type_name(), 'list')
 
 	def test_count_delegates_to_repeater(self) -> None:
-		self.assertEqual(self._list(repeater=CodeGeneratorTypeListRepeaterRepeatOnce()).count(), 6)
+		self.assertEqual(self._list(repeater=CodeGeneratorList.CodeGeneratorTypeListRepeaterRepeatOnce()).count(), 6)
 
 	def test_value_picks_item_at_repeater_index(self) -> None:
 		generator = self._list()
@@ -99,26 +89,26 @@ class Test_CodeGeneratorTypeList(unittest.TestCase):
 		self.assertEqual(generator.value(lambda name: lookups[name]), 'xY')
 
 	def test_value_out_of_range_returns_empty(self) -> None:
-		generator = self._list(repeater=CodeGeneratorTypeListRepeaterDont())
+		generator = self._list(repeater=CodeGeneratorList.CodeGeneratorTypeListRepeaterDont())
 		self.assertEqual(generator.value(lambda _: '9'), '')
 
 	def test_description_lists_values(self) -> None:
 		self.assertEqual(self._list().description(), 'Items from list: a, b, c')
 
 	def test_to_json(self) -> None:
-		generator = self._list(repeater=CodeGeneratorTypeListRepeaterRepeatOnce())
+		generator = self._list(repeater=CodeGeneratorList.CodeGeneratorTypeListRepeaterRepeatOnce())
 		self.assertEqual(generator.to_json(), {'type': 'list', 'list': ['a', 'b', 'c'], 'repeater': 'once'})
 
 	def test_from_json_round_trip(self) -> None:
-		generator = self._list(repeater=CodeGeneratorTypeListRepeaterRepeatLast())
-		restored = CodeGeneratorTypeList.from_json(generator.to_json())
+		generator = self._list(repeater=CodeGeneratorList.CodeGeneratorTypeListRepeaterRepeatLast())
+		restored = CodeGeneratorList.CodeGeneratorTypeList.from_json(generator.to_json())
 		self.assertEqual(restored.values, generator.values)
 		self.assertEqual(restored.repeater.type_name(), 'last_forever')
 
 	def test_from_json_invalid_repeater_raises(self) -> None:
 		with self.assertRaises(PyMSError) as cm:
-			CodeGeneratorTypeList.from_json({'type': 'list', 'list': ['a'], 'repeater': 'bogus'})
+			CodeGeneratorList.CodeGeneratorTypeList.from_json({'type': 'list', 'list': ['a'], 'repeater': 'bogus'})
 		self.assertIn('`repeater` has invalid value', str(cm.exception))
 
 	def test_registered_as_list(self) -> None:
-		self.assertIs(CG.lookup_type('list'), CodeGeneratorTypeList)
+		self.assertIs(CG.lookup_type('list'), CodeGeneratorList.CodeGeneratorTypeList)

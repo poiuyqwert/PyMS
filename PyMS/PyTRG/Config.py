@@ -1,6 +1,6 @@
 
 from ..Utilities import Config
-from ..Utilities.UIKit import Size, FileType
+from ..Utilities import UIKit as UI
 
 def _migrate_1_to_2(data: dict) -> None:
 	Config.migrate_fields(data, (
@@ -21,12 +21,12 @@ class PyTRGConfig(Config.Config):
 	class Windows(Config.Group):
 		class Settings(Config.Group):
 			def __init__(self) -> None:
-				self.main = Config.WindowGeometry(default_size=Size(550,430))
+				self.main = Config.WindowGeometry(default_size=UI.Size(550,430))
 				self.mpq_select = Config.WindowGeometry()
 				super().__init__()
 
 		def __init__(self) -> None:
-			self.main = Config.WindowGeometry(default_size=Size(740, 400))
+			self.main = Config.WindowGeometry(default_size=UI.Size(740, 400))
 			self.find_replace = Config.WindowGeometry()
 			self.colors = Config.WindowGeometry()
 			self.help = Config.WindowGeometry()
@@ -35,21 +35,21 @@ class PyTRGConfig(Config.Config):
 
 	class LastPath(Config.Group):
 		def __init__(self) -> None:
-			self.trg = Config.SelectFile(name='TRG', filetypes=[FileType.trg()])
-			self.txt = Config.SelectFile(name='TXT', filetypes=[FileType.txt()], op_type=Config.FileOpType.import_export)
+			self.trg = Config.SelectFile(name='TRG', filetypes=[UI.FileType.trg()])
+			self.txt = Config.SelectFile(name='TXT', filetypes=[UI.FileType.txt()], op_type=Config.FileOpType.import_export)
 			super().__init__()
 
 	class Settings(Config.Group):
 		class Files(Config.Group):
 			def __init__(self) -> None:
-				self.stat_txt = Config.File(default='MPQ:rez\\stat_txt.tbl', name='TBL', filetypes=[FileType.tbl()])
-				self.aiscript = Config.File(default='MPQ:scripts\\aiscript.bin', name='aiscript.bin', filetypes=[FileType.bin_ai()])
-				self.bwscript = Config.File(default='MPQ:scripts\\bwscript.bin', name='bwscript.bin', filetypes=[FileType.bin_ai()])
+				self.stat_txt = Config.File(default='MPQ:rez\\stat_txt.tbl', name='TBL', filetypes=[UI.FileType.tbl()])
+				self.aiscript = Config.File(default='MPQ:scripts\\aiscript.bin', name='aiscript.bin', filetypes=[UI.FileType.bin_ai()])
+				self.bwscript = Config.File(default='MPQ:scripts\\bwscript.bin', name='bwscript.bin', filetypes=[UI.FileType.bin_ai()])
 				super().__init__()
 
 		class LastPath(Config.Group):
 			def __init__(self) -> None:
-				self.mpqs = Config.SelectFile(name='MPQ', filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
+				self.mpqs = Config.SelectFile(name='MPQ', filetypes=[UI.FileType.mpq_all(),UI.FileType.mpq(),UI.FileType.exe_mpq(),UI.FileType.scm(),UI.FileType.scx()])
 				super().__init__()
 
 		def __init__(self) -> None:

@@ -3,7 +3,7 @@ from .Sort import SortBy
 from .DecompilingFormat import BlockFormat, CommandFormat, CommentFormat
 
 from ..Utilities import Config
-from ..Utilities.UIKit import Size, FileType
+from ..Utilities import UIKit as UI
 from ..Utilities import Assets
 
 def _migrate_1_to_2(data: dict) -> None:
@@ -32,7 +32,7 @@ class PyAIConfig(Config.Config):
 	class Windows(Config.Group):
 		class Settings(Config.Group):
 			def __init__(self) -> None:
-				self.main = Config.WindowGeometry(default_size=Size(550,430))
+				self.main = Config.WindowGeometry(default_size=UI.Size(550,430))
 				self.mpq_select = Config.WindowGeometry()
 				super().__init__()
 
@@ -45,8 +45,8 @@ class PyAIConfig(Config.Config):
 
 		class FixIssues(Config.Group):
 			def __init__(self) -> None:
-				self.resolutions = Config.WindowGeometry(default_size=Size(700, 420))
-				self.preview_code = Config.WindowGeometry(default_size=Size(700, 700))
+				self.resolutions = Config.WindowGeometry(default_size=UI.Size(700, 420))
+				self.preview_code = Config.WindowGeometry(default_size=UI.Size(700, 700))
 				super().__init__()
 
 		def __init__(self) -> None:
@@ -69,16 +69,16 @@ class PyAIConfig(Config.Config):
 	class LastPath(Config.Group):
 		class TXT(Config.Group):
 			def __init__(self) -> None:
-				self.ai = Config.SelectFile(name='AI TXT', filetypes=[FileType.txt()], op_type=Config.FileOpType.import_export)
-				self.settings = Config.SelectFile(name='Settings TXT', filetypes=[FileType.txt()])
-				self.extdefs = Config.SelectFile(name='External Definitions TXT', filetypes=[FileType.txt()], op_type=Config.FileOpType.import_export)
-				self.import_ = Config.SelectFile(name='Imports', filetypes=[FileType.txt()])
+				self.ai = Config.SelectFile(name='AI TXT', filetypes=[UI.FileType.txt()], op_type=Config.FileOpType.import_export)
+				self.settings = Config.SelectFile(name='Settings TXT', filetypes=[UI.FileType.txt()])
+				self.extdefs = Config.SelectFile(name='External Definitions TXT', filetypes=[UI.FileType.txt()], op_type=Config.FileOpType.import_export)
+				self.import_ = Config.SelectFile(name='Imports', filetypes=[UI.FileType.txt()])
 				super().__init__()
 
 		def __init__(self) -> None:
-			self.bin = Config.SelectFile(name='AI .bin', filetypes=[FileType.bin_ai()])
-			self.tbl = Config.SelectFile(name='stat_txt.tbl', filetypes=[FileType.tbl()])
-			self.mpq = Config.SelectFile(name='MPQ', filetypes=[FileType.mpq(),FileType.exe_mpq()])
+			self.bin = Config.SelectFile(name='AI .bin', filetypes=[UI.FileType.bin_ai()])
+			self.tbl = Config.SelectFile(name='stat_txt.tbl', filetypes=[UI.FileType.tbl()])
+			self.mpq = Config.SelectFile(name='MPQ', filetypes=[UI.FileType.mpq(),UI.FileType.exe_mpq()])
 			self.txt = PyAIConfig.LastPath.TXT()
 			super().__init__()
 
@@ -86,19 +86,19 @@ class PyAIConfig(Config.Config):
 		class Files(Config.Group):
 			class DAT(Config.Group):
 				def __init__(self) -> None:
-					self.units = Config.File(default=Assets.mpq_file_path('arr', 'units.dat'), name='units.dat', filetypes=[FileType.dat()])
-					self.upgrades = Config.File(default=Assets.mpq_file_path('arr', 'upgrades.dat'), name='upgrades.dat', filetypes=[FileType.dat()])
-					self.techdata = Config.File(default=Assets.mpq_file_path('arr', 'techdata.dat'), name='techdata.dat', filetypes=[FileType.dat()])
+					self.units = Config.File(default=Assets.mpq_file_path('arr', 'units.dat'), name='units.dat', filetypes=[UI.FileType.dat()])
+					self.upgrades = Config.File(default=Assets.mpq_file_path('arr', 'upgrades.dat'), name='upgrades.dat', filetypes=[UI.FileType.dat()])
+					self.techdata = Config.File(default=Assets.mpq_file_path('arr', 'techdata.dat'), name='techdata.dat', filetypes=[UI.FileType.dat()])
 					super().__init__()
 
 			def __init__(self) -> None:
 				self.dat = PyAIConfig.Settings.Files.DAT()
-				self.stat_txt = Config.File(default=Assets.mpq_file_path('rez', 'stat_txt.tbl'), name='stat_txt.tbl', filetypes=[FileType.tbl()])
+				self.stat_txt = Config.File(default=Assets.mpq_file_path('rez', 'stat_txt.tbl'), name='stat_txt.tbl', filetypes=[UI.FileType.tbl()])
 				super().__init__()
 
 		class LastPath(Config.Group):
 			def __init__(self) -> None:
-				self.mpqs = Config.SelectFile(name='MPQ', filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
+				self.mpqs = Config.SelectFile(name='MPQ', filetypes=[UI.FileType.mpq_all(),UI.FileType.mpq(),UI.FileType.exe_mpq(),UI.FileType.scm(),UI.FileType.scx()])
 				super().__init__()
 
 		def __init__(self) -> None:

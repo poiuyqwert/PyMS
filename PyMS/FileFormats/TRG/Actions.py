@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from .ActionDefinition import ActionDefinition, BasicActionDefinition, MemoryActionDefinition, RawActionDefinition
-from .Parameters import AIScriptParameter, AllianceStatusParameter, DisplayParameter, LocationParameter, ModifierParameter, NumberParameter, OrderParameter, PercentageParameter, PlayerParameter, PropertiesParameter, QuantityParameter, ResourceTypeParameter, ScoreTypeParameter, StateActionParameter, StringParameter, SwitchActionParameter, SwitchParameter, TimeParameter, UnitParameter, UnitTypeParameter, WAVParameter
+from . import Parameters
 from .Action import Action
 from .Constants import ActionType, Matches
 
@@ -31,7 +31,7 @@ definitions_registry: list[ActionDefinition] = [
 		name='Wait',
 		description='Wait for {0} milliseconds.',
 		action_type=ActionType.wait,
-		parameters=(TimeParameter(),)
+		parameters=(Parameters.TimeParameter(),)
 	),
 	BasicActionDefinition(
 		name='PauseGame',
@@ -47,145 +47,145 @@ definitions_registry: list[ActionDefinition] = [
 		name='Transmission',
 		description='Send transmission to current player from {4} at {5}. Play {2} with duration {3}. Modify transmission duration: {6} {7} milliseconds. Display {0} when {1}.',
 		action_type=ActionType.transmission,
-		parameters=(StringParameter(), DisplayParameter(), WAVParameter(), TimeParameter(), UnitParameter(), LocationParameter(), ModifierParameter(), TimeParameter(transmission=True))
+		parameters=(Parameters.StringParameter(), Parameters.DisplayParameter(), Parameters.WAVParameter(), Parameters.TimeParameter(), Parameters.UnitParameter(), Parameters.LocationParameter(), Parameters.ModifierParameter(), Parameters.TimeParameter(transmission=True))
 	),
 	BasicActionDefinition(
 		name='PlayWAV',
 		description='Play {0} with duration {1}.',
 		action_type=ActionType.play_wav,
-		parameters=(WAVParameter(), TimeParameter())
+		parameters=(Parameters.WAVParameter(), Parameters.TimeParameter())
 	),
 	BasicActionDefinition(
 		name='DisplayTextMessage',
 		description='Display {0} for current player when {1}.',
 		action_type=ActionType.display_message,
-		parameters=(StringParameter(), DisplayParameter())
+		parameters=(Parameters.StringParameter(), Parameters.DisplayParameter())
 	),
 	BasicActionDefinition(
 		name='CenterView',
 		description='Center view for current player at {0}.',
 		action_type=ActionType.center_view,
-		parameters=(LocationParameter(),)
+		parameters=(Parameters.LocationParameter(),)
 	),
 	BasicActionDefinition(
 		name='CreateUnitWithProperties',
 		description='Create {1} {2} at {3} for {0}. Apply {4}.',
 		action_type=ActionType.create_unit_properties,
-		parameters=(PlayerParameter(), QuantityParameter(), UnitParameter(), LocationParameter(), PropertiesParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.QuantityParameter(), Parameters.UnitParameter(), Parameters.LocationParameter(), Parameters.PropertiesParameter())
 	),
 	BasicActionDefinition(
 		name='SetMissionObjectives',
 		description='Set mission objectives to {0}.',
 		action_type=ActionType.set_mission_objectives,
-		parameters=(StringParameter(),),
+		parameters=(Parameters.StringParameter(),),
 		default_flags=0
 	),
 	BasicActionDefinition(
 		name='SetSwitch',
 		description='Modify switch: {1} {0}',
 		action_type=ActionType.set_switch,
-		parameters=(SwitchParameter(), SwitchActionParameter())
+		parameters=(Parameters.SwitchParameter(), Parameters.SwitchActionParameter())
 	),
 	BasicActionDefinition(
 		name='SetCountdownTimer',
 		description='Modify countdown timer: {0} {1} seconds.',
 		action_type=ActionType.set_countdown_timer,
-		parameters=(ModifierParameter(), TimeParameter())
+		parameters=(Parameters.ModifierParameter(), Parameters.TimeParameter())
 	),
 	BasicActionDefinition(
 		name='RunAIScript',
 		description='Execute AI Script {0}.',
 		action_type=ActionType.run_aiscript,
-		parameters=(AIScriptParameter(location_based=False),)
+		parameters=(Parameters.AIScriptParameter(location_based=False),)
 	),
 	BasicActionDefinition(
 		name='RunAIScriptAtLocation',
 		description='Execute AI Script {0} at {1}.',
 		action_type=ActionType.run_aiscript_at_location,
-		parameters=(AIScriptParameter(location_based=True), LocationParameter())
+		parameters=(Parameters.AIScriptParameter(location_based=True), Parameters.LocationParameter())
 	),
 	BasicActionDefinition(
 		name='LeaderboardControl',
 		description='Show Leader Board for most control of {1}. Display label {0}.',
 		action_type=ActionType.leaderboard_control,
-		parameters=(StringParameter(), UnitTypeParameter()),
+		parameters=(Parameters.StringParameter(), Parameters.UnitTypeParameter()),
 		default_flags=0
 	),
 	BasicActionDefinition(
 		name='LeaderboardControlAtLocation',
 		description='Show Leader Board for most control of {1} at {2}. Display label {0}.',
 		action_type=ActionType.leaderboard_control_at_location,
-		parameters=(StringParameter(), UnitTypeParameter(), LocationParameter()),
+		parameters=(Parameters.StringParameter(), Parameters.UnitTypeParameter(), Parameters.LocationParameter()),
 		default_flags=0
 	),
 	BasicActionDefinition(
 		name='LeaderboardResources',
 		description='Show Leader Board for accumulation of most {1}. Display label {0}.',
 		action_type=ActionType.leaderboard_resources,
-		parameters=(StringParameter(), ResourceTypeParameter()),
+		parameters=(Parameters.StringParameter(), Parameters.ResourceTypeParameter()),
 		default_flags=0
 	),
 	BasicActionDefinition(
 		name='LeaderboardKills',
 		description='Show Leader Board for accumulation of most kills of {1}. Display label {0}.',
 		action_type=ActionType.leaderboard_kills,
-		parameters=(StringParameter(), UnitTypeParameter()),
+		parameters=(Parameters.StringParameter(), Parameters.UnitTypeParameter()),
 		default_flags=0
 	),
 	BasicActionDefinition(
 		name='LeaderboardPoints',
 		description='Show Leader Board for accumulation of most {1} points. Display label {0}.',
 		action_type=ActionType.leaderboard_points,
-		parameters=(StringParameter(), ScoreTypeParameter()),
+		parameters=(Parameters.StringParameter(), Parameters.ScoreTypeParameter()),
 		default_flags=0
 	),
 	BasicActionDefinition(
 		name='KillUnit',
 		description='Kill all {1} for {0}.',
 		action_type=ActionType.kill_unit,
-		parameters=(PlayerParameter(), UnitTypeParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.UnitTypeParameter())
 	),
 	BasicActionDefinition(
 		name='KillUnitsAtLocation',
 		description='Kill {1} {2} for {0} at {3}.',
 		action_type=ActionType.kill_unit_at_location,
-		parameters=(PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.QuantityParameter(), Parameters.UnitTypeParameter(), Parameters.LocationParameter())
 	),
 	BasicActionDefinition(
 		name='RemoveUnit',
 		description='Remove all {1} for {0}.',
 		action_type=ActionType.remove_unit,
-		parameters=(PlayerParameter(), UnitTypeParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.UnitTypeParameter())
 	),
 	BasicActionDefinition(
 		name='RemoveUnitsAtLocation',
 		description='Remove {1} {2} for {0} at {3}.',
 		action_type=ActionType.remove_unit_at_location,
-		parameters=(PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.QuantityParameter(), Parameters.UnitTypeParameter(), Parameters.LocationParameter())
 	),
 	BasicActionDefinition(
 		name='SetResources',
 		description='Modify resources for {0}: {1} {2} of {3}.',
 		action_type=ActionType.set_resources,
-		parameters=(PlayerParameter(), ModifierParameter(), NumberParameter(), ResourceTypeParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.ModifierParameter(), Parameters.NumberParameter(), Parameters.ResourceTypeParameter())
 	),
 	BasicActionDefinition(
 		name='SetScore',
 		description='Modify score for {0}: {1} {2} of {3}.',
 		action_type=ActionType.set_score,
-		parameters=(PlayerParameter(), ModifierParameter(), NumberParameter(), ScoreTypeParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.ModifierParameter(), Parameters.NumberParameter(), Parameters.ScoreTypeParameter())
 	),
 	BasicActionDefinition(
 		name='MinimapPing',
 		description='Show minimap ping for current player at {0}.',
 		action_type=ActionType.minimap_ping,
-		parameters=(LocationParameter(),)
+		parameters=(Parameters.LocationParameter(),)
 	),
 	BasicActionDefinition(
 		name='TalkingPortrait',
 		description='Show {0} talking to current player for {1} milliseconds.',
 		action_type=ActionType.talking_portrait,
-		parameters=(UnitParameter(), TimeParameter())
+		parameters=(Parameters.UnitParameter(), Parameters.TimeParameter())
 	),
 	BasicActionDefinition(
 		name='MuteUnitSpeech',
@@ -201,140 +201,140 @@ definitions_registry: list[ActionDefinition] = [
 		name='LeaderboardComputerPlayers',
 		description='Set use of computer players in leaderboard calculations to {0}.',
 		action_type=ActionType.leaderboard_computer_players,
-		parameters=(StateActionParameter(),),
+		parameters=(Parameters.StateActionParameter(),),
 		default_flags=0
 	),
 	BasicActionDefinition(
 		name='LeaderboardGoalControl',
 		description='Show Leader Board for player closest to control of {1} of {2}. Display label {0}.',
 		action_type=ActionType.leaderboard_goal_control,
-		parameters=(StringParameter(), NumberParameter(), UnitTypeParameter()),
+		parameters=(Parameters.StringParameter(), Parameters.NumberParameter(), Parameters.UnitTypeParameter()),
 		default_flags=0
 	),
 	BasicActionDefinition(
 		name='LeaderboardGoalControlAtLocation',
 		description='Show Leader Board for player closest to control of {1} of {2} at {3}. Display label {0}.',
 		action_type=ActionType.leaderboard_goal_control_at_location,
-		parameters=(StringParameter(), NumberParameter(), UnitTypeParameter(), LocationParameter()),
+		parameters=(Parameters.StringParameter(), Parameters.NumberParameter(), Parameters.UnitTypeParameter(), Parameters.LocationParameter()),
 		default_flags=0
 	),
 	BasicActionDefinition(
 		name='LeaderboardGoalResources',
 		description='Show Leader Board for player closest to accumulation of {1} {2}. Display label {0}',
 		action_type=ActionType.leaderboard_goal_resources,
-		parameters=(StringParameter(), NumberParameter(), ResourceTypeParameter()),
+		parameters=(Parameters.StringParameter(), Parameters.NumberParameter(), Parameters.ResourceTypeParameter()),
 		default_flags=0
 	),
 	BasicActionDefinition(
 		name='LeaderboardGoalKills',
 		description='Show Leader Board for player closest to {1} kills of {2}. Display label {0}.',
 		action_type=ActionType.leaderboard_goal_kills,
-		parameters=(StringParameter(), NumberParameter(), UnitTypeParameter()),
+		parameters=(Parameters.StringParameter(), Parameters.NumberParameter(), Parameters.UnitTypeParameter()),
 		default_flags=0
 	),
 	BasicActionDefinition(
 		name='LeaderboardGoalPoints',
 		description='Show Leader Board for player closest to {1} of {2}. Display label {0}.',
 		action_type=ActionType.leaderboard_goal_points,
-		parameters=(StringParameter(), NumberParameter(), ScoreTypeParameter()),
+		parameters=(Parameters.StringParameter(), Parameters.NumberParameter(), Parameters.ScoreTypeParameter()),
 		default_flags=0
 	),
 	BasicActionDefinition(
 		name='MoveLocation',
 		description='Center location {2} on {1} owned by {0} at {3}.',
 		action_type=ActionType.move_location,
-		parameters=(PlayerParameter(), UnitTypeParameter(), LocationParameter(), LocationParameter(destination=True))
+		parameters=(Parameters.PlayerParameter(), Parameters.UnitTypeParameter(), Parameters.LocationParameter(), Parameters.LocationParameter(destination=True))
 	),
 	BasicActionDefinition(
 		name='MoveUnit',
 		description='Move {1} {2} for {0} at {4} to {3}.',
 		action_type=ActionType.move_unit,
-		parameters=(PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter(), LocationParameter(destination=True))
+		parameters=(Parameters.PlayerParameter(), Parameters.QuantityParameter(), Parameters.UnitTypeParameter(), Parameters.LocationParameter(), Parameters.LocationParameter(destination=True))
 	),
 	BasicActionDefinition(
 		name='LeaderboardGreed',
 		description='Show Greed Leader Board for player closest to accumulation of {0} ore and gas.',
 		action_type=ActionType.leaderboard_greed,
-		parameters=(NumberParameter(),)
+		parameters=(Parameters.NumberParameter(),)
 	),
 	BasicActionDefinition(
 		name='SetNextScenario',
 		description='Load scenario {0} after completion of current game.',
 		action_type=ActionType.set_next_scenario,
-		parameters=(StringParameter(),)
+		parameters=(Parameters.StringParameter(),)
 	),
 	BasicActionDefinition(
 		name='SetDoodadState',
 		description='Set doodad state for {1} for {0} at {2} to {3}.',
 		action_type=ActionType.set_doodad_state,
-		parameters=(PlayerParameter(), UnitTypeParameter(), LocationParameter(), StateActionParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.UnitTypeParameter(), Parameters.LocationParameter(), Parameters.StateActionParameter())
 	),
 	BasicActionDefinition(
 		name='SetInvincibility',
 		description='Set invincibility for {1} owned by {0} at {2} to {3}.',
 		action_type=ActionType.set_invincibility,
-		parameters=(PlayerParameter(), UnitTypeParameter(), LocationParameter(), StateActionParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.UnitTypeParameter(), Parameters.LocationParameter(), Parameters.StateActionParameter())
 	),
 	BasicActionDefinition(
 		name='CreateUnit',
 		description='Create {1} {2} at {3} for {0}.',
 		action_type=ActionType.create_unit,
-		parameters=(PlayerParameter(), QuantityParameter(), UnitParameter(), LocationParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.QuantityParameter(), Parameters.UnitParameter(), Parameters.LocationParameter())
 	),
 	BasicActionDefinition(
 		name='SetDeaths',
 		description='Modify death counts for {0}: {2} {3} for {1}.',
 		action_type=ActionType.set_deaths,
-		parameters=(PlayerParameter(), UnitTypeParameter(), ModifierParameter(), NumberParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.UnitTypeParameter(), Parameters.ModifierParameter(), Parameters.NumberParameter())
 	),
 	BasicActionDefinition(
 		name='Order',
 		description='Issue order to all {1} owned by {0} at {2}: {3} to {4}.',
 		action_type=ActionType.order,
-		parameters=(PlayerParameter(), UnitTypeParameter(), LocationParameter(), OrderParameter(), LocationParameter(destination=True))
+		parameters=(Parameters.PlayerParameter(), Parameters.UnitTypeParameter(), Parameters.LocationParameter(), Parameters.OrderParameter(), Parameters.LocationParameter(destination=True))
 	),
 	BasicActionDefinition(
 		name='Comment',
 		description='Comment: {0}.',
 		action_type=ActionType.comment,
-		parameters=(StringParameter(),),
+		parameters=(Parameters.StringParameter(),),
 		default_flags=0
 	),
 	BasicActionDefinition(
 		name='GiveUnitsToPlayer',
 		description='Give {2} {3} owned by {0} at {4} to {1}.',
 		action_type=ActionType.give_units,
-		parameters=(PlayerParameter(), PlayerParameter(target=True), QuantityParameter(), UnitTypeParameter(), LocationParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.PlayerParameter(target=True), Parameters.QuantityParameter(), Parameters.UnitTypeParameter(), Parameters.LocationParameter())
 	),
 	BasicActionDefinition(
 		name='ModifyUnitHitPoints',
 		description='Set hit points for {1} {2} owned by {0} at {3} to {4}.',
 		action_type=ActionType.modify_unit_hit_points,
-		parameters=(PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter(), PercentageParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.QuantityParameter(), Parameters.UnitTypeParameter(), Parameters.LocationParameter(), Parameters.PercentageParameter())
 	),
 	BasicActionDefinition(
 		name='ModifyUnitEnergy',
 		description='Set energy points for {1} {2} owned by {0} at {3} to {4}.',
 		action_type=ActionType.modify_unit_energy,
-		parameters=(PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter(), PercentageParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.QuantityParameter(), Parameters.UnitTypeParameter(), Parameters.LocationParameter(), Parameters.PercentageParameter())
 	),
 	BasicActionDefinition(
 		name='ModifyUnitShieldPoints',
 		description='Set shield points for {1} {2} owned by {0} at {3} to {4}',
 		action_type=ActionType.modify_unit_shield_points,
-		parameters=(PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter(), PercentageParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.QuantityParameter(), Parameters.UnitTypeParameter(), Parameters.LocationParameter(), Parameters.PercentageParameter())
 	),
 	BasicActionDefinition(
 		name='ModifyUnitResourceAmount',
 		description='Set resource amount for {1} resource sources owned by {0} at {2} to {3}.',
 		action_type=ActionType.modify_unit_resources,
-		parameters=(PlayerParameter(), QuantityParameter(), LocationParameter(), NumberParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.QuantityParameter(), Parameters.LocationParameter(), Parameters.NumberParameter())
 	),
 	BasicActionDefinition(
 		name='ModifyUnitHangerCount',
 		description='Add at most {4} to hangar for {1} {2} at {3} owned by {0}.',
 		action_type=ActionType.modify_unit_hanger_count,
-		parameters=(PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter(), NumberParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.QuantityParameter(), Parameters.UnitTypeParameter(), Parameters.LocationParameter(), Parameters.NumberParameter())
 	),
 	BasicActionDefinition(
 		name='PauseTimer',
@@ -355,7 +355,7 @@ definitions_registry: list[ActionDefinition] = [
 		name='SetAllianceStatus',
 		description='Set {0} to {1}.',
 		action_type=ActionType.set_alliance_status,
-		parameters=(PlayerParameter(), AllianceStatusParameter())
+		parameters=(Parameters.PlayerParameter(), Parameters.AllianceStatusParameter())
 	),
 	BasicActionDefinition(
 		name='DisableDebugMode',
