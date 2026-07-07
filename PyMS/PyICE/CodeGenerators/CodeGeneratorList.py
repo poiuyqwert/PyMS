@@ -257,7 +257,7 @@ class CodeGeneratorEditorList(CodeGenerator.CodeGeneratorEditor[CodeGeneratorTyp
 				break
 
 	def save(self) -> None:
-		self.generator.values = self.text.get(1.0, UI.END).rstrip('\n').split('\n')
+		self.generator.values = self.text.get('1.0', UI.END).rstrip('\n').split('\n')
 		self.generator.repeater = CodeGeneratorEditorList.REPEATERS[self.repeater.get()]()
 
 	def is_resizable(self) -> tuple[bool, bool]:

@@ -15,7 +15,16 @@ from ..Utilities.CheckSaved import CheckSaved
 
 import re
 
-from typing import Any
+from typing import Any, Container
+
+def unique_variable_name(name: str, existing_names: Container[str]) -> str:
+	# 'n' is reserved for the generated index variable
+	if name != 'n' and name not in existing_names:
+		return name
+	number = 2
+	while f'{name}{number}' in existing_names:
+		number += 1
+	return f'{name}{number}'
 
 class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 	def __init__(self, parent: UI.Misc, config: PyICEConfig, delegate: CodeGeneratorDelegate) -> None:
@@ -145,7 +154,7 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 		has_selection = not not self.listbox.curselection()
 		self.toolbar.tag_enabled('has_selection', has_selection)
 
-		can_save = bool(self.variables and self.text.get(1.0,UI.END))
+		can_save = bool(self.variables and self.text.get('1.0',UI.END))
 		self.toolbar.tag_enabled('can_save', can_save)
 
 		has_presets = not not self.config_.generator.presets.data
@@ -159,18 +168,7 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 		self.update_list()
 
 	def unique_name(self, name: str, ignore: CodeGeneratorVariable | None = None) -> str:
-		n = 1
-		unique = name
-		if name == 'n':
-			n = 2
-			name = 'n2'
-		for v in self.variables:
-			if v == ignore:
-				continue
-			if v.name == unique:
-				n += 1
-				unique = f'{name}{n}'
-		return unique
+		return unique_variable_name(name, set(v.name for v in self.variables if v is not ignore))
 
 	def edit(self, *_: Any) -> None:
 		if self.listbox.curselection():
@@ -198,7 +196,7 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 					break
 			preset = GeneratorPreset(
 				name=name,
-				code=self.text.get(1.0,UI.END).rstrip('\r\n'),
+				code=self.text.get('1.0',UI.END).rstrip('\r\n'),
 				variables=list(self.variables)
 			)
 			if replace is None:
@@ -209,11 +207,11 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 		NameDialog(parent=self, window_geometry_config=self.config_.windows.generator.name, title='Save Preset', done='Save', save_callback=do_save)
 
 	def load_preset(self, preset: GeneratorPreset, window: UI.AnyWindow | None = None) -> bool:
-		if self.variables or self.text.get(1.0, UI.END).strip():
+		if self.variables or self.text.get('1.0', UI.END).strip():
 			cont = UI.MessageBox.askyesno(parent=window if window else self, title='Load Preset?', message="Your current variables and code will be lost.", default=UI.MessageBox.YES)
 			if not cont:
 				return False
-		self.text.delete(1.0, UI.END)
+		self.text.delete('1.0', UI.END)
 		self.text.insert(UI.END, preset.code)
 		self.variables = list(preset.variables)
 		self.update_list()
@@ -226,7 +224,7 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 		code = self.generate()
 		if code is not None:
 			self.previewing = True
-			self.code.delete(1.0, UI.END)
+			self.code.delete('1.0', UI.END)
 			self.code.insert(UI.END, code)
 			self.previewing = False
 
@@ -244,7 +242,7 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 
 	def generate(self) -> str | None:
 		variable_re = re.compile(r'([$%])([a-zA-Z0-9_]+)')
-		code = self.text.get(1.0, UI.END)
+		code = self.text.get('1.0', UI.END)
 		generated = ''
 		count = None
 		for v in self.variables:

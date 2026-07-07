@@ -134,7 +134,7 @@ class FindReplaceDialog(PyMSDialog):
 					self.check(3)
 				else:
 					p: UI.Misc = self
-					if key and key.keycode == 13:
+					if key and key.keysym == UI.Key.Return.name():
 						p = self.parent
 					UI.MessageBox.showinfo(parent=p, title='Find', message="Can't find text.")
 			else:
@@ -174,14 +174,14 @@ class FindReplaceDialog(PyMSDialog):
 						break
 					if (not u and n == -1 and self.text.index(f'{i} lineend') == e) or i == e:
 						p = self
-						if key and key.keycode == 13:
+						if key and key.keysym == UI.Key.Return.name():
 							p = self.parent
 						UI.MessageBox.showinfo(parent=p, title='Find', message="Can't find text.")
 						break
 					i = self.text.index(f'{i} {s}1lines {lse}')
 				else:
 					p = self
-					if key and key.keycode == 13:
+					if key and key.keysym == UI.Key.Return.name():
 						p = self.parent
 					UI.MessageBox.showinfo(parent=p, title='Find', message="Can't find text.")
 
@@ -225,6 +225,12 @@ class FindReplaceDialog(PyMSDialog):
 			self.resettimer = None
 		self.findentry['bg'] = self.findentry_c
 
-	def dismiss(self) -> None:
+	def destroy(self) -> None:
+		# Closing this dialog only withdraws it so it can be reused (the editor re-shows
+		# the same window via deiconify); the owning CodeEditDialog performs the real
+		# teardown. Cancel any pending color-reset timer so it doesn't fire after close.
+		if self.resettimer:
+			self.after_managed_cancel(self.resettimer)
+			self.resettimer = None
 		self.window_geometry_config.save_size(self)
-		PyMSDialog.dismiss(self)
+		PyMSDialog.withdraw(self)

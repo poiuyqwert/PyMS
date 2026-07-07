@@ -23,6 +23,7 @@ class ImportListDialog(PyMSDialog):
 
 		##Listbox
 		self.listbox = UI.ScrolledListbox(self, font=UI.Font.fixed(), width=1, height=1)
+		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), lambda *_: self.update_states())
 		self.listbox.pack(fill=UI.BOTH, expand=1)
 
 		##Buttons
@@ -56,6 +57,8 @@ class ImportListDialog(PyMSDialog):
 			self.listbox.see(UI.END)
 
 	def remove(self) -> None:
+		if not self.listbox.curselection():
+			return
 		index = int(self.listbox.curselection()[0])
 		del self.delegate.imports[index]
 		if self.delegate.imports and index == len(self.delegate.imports):
@@ -64,6 +67,8 @@ class ImportListDialog(PyMSDialog):
 		self.update_list()
 
 	def iimport(self) -> None:
+		if not self.listbox.curselection():
+			return
 		self.delegate.iimport(files=self.listbox.get(self.listbox.curselection()[0]), parent=self)
 
 	def iimportall(self) -> None:
@@ -74,13 +79,13 @@ class ImportListDialog(PyMSDialog):
 		self.toolbar.tag_enabled('has_selection', has_selection)
 
 		can_import = not not self.delegate.imports
-		self.toolbar.tag_enabled('can_import', can_import)
 		self.importbtn['state'] = UI.NORMAL if can_import else UI.DISABLED
 
 	def update_list(self) -> None:
 		sel = 0
 		if self.listbox.size():
-			sel = self.listbox.curselection()[0]
+			if self.listbox.curselection():
+				sel = self.listbox.curselection()[0]
 			self.listbox.delete(0, UI.END)
 		if self.delegate.imports:
 			for file in self.delegate.imports:

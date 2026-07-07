@@ -90,7 +90,6 @@ class PreviewerDialog(PyMSDialog):
 		self.text = text
 		self.previewing: Preview = Preview(0, 0, None)
 		self.previewnext: Preview | None = None
-		self.timer: str | None = None
 		self.type = UI.IntVar()
 		self.curid = UI.IntVar()
 		self.curcmd = UI.IntVar()
@@ -338,26 +337,6 @@ class PreviewerDialog(PyMSDialog):
 			self.previewnext = self.previewing.next_frame(s)
 			self.updateframes()
 			self.drawpreview()
-		# if not n in [3,4,5,6,7]:
-		# 	if n in [0,10]:
-		# 		s = [self.curgrp.frames-1,0][not n]
-		# 	elif n in [1,2,8,9]:
-		# 		s = self.previewing[1] + [-17,-1,1,17][n % 5 - 1]
-		# 		if s < 0 or s >= self.curgrp[2]:
-		# 			if not self.looppreview.get():
-		# 				return
-		# 			if s < 0:
-		# 				s += self.curgrp[2]
-		# 			if s >= self.curgrp[2]:
-		# 				s %= self.curgrp[2]
-		# 	self.previewnext[1] = s
-		# 	self.updateframes()
-		# 	self.drawpreview()
-		# if n in [3,4,6,7]:
-		# 	self.speed = [-17,-1,None,1,17][n - 3]
-		# 	self.play = self.after_managed(int(self.prevspeed.get()), self.playframe)
-		# elif self.speed or self.play:
-		# 	self.stopframe()
 		self.action_states()
 
 	def stopframe(self) -> None:
@@ -545,9 +524,6 @@ class PreviewerDialog(PyMSDialog):
 		elif t == UI.SCROLL:
 			self.previewnext = self.previewing.next_frame(min(self.previewing.grp.frames-1,max(0,self.previewing.frame + int(p) * a[e])))
 		self.updateframes()
-		# if self.timer:
-			# self.after_cancel_managed(self.timer)
-		# self.timer = self.after_managed(10, self.drawpreview)
 		self.drawpreview()
 
 	def drawpreview(self) -> None:

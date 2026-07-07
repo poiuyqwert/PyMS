@@ -50,6 +50,8 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		self.update_list()
 
 	def remove(self) -> None:
+		if not self.listbox.curselection():
+			return
 		selected = int(self.listbox.curselection()[0])
 		preset = self.config_.generator.presets.data[selected]
 		cont = UI.MessageBox.askokcancel(parent=self, title='Remove Preset?', message=f"'{preset.name}' will be removed and you won't be able to get it back. Continue?")
@@ -68,7 +70,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		preset = self.config_.generator.presets.data[selected]
 		try:
 			with IO.OutputText(path) as f:
-				f.write(json.dumps(preset, indent=4))
+				f.write(json.dumps(preset.to_json(), indent=4))
 		except Exception:
 			ErrorDialog(self, PyMSError('Export', f"Could not write to file '{path}'"))
 
@@ -86,7 +88,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 			preset = GeneratorPreset.from_json(preset_json)
 			copy = 1
 			while True:
-				check = preset.name + '' if copy == 1 else str(copy)
+				check = preset.name if copy == 1 else preset.name + str(copy)
 				for p in self.config_.generator.presets.data:
 					if check == p.name:
 						copy += 1
@@ -137,6 +139,8 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		self.update_states()
 
 	def move(self, move: int) -> None:
+		if not self.listbox.curselection():
+			return
 		selected = int(self.listbox.curselection()[0])
 		preset = self.config_.generator.presets.data.pop(selected)
 		index = selected+move
@@ -146,6 +150,8 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		self.update_list()
 
 	def select(self) -> None:
+		if not self.listbox.curselection():
+			return
 		selected = int(self.listbox.curselection()[0])
 		preset = self.config_.generator.presets.data[selected]
 		if self.delegate.load_preset(preset, self):
