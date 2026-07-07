@@ -47,3 +47,7 @@ class Test_GeneratorPreset(unittest.TestCase):
 		for preset in DEFAULT_PRESETS:
 			json = preset.to_json()
 			self.assertEqual(GeneratorPreset.from_json(json).to_json(), json)
+
+	def test_default_preset_names_are_unique(self) -> None:
+		names = [preset.name for preset in DEFAULT_PRESETS]
+		self.assertEqual(len(names), len(set(names)))

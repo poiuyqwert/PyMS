@@ -39,6 +39,19 @@ class Test_CodeGeneratorTypeMath(unittest.TestCase):
 			CodeGeneratorTypeMath('__import__("os")').value(lambda _: '0')
 		self.assertIn('only numbers, +, -, /, *, (, ), and whitespace allowed', str(cm.exception))
 
+	def test_value_rejects_commas(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			CodeGeneratorTypeMath('1,2').value(lambda _: '0')
+		self.assertIn('only numbers, +, -, /, *, (, ), and whitespace allowed', str(cm.exception))
+
+	def test_value_supports_subtraction_and_negation(self) -> None:
+		self.assertEqual(CodeGeneratorTypeMath('10 - 4').value(lambda _: '0'), '6')
+		self.assertEqual(CodeGeneratorTypeMath('-5 + 2').value(lambda _: '0'), '-3')
+
+	def test_value_supports_division(self) -> None:
+		self.assertEqual(CodeGeneratorTypeMath('3 / 2').value(lambda _: '0'), '1.5')
+		self.assertEqual(CodeGeneratorTypeMath('7 // 2').value(lambda _: '0'), '3')
+
 	def test_value_rejects_unsafe_substituted_content(self) -> None:
 		with self.assertRaises(PyMSError) as cm:
 			CodeGeneratorTypeMath('$x').value(lambda _: 'abc')

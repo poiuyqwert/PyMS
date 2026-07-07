@@ -49,22 +49,6 @@ DEFAULT_PRESETS = [
 		]
 	),
 	GeneratorPreset(
-		name='Play Frames',
-		code="""\
-	playfram            $frame
-	wait                2""",
-		variables=[
-			CodeGeneratorVariable(
-				name='frame',
-				generator=CodeGeneratorTypeRange(
-					start=0,
-					stop=20,
-					step=1
-				)
-			)
-		]
-	),
-	GeneratorPreset(
 		name='Play Framesets',
 		code="""\
 	playfram            %frameset
