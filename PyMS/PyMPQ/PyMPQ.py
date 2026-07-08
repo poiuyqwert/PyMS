@@ -101,7 +101,8 @@ class PyMPQ(UI.MainWindow):
 		self.filter.set(['*','.+'][self.regex.get()])
 		filter_frame = UI.Frame(self)
 		UI.Label(filter_frame, text='Filter: ').pack(side=UI.LEFT)
-		self.textdrop = UI.TextDropDown(filter_frame, self.filter, self.config_.filter.history.data)
+		self.filter_history = UI.InputHistory(config=self.config_.filter.history)
+		self.textdrop = UI.TextDropDown(filter_frame, self.filter, self.filter_history)
 		self.textdrop.pack(side=UI.LEFT, fill=UI.X, expand=1)
 		self.textdrop.entry.bind(UI.Key.Return(), self.dofilter)
 		self.default_background_color = self.textdrop.entry['bg']
@@ -292,13 +293,7 @@ class PyMPQ(UI.MainWindow):
 	def dofilter(self, _event: UI.Event | None = None) -> None:
 		if not self.is_mpq_chosen():
 			return
-		mpq_filter = self.filter.get()
-		filters = self.config_.filter.history.data
-		if mpq_filter in filters:
-			filters.remove(mpq_filter)
-		filters.append(mpq_filter)
-		if len(filters) > 10:
-			del filters[0]
+		self.filter_history.record(self.filter.get())
 		self.update_list()
 
 	def open_mpq(self, read_only: bool = True) -> MPQ._WithContextManager:

@@ -7,6 +7,7 @@ from .Event import *
 
 from .Constants import *
 from .Variables import *
+from .InputHistory import *
 from .Images import *
 from .Widgets import *
 from .Components import *

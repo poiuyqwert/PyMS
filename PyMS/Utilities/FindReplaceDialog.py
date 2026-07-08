@@ -12,24 +12,12 @@ class _Update(Enum):
 	selection = 3
 
 class FindReplaceDialog(ReusablePyMSDialog):
-	HISTORY_LIMIT = 10
-
-	@staticmethod
-	def record_history(history: list[str], entry: str) -> None:
-		if not entry:
-			return
-		if entry in history:
-			history.remove(entry)
-		history.append(entry)
-		if len(history) > FindReplaceDialog.HISTORY_LIMIT:
-			del history[0]
-
-	def __init__(self, parent: UI.Misc, text: UI.CodeText, window_geometry_config: Config.WindowGeometry, *, can_replace: bool = True, find_history: list[str] | None = None, replace_history: list[str] | None = None) -> None:
+	def __init__(self, parent: UI.Misc, text: UI.CodeText, window_geometry_config: Config.WindowGeometry, *, can_replace: bool = True, find_history: UI.InputHistory | None = None, replace_history: UI.InputHistory | None = None) -> None:
 		self.text = text
 		self.window_geometry_config = window_geometry_config
 		self.can_replace = can_replace
-		self.find_history = find_history if find_history is not None else []
-		self.replace_history = replace_history if replace_history is not None else []
+		self.find_history = find_history if find_history is not None else UI.InputHistory()
+		self.replace_history = replace_history if replace_history is not None else UI.InputHistory()
 		self.resettimer: str | None = None
 		ReusablePyMSDialog.__init__(self, parent, 'Find/Replace' if can_replace else 'Find', resizable=(True, False))
 
@@ -136,7 +124,7 @@ class FindReplaceDialog(ReusablePyMSDialog):
 		f = self.find.get()
 		if not f:
 			return
-		self.record_history(self.find_history, f)
+		self.find_history.record(f)
 		r = self._compile_pattern()
 		if r is None:
 			return
@@ -147,7 +135,7 @@ class FindReplaceDialog(ReusablePyMSDialog):
 			UI.MessageBox.showinfo(parent=parent, title='Find', message="Can't find text.")
 		if replace:
 			rep = self.replacewith.get()
-			self.record_history(self.replace_history, rep)
+			self.replace_history.record(rep)
 			sel_range = tuple(str(index) for index in self.text.tag_ranges('sel'))
 			if sel_range and r.match(self.text.get(*sel_range)):
 				ins = r.sub(rep, self.text.get(*sel_range))

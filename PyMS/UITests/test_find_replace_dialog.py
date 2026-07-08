@@ -35,9 +35,9 @@ class Test_FindReplaceDialog(UITestCase):
 		self.pump(window)
 		sel = tuple(str(index) for index in window.text.tag_ranges('sel'))
 		self.assertEqual(sel, ('2.0', '2.4'))
-		self.assertEqual(dialog.find_history, ['beta'])
-		# The find entry dropdown shares the history list, so the recorded
-		# entry is available from the dropdown.
+		self.assertEqual(dialog.find_history.entries, ['beta'])
+		# The find entry dropdown shares the history, so the recorded entry is
+		# available from the dropdown.
 		self.assertIs(dialog.findentry.history, dialog.find_history)
 
 	def test_replace_all_replaces_matches(self) -> None:

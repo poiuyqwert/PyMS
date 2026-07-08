@@ -49,7 +49,7 @@ class ItemSelectDialog(PyMSDialog):
 		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), self.update_states)
 
 		s = UI.Frame(self)
-		self.filter_dropdown = UI.TextDropDown(s, self.filter_var, self.search_history_config.data if self.search_history_config else [])
+		self.filter_dropdown = UI.TextDropDown(s, self.filter_var, UI.InputHistory(config=self.search_history_config) if self.search_history_config else None)
 		self.filter_dropdown_bg = self.filter_dropdown.entry['bg']
 		self.filter_dropdown.pack(side=UI.LEFT, fill=UI.X, padx=1, pady=2)
 		UI.Radiobutton(s, text='Wildcard', variable=self.filter_is_regex_var, value=0, command=self.refresh_filter).pack(side=UI.LEFT, padx=1, pady=2)

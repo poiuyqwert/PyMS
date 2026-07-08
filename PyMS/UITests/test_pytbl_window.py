@@ -12,7 +12,6 @@ from ..FileFormats import FNT
 from ..FileFormats import PCX
 from ..FileFormats import Palette
 from ..FileFormats import GRP
-from ..Utilities.FindReplaceDialog import FindReplaceDialog
 from ..Utilities import UIKit as UI
 
 # These tests drive PyTBL through its public command methods, asserting on
@@ -90,7 +89,7 @@ class Test_PyTBL_find(PyTBLTestCase):
 			for n in range(15):
 				dialog.find.set(f'entry{n}')
 				dialog.findnext()
-		self.assertEqual(len(dialog.findhistory), FindReplaceDialog.HISTORY_LIMIT)
+		self.assertEqual(len(dialog.findhistory.entries), dialog.findhistory.limit)
 
 	def test_find_dialog_is_reused_after_close(self) -> None:
 		gui = self.make_pytbl(['alpha'])
@@ -133,7 +132,7 @@ class Test_PyTBL_goto(PyTBLTestCase):
 		for n in range(15):
 			dialog.goto.set(n)
 			dialog.jump()
-		self.assertEqual(len(dialog.gotohistory), FindReplaceDialog.HISTORY_LIMIT)
+		self.assertEqual(len(dialog.gotohistory.entries), dialog.gotohistory.limit)
 
 	def test_goto_dialog_is_reused_after_close(self) -> None:
 		gui = self.make_pytbl(['a\x00'])

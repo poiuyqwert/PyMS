@@ -112,7 +112,7 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 		collapse_view.set_collapsed(not self.data_context.config.show_listbox_options.value)
 
-		self.findhistory: list[str] = []
+		self.findhistory = UI.InputHistory()
 		self.find = UI.StringVar()
 		UI.Label(collapse_view, text='Find:').grid(column=0,row=0, sticky=UI.E)
 		find = UI.Frame(collapse_view)
@@ -329,9 +329,7 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 	def findnext(self, _event: UI.Event | None = None) -> None:
 		find = self.find.get()
-		if find in self.findhistory:
-			self.findhistory.remove(find)
-		self.findhistory.insert(0, find)
+		self.findhistory.record(find)
 		find = find.lower()
 		selection = self.listbox.curselection()
 		start = int(selection[0]) if selection else 0

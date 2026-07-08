@@ -36,10 +36,10 @@ class MainDelegate(Protocol):
 	def iimport(self, import_paths: list[str] | None, parent: UI.AnyWindow | None) -> None:
 		...
 
-	def get_find_history(self) -> list[str]:
+	def get_find_history(self) -> UI.InputHistory:
 		...
 
-	def get_replace_history(self) -> list[str]:
+	def get_replace_history(self) -> UI.InputHistory:
 		...
 
 class ActionDelegate(Protocol):

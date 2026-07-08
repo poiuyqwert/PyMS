@@ -57,8 +57,8 @@ class MPQSelect(PyMSDialog):
 		self.listbox.focus_set()
 
 		s = UI.Frame(self)
-		history = self.history_config.data[::-1]
-		self.textdrop = UI.TextDropDown(s, self.search, history)
+		self.history = UI.InputHistory(config=self.history_config)
+		self.textdrop = UI.TextDropDown(s, self.search, self.history)
 		self.textdrop_entry_c = self.textdrop.entry['bg']
 		self.textdrop.pack(side=UI.LEFT, fill=UI.X, padx=1, pady=2)
 		self.open = UI.Button(s, text=self.action.cta, width=10, command=self.ok)
@@ -127,12 +127,7 @@ class MPQSelect(PyMSDialog):
 	def ok(self, _: UI.Event | None = None) -> None:
 		f = self.listbox.get(self.listbox.curselection()[0])
 		self.file = 'MPQ:' + f
-		history = self.history_config.data
-		if f in history:
-			history.remove(f)
-		history.append(f)
-		if len(history) > 10:
-			del history[0]
+		self.history.record(f)
 		PyMSDialog.ok(self)
 
 	def dismiss(self) -> None:

@@ -75,8 +75,8 @@ class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, Errorab
 
 		self.action_manager = ActionManager()
 		self.action_manager.state_updated += self.action_states
-		self.findhistory: list[str] = []
-		self.replacehistory: list[str] = []
+		self.findhistory = UI.InputHistory()
+		self.replacehistory = UI.InputHistory()
 
 		self.sort = UI.StringVar()
 		self.sort.set(self.config_.sort.value.value)
@@ -835,10 +835,10 @@ class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, Errorab
 			if script.id in ids:
 				self.listbox.select_set(index)
 
-	def get_find_history(self) -> list[str]:
+	def get_find_history(self) -> UI.InputHistory:
 		return self.findhistory
 
-	def get_replace_history(self) -> list[str]:
+	def get_replace_history(self) -> UI.InputHistory:
 		return self.replacehistory
 
 	# Tooltip Delegate

@@ -2,14 +2,13 @@
 from .Delegates import MainDelegate
 
 from ..Utilities.ReusablePyMSDialog import ReusablePyMSDialog
-from ..Utilities.FindReplaceDialog import FindReplaceDialog
 from ..Utilities import UIKit as UI
 
 class GotoDialog(ReusablePyMSDialog):
 	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
 		self.delegate = delegate
 		self.goto = UI.IntegerVar(val_range=(0,65535), allow_hex=True)
-		self.gotohistory: list[str] = []
+		self.gotohistory = UI.InputHistory()
 		ReusablePyMSDialog.__init__(self, parent, 'Goto', escape=True, resizable=(False,False))
 
 	def widgetize(self) -> (UI.Misc | None):
@@ -36,7 +35,7 @@ class GotoDialog(ReusablePyMSDialog):
 		if not self.delegate.tbl or not self.delegate.listbox.size():
 			return
 		index = self.goto.get()
-		FindReplaceDialog.record_history(self.gotohistory, str(index))
+		self.gotohistory.record(str(index))
 		i = max(0, min(index, len(self.delegate.tbl.strings)-1))
 		self.delegate.listbox.select_clear(0,UI.END)
 		self.delegate.listbox.select_set(i)

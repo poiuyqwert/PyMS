@@ -11,7 +11,7 @@ class FindDialog(PyMSDialog):
 	def __init__(self, parent: UI.Misc, delegate: MainDelegate, window_geometry_config: Config.WindowGeometry, find_history_config: Config.List[str]) -> None:
 		self.delegate = delegate
 		self.window_geometry_config = window_geometry_config
-		self.find_history_config = find_history_config
+		self.find_history = UI.InputHistory(config=find_history_config)
 		self.resettimer: str | None = None
 		self.lists: list[UI.ScrolledListbox] = []
 		self.findentry_c: str | None = None
@@ -25,7 +25,7 @@ class FindDialog(PyMSDialog):
 
 		f = UI.Frame(self)
 		UI.Label(f, text='Find: ').pack(side=UI.LEFT)
-		self.findentry = UI.TextDropDown(f, self.find, self.find_history_config.data, 30)
+		self.findentry = UI.TextDropDown(f, self.find, self.find_history, 30)
 		self.findentry_c = self.findentry['bg']
 		self.findentry.pack(side=UI.LEFT,fill=UI.X, expand=1)
 		f.pack(fill=UI.X)
@@ -72,8 +72,7 @@ class FindDialog(PyMSDialog):
 	def search(self, _event: UI.Event | None = None) -> None:
 		self.lists = []
 		self.treelist.delete(UI.ALL)
-		if not self.find.get() in self.find_history_config.data:
-			self.find_history_config.data.append(self.find.get())
+		self.find_history.record(self.find.get())
 		if self.regex.get():
 			regex = self.find.get()
 		else:

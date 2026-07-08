@@ -2,7 +2,6 @@
 from .Delegates import MainDelegate
 
 from ..Utilities.ReusablePyMSDialog import ReusablePyMSDialog
-from ..Utilities.FindReplaceDialog import FindReplaceDialog
 from ..Utilities import UIKit as UI
 
 import re
@@ -11,7 +10,7 @@ class FindDialog(ReusablePyMSDialog):
 	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
 		self.delegate = delegate
 		self.resettimer: str | None = None
-		self.findhistory: list[str] = []
+		self.findhistory = UI.InputHistory()
 		ReusablePyMSDialog.__init__(self, parent, 'Find', escape=True, resizable=(True,False))
 
 	def widgetize(self) -> (UI.Misc | None):
@@ -65,7 +64,7 @@ class FindDialog(ReusablePyMSDialog):
 	def findnext(self, event: UI.Event | None = None) -> None:
 		self.updatecolor()
 		t = self.find.get()
-		FindReplaceDialog.record_history(self.findhistory, t)
+		self.findhistory.record(t)
 		size: int = self.delegate.listbox.size() # type: ignore[assignment]
 		if size:
 			regex_str = t if self.regex.get() else re.escape(t)
