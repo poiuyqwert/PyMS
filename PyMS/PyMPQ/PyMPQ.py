@@ -8,7 +8,7 @@ from .FolderDialog import FolderDialog
 from .SettingsUI.SettingsDialog import SettingsDialog
 from .Config import PyMPQConfig
 
-from ..FileFormats.MPQ.MPQ import MPQ, MPQLibrary, MPQFileEntry
+from ..FileFormats.MPQ.MPQ import MPQ, MPQLibrary, MPQFileEntry, MPQFileFlag
 
 from ..Utilities.DependencyError import DependencyError
 from ..Utilities.utils import format_byte_size, start_file
@@ -207,7 +207,7 @@ class PyMPQ(UI.MainWindow):
 			details = f' ({self.mpq_path})'
 		else:
 			details = ''
-		self.title(f'PyAI {LONG_VERSION}{details}')
+		self.title(f'PyMPQ {LONG_VERSION}{details}')
 
 	def choose_other_locale(self) -> None:
 		locale_dialog = LocaleDialog(self, title='Change locale', message='Type a custom locale or choose an existing locale')
@@ -267,10 +267,10 @@ class PyMPQ(UI.MainWindow):
 			button['image'] = image
 
 	def is_mpq_chosen(self) -> bool:
-		return not not self.mpq
+		return self.mpq is not None
 
 	def is_file_selected(self) -> bool:
-		return not not self.listbox.cur_selection()
+		return bool(self.listbox.cur_selection())
 
 	def select(self) -> None:
 		if self.is_mpq_chosen():
@@ -345,7 +345,7 @@ class PyMPQ(UI.MainWindow):
 		# else:
 		# 	return
 		if self.is_mpq_chosen() and self.all_files:
-			self.display_files = self.all_files
+			self.display_files = list(self.all_files)
 			filter_str = self.filter.get()
 			if not self.regex.get():
 				if not filter_str.replace('*','').replace('?',''):
@@ -416,14 +416,20 @@ class PyMPQ(UI.MainWindow):
 			return False
 		return True
 
+	def add_file_to_mpq(self, file_path: str, mpq_file_name: str) -> None:
+		assert self.mpq is not None
+		compression,compression_level = self.compression_settings(file_path)
+		flags = MPQFileFlag.encrypted if self.encvar.get() else MPQFileFlag.none
+		self.mpq.add_file(file_path, mpq_file_name, self.config_.locale.value, flags=flags, compression=compression, compression_level=compression_level)
+
 	def compression_settings(self, filename: str) -> tuple[int, int]:
 		compression = CompressionSetting.parse_value(self.compvar.get())
 		if compression.type == CompressionOption.Auto:
-			extension = '.' + filename.split(os.extsep)[-1]
-			if extension in self.config_.settings.autocompression.data:
+			_,extension = os.path.splitext(filename)
+			if extension and extension in self.config_.settings.autocompression.data:
 				compression = CompressionSetting.parse_value(self.config_.settings.autocompression.data[extension])
 			else:
-				compression = CompressionSetting.parse_value(self.config_.settings.autocompression.data['Default'])
+				compression = CompressionSetting.parse_value(self.config_.settings.autocompression.data.get('Default', str(CompressionOption.Standard.setting())))
 		mpq_compression_flags = compression.type.compression_type()
 		return (mpq_compression_flags, compression.compression_level())
 
@@ -439,6 +445,7 @@ class PyMPQ(UI.MainWindow):
 		dialog = LocaleDialog(self)
 		if dialog.save:
 			new_locale = dialog.result.get()
+			failed_files: list[str] = []
 			try:
 				with self.open_mpq(read_only=False):
 					for i in self.listbox.cur_selection():
@@ -449,14 +456,15 @@ class PyMPQ(UI.MainWindow):
 							self.mpq.change_file_locale(file_entry.file_name, file_entry.locale, new_locale)
 							file_entry.locale = new_locale
 						except Exception:
-							# TODO: Warn about files not updated
-							pass
+							failed_files.append(file_entry.file_name.decode('utf-8'))
 					self.mpq.flush()
 					self.list_files()
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			self.update_list()
+			if failed_files:
+				ErrorDialog(self, PyMSError('MPQ', "Couldn't change the locale of the following files:\n" + '\n'.join(failed_files)))
 
 	def openfile(self, _event: UI.Event | None = None) -> None:
 		if not self.is_mpq_chosen():
@@ -466,13 +474,14 @@ class PyMPQ(UI.MainWindow):
 			with self.open_mpq(read_only=False):
 				for i in self.listbox.cur_selection():
 					file_entry = self.display_files[i]
+					path_components = file_entry.file_name.decode('utf-8').split('\\')
 					try:
-						os.makedirs(os.path.join(self.temp_folder,os.path.dirname(file_entry.file_name.decode('utf-8'))))
+						os.makedirs(os.path.join(self.temp_folder,*path_components[:-1]))
 					except (OSError, IOError) as e:
 						if e.errno != 17:
 							raise
 					data = self.mpq.read_file(file_entry.file_name, file_entry.locale)
-					file_path = os.path.join(self.temp_folder,file_entry.file_name.decode('utf-8'))
+					file_path = os.path.join(self.temp_folder,*path_components)
 					with open(file_path, 'wb') as f:
 						f.write(data)
 					start_file(file_path)
@@ -486,6 +495,7 @@ class PyMPQ(UI.MainWindow):
 		if not self.is_mpq_chosen():
 			return
 		assert self.mpq is not None
+		files = [file_name.lstrip(os.sep) for file_name in files]
 		if len(files) == 1:
 			if not UI.MessageBox.askyesno(parent=self, title='File Edited', message=f'File "{files[0]}" has been modified since it was extracted.\n\nUpdate the archive with this file?'):
 				return
@@ -497,8 +507,7 @@ class PyMPQ(UI.MainWindow):
 		try:
 			with self.open_mpq(read_only=False):
 				for file_name in files:
-					compression,compression_level = self.compression_settings(file_name)
-					self.mpq.add_file(os.path.join(self.temp_folder,file_name), file_name, compression=compression, compression_level=compression_level)
+					self.add_file_to_mpq(os.path.join(self.temp_folder,file_name), file_name.replace(os.sep, '\\'))
 				self.mpq.flush()
 				self.list_files()
 				self.update_info()
@@ -543,7 +552,7 @@ class PyMPQ(UI.MainWindow):
 				return
 		mpq = MPQ.of(file)
 		try:
-			mpq.open()
+			open_context = mpq.open()
 		except Exception as e:
 			ErrorDialog(self, PyMSError('MPQ', "The file is not an MPQ, or the MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ.", cause=e))
 			return
@@ -553,9 +562,9 @@ class PyMPQ(UI.MainWindow):
 		self._update_listfiles()
 		self.update_title()
 		self.status.set('Load Successful!')
-		self.list_files()
-		self.update_info()
-		self.mpq.close()
+		with open_context:
+			self.list_files()
+			self.update_info()
 		self.update_list()
 		self.select()
 
@@ -590,8 +599,7 @@ class PyMPQ(UI.MainWindow):
 			for filepath in files:
 				filename = os.path.basename(filepath)
 				folder = self.config_.import_.files_prefix.value or ''
-				compression,compression_level = self.compression_settings(filename)
-				self.mpq.add_file(filepath, folder + filename, self.config_.locale.value, compression=compression, compression_level=compression_level)
+				self.add_file_to_mpq(filepath, folder + filename)
 			self.mpq.flush()
 			self.list_files()
 			self.update_info()
@@ -616,8 +624,7 @@ class PyMPQ(UI.MainWindow):
 				if path_folder:
 					folder += '\\'.join(os.path.split(path_folder)) + '\\'
 				for filename in filenames:
-					compression,compression_level = self.compression_settings(filename)
-					self.mpq.add_file(os.path.join(root,filename), folder + filename, self.config_.locale.value, compression=compression, compression_level=compression_level)
+					self.add_file_to_mpq(os.path.join(root,filename), folder + filename)
 			self.mpq.flush()
 			self.list_files()
 			self.update_info()
@@ -671,6 +678,7 @@ class PyMPQ(UI.MainWindow):
 					data = self.mpq.read_file(file_entry.file_name, file_entry.locale)
 				except Exception:
 					ErrorDialog(self, PyMSError('Extract', f"Couldn't read file '{file_entry.file_name.decode('utf-8')}' from MPQ"))
+					continue
 				with open(os.path.join(path,*path_components),'wb') as f:
 					f.write(data)
 
