@@ -1,16 +1,16 @@
 
 from .Delegates import MainDelegate
 
-from ..Utilities.PyMSDialog import PyMSDialog
+from ..Utilities.ReusablePyMSDialog import ReusablePyMSDialog
 from ..Utilities.FindReplaceDialog import FindReplaceDialog
 from ..Utilities import UIKit as UI
 
-class GotoDialog(PyMSDialog):
+class GotoDialog(ReusablePyMSDialog):
 	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
 		self.delegate = delegate
 		self.goto = UI.IntegerVar(val_range=(0,65535), allow_hex=True)
 		self.gotohistory: list[str] = []
-		PyMSDialog.__init__(self, parent, 'Goto', grabwait=False, escape=True, resizable=(False,False))
+		ReusablePyMSDialog.__init__(self, parent, 'Goto', escape=True, resizable=(False,False))
 
 	def widgetize(self) -> (UI.Misc | None):
 		f = UI.Frame(self)
@@ -29,8 +29,7 @@ class GotoDialog(PyMSDialog):
 	def setup_complete(self) -> None:
 		self.delegate.config_.windows.goto.load_size(self)
 
-	def show(self) -> None:
-		self.make_active()
+	def on_show(self) -> None:
 		self.gotoentry.focus_set(highlight=True)
 
 	def jump(self, _event: UI.Event | None = None) -> None:
@@ -44,9 +43,5 @@ class GotoDialog(PyMSDialog):
 		self.delegate.listbox.see(i)
 		self.delegate.update()
 
-	def destroy(self) -> None:
-		# Closing this dialog only withdraws it so it can be reused (the owner re-shows
-		# the same window via `show()`); the owning window performs the real teardown
-		# with `UI.Toplevel.destroy(...)`.
+	def on_hide(self) -> None:
 		self.delegate.config_.windows.goto.save_size(self)
-		PyMSDialog.withdraw(self)

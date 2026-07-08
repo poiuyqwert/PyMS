@@ -522,7 +522,7 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 	def destroy(self) -> None:
 		if self.gotowindow is not None:
-			UI.Toplevel.destroy(self.gotowindow)
+			self.gotowindow.destroy()
 		if self.findwindow is not None:
-			UI.Toplevel.destroy(self.findwindow)
+			self.findwindow.destroy()
 		UI.MainWindow.destroy(self)

@@ -12,7 +12,7 @@ from ..FileFormats.MPQ.MPQ import MPQ
 from ..FileFormats.Images import RawPalette
 
 from ..Utilities import UIKit as UI
-from ..Utilities.PyMSDialog import PyMSDialog
+from ..Utilities.ReusablePyMSDialog import ReusablePyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities import Assets
 from ..Utilities.CodeHandlers import CodeCommand
@@ -83,7 +83,7 @@ class FrameSet(Flag):
 
 	PLAY = play_prev_framesets | play_prev_frames | play_next_frames | play_next_framesets
 
-class PreviewerDialog(PyMSDialog):
+class PreviewerDialog(ReusablePyMSDialog):
 	def __init__(self, parent: UI.Misc, delegate: MainDelegate, config: PyICEConfig, text: UI.CodeText) -> None:
 		self.delegate = delegate
 		self.config_ = config
@@ -103,7 +103,7 @@ class PreviewerDialog(PyMSDialog):
 		self.grp_frame.set('Frame: 0 / 0')
 		self.speed = 0
 		self.play: str | None = None
-		PyMSDialog.__init__(self, parent, "Graphics Insert/Preview", grabwait=False, resizable=(False, False))
+		ReusablePyMSDialog.__init__(self, parent, "Graphics Insert/Preview", resizable=(False, False))
 
 	def nocur(self) -> None:
 		if self.curradio and self.curradio['state'] == UI.NORMAL:
@@ -395,7 +395,7 @@ class PreviewerDialog(PyMSDialog):
 		else:
 			self.text.insert(UI.INSERT, i)
 		if self.closeafter.get():
-			self.destroy()
+			self.dismiss()
 
 	def docmd(self) -> None:
 		self.stopframe()
@@ -438,7 +438,7 @@ class PreviewerDialog(PyMSDialog):
 				text = text.rstrip('\n')
 			self.text.insert(s, text)
 		if self.closeafter.get():
-			self.destroy()
+			self.dismiss()
 
 	def updateframes(self) -> None:
 		if self.previewing.grp:
@@ -552,11 +552,10 @@ class PreviewerDialog(PyMSDialog):
 		if sprite:
 			self.preview.create_image(130, 130, image=sprite)
 
-	def destroy(self) -> None:
+	def on_hide(self) -> None:
 		self.stopframe()
 		self.config_.previewer.overwrite.value = self.overwrite.get()
 		self.config_.previewer.close_after.value = self.closeafter.get()
 		self.config_.previewer.show_preview.value = self.showpreview.get()
 		self.config_.previewer.preview_speed.value = self.prevspeed.get()
 		self.config_.previewer.loop_preview.value = self.looppreview.get()
-		PyMSDialog.withdraw(self)

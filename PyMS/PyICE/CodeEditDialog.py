@@ -406,9 +406,9 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 
 	def destroy(self) -> None:
 		if self.findwindow:
-			UI.Toplevel.destroy(self.findwindow)
+			self.findwindow.destroy()
 		if self.previewer:
-			UI.Toplevel.destroy(self.previewer)
+			self.previewer.destroy()
 		UI.Toplevel.destroy(self)
 
 	# CodeTextDelegate

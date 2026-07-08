@@ -543,7 +543,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 
 	def destroy(self) -> None:
 		if self.findwindow:
-			UI.Toplevel.destroy(self.findwindow)
+			self.findwindow.destroy()
 		UI.MainWindow.destroy(self)
 
 	# MainDelegate

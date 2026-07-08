@@ -70,6 +70,14 @@ class Test_FindReplaceDialog(UITestCase):
 		self.pump(window)
 		self.assertEqual(dialog.state(), 'normal')
 
+	def test_destroy_really_destroys_the_dialog(self) -> None:
+		window, dialog = self.make_dialog('alpha\n')
+		dialog.ok()
+		self.pump(window)
+		dialog.destroy()
+		self.pump(window)
+		self.assertFalse(dialog.winfo_exists())
+
 	def test_find_only_mode_has_no_replace_buttons(self) -> None:
 		window = self.make_window(_Host)
 		window.text.load('alpha\n')

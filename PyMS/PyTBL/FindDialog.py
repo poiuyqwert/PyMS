@@ -1,18 +1,18 @@
 
 from .Delegates import MainDelegate
 
-from ..Utilities.PyMSDialog import PyMSDialog
+from ..Utilities.ReusablePyMSDialog import ReusablePyMSDialog
 from ..Utilities.FindReplaceDialog import FindReplaceDialog
 from ..Utilities import UIKit as UI
 
 import re
 
-class FindDialog(PyMSDialog):
+class FindDialog(ReusablePyMSDialog):
 	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
 		self.delegate = delegate
 		self.resettimer: str | None = None
 		self.findhistory: list[str] = []
-		PyMSDialog.__init__(self, parent, 'Find', grabwait=False, escape=True, resizable=(True,False))
+		ReusablePyMSDialog.__init__(self, parent, 'Find', escape=True, resizable=(True,False))
 
 	def widgetize(self) -> (UI.Misc | None):
 		self.find = UI.StringVar()
@@ -59,8 +59,7 @@ class FindDialog(PyMSDialog):
 	def setup_complete(self) -> None:
 		self.delegate.config_.windows.find.load_size(self)
 
-	def show(self) -> None:
-		self.make_active()
+	def on_show(self) -> None:
 		self.findentry.focus_set(highlight=True)
 
 	def findnext(self, event: UI.Event | None = None) -> None:
@@ -118,13 +117,9 @@ class FindDialog(PyMSDialog):
 			self.resettimer = None
 		self.findentry['bg'] = self.findentry_c
 
-	def destroy(self) -> None:
-		# Closing this dialog only withdraws it so it can be reused (the owner re-shows
-		# the same window via `show()`); the owning window performs the real teardown
-		# with `UI.Toplevel.destroy(...)`. Cancel any pending color-reset timer so it
-		# doesn't fire after close.
+	def on_hide(self) -> None:
+		# Cancel any pending color-reset timer so it doesn't fire after close
 		if self.resettimer:
 			self.after_managed_cancel(self.resettimer)
 			self.resettimer = None
 		self.delegate.config_.windows.find.save_size(self)
-		PyMSDialog.withdraw(self)

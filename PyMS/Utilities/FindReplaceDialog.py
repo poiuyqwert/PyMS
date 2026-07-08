@@ -1,6 +1,6 @@
 
 from . import UIKit as UI
-from .PyMSDialog import PyMSDialog
+from .ReusablePyMSDialog import ReusablePyMSDialog
 from . import Config
 
 import re
@@ -11,7 +11,7 @@ class _Update(Enum):
 	multiline = 2
 	selection = 3
 
-class FindReplaceDialog(PyMSDialog):
+class FindReplaceDialog(ReusablePyMSDialog):
 	HISTORY_LIMIT = 10
 
 	@staticmethod
@@ -31,7 +31,7 @@ class FindReplaceDialog(PyMSDialog):
 		self.find_history = find_history if find_history is not None else []
 		self.replace_history = replace_history if replace_history is not None else []
 		self.resettimer: str | None = None
-		PyMSDialog.__init__(self, parent, 'Find/Replace' if can_replace else 'Find', grabwait=False, resizable=(True, False))
+		ReusablePyMSDialog.__init__(self, parent, 'Find/Replace' if can_replace else 'Find', resizable=(True, False))
 
 	def widgetize(self) -> UI.Misc | None:
 		self.find = UI.StringVar()
@@ -95,8 +95,7 @@ class FindReplaceDialog(PyMSDialog):
 	def setup_complete(self) -> None:
 		self.window_geometry_config.load_size(self)
 
-	def show(self) -> None:
-		self.make_active()
+	def on_show(self) -> None:
 		self.findentry.focus_set(highlight=True)
 
 	def check(self, update: _Update) -> None:
@@ -239,13 +238,9 @@ class FindReplaceDialog(PyMSDialog):
 			self.resettimer = None
 		self.findentry['bg'] = self.findentry_c
 
-	def destroy(self) -> None:
-		# Closing this dialog only withdraws it so it can be reused (the owner re-shows
-		# the same window via `show()`); the owning window performs the real teardown
-		# with `UI.Toplevel.destroy(...)`. Cancel any pending color-reset timer so it
-		# doesn't fire after close.
+	def on_hide(self) -> None:
+		# Cancel any pending color-reset timer so it doesn't fire after close
 		if self.resettimer:
 			self.after_managed_cancel(self.resettimer)
 			self.resettimer = None
 		self.window_geometry_config.save_size(self)
-		PyMSDialog.withdraw(self)

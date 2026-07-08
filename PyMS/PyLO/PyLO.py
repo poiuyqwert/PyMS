@@ -669,7 +669,7 @@ class PyLO(UI.MainWindow, UI.CodeTextDelegate):
 
 	def destroy(self) -> None:
 		if self.findwindow:
-			UI.Toplevel.destroy(self.findwindow)
+			self.findwindow.destroy()
 		UI.MainWindow.destroy(self)
 
 	# CodeTextDelegate
