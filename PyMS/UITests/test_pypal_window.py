@@ -204,8 +204,21 @@ class Test_PyPAL_open(PyPALTestCase):
 		self.assertEqual(gui.selected, 5)
 		with mock.patch(SELECT_OPEN, return_value=io.BytesIO(_raw_rgb_bytes())):
 			gui.open()
-		# `open` only initializes the selection when none exists yet.
+		# `open` re-applies the selection, keeping the prior index.
 		self.assertEqual(gui.selected, 5)
+
+	def test_open_restores_selection_highlight_after_close(self) -> None:
+		# After `close` the selection is cleared and its rectangle collapsed;
+		# loading a file must leave the highlight at a defined position again.
+		gui = self.with_loaded_palette()
+		gui.close()
+		self.assertIsNone(gui.selected)
+		with mock.patch(SELECT_OPEN, return_value=io.BytesIO(_raw_rgb_bytes())):
+			gui.open()
+		self.assertEqual(gui.selected, 0)
+		coords = tkinter.Canvas.coords(gui.canvas, gui.sel.item_id)
+		self.assertEqual(coords[2] - coords[0], 17.0)
+		self.assertEqual(coords[3] - coords[1], 17.0)
 
 
 class Test_PyPAL_save(PyPALTestCase):
@@ -265,6 +278,16 @@ class Test_PyPAL_save(PyPALTestCase):
 				mock.patch(PALETTE_SAVE):
 			gui.saveas(file_path='out.pal', file_type=Palette.FileType.sc_pal)
 		self.assertEqual(gui.format, Palette.FileType.sc_pal.format)
+
+	def test_saveas_dialog_filter_matches_chosen_file_type(self) -> None:
+		gui = self.with_new_palette()
+		for file_type in (Palette.FileType.riff, Palette.FileType.jasc, Palette.FileType.sc_pal, Palette.FileType.wpe, Palette.FileType.act):
+			with self.subTest(pal_format=file_type.format, ext=file_type.ext):
+				with mock.patch(SELECT_SAVE, return_value=None) as select_save:
+					gui.saveas(file_type=file_type)
+				select_save.assert_called_once()
+				expected = list(Palette.FileType.save_types(file_type.format, file_type.ext))
+				self.assertEqual(select_save.call_args.kwargs['filetypes'], expected)
 
 	def test_saveas_write_error_shows_error_dialog(self) -> None:
 		gui = self.with_new_palette()
@@ -341,12 +364,18 @@ class Test_PyPAL_selection_and_status(PyPALTestCase):
 		gui.colorstatus(_event(), 5)
 		self.assertEqual(gui.status.get(), 'Index: 5  RGB: (0,0,0)  Hex: #000000')
 
-	def test_colorstatus_leaving_swatch_keeps_status(self) -> None:
+	def test_colorstatus_leaving_swatch_clears_status(self) -> None:
 		gui = self.with_new_palette()
-		gui.status.set('sentinel')
-		# Index -1 is the "pointer left the palette" signal; status is untouched.
+		gui.colorstatus(_event(), 5)
+		# Index -1 is the "pointer left the palette" signal; the color readout is
+		# cleared so it doesn't linger once the pointer is off the swatches.
 		gui.colorstatus(_event(), -1)
-		self.assertEqual(gui.status.get(), 'sentinel')
+		self.assertEqual(gui.status.get(), '')
+
+	def test_colorstatus_leaving_swatch_without_palette_keeps_status(self) -> None:
+		gui = self.open_pypal()
+		gui.colorstatus(_event(), -1)
+		self.assertEqual(gui.status.get(), 'Load or create a Palette.')
 
 
 class Test_PyPAL_change_color(PyPALTestCase):
@@ -368,6 +397,15 @@ class Test_PyPAL_change_color(PyPALTestCase):
 		self.assertEqual(gui.canvas.itemcget(6, 'fill'), '#0A141E')
 		# The status-bar edit icon reflects the unsaved-changes state.
 		self.assertEqual(str(gui.editstatus['state']), UI.NORMAL)
+
+	def test_changecolor_stores_integer_components(self) -> None:
+		# `askcolor` can return float components on some platforms; the stored
+		# palette entry must be ints so binary saves and hex formatting work.
+		gui = self.with_new_palette()
+		with mock.patch(ASKCOLOR, return_value=((9.6, 20.0, 29.99609375), '#0A141E')):
+			gui.changecolor(_event(), 5)
+		assert gui.palette is not None
+		self.assertEqual(gui.palette.palette[5], (10, 20, 30))
 
 	def test_changecolor_cancelled_chooser_leaves_palette(self) -> None:
 		gui = self.with_new_palette()
@@ -431,6 +469,24 @@ class Test_PyPAL_clipboard(PyPALTestCase):
 		self.assertEqual(gui.palette.palette[2], (10, 20, 30))
 		self.assertEqual(gui.canvas.itemcget(3, 'fill'), '#0A141E')
 		self.assertTrue(gui.edited)
+
+	def test_paste_normalizes_clipboard_hex_casing(self) -> None:
+		gui = self.with_new_palette()
+		gui.selected = 2
+		with mock.patch.object(gui, 'selection_get', return_value='#0a141e'):
+			gui.paste()
+		self.pump(gui)
+		assert gui.palette is not None
+		self.assertEqual(gui.palette.palette[2], (10, 20, 30))
+		# The swatch is filled from the parsed color, not the raw clipboard text.
+		self.assertEqual(gui.canvas.itemcget(3, 'fill'), '#0A141E')
+
+	def test_paste_reads_clipboard_once(self) -> None:
+		gui = self.with_new_palette()
+		gui.selected = 2
+		with mock.patch.object(gui, 'selection_get', return_value='#0A141E') as selection_get:
+			gui.paste()
+		selection_get.assert_called_once()
 
 	def test_paste_ignores_non_color_clipboard(self) -> None:
 		gui = self.with_new_palette()

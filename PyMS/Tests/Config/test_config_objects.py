@@ -234,6 +234,23 @@ class Test_SelectDirectory(unittest.TestCase):
 		self.assertEqual(obj.encode(), os.getcwd())
 
 
+class Test_SelectFile_save_dialog(unittest.TestCase):
+	def _save_dialog_kwargs(self, filetypes: list[Config.UI.FileType] | None) -> dict:
+		obj = Config.SelectFile(name='Test', filetypes=[Config.UI.FileType.pal()])
+		with mock.patch.object(Config.UI.FileDialog, 'asksaveasfilename', return_value='') as dialog:
+			obj.select_save(mock.Mock(), filetypes=filetypes)
+		return dict(dialog.call_args.kwargs)
+
+	def test_default_extension_comes_from_constructor_filetypes(self) -> None:
+		kwargs = self._save_dialog_kwargs(None)
+		self.assertEqual(kwargs['defaultextension'], Config.UI.FileType.default_extension([Config.UI.FileType.pal()]))
+
+	def test_default_extension_follows_filetypes_override(self) -> None:
+		kwargs = self._save_dialog_kwargs([Config.UI.FileType.wpe()])
+		self.assertEqual(kwargs['filetypes'], [Config.UI.FileType.wpe()])
+		self.assertEqual(kwargs['defaultextension'], Config.UI.FileType.default_extension([Config.UI.FileType.wpe()]))
+
+
 class Test_List(unittest.TestCase):
 	def test_decode_replaces_with_matching_values(self) -> None:
 		obj: Config.List[int] = Config.List(value_type=int, defaults=[0])

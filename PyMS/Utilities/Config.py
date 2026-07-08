@@ -506,6 +506,7 @@ class SelectFile(ConfigObject):
 	def _select_file(self, *, parent: UI.Misc, save: bool, title: str | None, filetypes: list[UI.FileType] | None, multiple: bool = False, filename: str | None = None) -> str | list[str] | None:
 		window = parent.winfo_toplevel()
 		setattr(window, '_pyms__window_blocking', True)
+		default_extension = UI.FileType.default_extension(filetypes) if filetypes else self._default_extension
 		path: str | list[str] | None
 		if save:
 			path = UI.FileDialog.asksaveasfilename(
@@ -513,7 +514,7 @@ class SelectFile(ConfigObject):
 				title=title or self._op_type.title(self._name, True),
 				initialdir=self._save_directory if save else self._open_directory,
 				filetypes=filetypes or self._filetypes,
-				defaultextension=self._default_extension,
+				defaultextension=default_extension,
 				initialfile=filename or self._initial_filename
 			)
 		else:
@@ -523,7 +524,7 @@ class SelectFile(ConfigObject):
 					title=title or self._op_type.title(self._name, False, multiple),
 					initialdir=self._save_directory if save else self._open_directory,
 					filetypes=filetypes or self._filetypes,
-					defaultextension=self._default_extension
+					defaultextension=default_extension
 				)
 				if isinstance(paths, tuple):
 					path = list(paths)
@@ -535,7 +536,7 @@ class SelectFile(ConfigObject):
 					title=title or self._op_type.title(self._name, False, multiple),
 					initialdir=self._save_directory if save else self._open_directory,
 					filetypes=filetypes or self._filetypes,
-					defaultextension=self._default_extension
+					defaultextension=default_extension
 				)
 		if not path:
 			path = None

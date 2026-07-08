@@ -140,7 +140,7 @@ class PyPAL(UI.MainWindow):
 		return self.saveas()
 
 	def is_file_open(self) -> bool:
-		return not not self.palette
+		return self.palette is not None
 
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
@@ -150,22 +150,26 @@ class PyPAL(UI.MainWindow):
 		if not self.palette:
 			return
 		self.select(event,i)
-		self.palmenu.tag_enabled('paste', not not self.canpaste()) # type: ignore[attr-defined]
+		self.palmenu.tag_enabled('paste', self.canpaste() is not None) # type: ignore[attr-defined]
 		self.palmenu.post(event.x_root, event.y_root)
 
 	def update_canvas(self) -> None:
 		if self.palette:
-			pal = self.palette.palette
+			for n,rgb in enumerate(self.palette.palette):
+				c = UI.Colors.to_html(rgb)
+				self.canvas.itemconfigure(n+1, fill=c, outline=c)
 		else:
-			pal = [(0,0,0)] * 256
-		for n,rgb in enumerate(pal):
-			c = UI.Colors.to_html(rgb)
-			self.canvas.itemconfigure(n+1, fill=c, outline=c)
+			for n in range(256):
+				self.canvas.itemconfigure(n+1, fill='#000000', outline='#000000')
 
 	def colorstatus(self, _event: UI.Event | None, i: int) -> None:
-		if self.palette and i > -1:
+		if not self.palette:
+			return
+		if i > -1:
 			r,g,b = self.palette.palette[i]
 			self.status.set(f'Index: {i}  RGB: ({r},{g},{b})  Hex: {UI.Colors.to_html(r,g,b)}')
+		else:
+			self.status.set('')
 
 	def select(self, _event: UI.Event | None, i: int) -> None:
 		if not self.palette:
@@ -178,11 +182,13 @@ class PyPAL(UI.MainWindow):
 		if not self.palette:
 			return
 		self.select(None,i)
-		c = UI.ColorChooser.askcolor(parent=self, initialcolor=UI.Colors.to_html(self.palette.palette[i]), title='Select Color')
-		if c[1]:
+		rgb,hex_color = UI.ColorChooser.askcolor(parent=self, initialcolor=UI.Colors.to_html(self.palette.palette[i]), title='Select Color')
+		if rgb is not None and hex_color:
 			self.mark_edited()
-			self.canvas.itemconfigure(i+1, fill=c[1], outline=c[1])
-			self.palette.palette[i] = c[0]
+			self.canvas.itemconfigure(i+1, fill=hex_color, outline=hex_color)
+			# `askcolor` can return floats for the color components on some platforms
+			r,g,b = (int(round(component)) for component in rgb)
+			self.palette.palette[i] = (r,g,b)
 
 	def copy(self, _event: UI.Event | None = None) -> None:
 		if not self.palette or self.selected is None:
@@ -190,7 +196,7 @@ class PyPAL(UI.MainWindow):
 		self.clipboard_clear()
 		self.clipboard_append(UI.Colors.to_html(self.palette.palette[self.selected]))
 
-	def canpaste(self, c: str | None = None) -> (RGB | None):
+	def canpaste(self, c: str | None = None) -> RGB | None:
 		try:
 			if c is None:
 				c = self.selection_get(selection='CLIPBOARD')
@@ -205,16 +211,12 @@ class PyPAL(UI.MainWindow):
 	def paste(self, _event: UI.Event | None = None) -> None:
 		if not self.palette or self.selected is None:
 			return
-		try:
-			c = self.selection_get(selection='CLIPBOARD')
-		except Exception:
-			pass
-		else:
-			rgb = self.canpaste(c)
-			if rgb:
-				self.palette.palette[self.selected] = rgb
-				self.canvas.itemconfigure(self.selected+1, fill=c, outline=c)
-				self.mark_edited()
+		rgb = self.canpaste()
+		if rgb:
+			self.palette.palette[self.selected] = rgb
+			color = UI.Colors.to_html(rgb)
+			self.canvas.itemconfigure(self.selected+1, fill=color, outline=color)
+			self.mark_edited()
 
 	def update_title(self) -> None:
 		file_path = self.file
@@ -238,9 +240,7 @@ class PyPAL(UI.MainWindow):
 		self.status.set('Editing new Palette.')
 		self.mark_edited(False)
 		self.update_title()
-		if self.selected is None:
-			self.selected = 0
-			self.select(None,0)
+		self.select(None, self.selected or 0)
 		self.update_canvas()
 		self.action_states()
 		self.colorstatus(None, 0)
@@ -264,9 +264,7 @@ class PyPAL(UI.MainWindow):
 		self.update_title()
 		self.status.set('Load Successful!')
 		self.mark_edited(False)
-		if self.selected is None:
-			self.selected = 0
-			self.select(None,0)
+		self.select(None, self.selected or 0)
 		self.update_canvas()
 		self.action_states()
 		self.colorstatus(None, 0)
@@ -278,7 +276,8 @@ class PyPAL(UI.MainWindow):
 		if not self.palette:
 			return CheckSaved.saved
 		if not file_path:
-			file_path = self.config_.last_path.pal.select_save(self)
+			filetypes = list(Palette.FileType.save_types(file_type.format, file_type.ext))
+			file_path = self.config_.last_path.pal.select_save(self, filetypes=filetypes)
 			if not file_path:
 				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
