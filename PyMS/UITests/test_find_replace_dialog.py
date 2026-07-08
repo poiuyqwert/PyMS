@@ -40,6 +40,45 @@ class Test_FindReplaceDialog(UITestCase):
 		# available from the dropdown.
 		self.assertIs(dialog.findentry.history, dialog.find_history)
 
+	def selection(self, window: _Host) -> tuple[str, ...]:
+		return tuple(str(index) for index in window.text.tag_ranges('sel'))
+
+	def test_find_down_continues_from_previous_match(self) -> None:
+		window, dialog = self.make_dialog('alpha\nbeta\nalpha\n')
+		dialog.find.set('alpha')
+		with mock.patch.object(UI.MessageBox, 'showinfo') as showinfo:
+			dialog.findnext()
+			self.assertEqual(self.selection(window), ('1.0', '1.5'))
+			dialog.findnext()
+			self.assertEqual(self.selection(window), ('3.0', '3.5'))
+			showinfo.assert_not_called()
+			dialog.findnext()
+		showinfo.assert_called_once()
+		self.assertIn("Can't find text", showinfo.call_args.kwargs['message'])
+
+	def test_find_up_selects_last_match_before_cursor(self) -> None:
+		window, dialog = self.make_dialog('alpha beta alpha\nbeta\n')
+		window.text.mark_set(UI.INSERT, UI.END)
+		dialog.updown.set(0)
+		dialog.find.set('alpha')
+		with mock.patch.object(UI.MessageBox, 'showinfo') as showinfo:
+			dialog.findnext()
+			self.assertEqual(self.selection(window), ('1.11', '1.16'))
+			dialog.findnext()
+			self.assertEqual(self.selection(window), ('1.0', '1.5'))
+			showinfo.assert_not_called()
+			dialog.findnext()
+		showinfo.assert_called_once()
+		self.assertIn("Can't find text", showinfo.call_args.kwargs['message'])
+
+	def test_find_up_with_no_earlier_match_reports_not_found(self) -> None:
+		_window, dialog = self.make_dialog('alpha\nbeta\n')
+		dialog.updown.set(0)
+		dialog.find.set('alpha')
+		with mock.patch.object(UI.MessageBox, 'showinfo') as showinfo:
+			dialog.findnext()
+		showinfo.assert_called_once()
+
 	def test_replace_all_replaces_matches(self) -> None:
 		window, dialog = self.make_dialog('alpha\nbeta\nalpha\n')
 		dialog.find.set('alpha')

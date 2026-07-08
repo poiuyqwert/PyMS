@@ -143,60 +143,62 @@ class FindReplaceDialog(ReusablePyMSDialog):
 					self.text.delete(*sel_range)
 					self.text.insert(sel_range[0], ins)
 				self.text.mark_recolor_range(f'{sel_range[0]} linestart', f'{sel_range[0]} lineend')
-		m: re.Match[str] | None
 		if self.multiline.get():
 			m = r.search(self.text.get(UI.INSERT, UI.END))
 			if m:
-				self.text.tag_remove('sel', '1.0', UI.END)
 				s = f'{UI.INSERT} +{m.start(0)}c'
 				e = f'{UI.INSERT} +{m.end(0)}c'
-				self.text.tag_add('sel', s, e)
-				self.text.mark_set(UI.INSERT, e)
-				self.text.see(s)
-				self.check(_Update.selection)
+				self._select_match(s, e, insert=e)
 			else:
 				not_found()
 		else:
-			u = self.updown.get()
-			s,lse,rlse,e = ['-','+'][u],['lineend','linestart'][u],['linestart','lineend'][u],[self.text.index('1.0 lineend'),self.text.index(UI.END)][u]
-			i = self.text.index(UI.INSERT)
-			if i == e:
-				return
-			if i == self.text.index(f'{UI.INSERT} {rlse}'):
-				i = self.text.index(f'{UI.INSERT} {s}1lines {lse}')
-			n = -1
-			while not u or i != e:
-				m = None
-				if u:
-					m = r.search(self.text.get(i, f'{i} {rlse}'))
-				else:
-					line_matches = r.finditer(self.text.get(f'{i} {rlse}', i))
-					c = 0
-					for index,line_match in enumerate(line_matches):
-						if n in (index, -1):
-							m = line_match
-							c = index
-					n = c - 1
-				if m:
-					self.text.tag_remove('sel', '1.0', UI.END)
-					if u:
-						s = f'{i} +{m.start(0)}c'
-						e = f'{i} +{m.end(0)}c'
-						self.text.mark_set(UI.INSERT, e)
-					else:
-						s = f'{i} linestart +{m.start(0)}c'
-						e = f'{i} linestart +{m.end(0)}c'
-						self.text.mark_set(UI.INSERT, s)
-					self.text.tag_add('sel', s, e)
-					self.text.see(s)
-					self.check(_Update.selection)
-					break
-				if (not u and n == -1 and self.text.index(f'{i} lineend') == e) or i == e:
-					not_found()
-					break
-				i = self.text.index(f'{i} {s}1lines {lse}')
+			down = bool(self.updown.get())
+			found = self._search_down(r) if down else self._search_up(r)
+			if found:
+				from_index, m = found
+				s = f'{from_index} +{m.start(0)}c'
+				e = f'{from_index} +{m.end(0)}c'
+				# Moving the insert cursor past the match (in the search direction)
+				# makes the next find continue instead of re-finding this match
+				self._select_match(s, e, insert=e if down else s)
 			else:
 				not_found()
+
+	def _select_match(self, start: str, end: str, insert: str) -> None:
+		self.text.tag_remove('sel', '1.0', UI.END)
+		self.text.tag_add('sel', start, end)
+		self.text.mark_set(UI.INSERT, insert)
+		self.text.see(start)
+		self.check(_Update.selection)
+
+	def _search_down(self, r: re.Pattern[str]) -> tuple[str, re.Match[str]] | None:
+		# Search line-by-line from the insert cursor to the end of the text,
+		# taking the first match on each line
+		end = self.text.index(UI.END)
+		index = self.text.index(UI.INSERT)
+		if index == self.text.index(f'{index} lineend'):
+			index = self.text.index(f'{index} +1lines linestart')
+		while self.text.compare(index, '<', end):
+			m = r.search(self.text.get(index, f'{index} lineend'))
+			if m:
+				return (index, m)
+			index = self.text.index(f'{index} +1lines linestart')
+		return None
+
+	def _search_up(self, r: re.Pattern[str]) -> tuple[str, re.Match[str]] | None:
+		# Search line-by-line from the insert cursor back to the start of the
+		# text, taking the last match before the cursor on each line
+		index = self.text.index(UI.INSERT)
+		while True:
+			linestart = self.text.index(f'{index} linestart')
+			last_match: re.Match[str] | None = None
+			for m in r.finditer(self.text.get(linestart, index)):
+				last_match = m
+			if last_match:
+				return (linestart, last_match)
+			if self.text.compare(linestart, '==', '1.0'):
+				return None
+			index = self.text.index(f'{linestart} -1lines lineend')
 
 	def count(self) -> None:
 		if not self.find.get():

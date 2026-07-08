@@ -2,6 +2,7 @@
 from .Constants import RE_COORDINATES
 
 from ..Utilities import UIKit as UI
+from ..Utilities.trace import get_tracer
 
 class SelectionTooltip(UI.Tooltip):
 	tag = 'Selection'
@@ -53,6 +54,8 @@ class SelectionTooltip(UI.Tooltip):
 				self.tip.wm_geometry(f'+{pos[0]}+{pos[1]+22}')
 			self.tip['background'] = '#FF0000'
 		except Exception:
+			if tracer := get_tracer():
+				tracer.trace_error()
 			if self.tip:
 				try:
 					self.tip.destroy()
