@@ -595,14 +595,18 @@ class PyMPQ(UI.MainWindow):
 		f = FolderDialog(self, self.config_.import_.files_prefix)
 		if not f.save:
 			return
-		with self.open_mpq(read_only=False):
-			for filepath in files:
-				filename = os.path.basename(filepath)
-				folder = self.config_.import_.files_prefix.value or ''
-				self.add_file_to_mpq(filepath, folder + filename)
-			self.mpq.flush()
-			self.list_files()
-			self.update_info()
+		try:
+			with self.open_mpq(read_only=False):
+				for filepath in files:
+					filename = os.path.basename(filepath)
+					folder = self.config_.import_.files_prefix.value or ''
+					self.add_file_to_mpq(filepath, folder + filename)
+				self.mpq.flush()
+				self.list_files()
+				self.update_info()
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
 		self.update_list()
 		self.select()
 
@@ -617,17 +621,21 @@ class PyMPQ(UI.MainWindow):
 		fo = FolderDialog(self, self.config_.import_.folder_prefix)
 		if not fo.save:
 			return
-		with self.open_mpq(read_only=False):
-			for root,_,filenames in os.walk(path):
-				folder = self.config_.import_.folder_prefix.value or ''
-				path_folder = root.replace(path,'')
-				if path_folder:
-					folder += '\\'.join(os.path.split(path_folder)) + '\\'
-				for filename in filenames:
-					self.add_file_to_mpq(os.path.join(root,filename), folder + filename)
-			self.mpq.flush()
-			self.list_files()
-			self.update_info()
+		try:
+			with self.open_mpq(read_only=False):
+				for root,_,filenames in os.walk(path):
+					folder = self.config_.import_.folder_prefix.value or ''
+					path_folder = root.replace(path,'')
+					if path_folder:
+						folder += '\\'.join(os.path.split(path_folder)) + '\\'
+					for filename in filenames:
+						self.add_file_to_mpq(os.path.join(root,filename), folder + filename)
+				self.mpq.flush()
+				self.list_files()
+				self.update_info()
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
 		self.update_list()
 		self.select()
 

@@ -7,6 +7,7 @@ The Python package lives in the `PyMS/` subdirectory. Internal imports are absol
 - `PyMS/FileFormats/` — the heart of the project: readers/writers/encoders for every BroodWar binary format (`AIBIN`, `DAT`, `GRP`, `MPQ`, `TBL`, `Tileset`, `CHK`, `TRG`, `IScriptBIN`, ...). Editing-program logic should call into these, not reimplement parsing.
 - `PyMS/Utilities/` — shared infrastructure: `UIKit/` (Tkinter widget wrappers, theming, syntax highlighting), `CodeHandlers/` (generic lexer/parser/compiler framework reused by AI/IScript script languages), `Config.py`/`PyMSConfig.py` (settings), `Assets.py` (resource paths), `IO.py`, `Struct.py` (binary struct helpers), `analytics.py`.
 - `PyMS/Tests/` — `unittest` suite mirroring the format/utility modules.
+- `PyMS/UITests/` — in-process Tkinter UI automation tests (a separate top-level package, sibling of `Tests/`, so the main test discovery never imports them). `UITests/harness.py` provides `UITestCase`.
 - `PyMS/MPQ/`, `PyMS/Data/`, `PyMS/Images/`, `Palettes/`, `Help/` — bundled game data, assets, and Markdown help docs.
 - `Settings/` — per-program runtime settings (`.txt`, JSON-ish). User-editable; not code.
 
@@ -33,6 +34,8 @@ The Python package lives in the `PyMS/` subdirectory. Internal imports are absol
 - **Always run `pylint` with the arguments configured in `.vscode/settings.json`** (the `pylint.args` array — currently the `--disable=...` rule list and `--indent-string='\t'`). Pass those exact arguments on the command line so the CLI matches the editor's behavior; otherwise pylint will report rules that are intentionally disabled for this project.
 - **No wildcard imports** (`from X import *`) — `wildcard-import` is enabled in pylint. The only exceptions are the public-API barrels (`Utilities/UIKit/__init__.py` plus its `Constants`/`Widgets` submodules, and `FileFormats/CHK/__init__.py`): they re-export deliberately, each backed by an explicit (literal) `__all__` and a local `# pylint: disable=wildcard-import`.
 - **Namespace vs. explicit imports.** When a file would pull a large share of a module's surface (rule of thumb: more than ~5 names *and* ≥75% of its exports — and always for `UIKit`), import the module under an alias and qualify each use: `from ..Utilities import UIKit as UI` → `UI.Frame`, `from ..FileFormats import DAT` → `DAT.UnitsDAT` (mirrors the existing `Assets` convention). Otherwise import the specific names explicitly: `from ..Widgets import Frame, Label`.
+- **Key event checks compare keysyms**: `Keysym(event.keysym) == Key.Return` (via the barrel: `UI.Keysym(...) == UI.Key.Return`). Never compare `event.keycode` to numbers (platform-specific — Return is 13 on Windows, 36 on macOS) or `event.keysym` to `.name()`/string literals. A keysym alone can't verify modifiers, so `== Ctrl.Return` is always False — modifier combos need real event bindings.
+- **Image types.** `PIL.Image` is for pixel construction only (FileFormats) — never handed to widgets. FileFormats converters (`GRP.frame_to_photo`, `Tileset.megatile_to_photo`/`minitile_to_photo`, `FNT.letter_to_photo`, ...) return plain `ImageTk.PhotoImage` so callers need no casts. `tkinter.PhotoImage` is only for bundled GIF assets (`Assets.get_image`) and UIKit component icon params. For GUI-layer annotations meaning "any displayable image" (caches, delegate protocols, `Canvas.create_image`) use `UI.AnyPhotoImage` (= `tk.PhotoImage | ImageTk.PhotoImage`, in `UIKit/Types.py`) — prefer it over `UI.ImageTk.PhotoImage`, which needs a `type: ignore`. Don't reintroduce `tkinter.Image`/`BitmapImage` or casts between image types. Gotchas: `Assets.py` must import `AnyPhotoImage` under `if TYPE_CHECKING:` (a runtime import from the UIKit barrel is circular), and keep strong references to Tk images (e.g. caches like `canvas_images`) or Tk garbage-collects them out from under widgets.
 - Do not place any issue number references (like ISS-001 for example) in code/comments/tests
 - Test names/comments should describe the invariant, not the bug
 - **Tests that assert a `PyMSError` is raised must validate it's the *expected* error**, not just that some `PyMSError` occurred. Capture the exception and assert on a distinctive substring of its message — bare `with self.assertRaises(PyMSError):` is not enough:
@@ -62,7 +65,19 @@ The Python package lives in the `PyMS/` subdirectory. Internal imports are absol
 
 ## 2. Run all tests
 
+Run from this directory (the one containing the `.pyw` launchers and the `PyMS/` package):
+
+- Full suite: `pyenv exec python -m unittest discover -t . -s PyMS/Tests -p 'test_*.py'` — the `-t .` matters; without it discovery imports tests as `Tests.*` and their relative imports fail.
+- Single module: `pyenv exec python -m unittest PyMS.Tests.<Sub>.<test_module>`
+- UI automation tests: `pyenv exec python -m unittest discover -t . -s PyMS/UITests -p 'test_*.py'`
+
 Note: SFmpq tests are expected to fail on macOS at this time
+
+UI automation test notes (see `PyMS/UITests/harness.py`):
+
+- `UITestCase.make_window(factory, extra_patches=())` builds a real main window with the default patches active (Config `_read`/`_write`, analytics, update check) so tests are deterministic and disk-free. Drive it *without* `startup()`/`mainloop()`; pump the event loop with the harness's `pump()` (it calls `UI.Misc.update_idletasks`/`update` explicitly so a window defining its own `update` method can't shadow the pump).
+- **Never create a throwaway second `Tk()` root** (e.g. to probe for a display) — on macOS Aqua a created-then-destroyed extra root corrupts the next root and segfaults the interpreter. Detect "no display" by catching `tkinter.TclError` when the window is constructed and raising `unittest.SkipTest`.
+- Keyboard-shortcut tests need the window shown *and* focused: `deiconify()` + `focus_force()` + pump. Build shortcut event strings with the event patterns (e.g. `UI.Ctrl.n.event()`), which resolve to `<Command-n>` on macOS.
 
 ## 3. Static analysis
 

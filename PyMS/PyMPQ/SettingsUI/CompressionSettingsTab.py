@@ -6,6 +6,8 @@ from ...Utilities import UIKit as UI
 from ...Utilities import Config
 from ...Utilities.SettingsUI.SettingsTab import SettingsTab
 from ...Utilities.EditedState import EditedState
+from ...Utilities.PyMSError import PyMSError
+from ...Utilities.ErrorDialog import ErrorDialog
 
 import os
 
@@ -66,24 +68,38 @@ class CompressionSettingsTab(SettingsTab):
 
 	def action_states(self) -> None:
 		self.addbutton['state'] = UI.NORMAL if self.extension.get() else UI.DISABLED
-		selected_index = int(self.listbox.curselection()[0])
-		self.rembutton['state'] = UI.NORMAL if selected_index else UI.DISABLED
+		selection = self.listbox.curselection()
+		self.rembutton['state'] = UI.NORMAL if selection and int(selection[0]) else UI.DISABLED
 
-	def get_selected_extension(self) -> str:
-		extension_index = int(self.listbox.curselection()[0])
-		return self.listbox.get(extension_index)
+	def get_selected_extension(self) -> str | None:
+		selection = self.listbox.curselection()
+		if not selection:
+			return None
+		return self.listbox.get(int(selection[0]))
 
 	def select_extension(self) -> None:
-		compression = CompressionSetting.parse_value(self.autocompression[self.get_selected_extension()])
+		self.action_states()
+		extension = self.get_selected_extension()
+		if extension is None:
+			return
+		try:
+			compression = CompressionSetting.parse_value(self.autocompression[extension])
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
 		self.compression_index.set(CompressionSettingsTab.COMPRESSION_CHOICES.index(compression.type))
 		self.update_levels(compression)
-		self.action_states()
 
 	def choose_compression(self, compression_type_index: int) -> None:
 		compression_type = CompressionSettingsTab.COMPRESSION_CHOICES[compression_type_index]
 		extension = self.get_selected_extension()
-		if CompressionSetting.parse_value(self.autocompression[extension]) == compression_type:
+		if extension is None:
 			return
+		try:
+			if CompressionSetting.parse_value(self.autocompression[extension]).type == compression_type:
+				return
+		except PyMSError:
+			pass # Corrupt stored value, replace it with the newly chosen compression
 		self.edited_state.mark_edited()
 		compression = compression_type.setting()
 		self.autocompression[extension] = str(compression)
@@ -102,7 +118,12 @@ class CompressionSettingsTab(SettingsTab):
 
 	def choose_level(self, level: int) -> None:
 		extension = self.get_selected_extension()
-		compression = CompressionSetting.parse_value(self.autocompression[extension])
+		if extension is None:
+			return
+		try:
+			compression = CompressionSetting.parse_value(self.autocompression[extension])
+		except PyMSError:
+			return
 		if level != compression.level:
 			self.autocompression[extension] = str(compression.type.setting(level))
 			self.edited_state.mark_edited()
@@ -116,19 +137,22 @@ class CompressionSettingsTab(SettingsTab):
 		self.extension.set('')
 		self.action_states()
 		if not e in self.autocompression:
-			self.autocompression[e] = [0,0]
+			self.autocompression[e] = str(CompressionOption.Standard.setting())
 			s: int = self.listbox.size() # type: ignore[assignment]
 			self.listbox.insert(UI.END,e)
 			self.listbox.select_clear(0,UI.END)
 			self.listbox.select_set(s)
 			self.listbox.see(s)
 			self.edited_state.mark_edited()
-			self.action_states()
+			self.select_extension()
 
 	def remove(self, _event: UI.Event | None = None) -> None:
 		if self.rembutton['state'] == UI.DISABLED:
 			return
-		s = int(self.listbox.curselection()[0])
+		selection = self.listbox.curselection()
+		if not selection:
+			return
+		s = int(selection[0])
 		del self.autocompression[self.listbox.get(s)]
 		self.listbox.delete(s)
 		if s == self.listbox.size():
