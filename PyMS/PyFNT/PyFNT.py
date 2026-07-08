@@ -304,6 +304,7 @@ class PyFNT(UI.MainWindow, ErrorableSettingsDialogDelegate):
 		self.file: str | None = None
 		self.edited = False
 		self.palette: PCX
+		self.cells: list[list[UI.Canvas.Item]] = []
 
 		self.update_title()
 
@@ -404,7 +405,7 @@ class PyFNT(UI.MainWindow, ErrorableSettingsDialogDelegate):
 		return self.saveas()
 
 	def is_file_open(self) -> bool:
-		return not not self.fnt
+		return self.fnt is not None
 
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
@@ -419,13 +420,17 @@ class PyFNT(UI.MainWindow, ErrorableSettingsDialogDelegate):
 
 	def resize(self) -> None:
 		self.canvas.delete(UI.ALL)
+		self.cells = []
 		if not self.fnt:
 			return
 		self.canvas['width'] = self.fnt.width * 4 + 1
 		self.canvas['height'] = self.fnt.height * 4 + 1
+		background = UI.Colors.to_html(self.palette.palette[self.palette.image[0][0]])
 		for y in range(self.fnt.height):
+			row: list[UI.Canvas.Item] = []
 			for x in range(self.fnt.width):
-				self.canvas.create_rectangle(3+x*4,3+y*4,6+x*4,6+y*4, fill=UI.Colors.to_html(self.palette.palette[self.palette.image[0][0]]), outline='', tag=f'{x},{y}') # type: ignore[call-overload]
+				row.append(self.canvas.create_rectangle(3+x*4,3+y*4,6+x*4,6+y*4, fill=background, outline=''))
+			self.cells.append(row)
 
 	def preview(self) -> None:
 		if not self.fnt or not self.listbox.size():
@@ -433,9 +438,8 @@ class PyFNT(UI.MainWindow, ErrorableSettingsDialogDelegate):
 		l = int(self.listbox.curselection()[0])
 		for y,yd in enumerate(self.fnt.letters[l]):
 			for x,c in enumerate(yd):
-				item = self.canvas.find_withtag(f'{x},{y}')
-				if item:
-					item[0].config(fill=UI.Colors.to_html(self.palette.palette[self.palette.image[0][c]]))
+				if y < len(self.cells) and x < len(self.cells[y]):
+					self.cells[y][x].config(fill=UI.Colors.to_html(self.palette.palette[self.palette.image[0][c]]))
 
 	def update_title(self) -> None:
 		file_path = self.file
@@ -454,11 +458,11 @@ class PyFNT(UI.MainWindow, ErrorableSettingsDialogDelegate):
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		s = InfoDialog(self,True)
-		if s.size is None:
+		if s.result is None:
 			return
 		self.fnt = FNT()
-		self.fnt.width,self.fnt.height,self.fnt.start = s.width.get(),s.height.get(),s.lowi.get()
-		for _ in range(s.letters.get()):
+		self.fnt.width,self.fnt.height,self.fnt.start = s.result.width,s.result.height,s.result.lowi
+		for _ in range(s.result.letters):
 			self.fnt.letters.append([[0]*self.fnt.width for __ in range(self.fnt.height)])
 		self.updatelist()
 		self.file = None
@@ -478,6 +482,7 @@ class PyFNT(UI.MainWindow, ErrorableSettingsDialogDelegate):
 				return
 		if isinstance(file, FNT):
 			fnt = file
+			self.file = None
 		else:
 			fnt = FNT()
 			try:
@@ -530,6 +535,7 @@ class PyFNT(UI.MainWindow, ErrorableSettingsDialogDelegate):
 		self.action_states()
 		self.listbox.delete(0, UI.END)
 		self.canvas.delete(UI.ALL)
+		self.cells = []
 		self.canvas['width'] = 0
 		self.canvas['height'] = 0
 
@@ -545,6 +551,8 @@ class PyFNT(UI.MainWindow, ErrorableSettingsDialogDelegate):
 			fnttobmp(self.fnt,[self.palette.palette[i] for i in self.palette.image[0]] + [(50,100,50) for _ in range(256 - len(self.palette.image[0]))],file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
+			self.status.set('Failed to export font.')
+			return
 		self.status.set('Font exported successfully!')
 
 	def imports(self) -> None:
@@ -554,15 +562,17 @@ class PyFNT(UI.MainWindow, ErrorableSettingsDialogDelegate):
 		if not file:
 			return
 		s = InfoDialog(self)
-		if s.size is None:
+		if s.result is None:
 			return
 		self.status.set('Importing FNT, please wait...')
+		self.update_idletasks()
 		b = BMP()
 		try:
 			b.load(file)
-			fnt = bmptofnt(b,s.lowi.get(),s.letters.get())
+			fnt = bmptofnt(b,s.result.lowi,s.result.letters)
 		except PyMSError as e:
 			ErrorDialog(self, e)
+			self.status.set('Failed to import font.')
 			return
 		self.open(file=fnt)
 		self.mark_edited()
