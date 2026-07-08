@@ -29,7 +29,7 @@ class UpdateFiles(PyMSDialog):
 
 	def cancel(self, _event: UI.Event | None = None) -> None:
 		self.files = []
-		PyMSDialog.ok(self)
+		PyMSDialog.cancel(self)
 
 	def ok(self, _event: UI.Event | None = None) -> None:
 		self.files = []

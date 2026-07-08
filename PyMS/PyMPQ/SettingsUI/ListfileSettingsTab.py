@@ -18,7 +18,7 @@ class ListfileSettingsTab(SettingsTab):
 		self.listbox.pack(fill=UI.BOTH, padx=1, pady=1, expand=1)
 		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), lambda *e: self.action_states())
 		for l in self.config_.settings.listfiles.data:
-			self.listbox.insert(0,l)
+			self.listbox.insert(UI.END,l)
 		if self.listbox.size():
 			self.listbox.select_set(0)
 
@@ -33,16 +33,24 @@ class ListfileSettingsTab(SettingsTab):
 		self.action_states()
 
 	def is_listfile_selected(self) -> bool:
-		return not not self.listbox.curselection()
+		return bool(self.listbox.curselection())
 
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('listfile_selected', self.is_listfile_selected())
 
 	def add(self, _event: UI.Event | None = None) -> None:
 		add = self.config_.settings.last_path.listfiles.select_open_multiple(self)
-		if add:
-			for i in add:
-				self.listbox.insert(UI.END,i)
+		if not add:
+			return
+		existing = set(self.listbox.get(0, UI.END))
+		added = False
+		for i in add:
+			if i in existing:
+				continue
+			self.listbox.insert(UI.END,i)
+			existing.add(i)
+			added = True
+		if added:
 			self.action_states()
 			self.edited_state.mark_edited()
 
