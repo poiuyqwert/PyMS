@@ -4,7 +4,7 @@ from ..FileFormats import TBL
 
 from enum import Enum
 
-from typing import Callable
+from typing import Callable, assert_never
 
 class SortBy(Enum):
 	file_order = 'file_order'
@@ -26,6 +26,8 @@ class SortBy(Enum):
 				return Sort.by_flags
 			case SortBy.string:
 				return Sort.by_string
+			case _:
+				assert_never(self)
 
 class Sort:
 	@staticmethod

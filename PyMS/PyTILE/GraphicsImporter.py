@@ -14,6 +14,8 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities import Assets
 from ..Utilities import Config
 
+from typing import assert_never
+
 class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 	def __init__(self, *, parent: UI.Misc, config: PyTILEConfig, delegate: GraphicsImporterDelegate, tiletype: TileType = TileType.group, ids: list[int] | None = None) -> None:
 		self.config_ = config
@@ -127,6 +129,8 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 				return self.config_.windows.import_.graphics.mega
 			case TileType.mini:
 				return self.config_.windows.import_.graphics.mini
+			case _:
+				assert_never(self.tiletype)
 
 	@property
 	def type_config(self) -> PyTILEConfig.Import.Graphics.MegaSettings | PyTILEConfig.Import.Graphics.MiniSettings:
@@ -137,6 +141,8 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 				return self.config_.import_.graphics.mega
 			case TileType.mini:
 				return self.config_.import_.graphics.mini
+			case _:
+				assert_never(self.tiletype)
 
 	def load_settings(self) -> None:
 		config = self.type_config

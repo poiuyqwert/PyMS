@@ -31,7 +31,7 @@ from ..Utilities.SponsorDialog import SponsorDialog
 
 from enum import Enum
 
-from typing import Callable, Any
+from typing import Callable, Any, assert_never
 
 LONG_VERSION = 'v' + Assets.version('PySPK')
 
@@ -542,13 +542,16 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def mouse_event(self, event: UI.Event, mouse_event: MouseEvent, click_modifier: ClickModifier) -> None:
 		if not self.is_file_open():
 			return
-		match self.get_tool():
+		tool = self.get_tool()
+		match tool:
 			case Tool.select:
 				f = self.select_event
 			case Tool.move:
 				f = self.move_event
 			case Tool.draw:
 				f = self.draw_event
+			case _:
+				assert_never(tool)
 		f(event, mouse_event, click_modifier)
 
 	def mouse_move(self, event: UI.Event, click_modifier: ClickModifier) -> None:

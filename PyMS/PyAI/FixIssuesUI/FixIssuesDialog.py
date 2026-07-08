@@ -15,6 +15,8 @@ from ...Utilities.ErrorDialog import ErrorDialog
 
 import io
 
+from typing import assert_never
+
 class IssueResolution:
 	def __init__(self, aibin: AIBIN, issue: LoadIssue):
 		self.aibin = aibin
@@ -27,6 +29,8 @@ class IssueResolution:
 				self.resolution_options = [DeleteResolution(from_bwscript=True), AddRefResolution()]
 			case LoadIssueReason.duplicate_bw:
 				self.resolution_options = [DeleteResolution(from_bwscript=True), DeleteResolution(from_bwscript=False), ChangeIDResolution(in_bwscript=True), ChangeIDResolution(in_bwscript=False)]
+			case _:
+				assert_never(issue.reason)
 		for option in self.resolution_options:
 			option.update_callback.add(self.update_callback)
 
@@ -37,7 +41,7 @@ class IssueResolution:
 			case LoadIssueReason.duplicate_bw:
 				return "Script is in aiscript.bin but also exists in bwscript.bin"
 			case _:
-				raise ValueError(f"Unhandled load issue reason: {self.issue.reason}")
+				assert_never(self.issue.reason)
 
 	def list_name(self) -> str:
 		detail = 'No resolution chosen'
@@ -80,7 +84,7 @@ class IssueResolution:
 			case LoadIssueReason.duplicate_bw:
 				return True
 			case _:
-				raise ValueError(f"Unhandled load issue reason: {self.issue.reason}")
+				assert_never(self.issue.reason)
 
 	def in_bwscript(self) -> bool:
 		return True

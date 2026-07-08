@@ -30,6 +30,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from collections.abc import Callable, Sequence
+from typing import assert_never
 
 
 def megatile_to_photo(tileset: Tileset, megatile_id: int) -> ImageTk.PhotoImage:
@@ -81,6 +82,8 @@ class TileType(Enum):
 				return 'MegaTile'
 			case TileType.mini:
 				return 'MiniTile'
+			case _:
+				assert_never(tile_type)
 
 # HEIGHT_LOW  = 0
 # HEIGHT_MID  = (1 << 1)

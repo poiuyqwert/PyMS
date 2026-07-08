@@ -5,7 +5,7 @@ from .Delegates import MegaEditorViewDelegate, TilePaletteDelegate, MiniEditorDe
 
 from ..FileFormats.Tileset.Tileset import Tileset, TileType
 from ..FileFormats.Tileset.VF4 import VF4Flag
-from ..FileFormats.Tileset.VX4 import VX4Minitile
+from ..FileFormats.Tileset.VX4 import VX4Megatile, VX4Minitile
 
 from ..Utilities import UIKit as UI
 from ..Utilities import Assets
@@ -244,7 +244,8 @@ class MegaEditorView(UI.Frame, TilePaletteDelegate, MiniEditorDelegate):
 			return
 		minitiles = list(tileset.vx4.get_megatile(self.megatile_id).minitiles)
 		minitile = minitiles[minitile_n]
-		minitile.flipped = not minitile.flipped
+		minitiles[minitile_n] = VX4Minitile(minitile.image_id, not minitile.flipped)
+		tileset.vx4.set_megatile(self.megatile_id, VX4Megatile(minitiles))
 		self.redraw_delegate()
 		self.draw()
 		self.mark_edited()
@@ -336,11 +337,11 @@ class MegaEditorView(UI.Frame, TilePaletteDelegate, MiniEditorDelegate):
 		if mode == MegaEditorMode.height:
 			self.fill_height()
 		elif mode == MegaEditorMode.walkability:
-			self.fill_flag(minitile_n, 1)
+			self.fill_flag(minitile_n, VF4Flag.walkable)
 		elif mode == MegaEditorMode.view_blocking:
-			self.fill_flag(minitile_n, 8)
+			self.fill_flag(minitile_n, VF4Flag.blocks_sight)
 		elif mode == MegaEditorMode.ramp:
-			self.fill_flag(minitile_n, 16)
+			self.fill_flag(minitile_n, VF4Flag.ramp)
 
 	def draw_minitiles(self) -> None:
 		self.canvas.delete('tile')
@@ -385,9 +386,10 @@ class MegaEditorView(UI.Frame, TilePaletteDelegate, MiniEditorDelegate):
 		tileset = self.delegate.get_tileset()
 		if not tileset or self.megatile_id is None:
 			return
-		megatile = tileset.vx4.get_megatile(self.megatile_id)
-		minitile = megatile.minitiles[self.minitile_n]
-		minitile.image_id = minitile_id
+		minitiles = list(tileset.vx4.get_megatile(self.megatile_id).minitiles)
+		minitile = minitiles[self.minitile_n]
+		minitiles[self.minitile_n] = VX4Minitile(minitile_id, minitile.flipped)
+		tileset.vx4.set_megatile(self.megatile_id, VX4Megatile(minitiles))
 		self.redraw_delegate()
 		self.draw()
 		self.mark_edited()

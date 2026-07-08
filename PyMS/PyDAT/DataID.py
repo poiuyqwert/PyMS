@@ -1,6 +1,8 @@
 
 from enum import Enum
 
+from typing import assert_never
+
 class DATID(Enum):
 	units = 'Units'
 	weapons = 'Weapons'
@@ -43,6 +45,8 @@ class DATID(Enum):
 				return 'mapdata.dat'
 			case DATID.orders:
 				return 'orders.dat'
+			case _:
+				assert_never(self)
 
 	@property
 	def tab_id(self) -> str:

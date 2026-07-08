@@ -15,6 +15,8 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
 from ..Utilities import Config
 
+from typing import assert_never
+
 
 class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, MegaEditorDelegate, MiniEditorDelegate, GraphicsImporterDelegate):
 	OPEN_PALETTE_COUNT = 0
@@ -115,6 +117,8 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 				return self.config_.windows.palette.mega
 			case TileType.mini:
 				return self.config_.windows.palette.mini
+			case _:
+				assert_never(self.tiletype)
 
 	def setup_complete(self) -> None:
 		self.window_geometry_config.load_size(self)

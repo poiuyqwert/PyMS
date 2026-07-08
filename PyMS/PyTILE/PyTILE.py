@@ -178,7 +178,6 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 		self.tileset: Tileset | None = None
 		self.file: str | None = None
 		self.edited = False
-		self.megatile = None
 
 		#Toolbar
 		self.toolbar = UI.Toolbar(self)
@@ -373,7 +372,7 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 			mega_id = group.megatile_ids[self.palette.sub_selection]
 			settings = self.clipboard_get()
 			try:
-				self.tileset.export_megatile_settings(settings, [mega_id])
+				self.tileset.import_megatile_settings(settings, [mega_id])
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
@@ -648,6 +647,8 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 
 		if is_file_open and cast(Tileset, self.tileset).vx4.is_expanded():
 			self.expanded.set('VX4 Expanded')
+		else:
+			self.expanded.set('')
 
 		can_copy_mega = is_file_open and self.options_copy_mega.any_enabled()
 		self.copy_mega_btn['state'] = UI.NORMAL if can_copy_mega else UI.DISABLED
@@ -831,7 +832,10 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 			self.mark_edited()
 
 	def placeability(self) -> None:
-		Placeability(self, self.config_, self, self.group_piece_left_or_dddata_id.get())
+		try:
+			Placeability(self, self.config_, self, self.group_piece_left_or_dddata_id.get())
+		except PyMSError as e:
+			ErrorDialog(self, e)
 
 	def update_ranges(self) -> None:
 		if not self.tileset:

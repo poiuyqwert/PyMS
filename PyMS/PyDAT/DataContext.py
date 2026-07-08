@@ -18,7 +18,7 @@ from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.Callback import Callback
 
-from typing import Any
+from typing import Any, assert_never
 
 ImageWithBounds = tuple[UI.AnyPhotoImage, Bounds]
 
@@ -166,6 +166,8 @@ class DataContext:
 				return self.campaign
 			case DATID.orders:
 				return self.orders
+			case _:
+				assert_never(datid)
 
 	def data_data(self, dataid: DataID) -> TBLData | IconData | IScriptBIN:
 		match dataid:
@@ -185,6 +187,8 @@ class DataContext:
 				return self.cmdicons
 			case DataID.iscriptbin:
 				return self.iscriptbin
+			case _:
+				assert_never(dataid)
 
 	def load_additional_files(self) -> None:
 		self.mpq_handler.open_mpqs()

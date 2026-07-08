@@ -12,7 +12,7 @@ from ....Utilities import Assets
 from math import floor, sqrt
 from enum import Enum
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, assert_never
 if TYPE_CHECKING:
 	from ...Delegates import MainDelegate, SubDelegate
 
@@ -27,6 +27,8 @@ class ForceType(Enum):
 				return 'Ground'
 			case ForceType.air:
 				return 'Air'
+			case _:
+				assert_never(self)
 
 class AIActionsUnitsTab(DATUnitsTab):
 	def __init__(self, parent: UI.Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:

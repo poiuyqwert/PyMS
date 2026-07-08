@@ -18,7 +18,7 @@ from ...Utilities.fileutils import check_allow_overwrite_internal_file
 
 import copy
 
-from typing import TYPE_CHECKING, cast, Generic, TypeVar
+from typing import TYPE_CHECKING, cast, Generic, TypeVar, assert_never
 if TYPE_CHECKING:
 	from ..Delegates import MainDelegate
 	from ..DATRef import DATRefs, DATRefMatch
@@ -70,6 +70,8 @@ class DATTab(UI.NotebookTab, DATTabConveniences, Generic[ET]):
 				return self.delegate.data_context.config.names.mapdata
 			case DATID.orders:
 				return self.delegate.data_context.config.names.orders
+			case _:
+				assert_never(self.DAT_ID)
 
 	def update_used_by_header(self) -> None:
 		if not self.used_by_header:

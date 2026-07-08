@@ -11,7 +11,7 @@ import os, json, re, enum
 from dataclasses import dataclass
 from copy import deepcopy
 
-from typing import Any, Protocol, runtime_checkable, Generic, TypeVar, Callable, Generator, overload, Literal, TYPE_CHECKING
+from typing import Any, Protocol, runtime_checkable, Generic, TypeVar, Callable, Generator, overload, Literal, TYPE_CHECKING, assert_never
 if TYPE_CHECKING:
 	from .MPQHandler import MPQHandler
 
@@ -460,6 +460,8 @@ class FileOpType(enum.Enum):
 				op_name = 'Save' if save else 'Open'
 			case FileOpType.import_export:
 				op_name = 'Export' if save else 'Import'
+			case _:
+				assert_never(self)
 		plural = ('s' if name[-1].islower() else "'s") if multiple else ''
 		return f'{op_name} {name}{plural}'
 
@@ -470,6 +472,8 @@ class FileOpType(enum.Enum):
 				return 'save'
 			case FileOpType.import_export:
 				return 'export'
+			case _:
+				assert_never(self)
 
 	@property
 	def open_key(self) -> str:
@@ -478,6 +482,8 @@ class FileOpType(enum.Enum):
 				return 'open'
 			case FileOpType.import_export:
 				return 'import'
+			case _:
+				assert_never(self)
 
 class SelectFile(ConfigObject):
 	def __init__(self, *, name: str, filetypes: list[UI.FileType], op_type: FileOpType = FileOpType.open_save, initial_filename: str | None = None) -> None:

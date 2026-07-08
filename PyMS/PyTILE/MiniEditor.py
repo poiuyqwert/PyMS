@@ -25,7 +25,7 @@ class MiniEditor(PyMSDialog):
 		self.select = False
 		self.id = tile_id
 		self.delegate = delegate
-		self.edited = True
+		self.edited = False
 		PyMSDialog.__init__(self, parent, f'MiniTile Editor [{tile_id}]', resizable=(False,False))
 
 	def widgetize(self) -> UI.Widget:
@@ -95,14 +95,15 @@ class MiniEditor(PyMSDialog):
 		self.click = None
 
 	def motion(self, event: UI.Event) -> None:
-		items = self.canvas.find_overlapping(event.x,event.y,event.x,event.y)
-		if self.click is None or not items:
+		if self.click is None:
 			return
-		tags = items[0].get_tags()
-		if not tags or not tags[0].startswith('tile'):
+		for item in self.canvas.find_overlapping(event.x,event.y,event.x,event.y):
+			tags = item.get_tags()
+			if not tags or not tags[0].startswith('tile'):
+				continue
+			coords_str = tags[0][4:].split(',')
+			self.color((int(coords_str[0]), int(coords_str[1])), self.click)
 			return
-		coords_str = tags[0][4:].split(',')
-		self.color((int(coords_str[0]), int(coords_str[1])), self.click)
 
 	def color(self, pos: tuple[int, int], click: Click) -> None:
 		tileset = self.delegate.get_tileset()
@@ -119,7 +120,7 @@ class MiniEditor(PyMSDialog):
 			self.canvas.itemconfig(f'tile{pos[0]},{pos[1]}', fill=r, outline=r)
 			self.canvas.itemconfig(f'scale{pos[0]},{pos[1]}', fill=r, outline=r)
 			self.click = click
-		self.edited = True
+			self.edited = True
 
 	def pencolor(self, index: int, click: Click) -> None:
 		tileset = self.delegate.get_tileset()

@@ -8,7 +8,7 @@ from ..Utilities import UIKit as UI
 
 from math import ceil
 
-from typing import Callable, Any
+from typing import Callable, Any, assert_never
 
 class TilePaletteView(UI.Frame):
 	# sub_select currently only supported by TileType.group when multiselect=False
@@ -16,7 +16,7 @@ class TilePaletteView(UI.Frame):
 		UI.Frame.__init__(self, parent)
 		self.tiletype = tiletype
 		self.selected: list[int] = []
-		self.last_selection: tuple[int, bool] | None # (index, on_or_off) = None
+		self.last_selection: tuple[int, bool] | None = None # (index, on_or_off)
 		self.sub_selection = 0
 		if select is not None:
 			if isinstance(select, list):
@@ -76,6 +76,8 @@ class TilePaletteView(UI.Frame):
 				return (32 + (0 if group else 1), 32 + (0 if group else 1))
 			case TileType.mini:
 				return (25, 25)
+			case _:
+				assert_never(tiletype)
 
 	def get_tile_count(self) -> int:
 		tileset = self.delegate.get_tileset()
@@ -88,6 +90,8 @@ class TilePaletteView(UI.Frame):
 				return tileset.vx4.megatile_count()
 			case TileType.mini:
 				return tileset.vr4.image_count()
+			case _:
+				assert_never(self.tiletype)
 
 	def get_total_size(self) -> tuple[int,int]:
 		tile_size = self.get_tile_size()
@@ -256,4 +260,4 @@ class TilePaletteView(UI.Frame):
 		max_y = total_size[1] - viewport_size[1]
 		tile_id = self.selected[0]
 		y = max(0,min(max_y,(tile_id // columns + 0.5) * tile_size[1] - viewport_size[1]/2.0))
-		self.canvas.yview_moveto(y // total_size[1])
+		self.canvas.yview_moveto(y / total_size[1])

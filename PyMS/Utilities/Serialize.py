@@ -8,7 +8,7 @@ import re
 from enum import Enum, Flag
 from collections import OrderedDict
 
-from typing import Type, Any, Sequence, TypeVar, Callable, Generic
+from typing import Type, Any, Sequence, TypeVar, Callable, Generic, assert_never
 
 SubFields = dict[str, bool]
 Fields = dict[str, bool | SubFields]
@@ -391,6 +391,8 @@ def encode_text(obj: object, obj_id: int | None, definition: Definition, fields:
 				result = f'{definition.name}({obj_id}):\n'
 			case IDMode.none:
 				result = f'{definition.name}:\n'
+			case _:
+				assert_never(definition.id_mode)
 	elif definition.id_mode == IDMode.header:
 		raise PyMSError('Internal', f"Missing ID for '{definition.name}' object")
 	else:

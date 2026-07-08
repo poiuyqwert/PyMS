@@ -8,7 +8,7 @@ from ..Utilities import Serialize
 import struct
 from enum import Enum
 
-from typing import Protocol, Type
+from typing import Protocol, Type, assert_never
 
 class VictoryCondition(Enum):
 	map_default = 0
@@ -51,6 +51,8 @@ class VictoryCondition(Enum):
 				return 'Slaughter'
 			case VictoryCondition.one_on_one:
 				return 'One on One'
+			case _:
+				assert_never(self)
 
 class Resources(Enum):
 	map_default = 0
@@ -87,6 +89,8 @@ class Resources(Enum):
 				return 'High'
 			case Resources.income:
 				return 'Income'
+			case _:
+				assert_never(self)
 
 class UnitStats(Enum):
 	map_default = 0
@@ -103,6 +107,8 @@ class UnitStats(Enum):
 				return 'Map Default'
 			case UnitStats.standard:
 				return 'Standard'
+			case _:
+				assert_never(self)
 
 class FogOfWar(Enum):
 	off = 0
@@ -122,6 +128,8 @@ class FogOfWar(Enum):
 				return 'Warcraft 1 Style'
 			case FogOfWar.on:
 				return 'On'
+			case _:
+				assert_never(self)
 
 class StartingUnits(Enum):
 	map_default = 0
@@ -141,6 +149,8 @@ class StartingUnits(Enum):
 				return 'Workers Only'
 			case StartingUnits.workers_and_center:
 				return 'Workers and Center'
+			case _:
+				assert_never(self)
 
 class StartingPositions(Enum):
 	random = 0
@@ -157,6 +167,8 @@ class StartingPositions(Enum):
 				return 'Random'
 			case StartingPositions.fixed:
 				return 'Fixed'
+			case _:
+				assert_never(self)
 
 class PlayerTypes(Enum):
 	no_single_no_ai = 0
@@ -179,6 +191,8 @@ class PlayerTypes(Enum):
 				return 'Single, No AI'
 			case PlayerTypes.single_ai:
 				return 'Single, AI'
+			case _:
+				assert_never(self)
 
 class Allies(Enum):
 	not_allowed = 0
@@ -195,6 +209,8 @@ class Allies(Enum):
 				return 'Not Allowed'
 			case Allies.allowed:
 				return 'Allowed'
+			case _:
+				assert_never(self)
 
 class TeamMode(Enum):
 	off = 0
@@ -219,6 +235,8 @@ class TeamMode(Enum):
 				return '3 Teams'
 			case TeamMode.teams_4:
 				return '4 Teams'
+			case _:
+				assert_never(self)
 
 class CheatCodes(Enum):
 	off = 0
@@ -235,6 +253,8 @@ class CheatCodes(Enum):
 				return 'Off'
 			case CheatCodes.on:
 				return 'On'
+			case _:
+				assert_never(self)
 
 class TournametMode(Enum):
 	off = 0
@@ -251,6 +271,8 @@ class TournametMode(Enum):
 				return 'Off'
 			case TournametMode.on:
 				return 'On'
+			case _:
+				assert_never(self)
 
 class HasALL(Protocol):
 	@staticmethod

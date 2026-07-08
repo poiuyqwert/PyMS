@@ -6,6 +6,8 @@ from ..FileFormats.MPQ.MPQ import MPQCompressionFlag
 
 from enum import Enum
 
+from typing import assert_never
+
 class CompressionOption(Enum):
 	NoCompression = 'none'
 	Standard = 'standard'
@@ -25,6 +27,8 @@ class CompressionOption(Enum):
 				return 'Audio'
 			case CompressionOption.Auto:
 				return 'Auto'
+			case _:
+				assert_never(self)
 
 	def compression_type(self) -> int:
 		match self:
@@ -34,8 +38,10 @@ class CompressionOption(Enum):
 				return MPQCompressionFlag.zlib
 			case CompressionOption.Audio:
 				return MPQCompressionFlag.huffman | MPQCompressionFlag.wav_mono
-			case _:
+			case CompressionOption.NoCompression | CompressionOption.Auto:
 				return MPQCompressionFlag.none
+			case _:
+				assert_never(self)
 
 	def level_count(self) -> int:
 		return len(self.compression_levels())

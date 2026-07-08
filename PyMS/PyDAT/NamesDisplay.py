@@ -3,6 +3,8 @@ from ..FileFormats.DAT.Utilities import DataNamesUsage
 
 from enum import Enum
 
+from typing import assert_never
+
 class NamesDisplaySetting(Enum):
 	basic = 'basic'
 	tbl = 'tbl'
@@ -17,6 +19,8 @@ class NamesDisplaySetting(Enum):
 				return DataNamesUsage.ignore
 			case NamesDisplaySetting.combine:
 				return DataNamesUsage.combine
+			case _:
+				assert_never(self)
 
 	@staticmethod
 	def from_data_names_usage(data_names_usage: DataNamesUsage) -> 'NamesDisplaySetting':
@@ -27,3 +31,5 @@ class NamesDisplaySetting(Enum):
 				return NamesDisplaySetting.tbl
 			case DataNamesUsage.combine:
 				return NamesDisplaySetting.combine
+			case _:
+				assert_never(data_names_usage)

@@ -6,7 +6,7 @@ from .PyMSError import PyMSError
 import struct
 from enum import StrEnum, Enum
 
-from typing import Self, BinaryIO, Literal, Sequence, Any, Protocol, runtime_checkable, TypeVar, Generic
+from typing import Self, BinaryIO, Literal, Sequence, Any, Protocol, runtime_checkable, TypeVar, Generic, assert_never
 
 class Endian(StrEnum):
 	native = '@'
@@ -62,6 +62,8 @@ class Format(StrEnum):
 				return False
 			case Format.str:
 				return False
+			case _:
+				assert_never(self)
 
 @runtime_checkable
 class Processed(Protocol):
@@ -162,6 +164,8 @@ class StringType(Type, Processed):
 					pass
 				else:
 					value = value[:index]
+			case _:
+				assert_never(self.strip)
 		return value.decode(self.encoding)
 
 	def __eq__(self, other: object) -> bool:

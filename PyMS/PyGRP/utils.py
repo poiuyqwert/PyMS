@@ -11,7 +11,7 @@ import os, re
 from math import ceil
 from enum import Enum
 
-from typing import Sequence
+from typing import Sequence, assert_never
 
 class BMPStyle(Enum):
 	bmp_per_frame = 'bmp_per_frame'
@@ -35,6 +35,8 @@ class BMPStyle(Enum):
 				return 'Single BMP (Framesets)'
 			case BMPStyle.single_bmp_vertical:
 				return 'Single BMP (Vertical/SFGrpConv)'
+			case _:
+				assert_never(self)
 
 	@property
 	def index(self) -> int:
@@ -45,6 +47,8 @@ class BMPStyle(Enum):
 				return 1
 			case BMPStyle.single_bmp_vertical:
 				return 2
+			case _:
+				assert_never(self)
 
 	@staticmethod
 	def from_index(index: int) -> BMPStyle:
@@ -79,6 +83,8 @@ def frames_to_sheet(frames: Sequence[GRP.Pixels], style: BMPStyle, transindex: i
 		case BMPStyle.single_bmp_vertical:
 			for frame in frames:
 				sheet.extend(list(row) for row in frame)
+		case _:
+			assert_never(style)
 	return sheet
 
 def sheet_frame_size(sheet_width: int, sheet_height: int, frame_count: int, style: BMPStyle) -> tuple[int, int]:
@@ -89,6 +95,8 @@ def sheet_frame_size(sheet_width: int, sheet_height: int, frame_count: int, styl
 			return (sheet_width // min(frame_count, FRAMESET_ROW_SIZE), sheet_height // int(ceil(frame_count / FRAMESET_ROW_SIZE)))
 		case BMPStyle.single_bmp_vertical:
 			return (sheet_width, sheet_height // frame_count)
+		case _:
+			assert_never(style)
 
 def sheet_to_frames(sheet: GRP.Pixels, frame_count: int, style: BMPStyle) -> list[GRP.Pixels]:
 	frame_width,frame_height = sheet_frame_size(len(sheet[0]), len(sheet), frame_count, style)

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from typing import assert_never
+
 from ..Utilities.CodeHandlers import Formatters
 
 class BlockFormat(StrEnum):
@@ -23,6 +25,8 @@ class BlockFormat(StrEnum):
 				return 'Hyphens     --block--'
 			case BlockFormat.colon:
 				return 'Colon       :block'
+			case _:
+				assert_never(self)
 
 	@property
 	def formatter(self) -> Formatters.BlockFormatter:
@@ -31,6 +35,8 @@ class BlockFormat(StrEnum):
 				return Formatters.HyphenBlockFormatter()
 			case BlockFormat.colon:
 				return Formatters.ColonBlockFormatter()
+			case _:
+				assert_never(self)
 
 class CommandFormat(StrEnum):
 	flat = 'flat'
@@ -50,6 +56,8 @@ class CommandFormat(StrEnum):
 				return 'Flat        wait 1'
 			case CommandFormat.parens:
 				return 'Parens      wait(1)'
+			case _:
+				assert_never(self)
 
 	@property
 	def formatter(self) -> Formatters.CommandFormatter:
@@ -58,6 +66,8 @@ class CommandFormat(StrEnum):
 				return Formatters.FlatCommandFormatter()
 			case CommandFormat.parens:
 				return Formatters.ParensCommandFormatter()
+			case _:
+				assert_never(self)
 
 class CommentFormat(StrEnum):
 	hash = 'hash'
@@ -77,6 +87,8 @@ class CommentFormat(StrEnum):
 				return 'Hash        # comment'
 			case CommentFormat.semicolon:
 				return 'Semicolon   ; comment'
+			case _:
+				assert_never(self)
 
 	@property
 	def formatter(self) -> Formatters.CommentFormatter:
@@ -85,3 +97,5 @@ class CommentFormat(StrEnum):
 				return Formatters.HashCommentFormatter()
 			case CommentFormat.semicolon:
 				return Formatters.SemicolonCommentFormatter()
+			case _:
+				assert_never(self)

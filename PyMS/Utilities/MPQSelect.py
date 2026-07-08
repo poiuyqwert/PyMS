@@ -9,7 +9,7 @@ from . import Config
 import os, re
 from enum import Enum
 
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, assert_never
 if TYPE_CHECKING:
 	from .MPQHandler import MPQHandler
 
@@ -28,6 +28,8 @@ class MPQSelect(PyMSDialog):
 					return 'Save'
 				case MPQSelect.Action.select:
 					return 'Select'
+				case _:
+					assert_never(self)
 
 		def title(self, name: str) -> str:
 			return f'{self.cta} {name}'
