@@ -28,28 +28,11 @@ from ..Utilities.EditedState import EditedState
 from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
 from ..Utilities.SponsorDialog import SponsorDialog
 
-from dataclasses import dataclass
 import re
 
 from typing import Sequence
 
 LONG_VERSION = 'v' + Assets.version('PyTRG')
-
-@dataclass
-class Completing:
-	initial_text: str
-	initial_start: str
-	initial_end: str
-	options: list[str]
-	option_index: int
-	current_end: str
-	current_text: str
-
-	def next_option(self) -> str:
-		self.option_index += 1
-		if self.option_index == len(self.options):
-			self.option_index = 0
-		return self.options[self.option_index]
 
 class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
@@ -109,26 +92,15 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
 		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
-		self.complete: Completing | None = None
-		keywords: dict[str, None] = dict.fromkeys(('Trigger', 'BriefingTrigger', 'Conditions', 'Actions', 'String', 'UnitProperties'))
-		functions: dict[str, None] = {}
+		functions: set[str] = set()
 		for condition in Conditions.definitions_registry:
-			functions[condition.name] = None
-			for cparameter in condition.parameters:
-				if isinstance(cparameter, Parameters.HasKeywords):
-					for keyword in cparameter.keywords():
-						keywords[keyword] = None
+			functions.add(condition.name)
 		for action in Actions.definitions_registry + BriefingActions.definitions_registry:
-			functions[action.name] = None
-			for aparameter in action.parameters:
-				if isinstance(aparameter, Parameters.HasKeywords):
-					for keyword in aparameter.keywords():
-						keywords[keyword] = None
+			functions.add(action.name)
 		for unit_property in UnitProperties.properties_definitions:
-			functions[unit_property.name] = None
-		self.autocomptext = list(keywords.keys())
-		self.autocompfuncs: list[str] = list(functions.keys())
-		self.autocompfuncs.sort()
+			functions.add(unit_property.name)
+		self.autocomptext = self.keywords()
+		self.autocompfuncs: list[str] = sorted(functions)
 
 		# Text editor
 		self.text = UI.CodeText(self, self.edited_state, self)
@@ -404,7 +376,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 			file = self.config_.last_path.trg.select_open(self)
 			if not file:
 				return
-		trg = TRG.TRG()
+		trg = TRG.TRG(self.tbl, self.aibin)
 		try:
 			trg.load(file)
 			data = IO.output_to_text(trg.decompile)
@@ -435,7 +407,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 		except Exception:
 			ErrorDialog(self, PyMSError('Import', f'Could not open file "{file}"'))
 			return
-		self.trg = TRG.TRG()
+		self.trg = TRG.TRG(self.tbl, self.aibin)
 		self.file = file
 		self.update_title()
 		self.status.set('Import Successful!')
@@ -492,9 +464,11 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 			self.status.set('Export Successful!')
 		except PyMSError as e:
 			ErrorDialog(self, e)
+		except Exception:
+			ErrorDialog(self, PyMSError('Export', f'Could not save file "{file}"'))
 
 	def test(self) -> None:
-		i = TRG.TRG()
+		i = TRG.TRG(self.tbl, self.aibin)
 		try:
 			text = self.text.get('1.0', UI.END)
 			warnings = i.compile(text)
@@ -567,72 +541,6 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 		self.config_.save()
 		self.destroy()
 
-	def autocomplete(self) -> bool:
-		i = self.text.tag_ranges('sel')
-		if i and '\n' in self.text.get(*i):
-			return False
-		def docomplete() -> None:
-			if not self.complete:
-				return
-			complete_text = self.complete.next_option()
-			current_end = f'{self.complete.initial_start}+{len(self.complete.initial_text)}c'
-			complete_end = f'{self.complete.initial_start}+{len(complete_text)}c'
-			self.text.delete(self.complete.initial_start, current_end)
-			self.text.insert(self.complete.initial_start, complete_text)
-			self.text.tag_remove('sel', '1.0', UI.END)
-			self.text.tag_add('sel', self.complete.initial_end, complete_end)
-		start = self.text.index(f'{UI.INSERT} -1c wordstart')
-		end = self.text.index(f'{UI.INSERT} -1c wordend')
-		text = self.text.get(start, end)
-		if self.complete is not None:
-			if self.complete.initial_start != start or self.complete.initial_end != end or self.complete.initial_text != text:
-				self.complete = None
-			else:
-				docomplete()
-				return True
-		if text and text[0].lower() in 'abcdefghijklmnopqrstuvwxyz{':
-			ac = list(self.autocomptext)
-			m = re.match(r'\A\s*[a-z\{]+\Z', text)
-			if not m:
-				ac.extend(self.autocompfuncs)
-			for header in self.aibin.list_scripts():
-				if not header.id in ac:
-					ac.append(header.id)
-				cs = TBL.decompile_string(self.tbl.strings[header.string_id][:-1], '\x0A\x28\x29\x2C')
-				if not cs in ac:
-					ac.append(cs)
-			for ns in self.tbl.strings[:228]:
-				components = ns.split('\x00')
-				if components[1] != '*':
-					name = TBL.decompile_string('\x00'.join(components[:2]), '\x0A\x28\x29\x2C')
-				else:
-					name = TBL.decompile_string(components[0], '\x0A\x28\x29\x2C')
-				if not name in ac:
-					ac.append(name)
-			head = '1.0'
-			while True:
-				item = self.text.tag_nextrange('ConstDef', head)
-				if not item:
-					break
-				var = '{%s}' % self.text.get(*item)
-				if not var in ac:
-					ac.append(var)
-				head = item[1]
-			ac.sort()
-			if m:
-				ac = self.autocompfuncs + ac
-			r = False
-			matches = []
-			for v in ac:
-				if v and v.lower().startswith(text.lower()):
-					matches.append(v)
-			if matches:
-				self.complete = Completing(text, start, end, [text] + matches, 0, end, text)
-				docomplete()
-				r = True
-			return r
-		return False
-
 	def destroy(self) -> None:
 		if self.findwindow:
 			UI.Toplevel.destroy(self.findwindow)
@@ -653,8 +561,42 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 	def autocomplete_override_keys(self) -> str:
 		return ' (,):'
 
+	RE_LOWERCASE_WORD = re.compile(r'\A\s*[a-z\{]+\Z')
 	def get_autocomplete_options(self, line: str) -> list[str] | None:
-		return None
+		text = line.split(' ')[-1]
+		if not text or not text[0].lower() in 'abcdefghijklmnopqrstuvwxyz{':
+			return None
+		options = list(self.autocomptext)
+		is_lowercase_word = PyTRG.RE_LOWERCASE_WORD.match(text) is not None
+		if not is_lowercase_word:
+			options.extend(self.autocompfuncs)
+		for header in self.aibin.list_scripts():
+			if not header.id in options:
+				options.append(header.id)
+			script_name = TBL.decompile_string(self.tbl.strings[header.string_id][:-1], '\x0A\x28\x29\x2C')
+			if not script_name in options:
+				options.append(script_name)
+		for ns in self.tbl.strings[:228]:
+			components = ns.split('\x00')
+			if components[1] != '*':
+				name = TBL.decompile_string('\x00'.join(components[:2]), '\x0A\x28\x29\x2C')
+			else:
+				name = TBL.decompile_string(components[0], '\x0A\x28\x29\x2C')
+			if not name in options:
+				options.append(name)
+		head = '1.0'
+		while True:
+			item = self.text.tag_nextrange('ConstantDefinition', head)
+			if not item:
+				break
+			constant = f'{{{self.text.get(*item)}}}'
+			if not constant in options:
+				options.append(constant)
+			head = item[1]
+		options.sort()
+		if is_lowercase_word:
+			options = self.autocompfuncs + options
+		return options
 
 	def jump_highlights(self) -> Sequence[str] | None:
 		return ('Error', 'Warning')

@@ -28,7 +28,6 @@ class PyTRGConfig(Config.Config):
 		def __init__(self) -> None:
 			self.main = Config.WindowGeometry(default_size=UI.Size(740, 400))
 			self.find_replace = Config.WindowGeometry()
-			self.colors = Config.WindowGeometry()
 			self.help = Config.WindowGeometry()
 			self.settings = PyTRGConfig.Windows.Settings()
 			super().__init__()
