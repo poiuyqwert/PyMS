@@ -36,25 +36,24 @@ class PreviewDialog(PyMSDialog):
 		self.grid_columnconfigure(0,weight=1)
 
 		self.canvas.focus_set()
-		def scroll_map(event: UI.Event | None = None, horizontal: bool = False, delta: int = 0) -> None:
+		def scroll_map(event: UI.Event | None = None, horizontal: bool = False, units: int = 0) -> None:
+			# `units` is the scroll direction/amount: negative scrolls up/left,
+			# positive scrolls down/right.
 			if event:
 				horizontal = False
 				if hasattr(event, 'state') and getattr(event, 'state', 0) & UI.Modifier.Shift.state:
 					horizontal = True
-				delta = event.delta
+				units = -1 if event.delta > 0 else 1
 			view = self.canvas.yview
 			if horizontal:
 				view = self.canvas.xview
-			if delta > 0:
-				view('scroll', -1, 'units')
-			else:
-				view('scroll', 1, 'units')
+			view('scroll', units, 'units')
 			self.update_viewport()
 		self.canvas.bind(UI.Mouse.Scroll(), scroll_map)
-		self.bind(UI.Key.Up(), lambda e: scroll_map(None, False, 1))
-		self.bind(UI.Key.Down(), lambda e: scroll_map(None, False, -1))
-		self.bind(UI.Key.Left(), lambda e: scroll_map(None, True, 1))
-		self.bind(UI.Key.Right(), lambda e: scroll_map(None, True, -1))
+		self.bind(UI.Key.Up(), lambda e: scroll_map(None, False, -1))
+		self.bind(UI.Key.Down(), lambda e: scroll_map(None, False, 1))
+		self.bind(UI.Key.Left(), lambda e: scroll_map(None, True, -1))
+		self.bind(UI.Key.Right(), lambda e: scroll_map(None, True, 1))
 
 		return None
 
@@ -82,6 +81,8 @@ class PreviewDialog(PyMSDialog):
 		self.last_x = x
 		self.last_y = y
 		for l,layer in enumerate(self.delegate.spk.layers):
+			if l >= len(SPK.SPK.PARALLAX_RATIOS):
+				break
 			ratio = SPK.SPK.PARALLAX_RATIOS[l]
 			ox = int(x * ratio) % SPK.SPK.LAYER_SIZE[0]
 			oy = int(y * ratio) % SPK.SPK.LAYER_SIZE[1]

@@ -18,7 +18,7 @@ class PaletteTab(UI.NotebookTab):
 
 	def __init__(self, parent: UI.Misc, delegate: MainDelegate, bind_target: UI.Misc):
 		self.delegate = delegate
-		self.item_palette_box = None
+		self.item_palette_box: UI.Canvas.Item | None = None # type: ignore[name-defined]
 		UI.NotebookTab.__init__(self, parent)
 
 		scrollframe = UI.Frame(self, bd=2, relief=UI.SUNKEN)
@@ -75,28 +75,27 @@ class PaletteTab(UI.NotebookTab):
 			x2 = PaletteTab.MAX_SIZE+PaletteTab.PAD*2-1
 			y2 = y+height-1
 			if self.item_palette_box:
-				self.starsCanvas.coords(self.item_palette_box, 0,y, x2,y2)
+				self.item_palette_box.coords(0,y, x2,y2)
 			else:
-				self.item_palette_box = self.starsCanvas.create_rectangle(0,y, x2,y2, width=1, outline='#FFFFFF') # type: ignore[assignment]
+				self.item_palette_box = self.starsCanvas.create_rectangle(0,y, x2,y2, width=1, outline='#FFFFFF')
 			if scroll:
 				miny,maxy = self.starsCanvas.yview()
 				area = maxy-miny
-				maxy = 1-area
 				center = y + (y2-y)//2
-				_,_,_,height = UI.parse_scrollregion(self.starsCanvas.cget('scrollregion'))
-				vis = height * area
-				top = center - vis//2
-				y = int(top / float(height))
-				self.starsCanvas.yview_moveto(y)
+				_,_,_,total_height = UI.parse_scrollregion(self.starsCanvas.cget('scrollregion'))
+				vis = total_height * area
+				top = center - vis/2
+				frac = max(0.0, min(top / float(total_height), 1-area))
+				self.starsCanvas.yview_moveto(frac)
 		elif self.item_palette_box:
-			self.starsCanvas.delete(self.item_palette_box)
+			self.item_palette_box.delete()
 			self.item_palette_box = None
 
 	def palette_select(self, event: UI.Event) -> None:
 		if not self.delegate.spk or not self.delegate.spk.images:
 			return
-		_,_,_,height = UI.parse_scrollregion(self.starsCanvas.cget('scrollregion'))
-		y = event.y + self.starsCanvas.yview()[0] * height
+		_,_,_,total_height = UI.parse_scrollregion(self.starsCanvas.cget('scrollregion'))
+		y = event.y + self.starsCanvas.yview()[0] * total_height
 		for img in self.delegate.spk.images:
 			height = min(img.height,PaletteTab.MAX_SIZE)+PaletteTab.PAD*2
 			if y < height:

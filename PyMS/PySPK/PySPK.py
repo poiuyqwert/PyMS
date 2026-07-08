@@ -35,6 +35,8 @@ from typing import Callable, Any, assert_never
 
 LONG_VERSION = 'v' + Assets.version('PySPK')
 
+ALL_LAYERS_MASK = (1 << SPK.SPK.MAX_LAYERS) - 1
+
 class MouseEvent(Enum):
 	down = 0
 	move = 1
@@ -132,7 +134,7 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		f = UI.Frame(layersframe)
 		listbox = UI.Frame(f, border=2, relief=UI.SUNKEN)
 		self.rows: list[LayerRow] = []
-		for l in range(5):
+		for l in range(SPK.SPK.MAX_LAYERS):
 			row = LayerRow(parent=listbox, selvar=self.layer, visvar=self.visible, lockvar=self.locked, layer=l)
 			row.hide()
 			row.pack(side=UI.TOP, fill=UI.X, expand=1)
@@ -262,6 +264,8 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			return
 		cur_layer = self.layer.get()
 		swap_layer = cur_layer + delta
+		if swap_layer < 0 or swap_layer >= len(self.spk.layers):
+			return
 		self.layer.set(swap_layer)
 		temp = self.spk.layers[cur_layer]
 		self.spk.layers[cur_layer] = self.spk.layers[swap_layer]
@@ -306,7 +310,7 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		return self.saveas()
 
 	def is_file_open(self) -> bool:
-		return not not self.spk
+		return bool(self.spk)
 
 	def are_stars_selected(self) -> bool:
 		return len(self.selected_stars) > 0
@@ -315,17 +319,17 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		return self.layer.get() > -1
 
 	def is_image_selected(self) -> bool:
-		return not not self.selected_image
+		return bool(self.selected_image)
 
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
-		self.toolbar.tag_enabled('has_layers', not not self.spk and len(self.spk.layers) > 0)
+		self.toolbar.tag_enabled('has_layers', bool(self.spk and len(self.spk.layers) > 0))
 
 		self.edit_toolbar.tag_enabled('file_open', self.is_file_open())
-		self.edit_toolbar.tag_enabled('can_add_layers', not not self.spk and len(self.spk.layers) < 5)
+		self.edit_toolbar.tag_enabled('can_add_layers', bool(self.spk and len(self.spk.layers) < SPK.SPK.MAX_LAYERS))
 		self.edit_toolbar.tag_enabled('layer_selected', self.is_layer_selected())
 		self.edit_toolbar.tag_enabled('can_move_up', self.is_layer_selected() and self.layer.get() > 0)
-		self.edit_toolbar.tag_enabled('can_move_down', self.is_layer_selected() and not not self.spk and self.layer.get() < len(self.spk.layers)-1)
+		self.edit_toolbar.tag_enabled('can_move_down', bool(self.is_layer_selected() and self.spk and self.layer.get() < len(self.spk.layers)-1))
 
 		self.palette_tab.action_states()
 		self.stars_tab.action_states()
@@ -352,7 +356,7 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		if self.autovis.get():
 			self.visible.set(1 << layer)
 		if self.autolock.get():
-			self.locked.set((1+2+4+8+16) & ~(1 << layer))
+			self.locked.set(ALL_LAYERS_MASK & ~(1 << layer))
 		self.action_states()
 
 	def visible_updated(self, *_args: Any) -> None:
@@ -444,12 +448,6 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.edit_status.set(f'{len(self.selected_stars)} stars selected')
 		self.stars_tab.update_selection()
 
-	# def edit_star_settings(self, star=None):
-	# 	if star is None:
-	# 		star = self.selected_stars[0]
-	# 	if star and star.widget:
-	# 		StarSettings(self, star)
-
 	def move_stars(self, delta: tuple[int, int]) -> None:
 		if not self.selected_stars:
 			return
@@ -469,10 +467,9 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.item_map[star].delete()
 			del self.item_map[star]
 			for layer in self.spk.layers:
-				try:
+				if star in layer.stars:
 					layer.stars.remove(star)
-				except Exception:
-					pass
+					break
 		self.selected_stars = []
 		self.update_selection()
 		self.stars_tab.update_list()
@@ -588,9 +585,9 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.selected_stars = []
 
 		self.layer.set(-1)
-		self.visible.set(1+2+4+8+16)
+		self.visible.set(ALL_LAYERS_MASK)
 		if self.autolock.get():
-			self.locked.set(2+4+8+16)
+			self.locked.set(ALL_LAYERS_MASK & ~1)
 		else:
 			self.locked.set(0)
 
@@ -683,7 +680,7 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.file = None
 		self.update_title()
 		self.status.set('Import Successful!')
-		self.mark_edited(False)
+		self.mark_edited()
 		self.action_states()
 
 	def save(self) -> CheckSaved:

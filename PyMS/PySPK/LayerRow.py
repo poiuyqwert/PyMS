@@ -15,6 +15,7 @@ class LayerRow(UI.Frame):
 		self.visible.set(True)
 		self.locked = UI.BooleanVar()
 		self.locked.set(False)
+		self.hide_widget: UI.Frame | None = None
 		# TODO: Use Toolbar?
 		visbtn = UI.Checkbutton(self, image=Assets.get_image('eye'), indicatoron=False, width=20, height=20, variable=self.visible, onvalue=True, offvalue=False, command=self.toggle_vis, highlightthickness=0)
 		visbtn.pack(side=UI.LEFT)
@@ -28,7 +29,6 @@ class LayerRow(UI.Frame):
 		self.update_state()
 		self.bind(UI.Mouse.Click_Left(), self.select)
 		self.label.bind(UI.Mouse.Click_Left(), self.select)
-		self.hide_widget: UI.Frame | None = None # Gross :(
 
 	def update_state(self, *_args: Any, **_kwargs: Any) -> None:
 		self.visible.set((self.visvar.get() & (1 << self.layer)) != 0)

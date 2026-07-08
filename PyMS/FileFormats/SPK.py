@@ -27,6 +27,7 @@ class SPKImage:
 		self.pixels: Pixels = pixels if pixels else [[]]
 
 class SPK:
+	MAX_LAYERS = 5
 	LAYER_ORIGIN = (-8, -8)
 	LAYER_SIZE = (648, 488)
 	PARALLAX_RATIOS = [16/256.0, 21/256.0, 26/256.0, 31/256.0, 36/256.0]
