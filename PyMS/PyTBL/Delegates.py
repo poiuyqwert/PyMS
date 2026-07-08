@@ -7,7 +7,6 @@ from ..FileFormats import GRP
 from ..FileFormats import FNT
 from ..FileFormats import PCX
 
-# from ..Utilities import Config
 from ..Utilities import UIKit as UI
 
 from typing import Protocol

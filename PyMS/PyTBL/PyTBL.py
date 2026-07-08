@@ -28,7 +28,7 @@ from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 from ..Utilities.SponsorDialog import SponsorDialog
 
-from typing import Literal
+from typing import Any, Literal
 
 LONG_VERSION = 'v' + Assets.version('PyTBL')
 
@@ -153,7 +153,6 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		colors.grid_rowconfigure(0, weight=1)
 		colors.grid_columnconfigure(0, weight=1)
 		self.ver_pane.add(colors, sticky=UI.NSEW)
-		# self.ver_pane.pack(side=LEFT, fill=BOTH, expand=1)
 		self.hor_pane.add(self.ver_pane, sticky=UI.NSEW, minsize=200)
 
 		self.hor_pane.grid(row=1,column=0, sticky=UI.NSEW)
@@ -258,10 +257,10 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		return self.saveas()
 
 	def is_file_open(self) -> bool:
-		return not not self.tbl
+		return self.tbl is not None
 
 	def is_string_selected(self) -> bool:
-		return not not self.listbox.curselection()
+		return bool(self.listbox.curselection())
 
 	def action_states(self) -> None:
 		file_open = self.is_file_open()
@@ -276,9 +275,11 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def text_delete(self, start: str, end: str | None = None) -> None:
 		self.tk.call((self.text_orig, 'delete', start, end))
 
-	def dispatch(self, cmd: str, *args: str ) -> None:
+	def dispatch(self, cmd: str, *args: str) -> Any:
 		try:
 			r = self.tk.call((self.text_orig, cmd) + args)
+		except UI.TclError:
+			raise
 		except Exception:
 			r = ''
 		if self.tbl and self.listbox.size() and cmd in ['insert','delete']:
@@ -319,6 +320,22 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.stringstatus.set('')
 		self.action_states()
 
+	def _populate_from_tbl(self, tbl: TBL.TBL, file: str, status: str) -> None:
+		self.tbl = tbl
+		self.listbox.delete(0, UI.END)
+		self.text_delete('1.0', UI.END)
+		for string in tbl.strings:
+			self.listbox.insert(UI.END, TBL.decompile_string(string))
+		if self.listbox.size():
+			self.listbox.select_set(0)
+			self.listbox.see(0)
+		self.file = file
+		self.update_title()
+		self.status.set(status)
+		self.mark_edited(False)
+		self.action_states()
+		self.update_string()
+
 	def open(self, file: str | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
@@ -332,20 +349,7 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		self.tbl = tbl
-		self.listbox.delete(0, UI.END)
-		self.text_delete('1.0', UI.END)
-		for string in self.tbl.strings:
-			self.listbox.insert(UI.END, TBL.decompile_string(string))
-		if self.listbox.size():
-			self.listbox.select_set(0)
-			self.listbox.see(0)
-		self.file = file
-		self.update_title()
-		self.status.set('Load Successful!')
-		self.mark_edited(False)
-		self.action_states()
-		self.update_string()
+		self._populate_from_tbl(tbl, file, 'Load Successful!')
 
 	def open_default(self) -> None:
 		self.open(Assets.mpq_file_path('rez','stat_txt.tbl'))
@@ -362,20 +366,7 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		self.tbl = tbl
-		self.listbox.delete(0, UI.END)
-		self.text_delete('1.0', UI.END)
-		for string in self.tbl.strings:
-			self.listbox.insert(UI.END, TBL.decompile_string(string))
-		if self.listbox.size():
-			self.listbox.select_set(0)
-			self.listbox.see(0)
-		self.file = file
-		self.update_title()
-		self.status.set('Import Successful!')
-		self.mark_edited(False)
-		self.action_states()
-		self.update_string()
+		self._populate_from_tbl(tbl, file, 'Import Successful!')
 
 	def save(self) -> CheckSaved:
 		return self.saveas(file_path=self.file)
@@ -487,8 +478,7 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.findwindow = FindDialog(self, self)
 			self.bind(UI.Key.F3(), self.findwindow.findnext)
 		else:
-			self.findwindow.make_active() # type: ignore[attr-defined]
-			self.findwindow.findentry.focus_set(highlight=True)
+			self.findwindow.show()
 
 	def goto(self) -> None:
 		if not self.is_file_open():
@@ -496,8 +486,7 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		if not self.gotowindow:
 			self.gotowindow = GotoDialog(self, self)
 		else:
-			self.gotowindow.make_active() # type: ignore[attr-defined]
-			self.gotowindow.gotoentry.focus_set(highlight=True)
+			self.gotowindow.show()
 
 	def preview(self) -> None:
 		if not self.is_string_selected():

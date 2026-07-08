@@ -24,7 +24,7 @@ import tkinter.filedialog as FileDialog
 import tkinter.messagebox as MessageBox
 import tkinter.colorchooser as ColorChooser
 
-from tkinter import Tcl
+from tkinter import Tcl, TclError
 from tkinter.ttk import Style
 READONLY = 'readonly'
 

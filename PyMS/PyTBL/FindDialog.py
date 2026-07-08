@@ -2,6 +2,7 @@
 from .Delegates import MainDelegate
 
 from ..Utilities.PyMSDialog import PyMSDialog
+from ..Utilities.FindReplaceDialog import FindReplaceDialog
 from ..Utilities import UIKit as UI
 
 import re
@@ -58,21 +59,17 @@ class FindDialog(PyMSDialog):
 	def setup_complete(self) -> None:
 		self.delegate.config_.windows.find.load_size(self)
 
+	def show(self) -> None:
+		self.make_active()
+		self.findentry.focus_set(highlight=True)
+
 	def findnext(self, event: UI.Event | None = None) -> None:
 		self.updatecolor()
 		t = self.find.get()
-		if not t in self.findhistory:
-			self.findhistory.insert(0, t)
+		FindReplaceDialog.record_history(self.findhistory, t)
 		size: int = self.delegate.listbox.size() # type: ignore[assignment]
 		if size:
-			if self.regex.get():
-				regex_str = t
-				if not regex_str.startswith('\\A'):
-					regex_str = '.*' + regex_str
-				if not regex_str.endswith('\\Z'):
-					regex_str = regex_str + '.*'
-			else:
-				regex_str = f'.*{re.escape(t)}.*'
+			regex_str = t if self.regex.get() else re.escape(t)
 			try:
 				regex = re.compile(regex_str, 0 if self.casesens.get() else re.I)
 			except Exception:
@@ -81,7 +78,8 @@ class FindDialog(PyMSDialog):
 				return
 			wrap = self.wrap.get()
 			down = self.updown.get()
-			s = int(self.delegate.listbox.curselection()[0])
+			selection = self.delegate.listbox.curselection()
+			s = int(selection[0]) if selection else 0
 			def next_i(i: int, down: bool, size: int) -> int:
 				if down:
 					i += 1
@@ -102,7 +100,7 @@ class FindDialog(PyMSDialog):
 				check = s
 			while check:
 				check -= 1
-				if regex.match(self.delegate.listbox.get(i)):
+				if regex.search(self.delegate.listbox.get(i)):
 					self.delegate.listbox.select_clear(0,UI.END)
 					self.delegate.listbox.select_set(i)
 					self.delegate.listbox.see(i)
@@ -120,6 +118,13 @@ class FindDialog(PyMSDialog):
 			self.resettimer = None
 		self.findentry['bg'] = self.findentry_c
 
-	def dismiss(self) -> None:
+	def destroy(self) -> None:
+		# Closing this dialog only withdraws it so it can be reused (the owner re-shows
+		# the same window via `show()`); the owning window performs the real teardown
+		# with `UI.Toplevel.destroy(...)`. Cancel any pending color-reset timer so it
+		# doesn't fire after close.
+		if self.resettimer:
+			self.after_managed_cancel(self.resettimer)
+			self.resettimer = None
 		self.delegate.config_.windows.find.save_size(self)
-		PyMSDialog.dismiss(self)
+		PyMSDialog.withdraw(self)

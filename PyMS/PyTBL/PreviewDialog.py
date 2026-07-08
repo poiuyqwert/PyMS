@@ -37,14 +37,17 @@ class PreviewDialog(PyMSDialog):
 
 	def preview(self) -> None:
 		self.canvas.delete(UI.ALL)
+		# `characters`/`icons` hold the only strong references keeping the PhotoImages
+		# alive, so they must only be cleared after the canvas items using them are
+		# deleted above.
 		self.characters.clear()
 		text = TBL.compile_string(self.delegate.text.get('1.0',UI.END)[:-1])
 		if not text:
 			return
 		color = 2
 		display: list[list[Character]] = []
-		hotkey = ord(text[1])
-		if self.hotkey.get() and hotkey < 6:
+		hotkey = ord(text[1]) if len(text) > 1 else 0
+		if self.hotkey.get() and len(text) > 1 and hotkey < 6:
 			text = text[2:]
 			if self.endatnull.get() and '\x00' in text:
 				text = text[:text.index('\x00')]
@@ -82,18 +85,24 @@ class PreviewDialog(PyMSDialog):
 					color = a
 			width = max(width, w)
 		if self.hotkey.get() and hotkey and hotkey < 6:
+			def set_icon(index: int, icon_name: str, frame_index: int) -> None:
+				# The offsets point into the synthetic resource line appended above, but
+				# glyphs outside the font range are filtered out while building the row,
+				# so it can be shorter than the offsets expect.
+				if index < len(display[-1]):
+					display[-1][index] = self.geticon(icon_name, frame_index)
 			if hotkey == 1:
-				display[-1][0] = self.geticon('mins',0)
-				display[-1][5] = self.geticon('gas',1)
-				display[-1][10] = self.geticon('supply',4)
+				set_icon(0, 'mins', 0)
+				set_icon(5, 'gas', 1)
+				set_icon(10, 'supply', 4)
 			elif hotkey == 2:
-				display[-1][0] = self.geticon('mins',0)
-				display[-1][5] = self.geticon('gas',1)
+				set_icon(0, 'mins', 0)
+				set_icon(5, 'gas', 1)
 			elif hotkey == 3:
-				display[-1][0] = self.geticon('energy',7)
+				set_icon(0, 'energy', 7)
 			elif hotkey in [4,5]:
-				display[-1][0] = self.geticon('mins',0)
-				display[-1][6] = self.geticon('gas',1)
+				set_icon(0, 'mins', 0)
+				set_icon(6, 'gas', 1)
 		self.canvas.config(width=width+10, height=fnt.height*len(display)+10)
 		y = 7
 		for letters in display:

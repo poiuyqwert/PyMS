@@ -2,6 +2,7 @@
 from .Delegates import MainDelegate
 
 from ..Utilities.PyMSDialog import PyMSDialog
+from ..Utilities.FindReplaceDialog import FindReplaceDialog
 from ..Utilities import UIKit as UI
 
 class GotoDialog(PyMSDialog):
@@ -28,18 +29,24 @@ class GotoDialog(PyMSDialog):
 	def setup_complete(self) -> None:
 		self.delegate.config_.windows.goto.load_size(self)
 
+	def show(self) -> None:
+		self.make_active()
+		self.gotoentry.focus_set(highlight=True)
+
 	def jump(self, _event: UI.Event | None = None) -> None:
-		if not self.delegate.tbl:
+		if not self.delegate.tbl or not self.delegate.listbox.size():
 			return
-		s = self.goto.get(True)
-		if not s in self.gotohistory:
-			self.gotohistory.insert(0, s)
-		i = min(self.goto.get(), len(self.delegate.tbl.strings)-1)
+		index = self.goto.get()
+		FindReplaceDialog.record_history(self.gotohistory, str(index))
+		i = max(0, min(index, len(self.delegate.tbl.strings)-1))
 		self.delegate.listbox.select_clear(0,UI.END)
 		self.delegate.listbox.select_set(i)
 		self.delegate.listbox.see(i)
 		self.delegate.update()
 
-	def dismiss(self) -> None:
+	def destroy(self) -> None:
+		# Closing this dialog only withdraws it so it can be reused (the owner re-shows
+		# the same window via `show()`); the owning window performs the real teardown
+		# with `UI.Toplevel.destroy(...)`.
 		self.delegate.config_.windows.goto.save_size(self)
-		PyMSDialog.dismiss(self)
+		PyMSDialog.withdraw(self)
