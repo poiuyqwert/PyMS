@@ -1,37 +1,38 @@
 
+import traceback
+
 from .PyMSDialog import PyMSDialog
 from .WarningDialog import WarningDialog
 from .InternalErrorDialog import InternalErrorDialog
-from .UIKit import *
+from . import UIKit as UI
 from .PyMSError import PyMSError
 from .trace import get_tracer
 
-import sys, traceback
-
 class ErrorDialog(PyMSDialog):
-	def __init__(self, parent: Misc, error: PyMSError) -> None:
+	def __init__(self, parent: UI.Misc, error: PyMSError) -> None:
 		self.error = error
-		PyMSDialog.__init__(self, parent, '%s Error!' % error.type, resizable=(False, False))
+		self.chained_exception: BaseException | None = error.__cause__ or error.__context__
+		PyMSDialog.__init__(self, parent, f'{error.type} Error!', resizable=(False, False))
 
-	def widgetize(self) -> Misc | None:
-		Label(self, justify=LEFT, anchor=W, text=self.error.repr(), wraplength=640).pack(pady=10, padx=5)
-		frame = Frame(self)
-		ok = Button(frame, text='Ok', width=10, command=self.ok)
-		ok.pack(side=LEFT, padx=3)
+	def widgetize(self) -> UI.Misc | None:
+		UI.Label(self, justify=UI.LEFT, anchor=UI.W, text=repr(self.error), wraplength=640).pack(pady=10, padx=5)
+		frame = UI.Frame(self)
+		ok = UI.Button(frame, text='Ok', width=10, command=self.ok)
+		ok.pack(side=UI.LEFT, padx=3)
 		w = len(self.error.warnings)
 		p = 's'
 		if w == 1:
 			p = ''
-		Button(frame, text='%s Warning%s' % (w, p), width=10, command=self.viewwarnings, state=DISABLED if not self.error.warnings else NORMAL).pack(side=LEFT, padx=3)
-		Button(frame, text='Copy', width=10, command=self.copy).pack(side=LEFT, padx=6)
-		if self.error.exception:
-			Button(frame, text='Internal Error', width=10, command=self.internal).pack(side=LEFT, padx=6)
+		UI.Button(frame, text=f'{w} Warning{p}', width=10, command=self.viewwarnings, state=UI.DISABLED if not self.error.warnings else UI.NORMAL).pack(side=UI.LEFT, padx=3)
+		UI.Button(frame, text='Copy', width=10, command=self.copy).pack(side=UI.LEFT, padx=6)
+		if self.chained_exception:
+			UI.Button(frame, text='Internal Error', width=10, command=self.internal).pack(side=UI.LEFT, padx=6)
 		frame.pack(pady=10)
 		return ok
 
 	def copy(self) -> None:
 		self.clipboard_clear()
-		self.clipboard_append(self.error.repr())
+		self.clipboard_append(repr(self.error))
 
 	def viewwarnings(self) -> None:
 		WarningDialog(self, self.error.warnings)
@@ -40,5 +41,6 @@ class ErrorDialog(PyMSDialog):
 		program_name = 'PyMS'
 		if tracer := get_tracer():
 			program_name = tracer.program_name
-		assert self.error.exception is not None
-		InternalErrorDialog(self, program_name, txt=''.join(traceback.format_exception(*self.error.exception)))
+		assert self.chained_exception is not None
+		formatted = traceback.TracebackException.from_exception(self.chained_exception).format()
+		InternalErrorDialog(self, program_name, txt=''.join(formatted))

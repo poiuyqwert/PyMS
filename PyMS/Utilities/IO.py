@@ -3,66 +3,71 @@ from __future__ import annotations
 
 import os, io, tempfile
 
-from typing import TextIO, BinaryIO, Callable, Iterable, Iterator
+from typing import IO, Callable, Iterable, Iterator, Any, Literal
 
-AnyInputText = str | TextIO
-AnyInputBytes = str | bytes | BinaryIO
+AnyInputText = str | IO[str]
+AnyInputBytes = str | bytes | bytearray | IO[bytes]
 
-AnyOutputText = str | TextIO
-AnyOutputBytes = str | BinaryIO
+AnyOutputText = str | IO[str]
+AnyOutputBytes = str | IO[bytes]
+
+class IOException(Exception):
+	pass
 
 class InputText:
-	def __init__(self, input: AnyInputText):
+	def __init__(self, any_input: AnyInputText):
 		self.entered = 0
 		self.close = False
-		self.file: TextIO
-		if isinstance(input, str):
-			if os.path.exists(input):
-				self.file = open(input, 'r')
+		self.file: IO[str]
+		if isinstance(any_input, str):
+			if os.path.exists(any_input):
+				self.file = open(any_input, 'r', encoding='utf-8') # pylint: disable=consider-using-with
 				self.close = True
 			else:
-				self.file = io.StringIO(input)
+				self.file = io.StringIO(any_input)
 		else:
-			self.file = input
+			self.file = any_input
 
-	def __enter__(self) -> TextIO:
+	def __enter__(self) -> IO[str]:
 		self.entered += 1
 		return self.file
 
-	def __exit__(self, exc_type, exc_value, traceback):
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Literal[False]:
 		self.entered -= 1
 		if self.entered == 0 and self.close:
 			self.file.close()
 			self.close = False
+		return False
 
 class InputBytes:
-	def __init__(self, input: AnyInputBytes):
+	def __init__(self, any_input: AnyInputBytes):
 		self.entered = 0
 		self.close = False
-		self.file: BinaryIO
-		if isinstance(input, str):
-			self.file = open(input, 'rb')
+		self.file: IO[bytes]
+		if isinstance(any_input, str):
+			self.file = open(any_input, 'rb') # pylint: disable=consider-using-with
 			self.close = True
-		elif isinstance(input, bytes):
-			self.file = io.BytesIO(input)
+		elif isinstance(any_input, (bytes, bytearray)):
+			self.file = io.BytesIO(any_input)
 		else:
-			self.file = input
+			self.file = any_input
 
-	def __enter__(self) -> BinaryIO:
+	def __enter__(self) -> IO[bytes]:
 		self.entered += 1
 		return self.file
 
-	def __exit__(self, exc_type, exc_value, traceback):
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Literal[False]:
 		self.entered -= 1
 		if self.entered == 0 and self.close:
 			self.file.close()
 			self.close = False
+		return False
 
-class OutputTextFile(TextIO):
-	def __init__(self, path: str) -> None:
+class OutputTextFile(IO[str]):
+	def __init__(self, path: str, encoding: str = 'utf-8') -> None:
 		self.path = path
 		directory, filename = os.path.split(os.path.abspath(path))
-		self.temp_file = tempfile.NamedTemporaryFile('w', prefix=f'.{filename}-', dir=directory, delete=False)
+		self.temp_file = tempfile.NamedTemporaryFile('w', prefix=f'.{filename}-', dir=directory, delete=False, encoding=encoding) # pylint: disable=consider-using-with
 
 	@property
 	def mode(self) -> str:
@@ -76,7 +81,16 @@ class OutputTextFile(TextIO):
 		if self.closed:
 			return
 		self.temp_file.close()
-		os.rename(self.temp_file.name, self.path)
+		os.replace(self.temp_file.name, self.path)
+
+	def discard(self) -> None:
+		if self.temp_file.closed:
+			return
+		self.temp_file.close()
+		try:
+			os.remove(self.temp_file.name)
+		except OSError:
+			pass
 
 	@property
 	def closed(self) -> bool:
@@ -92,28 +106,28 @@ class OutputTextFile(TextIO):
 		return self.temp_file.isatty()
 
 	def read(self, n: int = -1) -> str:
-		raise Exception(f'Attempting to read from {self.__class__.__name__}')
+		raise IOException(f'Attempting to read from {self.__class__.__name__}')
 
 	def readable(self) -> bool:
 		return False
 
 	def readline(self, limit: int = -1) -> str:
-		raise Exception(f'Attempting to read from {self.__class__.__name__}')
+		raise IOException(f'Attempting to read from {self.__class__.__name__}')
 
 	def readlines(self, hint: int = -1) -> list[str]:
-		raise Exception(f'Attempting to read from {self.__class__.__name__}')
+		raise IOException(f'Attempting to read from {self.__class__.__name__}')
 
 	def seek(self, offset: int, whence: int = 0) -> int:
-		raise Exception(f'Attempting to seek in {self.__class__.__name__}')
+		raise IOException(f'Attempting to seek in {self.__class__.__name__}')
 
 	def seekable(self) -> bool:
 		return False
 
 	def tell(self) -> int:
-		raise Exception(f'Attempting to tell in {self.__class__.__name__}')
+		raise IOException(f'Attempting to tell in {self.__class__.__name__}')
 
 	def truncate(self, size: int | None = None) -> int:
-		raise Exception(f'Attempting to truncate in {self.__class__.__name__}')
+		raise IOException(f'Attempting to truncate in {self.__class__.__name__}')
 
 	def writable(self) -> bool:
 		return self.temp_file.writable()
@@ -124,23 +138,26 @@ class OutputTextFile(TextIO):
 	def writelines(self, lines: Iterable[str]) -> None:
 		self.temp_file.writelines(lines)
 
-	def __enter__(self) -> TextIO:
+	def __enter__(self) -> IO[str]:
 		return self
 
-	def __exit__(self, type, value, traceback) -> None:
-		self.close()
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
+		if exc_type is not None:
+			self.discard()
+		else:
+			self.close()
 
 	def __iter__(self) -> Iterator[str]:
-		raise Exception(f'Attempting to iterate a {self.__class__.__name__}')
-	
-	def __next__(self) -> str:
-		raise Exception(f'Attempting to next a {self.__class__.__name__}')
+		raise IOException(f'Attempting to iterate a {self.__class__.__name__}')
 
-class OutputBytesFile(BinaryIO):
+	def __next__(self) -> str:
+		raise IOException(f'Attempting to next a {self.__class__.__name__}')
+
+class OutputBytesFile(IO[bytes]):
 	def __init__(self, path: str) -> None:
 		self.path = path
 		directory, filename = os.path.split(os.path.abspath(path))
-		self.temp_file = tempfile.NamedTemporaryFile('wb', prefix=f'.{filename}-', dir=directory, delete=False)
+		self.temp_file = tempfile.NamedTemporaryFile('wb', prefix=f'.{filename}-', dir=directory, delete=False) # pylint: disable=consider-using-with
 
 	@property
 	def mode(self) -> str:
@@ -154,7 +171,16 @@ class OutputBytesFile(BinaryIO):
 		if self.closed:
 			return
 		self.temp_file.close()
-		os.rename(self.temp_file.name, self.path)
+		os.replace(self.temp_file.name, self.path)
+
+	def discard(self) -> None:
+		if self.temp_file.closed:
+			return
+		self.temp_file.close()
+		try:
+			os.remove(self.temp_file.name)
+		except OSError:
+			pass
 
 	@property
 	def closed(self) -> bool:
@@ -170,28 +196,28 @@ class OutputBytesFile(BinaryIO):
 		return self.temp_file.isatty()
 
 	def read(self, n: int = -1) -> bytes:
-		raise Exception(f'Attempting to read from {self.__class__.__name__}')
+		raise IOException(f'Attempting to read from {self.__class__.__name__}')
 
 	def readable(self) -> bool:
 		return False
 
 	def readline(self, limit: int = -1) -> bytes:
-		raise Exception(f'Attempting to read from {self.__class__.__name__}')
+		raise IOException(f'Attempting to read from {self.__class__.__name__}')
 
 	def readlines(self, hint: int = -1) -> list[bytes]:
-		raise Exception(f'Attempting to read from {self.__class__.__name__}')
+		raise IOException(f'Attempting to read from {self.__class__.__name__}')
 
 	def seek(self, offset: int, whence: int = 0) -> int:
-		raise Exception(f'Attempting to seek in {self.__class__.__name__}')
+		raise IOException(f'Attempting to seek in {self.__class__.__name__}')
 
 	def seekable(self) -> bool:
 		return False
 
 	def tell(self) -> int:
-		raise Exception(f'Attempting to tell in {self.__class__.__name__}')
+		raise IOException(f'Attempting to tell in {self.__class__.__name__}')
 
 	def truncate(self, size: int | None = None) -> int:
-		raise Exception(f'Attempting to truncate in {self.__class__.__name__}')
+		raise IOException(f'Attempting to truncate in {self.__class__.__name__}')
 
 	def writable(self) -> bool:
 		return self.temp_file.writable()
@@ -202,89 +228,94 @@ class OutputBytesFile(BinaryIO):
 	def writelines(self, lines: Iterable[bytes | bytearray]) -> None: # type: ignore[override]
 		self.temp_file.writelines(lines)
 
-	def __enter__(self) -> BinaryIO:
+	def __enter__(self) -> IO[bytes]:
 		return self
 
-	def __exit__(self, type, value, traceback) -> None:
-		self.close()
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
+		if exc_type is not None:
+			self.discard()
+		else:
+			self.close()
 
 	def __iter__(self) -> Iterator[bytes]:
-		raise Exception(f'Attempting to iterate a {self.__class__.__name__}')
-	
+		raise IOException(f'Attempting to iterate a {self.__class__.__name__}')
+
 	def __next__(self) -> bytes:
-		raise Exception(f'Attempting to next a {self.__class__.__name__}')
+		raise IOException(f'Attempting to next a {self.__class__.__name__}')
 
 class OutputText:
 	def __init__(self, output: AnyOutputText):
 		self.close = False
-		self.file: TextIO
+		self.file: IO[str]
 		if isinstance(output, str):
 			self.file = OutputTextFile(output)
 			self.close = True
 		else:
 			self.file = output
 
-	def __enter__(self) -> TextIO:
+	def __enter__(self) -> IO[str]:
 		return self.file
 
-	def __exit__(self, exc_type, exc_value, traceback):
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Literal[False]:
 		if self.close:
-			self.file.close()
 			self.close = False
+			self.file.__exit__(exc_type, exc_value, traceback)
+		return False
 
 class OutputBytes:
 	def __init__(self, output: AnyOutputBytes):
 		self.close = False
-		self.file: BinaryIO
+		self.file: IO[bytes]
 		if isinstance(output, str):
 			self.file = OutputBytesFile(output)
 			self.close = True
 		else:
 			self.file = output
 
-	def __enter__(self) -> BinaryIO:
+	def __enter__(self) -> IO[bytes]:
 		return self.file
 
-	def __exit__(self, exc_type, exc_value, traceback):
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Literal[False]:
 		if self.close:
-			self.file.close()
 			self.close = False
+			self.file.__exit__(exc_type, exc_value, traceback)
+		return False
 
-def open_input_text(input: AnyInputText) -> TextIO:
-	if isinstance(input, str):
-		if os.path.exists(input):
-			return open(input, 'r')
+def open_input_text(any_input: AnyInputText) -> IO[str]:
+	if isinstance(any_input, str):
+		if os.path.exists(any_input):
+			return open(any_input, 'r', encoding='utf-8')
 		else:
-			return io.StringIO(input)
+			return io.StringIO(any_input)
 	else:
-		return input
+		return any_input
 
-def open_input_bytes(input: AnyInputBytes) -> BinaryIO:
-	if isinstance(input, str):
-		return open(input, 'rb')
-	elif isinstance(input, bytes):
-		return io.BytesIO(input)
+def open_input_bytes(any_input: AnyInputBytes) -> IO[bytes]:
+	if isinstance(any_input, str):
+		return open(any_input, 'rb')
+	elif isinstance(any_input, (bytes, bytearray)):
+		return io.BytesIO(any_input)
 	else:
-		return input
+		return any_input
 
-def open_output_text(output: AnyOutputText) -> TextIO:
+def open_output_text(output: AnyOutputText) -> IO[str]:
 	if isinstance(output, str):
 		return OutputTextFile(output)
 	else:
 		return output
 
-def open_output_bytes(output: AnyOutputBytes) -> BinaryIO:
+def open_output_bytes(output: AnyOutputBytes) -> IO[bytes]:
 	if isinstance(output, str):
 		return OutputBytesFile(output)
 	else:
 		return output
 
-def output_to_text(func: Callable[[TextIO], None]) -> str:
+def output_to_text(func: Callable[[IO[str]], None]) -> str:
 	output = io.StringIO()
 	func(output)
 	return output.getvalue()
 
-def output_to_bytes(func: Callable[[BinaryIO], None]) -> bytes:
+def output_to_bytes(func: Callable[[IO[bytes]], None]) -> bytes:
 	output = io.BytesIO()
 	func(output)
 	return output.getvalue()

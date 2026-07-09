@@ -1,11 +1,14 @@
 
-from .BaseCompileStep import BaseCompileStep
+from .BaseCompileStep import BaseCompileStep, Bucket
 
 import os as _os
 
 class CleanupIntermediates(BaseCompileStep):
+	def bucket(self) -> Bucket:
+		return Bucket.make_artifacts
+
 	def execute(self) -> list[BaseCompileStep] | None:
-		self.log(f'Cleaning up intermediate files...')
+		self.log('Cleaning up intermediate files...')
 		if not _os.path.isdir(self.compile_thread.project.intermediates_path):
 			self.log("  Folder doesn't exit, no cleanup required")
 			return None
@@ -15,7 +18,7 @@ class CleanupIntermediates(BaseCompileStep):
 				if not file_path in self.compile_thread.meta.used_outputs:
 					try:
 						_os.unlink(file_path)
-					except:
+					except Exception:
 						self.log(f"  Old intermediate `{file_path}` couldn't be deleted, continuing...", tag='warning')
 		self.log('  Cleanup completed!')
 		return None

@@ -116,14 +116,14 @@ class Condition(Struct.Struct):
 	def masked(self, masked: int) -> None:
 		self.fields[8] = masked
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Condition):
-			return False
+			return NotImplemented
 		if other.fields != self.fields:
 			return False
 		return True
 
 	def __repr__(self) -> str:
-		from .Conditions import get_definition
+		from .Conditions import get_definition  # pylint: disable=cyclic-import
 		definition = get_definition(self)
 		return f'<{definition.name} condition = {self.fields}>'

@@ -5,10 +5,10 @@ from ...Utilities.CodeHandlers import Tokens
 import re
 
 class TRGLexer(Lexer.Lexer):
-	class KeywordsToken(Tokens.LiteralsToken):
-		_literals = ('Trigger', 'BriefingTrigger', 'Conditions:', 'Actions:', 'String', 'UnitProperties')
+	class KeywordToken(Tokens.KeywordToken):
+		_keywords = ('Trigger', 'BriefingTrigger', 'Conditions', 'Actions', 'String', 'UnitProperties')
 
-	class SymbolToken(Tokens.LiteralsToken):
+	class SymbolToken(Tokens.SymbolToken):
 		_literals = (':', '(', ')', ',', '-')
 
 	class ParameterToken(Tokens.RegexToken):
@@ -19,7 +19,7 @@ class TRGLexer(Lexer.Lexer):
 		self.register_token_type(Tokens.WhitespaceToken, skip=True)
 		self.register_token_type(Tokens.CommentToken, skip=True)
 		self.register_token_type(Tokens.NewlineToken)
-		self.register_token_type(TRGLexer.KeywordsToken)
+		self.register_token_type(TRGLexer.KeywordToken)
 		self.register_token_type(TRGLexer.SymbolToken)
 		self.register_token_type(Tokens.IdentifierToken)
 		# self.register_token_type(TRGLexer.IdentifierToken)

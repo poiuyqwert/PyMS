@@ -6,11 +6,35 @@ from ..utils import is_mac
 
 import inspect
 
-from typing import Any, Type
+from typing import Type
+
+__all__ = [
+	'EventPattern',
+	'CustomEventPattern',
+	'Field',
+	'ModifiedField',
+	'Modifier',
+	'Keysym',
+	'Events',
+	'Key',
+	'Mouse',
+	'ButtonRelease',
+	'Shift',
+	'Ctrl',
+	'Alt',
+	'Double',
+	'Triple',
+	'Quadruple',
+	'Cursor',
+	'Focus',
+	'WidgetEvent',
+	'Shortcut',
+	'EventPropogation'
+]
 
 # https://www.tcl-lang.org/man/tcl8.4/TkCmd/bind.htm
 
-class EventPattern(object):
+class EventPattern:
 	def __init__(self, *fields: Field) -> None:
 		# TODO: Validate fields make sense?
 		self.fields = fields
@@ -19,7 +43,7 @@ class EventPattern(object):
 		return '-'.join(field.value for field in self.fields)
 
 	def event(self) -> str:
-		return '<%s>' % self.name()
+		return f'<{self.name()}>'
 
 	def description(self) -> str:
 		return ('' if is_mac() else '+').join(field.description for field in self.fields)
@@ -37,7 +61,7 @@ class EventPattern(object):
 		return self.event()
 
 	def __repr__(self) -> str:
-		return '<%s %s>' % (self.__class__.__name__, self)
+		return f'<{self.__class__.__name__} {self}>'
 
 	def __add__(self, other: EventPattern | Field) -> EventPattern:
 		if isinstance(other, EventPattern):
@@ -45,23 +69,23 @@ class EventPattern(object):
 		elif isinstance(other, Field):
 			return EventPattern(*(self.fields + (other,)))
 		else:
-			raise TypeError("unsupported operand type(s) for +: '%s' and '%s'" % (type(self).__name__, type(other).__name__))
+			raise TypeError(f"unsupported operand type(s) for +: '{type(self).__name__}' and '{type(other).__name__}'")
 
 	def __call__(self) -> str:
 		return self.event()
 
 class CustomEventPattern(EventPattern):
 	def event(self) -> str:
-		return '<<%s>>' % self.name()
+		return f'<<{self.name()}>>'
 
-class Field(object):
+class Field:
 	def __init__(self, value: str, description: str | None = None) -> None:
 		self.value = value
 		self.description = description or value
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Field):
-			return False
+			return NotImplemented
 		return other.value == self.value
 
 	def __add__(self, other: EventPattern | Field) -> EventPattern:
@@ -70,7 +94,7 @@ class Field(object):
 		elif isinstance(other, Field):
 			return EventPattern(self, other)
 		else:
-			raise TypeError("unsupported operand type(s) for +: '%s' and '%s'" % (type(self).__name__, type(other).__name__))
+			raise TypeError(f"unsupported operand type(s) for +: '{type(self).__name__}' and '{type(other).__name__}'")
 
 class ModifiedField(Field):
 	def __init__(self, value: str, description: str | None = None, state: int = 0) -> None:
@@ -109,10 +133,20 @@ class Keysym(Field):
 			return self
 		return Keysym(self._capitalized_key, self._capitalized_key_description)
 
-	def __repr__(self) -> str:
-		return "<Keysym '%s'>" % self.value
+	# Support comparing directly against a `Key` pattern (e.g. `Keysym(event.keysym) == Key.Return`).
+	# Only unmodified single-keysym patterns can match — a keysym alone can't verify modifiers like `Ctrl.Return`.
+	def __eq__(self, other: object) -> bool:
+		if isinstance(other, EventPattern):
+			if len(other.fields) != 1:
+				return False
+			keysym = other.get_keysym()
+			return keysym is not None and keysym.value == self.value
+		return super().__eq__(other)
 
-class Events(object):
+	def __repr__(self) -> str:
+		return f"<Keysym '{self.value}'>"
+
+class Events:
 	@classmethod
 	def modify(cls: Type[Events], *modifiers: Field) -> None:
 		for attr, value in inspect.getmembers(cls, lambda member: not inspect.ismethod(member)):
@@ -316,16 +350,18 @@ class WidgetEvent:
 	Map = EventPattern(Field('Map'))
 	Unmap = EventPattern(Field('Unmap'))
 
+	Destroy = EventPattern(Field('Destroy'))
+
 	Scrolled = CustomEventPattern(Field('Scrolled'))
 
 	class Listbox:
 		Select = CustomEventPattern(Field('ListboxSelect'))
-	
+
 	class Text:
 		Selection = CustomEventPattern(Field('Selection'))
 		UndoStack = CustomEventPattern(Field('UndoStack'))
 		Modified = CustomEventPattern(Field('Modified'))
-	
+
 	class Treeview:
 		Select = CustomEventPattern(Field('TreeviewSelect'))
 		Open = CustomEventPattern(Field('TreeviewOpen'))
@@ -333,6 +369,13 @@ class WidgetEvent:
 
 	class Combobox:
 		Selected = CustomEventPattern(Field('ComboboxSelected'))
+
+	class Notebook:
+		TabActivated = CustomEventPattern(Field('TabActivated'))
+		TabDeactivated = CustomEventPattern(Field('TabDeactivated'))
+
+	class FlowView:
+		Update = CustomEventPattern(Field('Update'))
 
 class Shortcut:
 	Exit = Ctrl.q if is_mac() else Alt.F4
@@ -344,42 +387,42 @@ class EventPropogation:
 	# Return from event callbacks to leave current processing but continue processing other bindings
 	Continue = 'continue'
 
-def _main():
-	events = [
-		Ctrl.a,
-		Modifier.Ctrl + Key.a,
-		Alt.a,
-		Ctrl.Alt.a,
-		Shift.Ctrl.Alt.a,
-		Shift.Click_Left,
-		Shift.Click_Right,
-		Shift.Double.Click_Left,
-		Shift.Ctrl.Alt.Quadruple.Click_Right,
-		Mouse.Drag_Left,
-		Shift.Ctrl.Alt.Drag_Left,
-		ButtonRelease.Click_Left,
-		Double.Click_Left,
-		Ctrl.Double.Click_Left,
-		WidgetEvent.Configure,
-		WidgetEvent.Listbox.Select
-	]
-	for event in events:
-		print(event)
-		print((event.name()))
-		print((event.description()))
+# def _main() -> None:
+# 	events = [
+# 		Ctrl.a,
+# 		Modifier.Ctrl + Key.a,
+# 		Alt.a,
+# 		Ctrl.Alt.a,
+# 		Shift.Ctrl.Alt.a,
+# 		Shift.Click_Left,
+# 		Shift.Click_Right,
+# 		Shift.Double.Click_Left,
+# 		Shift.Ctrl.Alt.Quadruple.Click_Right,
+# 		Mouse.Drag_Left,
+# 		Shift.Ctrl.Alt.Drag_Left,
+# 		ButtonRelease.Click_Left,
+# 		Double.Click_Left,
+# 		Ctrl.Double.Click_Left,
+# 		WidgetEvent.Configure,
+# 		WidgetEvent.Listbox.Select
+# 	]
+# 	for event in events:
+# 		print(event)
+# 		print((event.name()))
+# 		print((event.description()))
 
-	import tkinter as Tk
+# 	import tkinter as Tk
 
-	root = Tk.Tk()
-	canvas = Tk.Canvas(root, width=400, height=400, bg='grey')
-	canvas.grid(row=0, column=1)
-	def double_click(*e):
-		print('Double')
-	canvas.bind(Double.Click_Left, double_click)
-	def click(*e):
-		print('Left')
-	canvas.bind(Mouse.Click_Left, click)
-	root.mainloop()
+# 	root = Tk.Tk()
+# 	canvas = Tk.Canvas(root, width=400, height=400, bg='grey')
+# 	canvas.grid(row=0, column=1)
+# 	def double_click(*_e):
+# 		print('Double')
+# 	canvas.bind(Double.Click_Left, double_click)
+# 	def click(*_e):
+# 		print('Left')
+# 	canvas.bind(Mouse.Click_Left, click)
+# 	root.mainloop()
 
-if __name__ == '__main__':
-	_main()
+# if __name__ == '__main__':
+# 	_main()

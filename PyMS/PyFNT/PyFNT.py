@@ -8,8 +8,8 @@ from ..FileFormats.PCX import PCX
 from ..FileFormats.FNT import FNT, fnttobmp, bmptofnt
 from ..FileFormats.BMP import BMP
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
-from ..Utilities.UIKit import *
+from ..Utilities import registry
+from ..Utilities import UIKit as UI
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
@@ -24,7 +24,7 @@ from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 from ..Utilities.SponsorDialog import SponsorDialog
 
-LONG_VERSION = 'v%s' % Assets.version('PyFNT')
+LONG_VERSION = 'v' + Assets.version('PyFNT')
 
 DISPLAY_CHARS = [
 	'', # 0
@@ -285,11 +285,11 @@ DISPLAY_CHARS = [
 	'', # 255
 ]
 
-class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
+class PyFNT(UI.MainWindow, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
 		self.guifile = guifile
 		#Window
-		MainWindow.__init__(self)
+		UI.MainWindow.__init__(self)
 		self.set_icon('PyFNT')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyFNT', Assets.version('PyFNT'))
@@ -297,72 +297,73 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		setup_trace('PyFNT', self)
 
 		self.config_ = PyFNTConfig()
-		Theme.load_theme(self.config_.theme.value, self)
+		UI.Theme.load_theme(self.config_.theme.value, self)
 		self.resizable(False, False)
 
 		self.fnt: FNT | None = None
 		self.file: str | None = None
 		self.edited = False
 		self.palette: PCX
+		self.cells: list[list[UI.Canvas.Item]] = []
 
 		self.update_title()
 
 		#Toolbar
-		self.toolbar = Toolbar()
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		def save():
+		self.toolbar = UI.Toolbar()
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
+		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		def saveas():
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
+		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('exportc'), self.exports, 'Export Font', Ctrl.e, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('importc'), self.imports, 'Import Font', Ctrl.i, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('exportc'), self.exports, 'Export Font', UI.Ctrl.e, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('importc'), self.imports, 'Import Font', UI.Ctrl.i, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, "Manage MPQ's and Special Palette", Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, "Manage MPQ's and Special Palette", UI.Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.fnt editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.fnt editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyFNT')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
-		frame = Frame(self)
-		leftframe = Frame(frame)
+		frame = UI.Frame(self)
+		leftframe = UI.Frame(frame)
 		#Listbox
-		Label(leftframe, text='Characters:', anchor=W).pack(side=TOP, fill=X)
-		self.listbox = ScrolledListbox(leftframe, width=15, height=17)
-		self.listbox.bind(WidgetEvent.Listbox.Select(), lambda *e: self.preview())
-		self.listbox.pack(side=TOP, padx=1, pady=1, fill=BOTH, expand=1)
-		leftframe.pack(side=LEFT, padx=1, pady=1, fill=Y)
+		UI.Label(leftframe, text='Characters:', anchor=UI.W).pack(side=UI.TOP, fill=UI.X)
+		self.listbox = UI.ScrolledListbox(leftframe, width=15, height=17)
+		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), lambda *e: self.preview())
+		self.listbox.pack(side=UI.TOP, padx=1, pady=1, fill=UI.BOTH, expand=1)
+		leftframe.pack(side=UI.LEFT, padx=1, pady=1, fill=UI.Y)
 
-		rightframe = Frame(frame)
+		rightframe = UI.Frame(frame)
 
 		#Canvas
-		Label(rightframe, text='Display:', anchor=W).pack(side=TOP, fill=X)
-		t = Frame(rightframe)
-		self.canvas = Canvas(t, width=0, height=0, background='#000000', theme_tag='preview') # type: ignore[call-arg]
-		self.canvas.pack(side=TOP, padx=2, pady=2)
-		t.pack(side=LEFT, fill=Y)
-		rightframe.pack(side=LEFT, fill=BOTH, expand=1, padx=1, pady=1)
+		UI.Label(rightframe, text='Display:', anchor=UI.W).pack(side=UI.TOP, fill=UI.X)
+		t = UI.Frame(rightframe)
+		self.canvas = UI.Canvas(t, width=0, height=0, background='#000000', theme_tag='preview') # type: ignore[call-arg]
+		self.canvas.pack(side=UI.TOP, padx=2, pady=2)
+		t.pack(side=UI.LEFT, fill=UI.Y)
+		rightframe.pack(side=UI.LEFT, fill=UI.BOTH, expand=1, padx=1, pady=1)
 
-		frame.pack(fill=BOTH, expand=1)
+		frame.pack(fill=UI.BOTH, expand=1)
 
 		#Statusbar
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.status.set('Load or create a Font.')
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, width=35)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
-		self.mpq_handler = MPQHandler(self.config_.mpqs)
+		self.mpq_handler = MPQHandler(self.config_.settings.mpqs)
 
 		self.config_.windows.main.load_size(self)
 
@@ -379,7 +380,7 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		err = None
 		try:
 			palette = PCX()
-			palette.load_file(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
+			palette.load(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
 		except PyMSError as e:
 			err = e
 		else:
@@ -394,39 +395,42 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		file = self.file
 		if not file:
 			file = 'Unnamed.fnt'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		if save == MessageBox.NO:
-			return CheckSaved.saved
-		if save == MessageBox.CANCEL:
+		save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=UI.MessageBox.YES)
+		if save is None:
 			return CheckSaved.cancelled
+		if not save:
+			return CheckSaved.saved
 		if self.file:
 			return self.save()
-		else:
-			return self.saveas()
+		return self.saveas()
 
 	def is_file_open(self) -> bool:
-		return not not self.fnt
+		return self.fnt is not None
 
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
 
 	def updatelist(self) -> None:
-		self.listbox.delete(0,END)
+		self.listbox.delete(0,UI.END)
 		if not self.fnt:
 			return
 		for l in range(len(self.fnt.letters)):
-			self.listbox.insert(END, '%s (%s)' % (self.fnt.start+l,DISPLAY_CHARS[self.fnt.start+l]))
+			self.listbox.insert(UI.END, f'{self.fnt.start+l} ({DISPLAY_CHARS[self.fnt.start+l]})')
 		self.listbox.select_set(0)
 
 	def resize(self) -> None:
-		self.canvas.delete(ALL)
+		self.canvas.delete(UI.ALL)
+		self.cells = []
 		if not self.fnt:
 			return
 		self.canvas['width'] = self.fnt.width * 4 + 1
 		self.canvas['height'] = self.fnt.height * 4 + 1
+		background = UI.Colors.to_html(self.palette.palette[self.palette.image[0][0]])
 		for y in range(self.fnt.height):
+			row: list[UI.Canvas.Item] = []
 			for x in range(self.fnt.width):
-				self.canvas.create_rectangle(3+x*4,3+y*4,6+x*4,6+y*4, fill='#%02X%02X%02X' % tuple(self.palette.palette[self.palette.image[0][0]]), outline='', tag='%d,%d' % (x,y)) # type: ignore[call-overload]
+				row.append(self.canvas.create_rectangle(3+x*4,3+y*4,6+x*4,6+y*4, fill=background, outline=''))
+			self.cells.append(row)
 
 	def preview(self) -> None:
 		if not self.fnt or not self.listbox.size():
@@ -434,32 +438,31 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		l = int(self.listbox.curselection()[0])
 		for y,yd in enumerate(self.fnt.letters[l]):
 			for x,c in enumerate(yd):
-				item = self.canvas.find_withtag('%d,%d' % (x,y))
-				if item:
-					item[0].config(fill='#%02X%02X%02X' % tuple(self.palette.palette[self.palette.image[0][c]]))
+				if y < len(self.cells) and x < len(self.cells[y]):
+					self.cells[y][x].config(fill=UI.Colors.to_html(self.palette.palette[self.palette.image[0][c]]))
 
 	def update_title(self) -> None:
 		file_path = self.file
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.fnt'
 		if not file_path:
-			self.title('PyFNT %s' % LONG_VERSION)
+			self.title(f'PyFNT {LONG_VERSION}')
 		else:
-			self.title('PyFNT %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyFNT {LONG_VERSION} ({file_path})')
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
-		self.editstatus['state'] = NORMAL if edited else DISABLED
+		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 
 	def new(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		s = InfoDialog(self,True)
-		if s.size is None:
+		if s.result is None:
 			return
 		self.fnt = FNT()
-		self.fnt.width,self.fnt.height,self.fnt.start = s.width.get(),s.height.get(),s.lowi.get()
-		for _ in range(s.letters.get()):
+		self.fnt.width,self.fnt.height,self.fnt.start = s.result.width,s.result.height,s.result.lowi
+		for _ in range(s.result.letters):
 			self.fnt.letters.append([[0]*self.fnt.width for __ in range(self.fnt.height)])
 		self.updatelist()
 		self.file = None
@@ -479,10 +482,11 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 				return
 		if isinstance(file, FNT):
 			fnt = file
+			self.file = None
 		else:
 			fnt = FNT()
 			try:
-				fnt.load_file(file)
+				fnt.load(file)
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
@@ -509,7 +513,7 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		elif not check_allow_overwrite_internal_file(file_path):
 			return CheckSaved.cancelled
 		try:
-			self.fnt.save_file(file_path)
+			self.fnt.save(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled
@@ -520,7 +524,7 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		self.action_states()
 		return CheckSaved.saved
 
-	def close(self):
+	def close(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.fnt = None
@@ -529,11 +533,11 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		self.status.set('Load or create a FNT.')
 		self.mark_edited(False)
 		self.action_states()
-		self.listbox.delete(0, END)
-		self.canvas.delete(ALL)
+		self.listbox.delete(0, UI.END)
+		self.canvas.delete(UI.ALL)
+		self.cells = []
 		self.canvas['width'] = 0
 		self.canvas['height'] = 0
-		self.firstbox = None
 
 	def exports(self) -> None:
 		if not self.fnt:
@@ -547,6 +551,8 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 			fnttobmp(self.fnt,[self.palette.palette[i] for i in self.palette.image[0]] + [(50,100,50) for _ in range(256 - len(self.palette.image[0]))],file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
+			self.status.set('Failed to export font.')
+			return
 		self.status.set('Font exported successfully!')
 
 	def imports(self) -> None:
@@ -556,26 +562,28 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		if not file:
 			return
 		s = InfoDialog(self)
-		if s.size is None:
+		if s.result is None:
 			return
 		self.status.set('Importing FNT, please wait...')
+		self.update_idletasks()
 		b = BMP()
 		try:
-			b.load_file(file)
-			fnt = bmptofnt(b,s.lowi.get(),s.letters.get())
+			b.load(file)
+			fnt = bmptofnt(b,s.result.lowi,s.result.letters)
 		except PyMSError as e:
 			ErrorDialog(self, e)
+			self.status.set('Failed to import font.')
 			return
 		self.open(file=fnt)
 		self.mark_edited()
 		self.status.set('Font imported successfully!')
 
 	def settings(self, err: PyMSError | None = None) -> None:
-		SettingsDialog(self, self.config_, self, err, self.mpq_handler)
+		SettingsDialog(self, config=self.config_, delegate=self, err=err, mpq_handler=self.mpq_handler)
 
 	def register_registry(self) -> None:
 		try:
-			register_registry('PyFNT', 'fnt', 'Font')
+			registry.register('PyFNT', 'fnt', 'Font')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

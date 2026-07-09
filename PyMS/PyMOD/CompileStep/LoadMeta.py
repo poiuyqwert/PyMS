@@ -1,7 +1,10 @@
 
-from .BaseCompileStep import BaseCompileStep
+from .BaseCompileStep import BaseCompileStep, Bucket
 
 class LoadMeta(BaseCompileStep):
+	def bucket(self) -> Bucket:
+		return Bucket.setup
+
 	def execute(self) -> list[BaseCompileStep] | None:
 		self.log('Loading `.build/meta.json`...')
 		if not self.compile_thread.meta.exists():

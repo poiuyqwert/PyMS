@@ -5,8 +5,8 @@ from .DataSource import DataSource
 
 from ..FileFormats import JSON
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
-from ..Utilities.UIKit import *
+from ..Utilities import registry
+from ..Utilities import UIKit as UI
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
@@ -21,71 +21,71 @@ from ..Utilities.SponsorDialog import SponsorDialog
 
 from typing import Literal
 
-LONG_VERSION = 'v%s' % Assets.version('PyJSON')
+LONG_VERSION = 'v' + Assets.version('PyJSON')
 
-class PyJSON(MainWindow):
+class PyJSON(UI.MainWindow):
 	def __init__(self, guifile: str | None = None) -> None:
-		MainWindow.__init__(self)
+		UI.MainWindow.__init__(self)
 
 		self.set_icon('PyJSON')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyJSON', Assets.version('PyJSON'))
 		ga.track(GAScreen('PyJSON'))
 		setup_trace('PyJSON', self)
-		
+
 		self.config_ = PyJSONConfig()
-		Theme.load_theme(self.config_.theme.value, self)
+		UI.Theme.load_theme(self.config_.theme.value, self)
 
 		self.file_path: str | None = None
 		self.edited = False
 
 		self.update_title()
 
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
 		self.toolbar.add_gap()
-		def save():
+		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		def saveas():
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
+		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add Object', Key.Insert, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('insert'), self.insert, 'Insert Object', Shift.Insert, enabled=False, tags='object_selected')
-		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Object', Shift.Delete, enabled=False, tags='object_selected')
+		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add Object', UI.Key.Insert, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('insert'), self.insert, 'Insert Object', UI.Shift.Insert, enabled=False, tags='object_selected')
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Object', UI.Shift.Delete, enabled=False, tags='object_selected')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage Settings', Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage Settings', UI.Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.json editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.json editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyJSON')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		self.toolbar.grid(row=0,column=0, padx=1,pady=1, sticky=EW)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.grid(row=0,column=0, padx=1,pady=1, sticky=UI.EW)
 
-		self.hor_pane = PanedWindow(self,orient=HORIZONTAL)
+		self.hor_pane = UI.PanedWindow(self,orient=UI.HORIZONTAL)
 
 		# treeview
-		left_frame = Frame(self.hor_pane)
-		self.tree = ScrolledTreeview(left_frame)
-		self.tree.pack(side=TOP, fill=BOTH, expand=1)
-		self.key_index = IntVar()
-		key_frame = Frame(left_frame)
-		Label(key_frame, text='Key:').pack(side=LEFT, padx=(0,2))
-		self.key_dropdown = DropDown(key_frame, self.key_index, ['id'])
-		self.key_dropdown.pack(side=LEFT, fill=X, expand=1)
-		key_frame.pack(side=BOTTOM, fill=X, padx=2, pady=2)
-		self.hor_pane.add(left_frame, sticky=NSEW, minsize=200)
-		self.tree.treeview.bind(WidgetEvent.Treeview.Select(), lambda e: self.refresh_object())
+		left_frame = UI.Frame(self.hor_pane)
+		self.tree = UI.ScrolledTreeview(left_frame)
+		self.tree.pack(side=UI.TOP, fill=UI.BOTH, expand=1)
+		self.key_index = UI.IntVar()
+		key_frame = UI.Frame(left_frame)
+		UI.Label(key_frame, text='Key:').pack(side=UI.LEFT, padx=(0,2))
+		self.key_dropdown = UI.DropDown(key_frame, self.key_index, ['id'])
+		self.key_dropdown.pack(side=UI.LEFT, fill=UI.X, expand=1)
+		key_frame.pack(side=UI.BOTTOM, fill=UI.X, padx=2, pady=2)
+		self.hor_pane.add(left_frame, sticky=UI.NSEW, minsize=200)
+		self.tree.treeview.bind(UI.WidgetEvent.Treeview.Select(), lambda e: self.refresh_object())
 
 		import json
-		with open('/Users/zzahos/Projects/Personal/PyMS_Data/stat_txt.json','r') as f:
+		with open('/Users/zzahos/Projects/Personal/PyMS_Data/stat_txt.json', 'r', encoding='utf-8') as f:
 			data = json.load(f)
 		# data = {
 		# 	'Objects':[
@@ -97,20 +97,20 @@ class PyJSON(MainWindow):
 		self.data_source.attach(self.tree.treeview)
 
 		# Editor
-		self.editor_frame = LabelFrame(self.hor_pane, text='Editor')
-		self.hor_pane.add(self.editor_frame, sticky=NSEW, minsize=200)
+		self.editor_frame = UI.LabelFrame(self.hor_pane, text='Editor')
+		self.hor_pane.add(self.editor_frame, sticky=UI.NSEW, minsize=200)
 
-		self.hor_pane.grid(row=1,column=0, sticky=NSEW)
+		self.hor_pane.grid(row=1,column=0, sticky=UI.NSEW)
 
 		#Statusbar
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.status.set('Load or create a JSON.')
-		self.object_status = StringVar()
-		statusbar = StatusBar(self)
+		self.object_status = UI.StringVar()
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save.gif'))
 		statusbar.add_label(self.object_status)
-		statusbar.grid(row=2,column=0, sticky=EW)
+		statusbar.grid(row=2,column=0, sticky=UI.EW)
 
 		self.grid_columnconfigure(0, weight=1)
 		self.grid_rowconfigure(1, weight=1)
@@ -129,15 +129,14 @@ class PyJSON(MainWindow):
 		file_path = self.file_path
 		if not file_path:
 			file_path = 'Unnamed.json'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file_path, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		if save == MessageBox.NO:
-			return CheckSaved.saved
-		if save == MessageBox.CANCEL:
+		save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file_path}'?", default=UI.MessageBox.YES)
+		if save is None:
 			return CheckSaved.cancelled
+		if not save:
+			return CheckSaved.saved
 		if self.file_path:
 			return self.save()
-		else:
-			return self.saveas()
+		return self.saveas()
 
 	def is_file_open(self) -> bool:
 		return not not self.data_source.data
@@ -156,30 +155,29 @@ class PyJSON(MainWindow):
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.json'
 		if not file_path:
-			self.title('[WIP] PyJSON %s' % LONG_VERSION)
+			self.title(f'[WIP] PyJSON {LONG_VERSION}')
 		else:
-			self.title('[WIP] PyJSON %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'[WIP] PyJSON {LONG_VERSION} ({file_path})')
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
-		self.editstatus['state'] = NORMAL if edited else DISABLED
+		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 
 	def new(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.data_source.set_data(None)
-		self.path = None
 		self.status.set('Editing new JSON.')
 		self.mark_edited(False)
 		self.update_title()
 		self.object_status.set('')
 		self.action_states()
 
-	def check_format(self, json_data: Any) -> bool:
+	def check_format(self, json_data: list | dict) -> bool:
 		if not isinstance(json_data, list):
 			return False
-		for object in json_data:
-			if not isinstance(object, dict):
+		for obj in json_data:
+			if not isinstance(obj, dict):
 				return False
 		return True
 
@@ -188,6 +186,8 @@ class PyJSON(MainWindow):
 
 	def clear_editor(self) -> None:
 		for child in self.editor_frame.winfo_children():
+			if not isinstance(child, UI.Widget):
+				continue
 			child.pack_forget()
 
 	def rebuild_editor(self) -> None:
@@ -206,7 +206,7 @@ class PyJSON(MainWindow):
 		# value = self.data_source.value_for(self.tree.treeview.selection()[0])
 		self.rebuild_editor()
 
-	def open(self, file_path: str | None = None):
+	def open(self, file_path: str | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if not file_path:
@@ -260,7 +260,7 @@ class PyJSON(MainWindow):
 		self.object_status.set('')
 		self.action_states()
 
-	def add(self, index: int | Literal['end'] = END):
+	def add(self, _index: int | Literal['end'] = UI.END) -> None:
 		if not self.data_source.data:
 			return
 		self.mark_edited()
@@ -284,7 +284,7 @@ class PyJSON(MainWindow):
 
 	def register_registry(self) -> None:
 		try:
-			register_registry('PyJSON', 'json', '')
+			registry.register('PyJSON', 'json', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

@@ -3,13 +3,14 @@ from __future__ import annotations
 
 from .DATTab import DATTab
 from .UnitTabs.DATUnitsTab import DATUnitsTab
-from .UnitTabs import *
+from . import UnitTabs
 from ..DataID import DATID, UnitsTabID, AnyID
 from ..DATRef import DATRefs, DATRef
 
 from ...FileFormats.DAT import DATUnit
 
-from ...Utilities.UIKit import *
+from ...Utilities import UIKit as UI
+from ...Utilities.CheckSaved import CheckSaved
 
 from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
@@ -18,20 +19,20 @@ if TYPE_CHECKING:
 class UnitsTab(DATTab):
 	DAT_ID = DATID.units
 
-	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
 		DATTab.__init__(self, parent, delegate)
-		self.dattabs = Notebook(self, FLAT)
+		self.dattabs = UI.Notebook(self, UI.FLAT)
 		tabs = [
-			('Basic', BasicUnitsTab),
-			('Advanced', AdvancedUnitsTab),
-			('Sounds', SoundsUnitsTab),
-			('Graphics', GraphicsUnitsTab),
-			('StarEdit', StarEditUnitsTab),
-			('AI Actions', AIActionsUnitsTab),
+			('Basic', UnitTabs.BasicUnitsTab),
+			('Advanced', UnitTabs.AdvancedUnitsTab),
+			('Sounds', UnitTabs.SoundsUnitsTab),
+			('Graphics', UnitTabs.GraphicsUnitsTab),
+			('StarEdit', UnitTabs.StarEditUnitsTab),
+			('AI Actions', UnitTabs.AIActionsUnitsTab),
 		]
 		for name,tab in tabs:
 			self.dattabs.add_tab(tab(self.dattabs, delegate, self), name)
-		self.dattabs.pack(fill=BOTH, expand=1)
+		self.dattabs.pack(fill=UI.BOTH, expand=1)
 
 		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (
@@ -55,11 +56,11 @@ class UnitsTab(DATTab):
 			tab = cast(DATUnitsTab, frame)
 			tab.updated_pointer_entries(ids)
 
-	def load_data(self, id: int | None = None) -> None:
+	def load_data(self, entry_id: int | None = None) -> None:
 		if not self.delegate.data_context.units.dat:
 			return
-		if id is not None:
-			self.id = id
+		if entry_id is not None:
+			self.id = entry_id
 		entry = self.delegate.data_context.units.dat.get_entry(self.id)
 		self.active_tab().load_data(entry)
 		self.check_used_by_references()
@@ -73,9 +74,10 @@ class UnitsTab(DATTab):
 			self.delegate.update_status_bar()
 			self.check_used_by_references()
 
-	def save(self, key: Event | None = None) -> None:
-		DATTab.save(self)
+	def save(self, _event: UI.Event | None = None) -> CheckSaved:
+		result = DATTab.save(self)
 		if not self.edited:
 			for frame,_ in list(self.dattabs.pages.values()):
 				tab = cast(DATUnitsTab, frame)
 				tab.edited = False
+		return result

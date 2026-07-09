@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# pylint: disable=consider-using-f-string
 
 from PyMS.Utilities.Compatibility import check_compat, Requirement
 check_compat('PyPCX', Requirement.PIL)
@@ -39,10 +40,10 @@ def main(): # type: () -> None
 			if opt.convert:
 				print("Reading PCX '%s'..." % args[0])
 				try:
-					pcx.load_file(args[0])
+					pcx.load(args[0])
 					print(" - '%s' read successfully\nConverting '%s' to %s file '%s'..." % (args[0], args[0], ext.upper(), args[1]))
 					bmp.set_pixels(pcx.image,pcx.palette)
-					bmp.save_file(args[1])
+					bmp.save(args[1])
 				except PyMSError as e:
 					print(repr(e))
 				else:
@@ -50,10 +51,10 @@ def main(): # type: () -> None
 			else:
 				print("Reading BMP '%s'..." % args[0])
 				try:
-					bmp.load_file(args[0])
+					bmp.load(args[0])
 					print(" - '%s' read successfully\nConverting '%s' to %s file '%s'..." % (args[0], args[0], ext.upper(), args[1]))
 					pcx.load_pixels(bmp.image,bmp.palette)
-					pcx.save_file(args[1])
+					pcx.save(args[1])
 				except PyMSError as e:
 					print(repr(e))
 				else:

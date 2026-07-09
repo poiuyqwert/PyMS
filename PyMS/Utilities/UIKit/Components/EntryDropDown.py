@@ -1,7 +1,8 @@
 
-from ..Widgets import *
+from ..Widgets import Entry, Frame, Label, Misc
+from ..Constants import LEFT
+from ..Variables import IntVar, IntegerVar
 from .DropDown import DropDown
-from ..Variables import IntegerVar
 
 from typing import Sequence
 
@@ -11,7 +12,7 @@ class EntryDropDown(Frame):
 	# `entries` is an array of the entries to show in the dropdown
 	#     They can be a tuple `(str_name, int_value)`, or just `str_name` in which case it will use the index for its `int_value`
 	#     One entry can have an `int_value` of `None` to indicate it will be selected for any unknown value
-	def __init__(self, parent: Misc, variable: IntegerVar, entries: Sequence[str] | Sequence[tuple[str, int | None]], entry_width: int | None = None, dropdown_width: int | None = None, separator: str = '='):
+	def __init__(self, parent: Misc, variable: IntegerVar, entries: Sequence[str] | Sequence[tuple[str, int | None]], *, entry_width: int | None = None, dropdown_width: int | None = None, separator: str = '='):
 		Frame.__init__(self, parent)
 
 		self.variable = variable

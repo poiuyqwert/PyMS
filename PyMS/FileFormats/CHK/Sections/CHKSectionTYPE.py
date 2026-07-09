@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionTYPE(CHKSection):
-	NAME = "TYPE"
+	NAME = b'TYPE'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 
 	STARCRAFT = b"RAWS"
@@ -27,7 +27,7 @@ class CHKSectionTYPE(CHKSection):
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.type = CHKSectionTYPE.BROODWAR
-		from .CHKSectionVER import CHKSectionVER
+		from .CHKSectionVER import CHKSectionVER  # pylint: disable=cyclic-import
 		verSect = chk.sections.get(CHKSectionVER.NAME)
 		if verSect:
 			verSect = cast(CHKSectionVER, verSect)
@@ -41,4 +41,4 @@ class CHKSectionTYPE(CHKSection):
 		return self.type
 
 	def decompile(self) -> str:
-		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Type',str(self.type)), CHKSectionTYPE.TYPE_NAME(self.type))
+		return f'{self.NAME.decode("ascii")}:\n\t{pad("Type",str(self.type))} # {CHKSectionTYPE.TYPE_NAME(self.type)}\n'

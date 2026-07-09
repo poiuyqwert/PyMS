@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from . import Assets
 from .InternalErrorDialog import InternalErrorDialog
-from .UIKit import MainWindow, Toplevel, AnyWindow
+from . import UIKit as UI
 
 import sys, os
 
@@ -11,11 +11,11 @@ from typing import TextIO
 
 try:
 	os.makedirs(Assets.logs_dir)
-except:
+except Exception:
 	pass
 
-class Tracer(object):
-	class STDStream(object):
+class Tracer:
+	class STDStream:
 		def __init__(self, tracer: Tracer, stream: TextIO | None) -> None:
 			self.tracer = tracer
 			self.stream = stream
@@ -24,14 +24,14 @@ class Tracer(object):
 			if self.stream:
 				try:
 					self.stream.write(text)
-				except:
+				except Exception:
 					pass
 			self.tracer.write(text, self)
 
 		def flush(self) -> None:
 			pass
 
-	def __init__(self, program_name: str, main_window: MainWindow) -> None:
+	def __init__(self, program_name: str, main_window: UI.MainWindow) -> None:
 		self.stdout = Tracer.STDStream(self, sys.stdout)
 		self.stderr = Tracer.STDStream(self, sys.stderr)
 		self.program_name = program_name
@@ -40,15 +40,16 @@ class Tracer(object):
 		self.creating_window = False
 		self.buffer = ''
 		self.flush_after_id: str | None = None
+		self.file: TextIO | None = None
 		try:
-			self.file = open(Assets.log_file_path('%s.txt' % program_name), 'w', encoding='utf-8')
-		except OSError:
+			self.file = open(Assets.log_file_path(f'{program_name}.txt'), 'w', encoding='utf-8') # pylint: disable=consider-using-with
+		except Exception:
 			pass
 
-	def _find_presenter(self) -> AnyWindow:
-		presenter = self.main_window
+	def _find_presenter(self) -> UI.AnyWindow:
+		presenter: UI.AnyWindow = self.main_window
 		children = presenter.winfo_children()
-		while len(children) and isinstance(children[-1], Toplevel):
+		while len(children) and isinstance(children[-1], UI.Toplevel):
 			presenter = children[-1]
 			children = presenter.winfo_children()
 		return presenter
@@ -60,23 +61,23 @@ class Tracer(object):
 			self.creating_window = True
 			def present() -> None:
 				presenter = self._find_presenter()
-				if hasattr(presenter, '_pyms__window_blocking') and presenter._pyms__window_blocking:
-					self.main_window.after(1000, present)
+				if hasattr(presenter, '_pyms__window_blocking') and presenter._pyms__window_blocking: # pylint: disable=protected-access
+					self.main_window.after_managed(1000, present)
 					return
 				self.window = InternalErrorDialog(presenter, self.program_name, self.buffer)
 				self.buffer = ''
 				self.creating_window = False
 				self.window.grab_wait()
 				self.window = None
-			self.main_window.after(0, present)
+			self.main_window.after_managed(0, present)
 		self.flush()
 
 	def write(self, text: str, source: STDStream | None = None) -> None:
 		if self.file:
 			self.file.write(text)
 			if self.flush_after_id is not None:
-				self.main_window.after_cancel(self.flush_after_id)
-			self.flush_after_id = self.main_window.after(10, self.flush)
+				self.main_window.after_managed_cancel(self.flush_after_id)
+			self.flush_after_id = self.main_window.after_managed(10, self.flush)
 		if self.window:
 			self.window.add_text(text)
 		else:
@@ -86,7 +87,7 @@ class Tracer(object):
 
 	def flush(self) -> None:
 		if self.flush_after_id is not None:
-			self.main_window.after_cancel(self.flush_after_id)
+			self.main_window.after_managed_cancel(self.flush_after_id)
 			self.flush_after_id = None
 		if not self.file:
 			return
@@ -97,8 +98,8 @@ class Tracer(object):
 		self.write(''.join(traceback.format_exception(*sys.exc_info())))
 
 _TRACER: Tracer | None = None
-def setup_trace(program_name: str, main_window: MainWindow) -> None:
-	global _TRACER
+def setup_trace(program_name: str, main_window: UI.MainWindow) -> None:
+	global _TRACER # pylint: disable=global-statement
 	if _TRACER is not None:
 		return
 	_TRACER = Tracer(program_name, main_window)

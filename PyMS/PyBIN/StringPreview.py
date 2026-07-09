@@ -3,34 +3,34 @@ from __future__ import annotations
 
 from ..FileFormats import DialogBIN, FNT, PCX
 
-from ..Utilities.UIKit import ImageTk
+from ..Utilities import UIKit as UI
 
 class StringPreview:
 	# GLYPH_CACHE = {}
 
-	def __init__(self, text: str, font: FNT.FNT, tfontgam: PCX.PCX, remap: FNT.Remapping | None = None, remap_palette: PCX.PCX | None = None, default_color: int = 1) -> None:
+	def __init__(self, text: str, font: FNT.FNT, tfontgam: PCX.PCX, *, remap: FNT.Remapping | None = None, remap_palette: PCX.PCX | None = None, default_color: int = 1) -> None:
 		self.text = text
 		self.font = font
 		self.tfontgam = tfontgam
 		self.remap = remap
 		self.remap_palette = remap_palette
 		self.default_color = default_color
-		self.glyphs: list[ImageTk.PhotoImage] | None = None
+		self.glyphs: list[UI.ImageTk.PhotoImage] | None = None
 
-	def get_glyphs(self) -> list[ImageTk.PhotoImage]:
+	def get_glyphs(self) -> list[UI.ImageTk.PhotoImage]:
 		if self.glyphs is None:
 			self.glyphs = []
 			color = self.default_color
 			for c in self.text:
 				a = ord(c)
-				if a >= self.font.start and a < self.font.start + len(self.font.letters):
+				if self.font.start <= a < self.font.start + len(self.font.letters):
 					a -= self.font.start
 					self.glyphs.append(FNT.letter_to_photo(self.tfontgam, self.font.letters[a], color, self.remap, self.remap_palette))
 				elif self.remap and (a in self.remap or a in FNT.COLOR_CODES_INGAME) and not color in FNT.COLOR_OVERPOWER:
 					color = a if a > 1 else self.default_color
 		return self.glyphs
 
-	def get_positions(self, x1: int, y1: int , x2: int, y2: int, align_flags: int) -> list[tuple[int, int]]:
+	def get_positions(self, x1: int, y1: int, x2: int, y2: int, *, align_flags: int) -> list[tuple[int, int]]:
 		positions: list[tuple[int, int]] = []
 		x = x1
 		y = y1
@@ -62,7 +62,7 @@ class StringPreview:
 			del word[:]
 		for c in self.text:
 			a = ord(c)
-			if a >= self.font.start and a < self.font.start + len(self.font.letters):
+			if self.font.start <= a < self.font.start + len(self.font.letters):
 				a -= self.font.start
 				w = self.font.sizes[a][0]
 				if c == ' ' and w == 0:
@@ -73,8 +73,8 @@ class StringPreview:
 							w += self.font.sizes[l][0]
 							count += 1
 					w = int(round(w / float(count)))
-					x,y,_,h = self.font.sizes[a]
-					self.font.sizes[a] = (x,y,w,h)
+					_,sh,sxo,syo = self.font.sizes[a]
+					self.font.sizes[a] = (w,sh,sxo,syo)
 				w += 1
 				word.append(w)
 				word_width += w

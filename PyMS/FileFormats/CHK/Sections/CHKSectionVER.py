@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionVER(CHKSection):
-	NAME = "VER "
+	NAME = b'VER '
 
 	BETA = 57
 	SC100 = 59
@@ -31,18 +31,18 @@ class CHKSectionVER(CHKSection):
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.version = CHKSectionVER.BW
-		from .CHKSectionTYPE import CHKSectionTYPE
+		from .CHKSectionTYPE import CHKSectionTYPE  # pylint: disable=cyclic-import
 		typeSect = chk.sections.get(CHKSectionTYPE.NAME)
 		if typeSect:
 			typeSect = cast(CHKSectionTYPE, typeSect)
 			if not typeSect.type == CHKSectionTYPE.BROODWAR:
 				self.version = CHKSectionVER.SC104
 
-	def load_data(self, data):
+	def load_data(self, data: bytes) -> None:
 		self.version = struct.unpack('<H', data[:2])[0]
 
-	def save_data(self):
+	def save_data(self) -> bytes:
 		return struct.pack('<H', self.version)
 
-	def decompile(self):
-		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Version',self.version), CHKSectionVER.VER_NAME(self.version))
+	def decompile(self) -> str:
+		return f'{self.NAME.decode("ascii")}:\n\t{pad("Version",str(self.version))} # {CHKSectionVER.VER_NAME(self.version)}\n'

@@ -5,6 +5,7 @@ from .CodeHandlers import CodeCommands
 from ...Utilities.CodeHandlers.CodeCommand import CodeCommand
 from ...Utilities.CodeHandlers.CodeHeader import CodeHeader
 from ...Utilities.CodeHandlers.CodeType import CodeBlock
+from ...Utilities.CodeHandlers.SerializeContext import SerializeContext
 
 from dataclasses import dataclass
 
@@ -28,7 +29,7 @@ class AIScript(CodeHeader):
 	def get_entry_points(self) -> list[tuple[CodeBlock, str | None]]:
 		return [(self.entry_point, 'EntryPoint')]
 
-	def serialize(self, serialize_context: CodeCommands.SerializeContext) -> None:
+	def serialize(self, serialize_context: SerializeContext) -> None:
 		serialize_context.write(f'\nscript {self.id} {{\n')
 		serialize_context.indent()
 		CodeCommand(CodeCommands.HeaderNameString, [self.string_id]).serialize(serialize_context)

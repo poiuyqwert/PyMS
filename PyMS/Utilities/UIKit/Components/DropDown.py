@@ -1,24 +1,26 @@
 
 from .DropDownChooser import DropDownChooser
-from ..Widgets import *
+from ..Widgets import Button, Entry, Frame, Misc
+from ..Constants import END, LEFT, NORMAL, RIGHT, SUNKEN, X, Y
+from ..Variables import IntVar, IntegerVar, StringVar, Variable
+from ..Event import Event
 from ..Font import Font
-from ..EventPattern import *
-from ..Variables import IntegerVar
+from ..EventPattern import EventPropogation, Focus, Key, Keysym, Mouse
 
 from ... import Assets
 
-from typing import Callable, Literal, Sequence
+from typing import Callable, Literal, Sequence, Any
 
 class DropDown(Frame):
-	def __init__(self, parent: Misc, variable: IntVar, entries: Sequence[str], display: IntegerVar | Callable[[int], None] | None = None, width: int = 1, state: Literal['normal', 'active', 'disabled'] = NORMAL, stay_right: bool = False, none_name: str = 'None', none_value: int | None = None):
+	def __init__(self, parent: Misc, variable: IntVar, entries: Sequence[str], display: IntegerVar | Callable[[int], None] | None = None, *, width: int = 1, state: Literal['normal', 'active', 'disabled'] = NORMAL, stay_right: bool = False, none_name: str = 'None', none_value: int | None = None):
 		self.variable = variable
-		self.variable.set = self.set # type: ignore[assignment]
+		self.variable.trace_add('write', self._variable_changed)
 		self.display = display
 		self.stay_right = stay_right
 		self._original_display_callback = None
 		if display and isinstance(display, Variable):
 			self._original_display_callback = display.callback
-			def callback_wrapper(num):
+			def callback_wrapper(num: int) -> None:
 				self.set(num)
 				if self._original_display_callback:
 					self._original_display_callback(self.variable.get())
@@ -36,18 +38,18 @@ class DropDown(Frame):
 		self.entry['state'] = state
 		self.entry.bind(Mouse.Click_Left(), self.choose)
 		def move_callback(i: int| Literal['end']) -> Callable[[Event], None]:
-			def move(e: Event) -> None:
-				self.move(e, i)
+			def move(event: Event) -> None:
+				self.move(event, i)
 			return move
-		self.entry.bind(Key.Home(), move_callback(0)),
-		self.entry.bind(Key.End(), move_callback(END)),
-		self.entry.bind(Key.Up(), move_callback(-1)),
-		self.entry.bind(Key.Left(), move_callback(-1)),
-		self.entry.bind(Key.Down(), move_callback(1)),
-		self.entry.bind(Key.Right(), move_callback(1)),
-		self.entry.bind(Key.Prior(), move_callback(-10)),
-		self.entry.bind(Key.Next(), move_callback(10)),
-		self.entry.bind(Key.Pressed(), self.key_pressed),
+		self.entry.bind(Key.Home(), move_callback(0))
+		self.entry.bind(Key.End(), move_callback(END))
+		self.entry.bind(Key.Up(), move_callback(-1))
+		self.entry.bind(Key.Left(), move_callback(-1))
+		self.entry.bind(Key.Down(), move_callback(1))
+		self.entry.bind(Key.Right(), move_callback(1))
+		self.entry.bind(Key.Prior(), move_callback(-10))
+		self.entry.bind(Key.Next(), move_callback(10))
+		self.entry.bind(Key.Pressed(), self.key_pressed)
 		self.entry.bind(Key.Return(), self.choose)
 		self.setentries(entries)
 		self.button = Button(self, image=Assets.get_image('arrow'), command=self.choose, state=state)
@@ -55,12 +57,12 @@ class DropDown(Frame):
 
 		self.background_color = self.entry.cget('bg')
 		self.highlight_color = self.entry.cget('selectbackground')
-		def update_background(color):
+		def update_background(color: str) -> None:
 			self.entry['bg'] = color
 		self.entry.bind(Focus.In(), lambda *_: update_background(self.highlight_color))
 		self.entry.bind(Focus.Out(), lambda *_: update_background(self.background_color))
 		# The Focus.Out event stops firing sometimes, so we use a workaround with `validatecommand` triggering on `focusout` to overcome the issue
-		def validate(reason):
+		def validate(reason: str) -> bool:
 			if reason == 'focusout':
 				update_background(self.background_color)
 			return True
@@ -76,13 +78,19 @@ class DropDown(Frame):
 	def setentries(self, entries: Sequence[str]) -> None:
 		self.entries = list(entries)
 		if self.entries:
-			self.text.set(self.entries[self.variable.get()])
+			if self.variable.get() == self.none_value:
+				self.text.set(self.none_name)
+			else:
+				self.text.set(self.entries[self.variable.get()])
 		else:
 			self.text.set('')
 
 	def set(self, num: int) -> None:
+		self.variable.set(num)
+
+	def _variable_changed(self, *_: Any) -> None:
+		num = self.variable.get()
 		self.change(num)
-		IntVar.set(self.variable, num)
 		self.disp(num)
 		if self.stay_right:
 			self.entry.xview_moveto(1.0)
@@ -91,30 +99,33 @@ class DropDown(Frame):
 		if num >= len(self.entries):
 			num = len(self.entries)-1
 		if self.entries:
-			self.text.set(self.entries[num])
+			if num == self.none_value:
+				self.text.set(self.none_name)
+			else:
+				self.text.set(self.entries[num])
 			if self.stay_right:
 				self.entry.xview_moveto(1.0)
 		else:
 			self.text.set('')
 
-	def move(self, e: Event, a: int | Literal['end']) -> str:
+	def move(self, _event: Event, a: int | Literal['end']) -> str:
 		if self.entry['state'] == NORMAL:
 			if a == END:
 				i = len(self.entries)-1
 			elif a:
 				i = max(min(len(self.entries)-1,self.variable.get() + a),0)
+			else:
+				return EventPropogation.Break
 			self.set(i)
 		return EventPropogation.Break
 
-	def choose(self, e: Event | None = None) -> None:
+	def choose(self, _event: Event | None = None) -> None:
 		if self.entry['state'] == NORMAL:
 			i = self.variable.get()
-			if i == self.none_value:
-				n = self.entries.index(self.none_name)
-				if n >= 0:
-					i = n
+			if i == self.none_value and self.none_name in self.entries:
+				i = self.entries.index(self.none_name)
 			c = DropDownChooser(self, self.entries, i)
-			if c.result > -1 and c.result < len(self.entries) and self.entries[c.result] == self.none_name and self.none_value:
+			if c.result > -1 and c.result < len(self.entries) and self.entries[c.result] == self.none_name and self.none_value is not None:
 				self.set(self.none_value)
 			else:
 				self.set(c.result)
@@ -128,11 +139,11 @@ class DropDown(Frame):
 
 	def key_pressed(self, event: Event) -> str:
 		if self._typed_timer:
-			self.after_cancel(self._typed_timer)
+			self.after_managed_cancel(self._typed_timer)
 			self._typed_timer = None
-		if event.keysym == Key.Backspace.name():
+		if Keysym(event.keysym) == Key.Backspace:
 			self._typed = self._typed[:-1]
-		elif event.keysym == Key.Tab.name() or event.char == '\t':
+		elif Keysym(event.keysym) == Key.Tab or event.char == '\t':
 			return EventPropogation.Continue
 		elif event.char:
 			self._typed += event.char.lower()
@@ -141,7 +152,7 @@ class DropDown(Frame):
 				if self._typed in item.lower():
 					self.set(index)
 					break
-			self._typed_timer = self.after(1000, self.clear_typed)
+			self._typed_timer = self.after_managed(1000, self.clear_typed)
 		return EventPropogation.Break
 
 	def clear_typed(self) -> None:

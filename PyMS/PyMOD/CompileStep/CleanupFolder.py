@@ -1,5 +1,5 @@
 
-from .BaseCompileStep import BaseCompileStep, CompileError
+from .BaseCompileStep import BaseCompileStep, CompileError, Bucket
 
 import os as _os
 import shutil as _shutil
@@ -14,6 +14,9 @@ class CleanupFolder(BaseCompileStep):
 		self.folder_path = folder_path
 		self.required = required
 
+	def bucket(self) -> Bucket:
+		return Bucket.setup
+
 	def execute(self) -> list[BaseCompileStep] | None:
 		self.log(f'Cleaning up contents of folder `{self.folder_path}`...')
 		if not _os.path.isdir(self.folder_path):
@@ -27,9 +30,9 @@ class CleanupFolder(BaseCompileStep):
 					_os.unlink(path)
 				elif _os.path.isdir(path):
 					_shutil.rmtree(path)
-			except:
+			except Exception as exc:
 				if self.required:
-					raise CompileError("Couldn't cleanup contents")
+					raise CompileError("Couldn't cleanup contents") from exc
 				else:
 					had_error = True
 					return None

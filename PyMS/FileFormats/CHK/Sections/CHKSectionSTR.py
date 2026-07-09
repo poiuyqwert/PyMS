@@ -12,30 +12,30 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKString(object):
+class CHKString:
 	def __init__(self, sect: CHKSectionSTR, string_id: int, text: str, refs: int = 1) -> None:
 		self.sect = sect
 		self.string_id = string_id
 		self.text = text
 		self.references = refs
 
-	def retain(self):
+	def retain(self) -> None:
 		self.references += 1
 
-	def release(self):
+	def release(self) -> None:
 		self.references -= 1
 		if self.references == 0:
 			self.sect.delete_string(self.string_id)
 
 class CHKSectionSTR(CHKSection):
-	NAME = 'STR '
+	NAME = b'STR '
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
-	
+
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.strings: dict[int, CHKString] = {}
 		self.open_ids: list[int] = []
-	
+
 	def load_data(self, data: bytes) -> None:
 		self.strings = {}
 		self.open_ids = []
@@ -54,7 +54,7 @@ class CHKSectionSTR(CHKSection):
 			string = CHKString(self, string_id, text)
 			self.strings[string_id] = string
 			string_id += 1
-	
+
 	def string_count(self) -> int:
 		return len(self.strings)
 
@@ -71,10 +71,9 @@ class CHKSectionSTR(CHKSection):
 		offset = 2+count*2
 		for string_id in range(count):
 			string = self.get_string(string_id)
-			if not string:
-				continue
+			text = string.text if string else ''
 			header += struct.pack('<H', offset+len(strings))
-			strings += string.text.encode('utf-8') or b'' + b'\0'
+			strings += text.encode('utf-8') + b'\0'
 		return header + strings
 
 	def string_exists(self, string_id: int) -> bool:
@@ -121,21 +120,22 @@ class CHKSectionSTR(CHKSection):
 
 	def set_string(self, string_id: int, text: str) -> CHKString:
 		string = self.get_string(string_id)
+		if string and string.references == 1:
+			string.text = text
+			return string
 		if string:
-			if string.references == 1:
-				string.text = text
-			else:
-				string = self.lookup_string(text)
-		if not string:
-			string = self.add_string(text)
-		return string
+			# Shared by more than one reference: this reference moves to a
+			# different string, so drop its hold on the original.
+			string.release()
+		return self.add_string(text)
 
 	def delete_string(self, string_id: int) -> None:
 		if string_id in self.strings:
 			del self.strings[string_id]
-	
+
 	def decompile(self) -> str:
-		result = '%s:\n' % (self.NAME)
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for n,string in self.strings.items():
-			result += '\t%s"%s"\n' % (pad('String %d' % (n+1)), string.text.replace('\\','\\\\').replace('"','\\"'))
+			text = string.text.replace('\\','\\\\').replace('"','\\"')
+			result += f'\t{pad(f"String {n+1}")}"{text}"\n'
 		return result

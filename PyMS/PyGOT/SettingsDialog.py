@@ -3,10 +3,10 @@ from .Config import PyGOTConfig
 
 from ..Utilities.SettingsUI.BaseSettingsDialog import BaseSettingsDialog
 from ..Utilities.SettingsUI.ThemeSettingsTab import ThemeSettingsTab
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 
 class SettingsDialog(BaseSettingsDialog[PyGOTConfig]):
-	def widgetize(self) -> Misc | None:
+	def widgetize(self) -> UI.Misc | None:
 		widget = super().widgetize()
 
 		self.add_tab('Theme', ThemeSettingsTab(self.notebook, self.edited_state.sub_state(), self.config_.theme))

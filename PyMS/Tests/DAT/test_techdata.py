@@ -1,5 +1,6 @@
 
 from ...FileFormats.DAT import TechDAT
+from ...Utilities import IO
 
 from ..utils import resource_path
 
@@ -11,8 +12,8 @@ class Test_Techdata(unittest.TestCase):
 			expected = f.read()
 
 		dat = TechDAT()
-		dat.load_data(expected)
+		dat.load(expected)
 
-		result = dat.save_data()
+		result = IO.output_to_bytes(dat.save)
 
 		self.assertEqual(result, expected)

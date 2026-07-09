@@ -2,7 +2,7 @@
 from ..FileFormats.Palette import Palette
 
 from ..Utilities import Config
-from ..Utilities.UIKit import Size, FileType
+from ..Utilities import UIKit as UI
 
 def _migrate_1_to_2(data: dict) -> None:
 	Config.migrate_fields(data, (
@@ -19,20 +19,20 @@ class PyPCXConfig(Config.Config):
 	class Windows(Config.Group):
 		class Settings(Config.Group):
 			def __init__(self) -> None:
-				self.main = Config.WindowGeometry(default_size=Size(550,380))
+				self.main = Config.WindowGeometry(default_size=UI.Size(550,380))
 				super().__init__()
 
 		def __init__(self) -> None:
-			self.main = Config.WindowGeometry(default_size=Size(600, 400))
+			self.main = Config.WindowGeometry(default_size=UI.Size(600, 400))
 			self.help = Config.WindowGeometry()
 			self.settings = PyPCXConfig.Windows.Settings()
 			super().__init__()
 
 	class LastPath(Config.Group):
 		def __init__(self) -> None:
-			self.pcx = Config.SelectFile(name='PCX', filetypes=[FileType.pcx()])
+			self.pcx = Config.SelectFile(name='PCX', filetypes=[UI.FileType.pcx()])
 			self.pal = Config.SelectFile(name='Palette', filetypes=list(Palette.FileType.load_types()), op_type=Config.FileOpType.import_export)
-			self.bmp = Config.SelectFile(name='BMP', filetypes=[FileType.bmp()], op_type=Config.FileOpType.import_export)
+			self.bmp = Config.SelectFile(name='BMP', filetypes=[UI.FileType.bmp()], op_type=Config.FileOpType.import_export)
 			super().__init__()
 
 	def __init__(self) -> None:

@@ -2,7 +2,7 @@
 from . import CodeGenerator
 from ..Config import PyICEConfig
 
-from ...Utilities.UIKit import *
+from ...Utilities import UIKit as UI
 from ...Utilities import JSON
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import Config
@@ -33,31 +33,31 @@ class CodeGeneratorTypeMath(CodeGenerator.CodeGeneratorType):
 		return None
 
 	VARIABLE_RE = re.compile(r'\$([a-zA-Z0-9_]+)')
-	MATH_RE = re.compile(r'^[0-9.+-/*() \t]+$')
-	def value(self, lookup_value: Callable[[str], int]) -> str:
-		math = CodeGeneratorTypeMath.VARIABLE_RE.sub(lambda m: str(lookup_value(m.group(1))), self.math)
+	MATH_RE = re.compile(r'^[0-9.+\-/*() \t]+$')
+	def value(self, lookup_value: Callable[[str], str]) -> str:
+		math = CodeGeneratorTypeMath.VARIABLE_RE.sub(lambda m: lookup_value(m.group(1)), self.math)
 		if not CodeGeneratorTypeMath.MATH_RE.match(math):
-			raise PyMSError('Generate', "Invalid math expression '%s' (only numbers, +, -, /, *, (, ), and whitespace allowed)" % math)
+			raise PyMSError('Generate', f"Invalid math expression '{math}' (only numbers, +, -, /, *, (, ), and whitespace allowed)")
 		try:
-			return eval(math)
-		except:
-			raise PyMSError('Generate', "Error evaluating math expression '%s'" % math, capture_exception=True)
+			return str(eval(math)) # pylint: disable=eval-used
+		except Exception as exc:
+			raise PyMSError('Generate', f"Error evaluating math expression '{math}'") from exc
 
 	def description(self) -> str:
 		return self.math
 
-	def build_editor(self, parent: Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
+	def build_editor(self, parent: UI.Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
 		return CodeGeneratorEditorMath(parent, self, config.windows.generator.editor.math)
 
 class CodeGeneratorEditorMath(CodeGenerator.CodeGeneratorEditor[CodeGeneratorTypeMath]):
-	def __init__(self, parent: Misc, generator: CodeGeneratorTypeMath, window_geometry_config: Config.WindowGeometry) -> None:
+	def __init__(self, parent: UI.Misc, generator: CodeGeneratorTypeMath, window_geometry_config: Config.WindowGeometry) -> None:
 		CodeGenerator.CodeGeneratorEditor.__init__(self, parent, generator, window_geometry_config)
 
-		self.math = StringVar()
+		self.math = UI.StringVar()
 		self.math.set(self.generator.math)
 
-		Label(self, text='Math:', anchor=W).pack(side=TOP, fill=X)
-		Entry(self, textvariable=self.math).pack(side=TOP, fill=X)
+		UI.Label(self, text='Math:', anchor=UI.W).pack(side=UI.TOP, fill=UI.X)
+		UI.Entry(self, textvariable=self.math).pack(side=UI.TOP, fill=UI.X)
 
 	def save(self) -> None:
 		self.generator.math = self.math.get()

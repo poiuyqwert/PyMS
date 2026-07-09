@@ -43,7 +43,7 @@ class CompileThread(_Thread):
 		while True:
 			try:
 				message = self.input_queue.get(False)
-			except:
+			except Exception:
 				break
 			if isinstance(message, CompileThread.InputMessage.Abort):
 				abort = True
@@ -92,7 +92,7 @@ class CompileThread(_Thread):
 					if e.internal_exception:
 						self.log('INTERNAL ERROR:\n' + '\n'.join(_traceback.format_exception(e.internal_exception)), tag='error')
 					return
-				except:
+				except Exception:
 					self.log('ERROR:\n' + _traceback.format_exc(), tag='error')
 					return
 

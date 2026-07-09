@@ -3,25 +3,27 @@ from __future__ import annotations
 
 from ...DATTabConveniences import DATTabConveniences
 
-from ....Utilities.UIKit import *
+from ....FileFormats.DAT.UnitsDAT import DATUnit
+
+from ....Utilities import UIKit as UI
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ...Delegates import MainDelegate, SubDelegate
 	from ...DataID import DATID, AnyID
 
-class DATUnitsTab(NotebookTab, DATTabConveniences):
-	def __init__(self, parent: Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:
+class DATUnitsTab(UI.NotebookTab, DATTabConveniences):
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:
 		self.delegate = delegate
 		self.sub_delegate = sub_delegate
 		self.edited = False
-		NotebookTab.__init__(self, parent)
+		UI.NotebookTab.__init__(self, parent)
 
 	def copy(self) -> None:
 		pass
 
 	def jump(self, dat_id: DATID, entry_id: int) -> None:
-		if entry_id < self.delegate.data_context.dat_data(dat_id).entry_count() - 1:
+		if 0 <= entry_id < self.delegate.data_context.dat_data(dat_id).entry_count():
 			self.delegate.change_tab(dat_id)
 			self.delegate.change_id(entry_id)
 
@@ -43,8 +45,8 @@ class DATUnitsTab(NotebookTab, DATTabConveniences):
 			self.sub_delegate.edited = edited
 			self.delegate.update_status_bar()
 
-	def load_data(self, entry):
+	def load_data(self, _entry: DATUnit) -> None:
 		pass
 
-	def save_data(self, entry):
+	def save_data(self, _entry: DATUnit) -> bool:
 		return False

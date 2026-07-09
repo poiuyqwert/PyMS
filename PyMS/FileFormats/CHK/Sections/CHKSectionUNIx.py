@@ -4,7 +4,7 @@ from .CHKSectionUNIS import CHKSectionUNIS
 from ..CHKRequirements import CHKRequirements
 
 class CHKSectionUNIx(CHKSectionUNIS):
-	NAME = 'UNIx'
+	NAME = b'UNIx'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_BROODWAR_HYBRID, CHKRequirements.MODE_UMS)
 
 	WEAPONS = 130

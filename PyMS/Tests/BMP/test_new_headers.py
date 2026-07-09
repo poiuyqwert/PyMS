@@ -21,6 +21,6 @@ class Test_New_Headers(unittest.TestCase):
 		]
 
 		bmp = BMP()
-		bmp.load_file(resource_path('new_header.bmp', __file__))
+		bmp.load(resource_path('new_header.bmp', __file__))
 
 		self.assertEqual(bmp.image, expected)

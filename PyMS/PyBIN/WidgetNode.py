@@ -6,20 +6,19 @@ from .StringPreview import StringPreview
 
 from ..FileFormats import DialogBIN, TBL, SMK, GRP, PCX, FNT
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 
 import sys
 
-from typing import cast
 
 class WidgetNode:
-	SMK_FRAME_CACHE: dict[str, dict[int, ImageTk.PhotoImage]] = {}
+	SMK_FRAME_CACHE: dict[str, dict[int, UI.AnyPhotoImage]] = {}
 
 	def __init__(self, delegate: NodeDelegate, widget: DialogBIN.BINWidget | None = None) -> None:
 		self.delegate = delegate
 		self.widget = widget
 		self.parent: WidgetNode | None = None
-		self.name = None
+		self.name: str | None = None # TODO: Is this actually used?
 		self.index: str | None = None
 		self.children: list[WidgetNode] | None
 		if widget and widget.type != DialogBIN.BINWidget.TYPE_DIALOG:
@@ -28,30 +27,43 @@ class WidgetNode:
 			self.children = []
 
 		self.string: StringPreview | None = None
-		self.photo: ImageTk.PhotoImage | None = None
+		self.photo: UI.AnyPhotoImage | None = None
+		self.image_load_failed: str | None = None
 		self.smks: dict[str, SMK.SMK] | None = None
-		self.dialog_image: ImageTk.PhotoImage | None = None
+		self.smk_loads_failed: set[str] = set()
+		self.dialog_image: UI.AnyPhotoImage | None = None
 		self.frame_delay: int | None = None
 		self.frame_waited = 0.0
 
-		self.item_bounds: Canvas.Item | None = None # type: ignore[name-defined]
-		self.item_text_bounds: Canvas.Item | None = None # type: ignore[name-defined]
-		self.item_responsive_bounds: Canvas.Item | None = None # type: ignore[name-defined]
-		self.item_string_images: list[Canvas.Item] | None = None # type: ignore[name-defined]
-		self.item_image: Canvas.Item | None = None # type: ignore[name-defined]
-		self.item_smks: list[Canvas.Item] = [] # type: ignore[name-defined]
-		self.item_dialog: Canvas.Item | None = None # type: ignore[name-defined]
+		self.item_bounds: UI.Canvas.Item | None = None # type: ignore[name-defined]
+		self.item_text_bounds: UI.Canvas.Item | None = None # type: ignore[name-defined]
+		self.item_responsive_bounds: UI.Canvas.Item | None = None # type: ignore[name-defined]
+		self.item_string_images: list[UI.Canvas.Item] | None = None # type: ignore[name-defined]
+		self.item_image: UI.Canvas.Item | None = None # type: ignore[name-defined]
+		self.item_smks: list[UI.Canvas.Item] = [] # type: ignore[name-defined]
+		self.item_dialog: UI.Canvas.Item | None = None # type: ignore[name-defined]
 
 	def get_name(self) -> str:
 		name = 'Group'
-		if self.widget:
-			name = DialogBIN.BINWidget.TYPE_NAMES[self.widget.type]
+		if self.name:
+			name = self.name
+		elif self.widget:
+			type_name = DialogBIN.BINWidget.TYPE_NAMES[self.widget.type]
 			display_text = self.widget.display_text()
 			if display_text:
-				name = '%s [%s]' % (TBL.decompile_string(display_text),name)
-		if self.name:
-			name = '%s [%s]' % self.name
+				if self.delegate.get_show_simple_names():
+					text = TBL.simplify_string(display_text)
+				else:
+					text = TBL.decompile_string(display_text)
+				name = f'{text} [ID: {self.widget.identifier}, {type_name}]'
+			else:
+				name = f'{type_name} [ID: {self.widget.identifier}]'
 		return name
+
+	def get_usage_label(self) -> str:
+		if self.widget is None:
+			return self.get_name()
+		return f'{self.get_name()} [ID: {self.widget.identifier}]'
 
 	def remove_from_parent(self) -> None:
 		if not self.parent or self.parent.children is None:
@@ -59,7 +71,7 @@ class WidgetNode:
 		self.parent.children.remove(self)
 		self.parent = None
 
-	def add_child(self, node: WidgetNode, index: int = -1):
+	def add_child(self, node: WidgetNode, index: int = -1) -> None:
 		if self.children is None:
 			return
 		node.remove_from_parent()
@@ -90,14 +102,10 @@ class WidgetNode:
 		y2 = 0
 		for node in self.children:
 			cx1,cy1,cx2,cy2 = node.bounding_box()
-			if cx1 < x1:
-				x1 = cx1
-			if cy1 < y1:
-				y1 = cy1
-			if cx2 > x2:
-				x2 = cx2
-			if cy2 > y2:
-				y2 = cy2
+			x1 = min(x1, cx1)
+			y1 = min(y1, cy1)
+			x2 = max(x2, cx2)
+			y2 = max(y2, cy2)
 		return (x1,y1,x2,y2)
 
 	def text_box(self) -> tuple[int, int, int, int]:
@@ -122,25 +130,25 @@ class WidgetNode:
 			x1,y1,x2,y2 = self.bounding_box()
 			x = x1
 			y = y1
-			anchor: Anchor = NW
+			anchor: UI.Anchor = UI.NW
 			if self.widget.type == DialogBIN.BINWidget.TYPE_CHECKBOX:
 				asset_id = DialogBIN.DIALOG_ASSET_CHECK_DISABLED
 				if self.enabled():
 					asset_id = DialogBIN.DIALOG_ASSET_CHECK_SELECTED
 				pil = self.delegate.get_dialog_asset(asset_id)
 				if pil:
-					self.dialog_image = ImageTk.PhotoImage(pil)
+					self.dialog_image = UI.ImageTk.PhotoImage(pil)
 					y += (y2 - y1) // 2
-					anchor = W
+					anchor = UI.W
 			elif self.widget.type == DialogBIN.BINWidget.TYPE_OPTION_BTN:
 				asset_id = DialogBIN.DIALOG_ASSET_RADIO_DISABLED
 				if self.enabled():
 					asset_id = DialogBIN.DIALOG_ASSET_RADIO_SELECTED
 				pil = self.delegate.get_dialog_asset(asset_id)
 				if pil:
-					self.dialog_image = ImageTk.PhotoImage(pil)
+					self.dialog_image = UI.ImageTk.PhotoImage(pil)
 					y += (y2 - y1) // 2
-					anchor = W
+					anchor = UI.W
 			elif self.widget.type == DialogBIN.BINWidget.TYPE_SLIDER:
 				if self.enabled():
 					left = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_LEFT)
@@ -167,7 +175,7 @@ class WidgetNode:
 						spots_padding = (width - left.size[0] - right.size[0] - spot.size[0] * (spots+1)) // spots
 					draw_x = 0
 					mid_y = height // 2
-					pil = PILImage.new('RGBA', (width,height))
+					pil = UI.PILImage.new('RGBA', (width,height))
 					pil.paste(left, (draw_x,mid_y - left.size[1]//2))
 					draw_x += left.size[0]
 					while spots >= 0:
@@ -181,9 +189,9 @@ class WidgetNode:
 					pil.paste(right, (draw_x,mid_y - right.size[1]//2))
 					if dot:
 						pil.paste(dot, ((width - dot.size[0])//2, mid_y - dot.size[1]//2))
-					self.dialog_image = ImageTk.PhotoImage(pil)
+					self.dialog_image = UI.ImageTk.PhotoImage(pil)
 					y += (y2 - y1) // 2
-					anchor = W
+					anchor = UI.W
 			elif self.widget.type in (DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_DEFAULT_BTN):
 				if self.enabled():
 					left = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_BUTTON_MID_LEFT)
@@ -199,16 +207,16 @@ class WidgetNode:
 					for img in (left,mid,right):
 						height = max(height, img.size[1])
 					mid_y = height // 2
-					pil = PILImage.new('RGBA', (width,height))
+					pil = UI.PILImage.new('RGBA', (width,height))
 					pil.paste(left, (0,mid_y - left.size[1]//2))
 					pad_size = width-left.size[0]-right.size[0]
 					if pad_size > 0:
 						pad = mid.resize((pad_size,mid.size[1]))
 						pil.paste(pad, (left.size[0],mid_y - pad.size[1]//2))
 					pil.paste(right, (width-right.size[0],mid_y - right.size[1]//2))
-					self.dialog_image = ImageTk.PhotoImage(pil)
+					self.dialog_image = UI.ImageTk.PhotoImage(pil)
 					y += (y2 - y1) // 2
-					anchor = W
+					anchor = UI.W
 			elif self.widget.type == DialogBIN.BINWidget.TYPE_LISTBOX:
 				top = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_VERTICAL_TOP)
 				mid = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_VERTICAL_MIDDLE)
@@ -220,13 +228,13 @@ class WidgetNode:
 				else:
 					up = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_UP_DISABLED)
 					down = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_DOWN_DISABLED)
-				if top and mid and bot and bar and up and down:
+				if top and mid and bot and bar and up and down: # pylint: disable=too-many-boolean-expressions
 					width = 0
 					height = y2-y1
 					for img in (top,mid,bot,bar,up,down):
 						width = max(width, img.size[0])
 					mid_x = width // 2
-					pil = PILImage.new('RGBA', (width,height))
+					pil = UI.PILImage.new('RGBA', (width,height))
 					pil.paste(up, (mid_x-up.size[0]//2,0))
 					pil.paste(top, (mid_x-top.size[0]//2,up.size[1]+2))
 					mid_height = height - up.size[1] - 2 - top.size[1] - bot.size[1] - 2 - down.size[1]
@@ -236,10 +244,10 @@ class WidgetNode:
 					pil.paste(bot, (mid_x-bot.size[0]//2,height-down.size[1]-2-bot.size[1]))
 					pil.paste(down, (mid_x-down.size[0]//2,height-down.size[1]))
 					pil.paste(bar, (mid_x-bar.size[0]//2,up.size[1]+4))
-					self.dialog_image = ImageTk.PhotoImage(pil)
+					self.dialog_image = UI.ImageTk.PhotoImage(pil)
 					x = x2
 					y += (y2 - y1) // 2
-					anchor = E
+					anchor = UI.E
 			elif self.widget.type == DialogBIN.BINWidget.TYPE_COMBOBOX:
 				left = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_COMBOBOX_LEFT)
 				middle = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_COMBOBOX_MIDDLE)
@@ -254,7 +262,7 @@ class WidgetNode:
 					for img in (left,middle,right,arrow):
 						height = max(height, img.size[1])
 					mid_y = height // 2
-					pil = PILImage.new('RGBA', (width,height))
+					pil = UI.PILImage.new('RGBA', (width,height))
 					pil.paste(left, (0,mid_y - left.size[1]//2))
 					pad_size = width-left.size[0]-right.size[0]
 					if pad_size > 0:
@@ -262,9 +270,9 @@ class WidgetNode:
 						pil.paste(pad, (left.size[0],mid_y - pad.size[1]//2))
 					pil.paste(right, (width-right.size[0],mid_y - right.size[1]//2))
 					pil.paste(arrow, (width-arrow.size[0]-5,mid_y - arrow.size[1]//2))
-					self.dialog_image = ImageTk.PhotoImage(pil)
+					self.dialog_image = UI.ImageTk.PhotoImage(pil)
 					y += (y2 - y1) // 2
-					anchor = W
+					anchor = UI.W
 			elif self.widget.type == DialogBIN.BINWidget.TYPE_DIALOG and self.delegate.get_show_dialog():
 				tl = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_TL)
 				t = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_T)
@@ -275,12 +283,12 @@ class WidgetNode:
 				bl = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_BL)
 				b = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_B)
 				br = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_BR)
-				if tl and t and tr and l and m and r and bl and b and br:
+				if tl and t and tr and l and m and r and bl and b and br: # pylint: disable=too-many-boolean-expressions
 					width = x2-x1
 					height = y2-y1
 					i_width = width-tl.size[0]-tr.size[0]
 					i_height = height-tl.size[1]-bl.size[1]
-					pil = PILImage.new('RGBA', (width,height))
+					pil = UI.PILImage.new('RGBA', (width,height))
 					pil.paste(tl, (0,0))
 					if i_width > 0:
 						t_full = t.resize((i_width,t.size[1]))
@@ -299,12 +307,12 @@ class WidgetNode:
 						b_full = b.resize((i_width,b.size[1]))
 						pil.paste(b_full, (bl.size[0],height-b.size[1]))
 					pil.paste(br, (width-br.size[0],height-br.size[1]))
-					self.dialog_image = ImageTk.PhotoImage(pil)
+					self.dialog_image = UI.ImageTk.PhotoImage(pil)
 			if self.dialog_image:
 				if self.item_dialog:
-					self.delegate.node_render_image_update(self.item_dialog, x, y, self.dialog_image)
+					self.delegate.node_render_image_update(item=self.item_dialog, x=x, y=y, image=self.dialog_image)
 				else:
-					self.delegate.node_render_image_create(x, y, self.dialog_image, anchor)
+					self.item_dialog = self.delegate.node_render_image_create(x=x, y=y, image=self.dialog_image, anchor=anchor)
 					reorder = True
 		if self.dialog_image is None and self.item_dialog:
 			self.delegate.node_render_delete(self.item_dialog)
@@ -319,17 +327,19 @@ class WidgetNode:
 		self.frame_waited += dt
 		if self.frame_delay is None or self.frame_waited < self.frame_delay:
 			return
+		repeats = bool(self.widget.smk.flags & DialogBIN.BINSMK.FLAG_REPEATS)
 		for smk in list(self.smks.values()):
-			if smk.current_frame < smk.frames or self.widget.smk.flags & DialogBIN.BINSMK.FLAG_REPEATS:
-				# while self.frame_waited > self.frame_delay:
-					smk.next_frame()
-					# self.frame_waited -= self.frame_delay
+			# `next_frame` wraps back to 0 at the end, so comparing the post-wrap
+			# `current_frame` can never detect completion; stop a non-repeating SMK
+			# once it is showing its final frame instead.
+			if repeats or smk.current_frame < smk.frames - 1:
+				smk.next_frame()
 		self.frame_waited = 0
 
 	def update_video(self) -> bool:
 		reorder = False
 		SHOW_SMKS = self.delegate.get_show_smks()
-		SHOW_HOVER_SMKS = self.delegate.get_show_animated()
+		SHOW_HOVER_SMKS = self.delegate.get_show_hover_smks()
 		showing: list[tuple[DialogBIN.BINSMK, SMK.SMK]] = []
 		if SHOW_SMKS and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN and self.widget.smk and self.visible():
 			if self.smks is None:
@@ -337,18 +347,21 @@ class WidgetNode:
 			check: DialogBIN.BINSMK | None = self.widget.smk
 			while check:
 				if not check.flags & DialogBIN.BINSMK.FLAG_SHOW_ON_HOVER or SHOW_HOVER_SMKS:
-					if not check.filename in self.smks:
+					if check.filename not in self.smks and check.filename not in self.smk_loads_failed:
 						try:
-							smk = SMK.SMK()
-							smk.load_file(self.delegate.get_mpqhandler().get_file('MPQ:' + check.filename))
-							delay = int(1000 / float(smk.fps))
-							if self.frame_delay is None:
-								self.frame_delay = delay
-							else:
-								self.frame_delay = min(self.frame_delay,delay)
-							self.smks[check.filename] = smk
-						except:
-							self.delegate.capture_exception()
+							file = self.delegate.get_mpqhandler().get_file('MPQ:' + check.filename)
+							if file:
+								smk = SMK.SMK()
+								smk.load(file)
+								delay = int(1000 / float(smk.fps))
+								if self.frame_delay is None:
+									self.frame_delay = delay
+								else:
+									self.frame_delay = min(self.frame_delay,delay)
+								self.smks[check.filename] = smk
+						except Exception:
+							self.smk_loads_failed.add(check.filename)
+							self.delegate.record_asset_load_failure(check.filename, self.get_usage_label())
 					show_smk = self.smks.get(check.filename)
 					if show_smk:
 						showing.append((check, show_smk))
@@ -359,11 +372,10 @@ class WidgetNode:
 		for i,(bin_smk,smk) in enumerate(showing):
 			frame = smk.get_frame()
 			# trans = ((self.widget.flags & DialogBIN.BINWidget.FLAG_TRANSPARENCY) == DialogBIN.BINWidget.FLAG_TRANSPARENCY)
-			trans = False
 			if bin_smk.filename in WidgetNode.SMK_FRAME_CACHE and smk.current_frame in WidgetNode.SMK_FRAME_CACHE[bin_smk.filename]:
 				image = WidgetNode.SMK_FRAME_CACHE[bin_smk.filename][smk.current_frame]
 			else:
-				image = cast(ImageTk.PhotoImage, GRP.frame_to_photo(frame.palette, frame.image, None, size=False, trans=trans))
+				image = GRP.frame_to_photo(frame.palette, frame.image)
 				if not bin_smk.filename in WidgetNode.SMK_FRAME_CACHE:
 					WidgetNode.SMK_FRAME_CACHE[bin_smk.filename] = {}
 				WidgetNode.SMK_FRAME_CACHE[bin_smk.filename][smk.current_frame] = image
@@ -372,9 +384,9 @@ class WidgetNode:
 			x1 += bin_smk.offset_x
 			y1 += bin_smk.offset_y
 			if i < len(self.item_smks):
-				self.delegate.node_render_image_update(self.item_smks[i], x1, y1, image)
+				self.delegate.node_render_image_update(item=self.item_smks[i], x=x1, y=y1, image=image)
 			else:
-				item = self.delegate.node_render_image_create(x1, y1, image, NW)
+				item = self.delegate.node_render_image_create(x=x1, y=y1, image=image, anchor=UI.NW)
 				self.item_smks.append(item)
 				# self.toplevel.widgetCanvas.create_rectangle(x1,y1,x1+self.smk.width,y1+self.smk.height, width=1, outline='#FFFF00')
 				reorder = True
@@ -384,22 +396,20 @@ class WidgetNode:
 		reorder = False
 		SHOW_IMAGES = self.delegate.get_show_images()
 		if SHOW_IMAGES and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_IMAGE and self.visible() and self.widget.string:
-			photo_change = False
-			if self.photo is None:
+			if self.photo is None and self.widget.string != self.image_load_failed:
 				try:
 					pcx = PCX.PCX()
-					pcx.load_file(self.delegate.get_mpqhandler().load_file('MPQ:' + self.widget.string))
-					trans = ((self.widget.flags & DialogBIN.BINWidget.FLAG_TRANSPARENCY) == DialogBIN.BINWidget.FLAG_TRANSPARENCY)
-					self.photo = cast(ImageTk.PhotoImage, GRP.frame_to_photo(pcx.palette, pcx, -1, size=False, trans=trans))
-					photo_change = True
-				except:
-					self.delegate.capture_exception()
+					pcx.load(self.delegate.get_mpqhandler().load_file('MPQ:' + self.widget.string))
+					self.photo = GRP.frame_to_photo(pcx.palette, pcx)
+				except Exception:
+					self.image_load_failed = self.widget.string
+					self.delegate.record_asset_load_failure(self.widget.string, self.get_usage_label())
 			if self.photo:
 				x1,y1,_,_ = self.bounding_box()
 				if self.item_image:
-					self.delegate.node_render_image_update(self.item_image, x1, y1, self.photo)
+					self.delegate.node_render_image_update(item=self.item_image, x=x1, y=y1, image=self.photo)
 				else:
-					self.item_image = self.delegate.node_render_image_create(x1, y1, self.photo, NW)
+					self.item_image = self.delegate.node_render_image_create(x=x1, y=y1, image=self.photo, anchor=UI.NW)
 					reorder = True
 		elif self.item_image:
 			self.delegate.node_render_delete(self.item_image)
@@ -421,7 +431,7 @@ class WidgetNode:
 				default_color = 2
 				if self.widget.type in (DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_COMBOBOX,DialogBIN.BINWidget.TYPE_DEFAULT_BTN,DialogBIN.BINWidget.TYPE_OPTION_BTN,DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN):
 					default_color = 3
-				self.string = StringPreview(self.widget.display_text() or '', font, tfontgam, remap, remap_pal, default_color)
+				self.string = StringPreview(self.widget.display_text() or '', font, tfontgam, remap=remap, remap_palette=remap_pal, default_color=default_color)
 			x1,y1,x2,y2 = self.text_box()
 			align = self.widget.flags
 			if self.widget.type == DialogBIN.BINWidget.TYPE_LABEL_LEFT_ALIGN:
@@ -437,14 +447,14 @@ class WidgetNode:
 			positions = self.string.get_positions(x1,y1, x2,y2, align_flags=align)
 			if self.item_string_images:
 				for item,position in zip(self.item_string_images,positions):
-					self.delegate.node_render_image_update(item, position[0], position[1], None)
+					self.delegate.node_render_image_update(item=item, x=position[0], y=position[1], image=None)
 			else:
 				self.item_string_images = []
 				glyphs = self.string.get_glyphs()
 				for glyph,position in zip(glyphs,positions):
-					self.item_string_images.append(self.delegate.node_render_image_create(position[0], position[1], glyph, NW))
+					self.item_string_images.append(self.delegate.node_render_image_create(x=position[0], y=position[1], image=glyph, anchor=UI.NW))
 				reorder = True
-		elif self.item_string_images:
+		elif self.item_string_images is not None:
 			for item in self.item_string_images:
 				self.delegate.node_render_delete(item)
 			self.item_string_images = None
@@ -457,14 +467,14 @@ class WidgetNode:
 		if SHOW_BOUNDING_BOX and (self.widget or SHOW_GROUP_BOUNDS):
 			x1,y1,x2,y2 = self.bounding_box()
 			if self.item_bounds:
-				self.delegate.node_render_rect_update(self.item_bounds, x1, y1, x2, y2)
+				self.delegate.node_render_rect_update(item=self.item_bounds, x1=x1, y1=y1, x2=x2, y2=y2)
 			else:
 				color = '#505050'
 				if self.widget:
 					color = '#0080ff'
 					if self.widget.type == DialogBIN.BINWidget.TYPE_DIALOG:
 						color = '#00A0A0'
-				self.item_bounds = self.delegate.node_render_rect_create(x1, y1, x2, y2, color)
+				self.item_bounds = self.delegate.node_render_rect_create(x1=x1, y1=y1, x2=x2, y2=y2, color=color)
 				reorder = True
 		elif self.item_bounds:
 			self.delegate.node_render_delete(self.item_bounds)
@@ -477,9 +487,9 @@ class WidgetNode:
 		if SHOW_TEXT_BOUNDS and self.widget and self.widget.display_text() is not None:
 			x1,y1,x2,y2 = self.text_box()
 			if self.item_text_bounds:
-				self.delegate.node_render_rect_update(self.item_text_bounds, x1, y1, x2, y2)
+				self.delegate.node_render_rect_update(item=self.item_text_bounds, x1=x1, y1=y1, x2=x2, y2=y2)
 			else:
-				self.item_text_bounds = self.delegate.node_render_rect_create(x1, y1, x2, y2, '#F0F0F0')
+				self.item_text_bounds = self.delegate.node_render_rect_create(x1=x1, y1=y1, x2=x2, y2=y2, color='#F0F0F0')
 				reorder = True
 		elif self.item_text_bounds:
 			self.delegate.node_render_delete(self.item_text_bounds)
@@ -492,9 +502,9 @@ class WidgetNode:
 		if SHOW_RESPONSIVE_BOUNDS and self.widget and self.widget.has_responsive():
 			x1,y1,x2,y2 = self.widget.responsive_box()
 			if self.item_responsive_bounds:
-				self.delegate.node_render_rect_update(self.item_responsive_bounds, x1, y1, x2, y2)
+				self.delegate.node_render_rect_update(item=self.item_responsive_bounds, x1=x1, y1=y1, x2=x2, y2=y2)
 			else:
-				self.item_responsive_bounds = self.delegate.node_render_rect_create(x1, y1, x2, y2, '#00FF80')
+				self.item_responsive_bounds = self.delegate.node_render_rect_create(x1=x1, y1=y1, x2=x2, y2=y2, color='#00FF80')
 				reorder = True
 		elif self.item_responsive_bounds:
 			self.delegate.node_render_delete(self.item_responsive_bounds)
@@ -554,3 +564,14 @@ class WidgetNode:
 		if self.item_responsive_bounds:
 			self.delegate.node_render_delete(self.item_responsive_bounds)
 			self.item_responsive_bounds = None
+
+	def reset_display(self) -> None:
+		# Drop the rendered items and the cached assets so the next display rebuilds them
+		# (e.g. after the MPQ configuration changes and assets must be reloaded).
+		self.remove_display()
+		self.photo = None
+		self.image_load_failed = None
+		self.smks = None
+		self.smk_loads_failed = set()
+		self.string = None
+		self.frame_delay = None

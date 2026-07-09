@@ -4,8 +4,8 @@ from ...DAT import UnitsDAT, UpgradesDAT, TechDAT
 
 # TODO: Use DatEntryName?
 
-class DataContext(object):
-	def __init__(self, stattxt_tbl: TBL | None = None, unitnames_tbl: TBL | None = None, units_dat: UnitsDAT | None = None, upgrades_dat: UpgradesDAT | None = None, techdata_dat: TechDAT | None = None) -> None:
+class DataContext:
+	def __init__(self, *, stattxt_tbl: TBL | None = None, unitnames_tbl: TBL | None = None, units_dat: UnitsDAT | None = None, upgrades_dat: UpgradesDAT | None = None, techdata_dat: TechDAT | None = None) -> None:
 		self.stattxt_tbl = stattxt_tbl
 		self.unitnames_tbl = unitnames_tbl
 		self.units_dat = units_dat
@@ -22,7 +22,7 @@ class DataContext(object):
 	def stattxt_string(self, string_id: int) -> str | None:
 		if not self.stattxt_tbl:
 			return None
-		if string_id >= len(self.stattxt_tbl.strings):
+		if string_id < 0 or string_id >= len(self.stattxt_tbl.strings):
 			return None
 		return decompile_string(self.stattxt_tbl.strings[string_id][:-1])
 
@@ -39,7 +39,7 @@ class DataContext(object):
 			string += '\x00'
 		try:
 			return self.stattxt_tbl.strings.index(string)
-		except:
+		except Exception:
 			return None
 
 	def set_unitnames_tbl(self, unitnames_tbl: TBL | None) -> None:
@@ -87,7 +87,7 @@ class DataContext(object):
 			return None
 		try:
 			return unit_names.index(unit_name)
-		except:
+		except Exception:
 			return None
 
 	def set_upgrades_dat(self, upgrades_dat: UpgradesDAT | None) -> None:
@@ -127,7 +127,7 @@ class DataContext(object):
 			return None
 		try:
 			return upgrade_names.index(upgrade_name)
-		except:
+		except Exception:
 			return None
 
 	def set_techdata_dat(self, techdata_dat: TechDAT | None) -> None:
@@ -167,5 +167,5 @@ class DataContext(object):
 			return None
 		try:
 			return technology_names.index(technology_name)
-		except:
+		except Exception:
 			return None

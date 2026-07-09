@@ -1,17 +1,17 @@
 
 from __future__ import annotations
 
-from ..UIKit.Components.Notebook import Notebook, NotebookTab
+from .. import UIKit as UI
 from .SettingView import SettingView
 
-class SettingsTab(NotebookTab):
-	def __init__(self, notebook: Notebook):
-		NotebookTab.__init__(self, notebook)
+class SettingsTab(UI.NotebookTab):
+	def __init__(self, notebook: UI.Notebook):
+		UI.NotebookTab.__init__(self, notebook)
 		self.settings_views: list[SettingView] = []
 
-	def register_settings_view(self, settings_view: SettingView):
+	def register_settings_view(self, settings_view: SettingView) -> None:
 		self.settings_views.append(settings_view)
 
-	def save(self):
+	def save(self) -> None:
 		for settings_view in self.settings_views:
 			settings_view.save()

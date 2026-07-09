@@ -3,7 +3,7 @@ from .Delegates import MainDelegate
 
 from ..FileFormats import SPK
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
 
 from typing import Callable
@@ -12,22 +12,22 @@ class PreviewDialog(PyMSDialog):
 	MAP_WIDTH = 32*256
 	MAP_HEIGHT = 32*256
 
-	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
 		self.delegate = delegate
-		self.items: dict[SPK.SPKStar, Canvas.Item] = {} # type: ignore[name-defined]
+		self.items: dict[SPK.SPKStar, UI.Canvas.Item] = {} # type: ignore[name-defined]
 		self.last_x: int | None = None
 		self.last_y: int | None = None
 		PyMSDialog.__init__(self, parent, 'Parallax Preview', center=False, resizable=(False, False))
 
-	def widgetize(self) -> (Misc | None):
-		self.canvas = Canvas(self, background='#000000', highlightthickness=0, width=640, height=480, scrollregion=(0,0,PreviewDialog.MAP_WIDTH,PreviewDialog.MAP_HEIGHT), theme_tag='preview') # type: ignore[call-arg]
+	def widgetize(self) -> (UI.Misc | None):
+		self.canvas = UI.Canvas(self, background='#000000', highlightthickness=0, width=640, height=480, scrollregion=(0,0,PreviewDialog.MAP_WIDTH,PreviewDialog.MAP_HEIGHT), theme_tag='preview') # type: ignore[call-arg]
 		self.canvas.grid(row=0,column=0)
-		xscrollbar = Scrollbar(self, orient=HORIZONTAL, command=self.canvas.xview)
-		xscrollbar.grid(row=1,column=0, sticky=EW)
-		yscrollbar = Scrollbar(self, command=self.canvas.yview)
-		yscrollbar.grid(row=0,column=1, sticky=NS)
-		def scroll_callback(scrollbar: Scrollbar) -> Callable[[float, float], None]:
-			def scroll(l,h):
+		xscrollbar = UI.Scrollbar(self, orient=UI.HORIZONTAL, command=self.canvas.xview)
+		xscrollbar.grid(row=1,column=0, sticky=UI.EW)
+		yscrollbar = UI.Scrollbar(self, command=self.canvas.yview)
+		yscrollbar.grid(row=0,column=1, sticky=UI.NS)
+		def scroll_callback(scrollbar: UI.Scrollbar) -> Callable[[float, float], None]:
+			def scroll(l: float, h: float) -> None:
 				scrollbar.set(l,h)
 				self.update_viewport()
 			return scroll
@@ -36,25 +36,24 @@ class PreviewDialog(PyMSDialog):
 		self.grid_columnconfigure(0,weight=1)
 
 		self.canvas.focus_set()
-		def scroll_map(event: Event | None = None, horizontal: bool = False, delta: int = 0):
+		def scroll_map(event: UI.Event | None = None, horizontal: bool = False, units: int = 0) -> None:
+			# `units` is the scroll direction/amount: negative scrolls up/left,
+			# positive scrolls down/right.
 			if event:
 				horizontal = False
-				if hasattr(event, 'state') and getattr(event, 'state', 0) & Modifier.Shift.state:
+				if hasattr(event, 'state') and getattr(event, 'state', 0) & UI.Modifier.Shift.state:
 					horizontal = True
-				delta = event.delta
+				units = -1 if event.delta > 0 else 1
 			view = self.canvas.yview
 			if horizontal:
 				view = self.canvas.xview
-			if delta > 0:
-				view('scroll', -1, 'units')
-			else:
-				view('scroll', 1, 'units')
+			view('scroll', units, 'units')
 			self.update_viewport()
-		self.canvas.bind(Mouse.Scroll(), scroll_map)
-		self.bind(Key.Up(), lambda e: scroll_map(None, False, 1))
-		self.bind(Key.Down(), lambda e: scroll_map(None, False, -1))
-		self.bind(Key.Left(), lambda e: scroll_map(None, True, 1))
-		self.bind(Key.Right(), lambda e: scroll_map(None, True, -1))
+		self.canvas.bind(UI.Mouse.Scroll(), scroll_map)
+		self.bind(UI.Key.Up(), lambda e: scroll_map(None, False, -1))
+		self.bind(UI.Key.Down(), lambda e: scroll_map(None, False, 1))
+		self.bind(UI.Key.Left(), lambda e: scroll_map(None, True, -1))
+		self.bind(UI.Key.Right(), lambda e: scroll_map(None, True, 1))
 
 		return None
 
@@ -69,11 +68,11 @@ class PreviewDialog(PyMSDialog):
 		for layer in self.delegate.spk.layers:
 			for star in layer.stars:
 				image = self.delegate.get_image(star.image)
-				item = self.canvas.create_image(star.x,star.y, image=image, anchor=NW)
+				item = self.canvas.create_image(star.x,star.y, image=image, anchor=UI.NW)
 				self.items[star] = item
 
 	def update_viewport(self) -> None:
-		if not len(self.items) or not self.delegate.spk:
+		if not self.items or not self.delegate.spk:
 			return
 		x = int(PreviewDialog.MAP_WIDTH * self.canvas.xview()[0])
 		y = int(PreviewDialog.MAP_HEIGHT * self.canvas.yview()[0])
@@ -82,6 +81,8 @@ class PreviewDialog(PyMSDialog):
 		self.last_x = x
 		self.last_y = y
 		for l,layer in enumerate(self.delegate.spk.layers):
+			if l >= len(SPK.SPK.PARALLAX_RATIOS):
+				break
 			ratio = SPK.SPK.PARALLAX_RATIOS[l]
 			ox = int(x * ratio) % SPK.SPK.LAYER_SIZE[0]
 			oy = int(y * ratio) % SPK.SPK.LAYER_SIZE[1]

@@ -23,8 +23,8 @@ class CopyFile(BaseCompileStep):
 		self.log(f'Copying `{self.source_path}` to `{self.destination_path}`...')
 		try:
 			_shutil.copy2(self.source_path, self.destination_path)
-		except:
-			raise CompileError("Couldn't copy file")
+		except Exception as exc:
+			raise CompileError("Couldn't copy file") from exc
 		self.log('  Copy completed!')
 		self.compile_thread.meta.update_output_metas([self.destination_path])
 		return None

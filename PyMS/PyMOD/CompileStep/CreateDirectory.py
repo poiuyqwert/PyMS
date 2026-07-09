@@ -23,7 +23,7 @@ class CreateDirectory(BaseCompileStep):
 		self.log('  Creating directory...')
 		try:
 			_os.mkdir(self.path)
-		except:
-			raise CompileError("Couldn't create directory: %s" % self.path)
+		except Exception as exc:
+			raise CompileError(f"Couldn't create directory: {self.path}") from exc
 		self.log('  Directory created!')
 		return None

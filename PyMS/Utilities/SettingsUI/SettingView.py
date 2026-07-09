@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 from ..EditedState import EditedState
-from ..UIKit import Frame, Misc
+from .. import UIKit as UI
 
-class SettingView(Frame):
-	def __init__(self, parent: Misc, edited_state: EditedState) -> None:
-		Frame.__init__(self, parent)
+class SettingView(UI.Frame):
+	def __init__(self, parent: UI.Misc, edited_state: EditedState) -> None:
+		UI.Frame.__init__(self, parent)
 		self.edited_state = edited_state
 
 	def save(self) -> None:

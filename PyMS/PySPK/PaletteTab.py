@@ -5,44 +5,46 @@ from .Delegates import MainDelegate
 from ..FileFormats import SPK
 from ..FileFormats import BMP
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 
-class PaletteTab(NotebookTab):
+from typing import Any
+
+class PaletteTab(UI.NotebookTab):
 	MAX_SIZE = 150
 	PAD = 10
 
-	def __init__(self, parent: Misc, delegate: MainDelegate, bind_target: Misc):
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate, bind_target: UI.Misc):
 		self.delegate = delegate
-		self.item_palette_box = None
-		NotebookTab.__init__(self, parent)
+		self.item_palette_box: UI.Canvas.Item | None = None # type: ignore[name-defined]
+		UI.NotebookTab.__init__(self, parent)
 
-		scrollframe = Frame(self, bd=2, relief=SUNKEN)
-		self.starsCanvas = Canvas(scrollframe, background='#000000', highlightthickness=0, width=PaletteTab.MAX_SIZE+PaletteTab.PAD*2, theme_tag='preview') # type: ignore[call-arg]
-		def scroll_palette(event):
-			if self.toplevel.spk:
+		scrollframe = UI.Frame(self, bd=2, relief=UI.SUNKEN)
+		self.starsCanvas = UI.Canvas(scrollframe, background='#000000', highlightthickness=0, width=PaletteTab.MAX_SIZE+PaletteTab.PAD*2, theme_tag='preview') # type: ignore[call-arg]
+		def scroll_palette(event: UI.Event) -> None:
+			if self.delegate.spk:
 				if event.delta > 0:
 					self.starsCanvas.yview('scroll', -1, 'units')
 				else:
 					self.starsCanvas.yview('scroll', 1, 'units')
-		self.starsCanvas.bind(Mouse.Scroll(), scroll_palette)
-		self.starsCanvas.bind(Mouse.Click_Left(), self.palette_select)
-		self.starsCanvas.pack(side=LEFT, fill=Y, expand=1)
-		scrollbar = Scrollbar(scrollframe, command=self.starsCanvas.yview)
+		self.starsCanvas.bind(UI.Mouse.Scroll(), scroll_palette)
+		self.starsCanvas.bind(UI.Mouse.Click_Left(), self.palette_select)
+		self.starsCanvas.pack(side=UI.LEFT, fill=UI.Y, expand=1)
+		scrollbar = UI.Scrollbar(scrollframe, command=self.starsCanvas.yview)
 		self.starsCanvas.config(yscrollcommand=scrollbar.set)
-		scrollbar.pack(side=LEFT, fill=Y, expand=1)
-		scrollframe.pack(side=TOP, padx=2, fill=Y, expand=1)
+		scrollbar.pack(side=UI.LEFT, fill=UI.Y, expand=1)
+		scrollframe.pack(side=UI.TOP, padx=2, fill=UI.Y, expand=1)
 
-		self.toolbar = Toolbar(self, bind_target=bind_target)
-		self.toolbar.add_radiobutton(Assets.get_image('select'), self.delegate.tool, Tool.select, 'Select', Key.m, enabled=False, tags='file_open')
-		self.toolbar.add_radiobutton(Assets.get_image('arrows'), self.delegate.tool, Tool.move, 'Move', Key.v, enabled=False, tags='file_open')
-		self.toolbar.add_radiobutton(Assets.get_image('pencil'), self.delegate.tool, Tool.draw, 'Draw', Key.p, enabled=False, tags='file_open')
+		self.toolbar = UI.Toolbar(self, bind_target=bind_target)
+		self.toolbar.add_radiobutton(Assets.get_image('select'), self.delegate.tool, Tool.select, 'Select', UI.Key.m, enabled=False, tags='file_open')
+		self.toolbar.add_radiobutton(Assets.get_image('arrows'), self.delegate.tool, Tool.move, 'Move', UI.Key.v, enabled=False, tags='file_open')
+		self.toolbar.add_radiobutton(Assets.get_image('pencil'), self.delegate.tool, Tool.draw, 'Draw', UI.Key.p, enabled=False, tags='file_open')
 		self.toolbar.add_spacer(2, flexible=True)
 		self.toolbar.add_button(Assets.get_image('exportc'), self.export_image, 'Export Star', enabled=False, tags='image_selected')
 		self.toolbar.add_button(Assets.get_image('importc'), self.import_image, 'Import Star', enabled=False, tags='file_open')
-		self.toolbar.pack(side=TOP, fill=X, padx=2, pady=(2,0))
+		self.toolbar.pack(side=UI.TOP, fill=UI.X, padx=2, pady=(2,0))
 
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.delegate.is_file_open())
@@ -73,28 +75,27 @@ class PaletteTab(NotebookTab):
 			x2 = PaletteTab.MAX_SIZE+PaletteTab.PAD*2-1
 			y2 = y+height-1
 			if self.item_palette_box:
-				self.starsCanvas.coords(self.item_palette_box, 0,y, x2,y2)
+				self.item_palette_box.coords(0,y, x2,y2)
 			else:
-				self.item_palette_box = self.starsCanvas.create_rectangle(0,y, x2,y2, width=1, outline='#FFFFFF') # type: ignore[assignment]
+				self.item_palette_box = self.starsCanvas.create_rectangle(0,y, x2,y2, width=1, outline='#FFFFFF')
 			if scroll:
 				miny,maxy = self.starsCanvas.yview()
 				area = maxy-miny
-				maxy = 1-area
 				center = y + (y2-y)//2
-				_,_,_,height = parse_scrollregion(self.starsCanvas.cget('scrollregion'))
-				vis = height * area
-				top = center - vis//2
-				y = int(top / float(height))
-				self.starsCanvas.yview_moveto(y)
+				_,_,_,total_height = UI.parse_scrollregion(self.starsCanvas.cget('scrollregion'))
+				vis = total_height * area
+				top = center - vis/2
+				frac = max(0.0, min(top / float(total_height), 1-area))
+				self.starsCanvas.yview_moveto(frac)
 		elif self.item_palette_box:
-			self.starsCanvas.delete(self.item_palette_box)
+			self.item_palette_box.delete()
 			self.item_palette_box = None
 
-	def palette_select(self, event: Event) -> None:
-		if not self.delegate.spk or not len(self.delegate.spk.images):
+	def palette_select(self, event: UI.Event) -> None:
+		if not self.delegate.spk or not self.delegate.spk.images:
 			return
-		_,_,_,height = parse_scrollregion(self.starsCanvas.cget('scrollregion'))
-		y = event.y + self.starsCanvas.yview()[0] * height
+		_,_,_,total_height = UI.parse_scrollregion(self.starsCanvas.cget('scrollregion'))
+		y = event.y + self.starsCanvas.yview()[0] * total_height
 		for img in self.delegate.spk.images:
 			height = min(img.height,PaletteTab.MAX_SIZE)+PaletteTab.PAD*2
 			if y < height:
@@ -105,19 +106,19 @@ class PaletteTab(NotebookTab):
 			y -= height
 
 	def clear(self) -> None:
-		self.starsCanvas.delete(ALL)
+		self.starsCanvas.delete(UI.ALL)
 		self.item_palette_box = None
 
-	def export_image(self, *args) -> None:
+	def export_image(self, *_args: Any) -> None:
 		if not self.delegate.selected_image:
 			return
 		filepath = self.delegate.config_.last_path.bmp.select_save(self, title='Export Star')
 		if filepath:
 			bmp = BMP.BMP()
 			bmp.set_pixels(self.delegate.selected_image.pixels, self.delegate.platform_wpe.palette)
-			bmp.save_file(filepath)
+			bmp.save(filepath)
 
-	def import_image(self, *args) -> None:
+	def import_image(self, *_args: Any) -> None:
 		if not self.delegate.spk:
 			return
 		filepath = self.delegate.config_.last_path.bmp.select_open(self, title='Import Star')
@@ -125,7 +126,7 @@ class PaletteTab(NotebookTab):
 			return
 		b = BMP.BMP()
 		try:
-			b.load_file(filepath)
+			b.load(filepath)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 		else:

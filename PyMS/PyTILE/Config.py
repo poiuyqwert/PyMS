@@ -4,7 +4,7 @@ from .RepeaterID import RepeaterID
 
 from ..Utilities import Config
 from ..Utilities import Assets
-from ..Utilities.UIKit import Size, FileType
+from ..Utilities import UIKit as UI
 
 def _migrate_1_to_2(data: dict) -> None:
 	Config.migrate_fields(data, (
@@ -21,7 +21,7 @@ class PyTILEConfig(Config.Config):
 	class Windows(Config.Group):
 		class Settings(Config.Group):
 			def __init__(self) -> None:
-				self.main = Config.WindowGeometry(default_size=Size(550,380))
+				self.main = Config.WindowGeometry(default_size=UI.Size(550,380))
 				self.mpq_select = Config.WindowGeometry()
 				super().__init__()
 
@@ -34,7 +34,7 @@ class PyTILEConfig(Config.Config):
 					super().__init__()
 			def __init__(self) -> None:
 				self.graphics = PyTILEConfig.Windows.Import.Graphics()
-				super().__init__() 
+				super().__init__()
 
 		class Palette(Config.Group):
 			def __init__(self) -> None:
@@ -53,21 +53,21 @@ class PyTILEConfig(Config.Config):
 
 	class LastPath(Config.Group):
 		def __init__(self) -> None:
-			self.tbl = Config.SelectFile(name='TBL', filetypes=[FileType.tbl()], op_type=Config.FileOpType.import_export)
-			self.tileset = Config.SelectFile(name='Complete Tileset', filetypes=[FileType.cv5()])
-			self.graphics = Config.SelectFile(name='Graphics', filetypes=[FileType.bmp()])
-			self.settings = Config.SelectFile(name='Settings', filetypes=[FileType.txt()], op_type=Config.FileOpType.import_export)
+			self.tbl = Config.SelectFile(name='TBL', filetypes=[UI.FileType.tbl()], op_type=Config.FileOpType.import_export)
+			self.tileset = Config.SelectFile(name='Complete Tileset', filetypes=[UI.FileType.cv5()])
+			self.graphics = Config.SelectFile(name='Graphics', filetypes=[UI.FileType.bmp()])
+			self.settings = Config.SelectFile(name='Settings', filetypes=[UI.FileType.txt()], op_type=Config.FileOpType.import_export)
 			super().__init__()
 
 	class Settings(Config.Group):
 		class Files(Config.Group):
 			def __init__(self) -> None:
-				self.stat_txt = Config.File(default=Assets.mpq_file_path('rez', 'stat_txt.tbl'), name='TBL', filetypes=[FileType.tbl()])
+				self.stat_txt = Config.File(default=Assets.mpq_file_path('rez', 'stat_txt.tbl'), name='TBL', filetypes=[UI.FileType.tbl()])
 				super().__init__()
 
 		class LastPath(Config.Group):
 			def __init__(self) -> None:
-				self.mpqs = Config.SelectFile(name='MPQ', filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
+				self.mpqs = Config.SelectFile(name='MPQ', filetypes=[UI.FileType.mpq_all(),UI.FileType.mpq(),UI.FileType.exe_mpq(),UI.FileType.scm(),UI.FileType.scx()])
 				super().__init__()
 
 		def __init__(self) -> None:
@@ -126,7 +126,7 @@ class PyTILEConfig(Config.Config):
 
 	class DontWarn(Config.Group):
 		def __init__(self) -> None:
-			self.expanded_vx4 = Config.Warning(message="This tileset is using an expanded vx4 file (vx4ex). This could be a Remastered tileset, and/or will require a 'VX4 Expander Plugin' for pre-Remastered.")
+			self.expanded_vx4 = Config.Warn(message="This tileset is using an expanded vx4 file (vx4ex). This could be a Remastered tileset, and/or will require a 'VX4 Expander Plugin' for pre-Remastered.")
 			super().__init__()
 
 	class Import(Config.Group):
@@ -140,7 +140,7 @@ class PyTILEConfig(Config.Config):
 					self.replace_selections = Config.Boolean(default=True)
 					self.auto_close = Config.Boolean(default=True)
 					super().__init__()
-			
+
 			class MegaSettings(MiniSettings):
 				def __init__(self) -> None:
 					self.megatiles_reuse_duplicates_old = Config.Boolean(default=False)
@@ -174,7 +174,7 @@ class PyTILEConfig(Config.Config):
 				self.block_sight = Config.Boolean(default=True)
 				self.ramp = Config.Boolean(default=True)
 				super().__init__()
-		
+
 		def __init__(self) -> None:
 			self.megatiles = PyTILEConfig.Export.MegaTiles()
 			super().__init__()
@@ -183,7 +183,6 @@ class PyTILEConfig(Config.Config):
 		self.theme = Config.String()
 		self.windows = PyTILEConfig.Windows()
 		self.last_path = PyTILEConfig.LastPath()
-		self.mpqs = Config.List(value_type=str)
 		self.settings = PyTILEConfig.Settings()
 		self.mega_edit = PyTILEConfig.MegaEdit()
 		self.copy = PyTILEConfig.Copy()

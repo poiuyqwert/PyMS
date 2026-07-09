@@ -2,29 +2,24 @@
 from .Images import Pixels, RawPalette
 
 from ..Utilities.utils import nearest_multiple
-from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
-from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities import IO
 
 import struct, math
 
-from typing import BinaryIO
-
 # This class is designed for StarCraft PCX's, there is no guarantee it works with other PCX files
 class PCX:
-	def __init__(self, palette: RawPalette = []) -> None:
+	def __init__(self, palette: RawPalette | None = None) -> None:
 		self.width = 0
 		self.height = 0
-		self.palette = palette
+		self.palette = palette or [(0,0,0)]*256
 		self.image: Pixels = []
 
-	def load_file(self, file: str | BinaryIO, pal: bool = False) -> None:
-		data = load_file(file, 'PCX')
-		self.load_data(data, pal)
-
-	def load_data(self, data: bytes, pal: bool = False) -> None:
+	def load(self, any_input: IO.AnyInputBytes, pal: bool = False) -> None:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		if data[:4] != b'\x0A\x05\x01\x08':
-			raise PyMSError('Load',"Not a PCX file (no PCX header)")
+			raise PyMSError('Load', "Not a PCX file (no PCX header)")
 		try:
 			xmin,ymin,xmax,ymax,_hdpi,_vdpi = struct.unpack('<6H',data[4:16])
 			planes,_bytesperline,_palinfo,_hscreensize,_vscreensize = struct.unpack('<B4H', data[65:74])
@@ -75,8 +70,8 @@ class PCX:
 			self.image = image
 		except PyMSError:
 			raise
-		except:
-			raise PyMSError('Load',"Unsupported PCX file, could possibly be corrupt")
+		except Exception as exc:
+			raise PyMSError('Load', "Unsupported PCX file, could possibly be corrupt") from exc
 
 	def load_pixels(self, image: Pixels, palette: RawPalette | None = None) -> None:
 		self.height = len(image)
@@ -85,38 +80,34 @@ class PCX:
 			self.palette = list(palette)
 		self.image = [list(y) for y in image]
 
-	def save_file(self, file: str) -> None:
-		try:
-			f = AtomicWriter(file)
-		except:
-			raise PyMSError('Save',"Could not save PCX to file '%s'" % file)
-		f.write(b'\x0A\x05\x01\x08' + struct.pack('<6H49xB4H54x', 0, 0, self.width-1, self.height-1, 72, 72, 1, nearest_multiple(self.width,2,math.ceil), 0, 0, 0))
-		for y in self.image:
-			last = y[0]
-			repeat = 1
-			for index in y[1:]:
-				if index == last:
-					if repeat == 63:
-						f.write(b'\xFF')
-						f.write(index.to_bytes())
-						repeat = 1
+	def save(self, output: IO.AnyOutputBytes) -> None:
+		with IO.OutputBytes(output) as f:
+			f.write(b'\x0A\x05\x01\x08' + struct.pack('<6H49xB4H54x', 0, 0, self.width-1, self.height-1, 72, 72, 1, nearest_multiple(self.width,2,math.ceil), 0, 0, 0))
+			for y in self.image:
+				last = y[0]
+				repeat = 1
+				for index in y[1:]:
+					if index == last:
+						if repeat == 63:
+							f.write(b'\xFF')
+							f.write(struct.pack('<B', index))
+							repeat = 1
+						else:
+							repeat += 1
 					else:
-						repeat += 1
-				else:
-					if repeat > 1:
-						f.write((repeat | 0xC0).to_bytes())
-					elif last >= 192:
-						f.write(b'\xC1')
-					f.write(last.to_bytes())
-					last = index
-					repeat = 1
-			if repeat > 1:
-				f.write((repeat | 0xC0).to_bytes())
-			elif last >= 192:
-				f.write(b'\xC1')
-			f.write(last.to_bytes())
-		f.write(b'\x0C' + b''.join(struct.pack('3B',*c) for c in self.palette))
-		f.close()
+						if repeat > 1:
+							f.write(struct.pack('<B', repeat | 0xC0))
+						elif last >= 192:
+							f.write(b'\xC1')
+						f.write(struct.pack('<B', last))
+						last = index
+						repeat = 1
+				if repeat > 1:
+					f.write(struct.pack('<B', repeat | 0xC0))
+				elif last >= 192:
+					f.write(b'\xC1')
+				f.write(struct.pack('<B', last))
+			f.write(b'\x0C' + b''.join(struct.pack('3B',*c) for c in self.palette))
 
 # import sys
 # sys.stdout = open('stdeo.txt','w')

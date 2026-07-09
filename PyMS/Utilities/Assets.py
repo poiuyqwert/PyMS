@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import os as _os
 import sys as _sys
+from uuid import uuid4 as _uuid4
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
+from .UIKit import PhotoImage
 if TYPE_CHECKING:
-	from .UIKit import PhotoImage
-	from .UIKit import Image
-	from .UIKit import ImageTk
+	from .UIKit import AnyPhotoImage
 
 if hasattr(_sys, 'frozen'):
 	base_dir = _os.path.dirname(_sys.executable)
@@ -23,10 +23,10 @@ versions_file_path = _os.path.join(internals_dir, 'versions.json')
 
 _VERSIONS: dict[str, str] = {}
 def version(program_name: str) -> str:
-	global _VERSIONS
+	global _VERSIONS # pylint: disable=global-statement
 	if not _VERSIONS:
 		import json
-		with open(versions_file_path, 'r') as f:
+		with open(versions_file_path, 'r', encoding='utf-8') as f:
 			_VERSIONS = json.load(f)
 	return _VERSIONS[program_name]
 
@@ -39,9 +39,8 @@ images_dir = _os.path.join(internals_dir, 'Images')
 def image_path(filename: str) -> str:
 	return _os.path.join(images_dir, filename)
 
-_IMAGE_CACHE: dict[str, Image] = {}
-def get_image(filename: str, cache: bool = True) -> Image:
-	from .UIKit import PhotoImage
+_IMAGE_CACHE: dict[str, PhotoImage] = {}
+def lookup_image(filename: str, cache: bool = True) -> PhotoImage | None:
 	if not _os.extsep in filename:
 		filename += _os.extsep + 'gif'
 	if filename in _IMAGE_CACHE:
@@ -49,13 +48,19 @@ def get_image(filename: str, cache: bool = True) -> Image:
 	path = image_path(filename)
 	try:
 		image = PhotoImage(file=path)
-	except:
-		image = PhotoImage()
+	except Exception:
+		return None
 	if cache:
 		_IMAGE_CACHE[filename] = image
 	return image
 
-def clear_image_cache():
+def get_image(filename: str, cache: bool = True) -> PhotoImage:
+	image = lookup_image(filename, cache)
+	if not image:
+		image = PhotoImage()
+	return image
+
+def clear_image_cache() -> None:
 	_IMAGE_CACHE.clear()
 
 ## MPQ
@@ -73,13 +78,13 @@ def mpq_file_ref(*path_components: str) -> str:
 def mpq_file_path_to_file_name(file_path: str) -> str:
 	if not file_path.startswith(mpq_dir):
 		return file_path
-	path_components = _os.path.normpath(_os.path.relpath(file_path, mpq_dir)).split(_os.path.sep)
+	path_components = _os.path.relpath(file_path, mpq_dir).split(_os.sep)
 	return mpq_file_name(*path_components)
 
 def mpq_file_path_to_ref(file_path: str) -> str:
 	if not file_path.startswith(mpq_dir):
 		return file_path
-	path_components = _os.path.normpath(_os.path.relpath(file_path, mpq_dir)).split(_os.path.sep)
+	path_components = _os.path.relpath(file_path, mpq_dir).split(_os.sep)
 	return mpq_file_ref(*path_components)
 
 def mpq_ref_to_file_path(file_ref: str) -> str:
@@ -127,11 +132,12 @@ class DataReference:
 	Sfxdata         = 'Sfxdata' # Sound Effects
 	ShieldSize      = 'ShieldSize' # Shield Sizes
 
-_DATA_CACHE: dict[str, list[str]] = {}
-def data_cache(filename: str) -> list[str]:
+_DATA_CACHE: dict[str, tuple[str, ...]] = {}
+def data_cache(filename: str) -> tuple[str, ...]:
 	if not filename in _DATA_CACHE:
-		with open(data_file_path('%s.txt' % filename), 'r') as f:
-			_DATA_CACHE[filename] = [l.rstrip() for l in f.readlines()]
+		with open(data_file_path(f'{filename}.txt'), 'r', encoding='utf-8') as f:
+			_DATA_CACHE[filename] = tuple(l.rstrip() for l in f.readlines())
+	# An immutable tuple is returned so callers cannot corrupt the shared cache.
 	return _DATA_CACHE[filename]
 
 ## Palettes
@@ -144,7 +150,7 @@ def palette_file_path(filename: str) -> str:
 settings_dir = _os.path.join(base_dir, 'Settings')
 
 def settings_file_path(name: str) -> str:
-	return _os.path.join(settings_dir, '%s%stxt' % (name, _os.extsep))
+	return _os.path.join(settings_dir, f'{name}{_os.extsep}txt')
 
 ## Logs
 logs_dir = _os.path.join(internals_dir, 'Logs')
@@ -155,13 +161,15 @@ def log_file_path(filename: str) -> str:
 ## Internal Temp
 internal_temp_dir = _os.path.join(internals_dir, 'Temp')
 
-def internal_temp_file(filename):
+def internal_temp_file_path(filename: str | None = None) -> str:
+	if filename is None:
+		filename = _uuid4().hex
 	return _os.path.join(internal_temp_dir, filename)
 
 ## Help
 help_dir = _os.path.join(base_dir, 'Help')
 
-class HelpFolder(object):
+class HelpFolder:
 	def __init__(self, name: str) -> None:
 		self.name = name
 		self.parent: (HelpFolder | None) = None
@@ -193,10 +201,10 @@ class HelpFolder(object):
 		else:
 			for index, folder in enumerate(self.folders):
 				if path_components[0] == folder.name:
-					sub_index = folder._index(path_components[1:])
+					sub_index = folder._index(path_components[1:]) # pylint: disable=protected-access
 					if sub_index is None:
 						return None
-					return '%d.%s' % (index + len(self.files), sub_index)
+					return f'{index + len(self.files)}.{sub_index}'
 		return None
 
 	def get_file(self, index: str) -> HelpFile | None:
@@ -211,16 +219,16 @@ class HelpFolder(object):
 			index_components[0] -= len(self.files)
 			if index_components[0] >= len(self.folders):
 				return None
-			return self.folders[index_components[0]]._get_file(index_components[1:])
+			return self.folders[index_components[0]]._get_file(index_components[1:]) # pylint: disable=protected-access
 
-	def __repr__(self):
+	def __repr__(self) -> str:
 		result = self.name
 		for file in self.files:
 			result += '\n - ' + file.name
 		for folder in self.folders:
 			result += '\n > ' + repr(folder).replace('\n', '\n  ')
 		return result
-class HelpFile(object):
+class HelpFile:
 	def __init__(self, path: str, folder: HelpFolder) -> None:
 		self.path = '/'.join(_os.path.split(path))
 		self.name = _os.path.splitext(path.split('/')[-1])[0]
@@ -228,8 +236,8 @@ class HelpFile(object):
 
 _HELP_TREE: HelpFolder | None = None
 def help_tree( force_update: bool = False) -> HelpFolder:
-	global _HELP_TREE 
-	if _HELP_TREE is not None and force_update == False:
+	global _HELP_TREE # pylint: disable=global-statement
+	if _HELP_TREE is not None and not force_update:
 		return _HELP_TREE
 	root = None
 	parents: dict[str, HelpFolder] = {}
@@ -265,11 +273,10 @@ def help_file_path(path: str) -> str | None:
 		return None
 	return full_path
 
-_HELP_IMAGE_CACHE: dict[str, Image] = {}
-def help_image(path: str) -> Image | None:
-	from .UIKit import PhotoImage as _PhotoImage
-	from .UIKit import PILImage as _PILImage
-	from .UIKit import ImageTk as _ImageTk
+_HELP_IMAGE_CACHE: dict[str, AnyPhotoImage] = {}
+def help_image(path: str) -> AnyPhotoImage | None:
+	from .UIKit import PILImage as _PILImage  # pylint: disable=cyclic-import
+	from .UIKit import ImageTk as _ImageTk  # pylint: disable=cyclic-import
 	path_components = path.split('/')
 	if path_components[0] == '':
 		path_components.pop(0)
@@ -280,19 +287,19 @@ def help_image(path: str) -> Image | None:
 		return None
 	if full_path in _HELP_IMAGE_CACHE:
 		return _HELP_IMAGE_CACHE[full_path]
-	image: Image
+	image: AnyPhotoImage
 	try:
-		image = _PhotoImage(file=full_path)
-	except:
+		image = PhotoImage(file=full_path)
+	except Exception:
 		try:
 			pil_image = _PILImage.open(full_path)
-			image = cast(Image, _ImageTk.PhotoImage(pil_image))
-		except:
+			image = _ImageTk.PhotoImage(pil_image)
+		except Exception:
 			return None
 	_HELP_IMAGE_CACHE[full_path] = image
 	return image
 
-def clear_help_image_cache():
+def clear_help_image_cache() -> None:
 	_HELP_IMAGE_CACHE.clear()
 
 ## Themes
@@ -300,11 +307,11 @@ def clear_help_image_cache():
 themes_dir = _os.path.join(base_dir, 'PyMS', 'Themes')
 
 def theme_file_path(name: str) -> str:
-	return _os.path.join(themes_dir, '%s.txt' % name)
+	return _os.path.join(themes_dir, f'{name}{_os.extsep}txt')
 
 _THEME_LIST: list[str] | None = None
 def theme_list() -> list[str]:
-	global _THEME_LIST
+	global _THEME_LIST # pylint: disable=global-statement
 	if not _THEME_LIST:
 		_THEME_LIST = []
 		for filename in _os.listdir(themes_dir):

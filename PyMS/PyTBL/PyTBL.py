@@ -12,8 +12,8 @@ from ..FileFormats import FNT
 from ..FileFormats import Palette
 from ..FileFormats import GRP
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
-from ..Utilities.UIKit import *
+from ..Utilities import registry
+from ..Utilities import UIKit as UI
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
@@ -28,13 +28,13 @@ from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 from ..Utilities.SponsorDialog import SponsorDialog
 
-from typing import Literal
+from typing import Any, Literal
 
-LONG_VERSION = 'v%s' % Assets.version('PyTBL')
+LONG_VERSION = 'v' + Assets.version('PyTBL')
 
-class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
+class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
-		MainWindow.__init__(self)
+		UI.MainWindow.__init__(self)
 		self.guifile = guifile
 
 		self.set_icon('PyTBL')
@@ -42,9 +42,9 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		ga.set_application('PyTBL', Assets.version('PyTBL'))
 		ga.track(GAScreen('PyTBL'))
 		setup_trace('PyTBL', self)
-		
+
 		self.config_ = PyTBLConfig()
-		Theme.load_theme(self.config_.theme.value, self)
+		UI.Theme.load_theme(self.config_.theme.value, self)
 
 		self.tbl: TBL.TBL | None = None
 		self.file: str | None = None
@@ -59,114 +59,113 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 		self.update_title()
 
-		self.listmenu = Menu(self, tearoff=0)
-		self.listmenu.add_command(label='Add String', command=self.add, shortcut=Key.Insert, bind_shortcut=False) # type: ignore[call-arg]
-		self.listmenu.add_command(label='Insert String', command=self.insert, shortcut=Shift.Insert, bind_shortcut=False) # type: ignore[call-arg]
-		self.listmenu.add_command(label='Remove String', command=self.remove, shortcut=Key.Delete, tags='string_selected', bind_shortcut=False) # type: ignore[call-arg]
+		self.listmenu = UI.Menu(self, tearoff=0)
+		self.listmenu.add_command(label='Add String', command=self.add, shortcut=UI.Key.Insert, bind_shortcut=False) # type: ignore[call-arg]
+		self.listmenu.add_command(label='Insert String', command=self.insert, shortcut=UI.Shift.Insert, bind_shortcut=False) # type: ignore[call-arg]
+		self.listmenu.add_command(label='Remove String', command=self.remove, shortcut=UI.Key.Delete, tags='string_selected', bind_shortcut=False) # type: ignore[call-arg]
 		self.listmenu.add_separator()
-		self.listmenu.add_command(label='Move String Up', command=lambda: self.movestring(-1), shortcut=Shift.Up, bind_shortcut=False) # type: ignore[call-arg]
-		self.listmenu.add_command(label='Move String Down', command=lambda: self.movestring(1), shortcut=Shift.Down, bind_shortcut=False) # type: ignore[call-arg]
+		self.listmenu.add_command(label='Move String Up', command=lambda: self.movestring(-1), shortcut=UI.Shift.Up, bind_shortcut=False) # type: ignore[call-arg]
+		self.listmenu.add_command(label='Move String Down', command=lambda: self.movestring(1), shortcut=UI.Shift.Down, bind_shortcut=False) # type: ignore[call-arg]
 
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default TBL', Ctrl.d)
-		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Strings', Ctrl.i)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default TBL', UI.Ctrl.d)
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Strings', UI.Ctrl.i)
 		self.toolbar.add_gap()
-		def save():
+		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		def saveas():
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
+		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Strings', Ctrl.e, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Strings', UI.Ctrl.e, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add String', Key.Insert, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('insert'), self.insert, 'Insert String', Shift.Insert, enabled=False, tags='string_selected')
-		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove String (Delete in Listbox, Shift+Delete in Textbox)', Shift.Delete, enabled=False, tags='string_selected', add_shortcut_to_tooltip=False)
+		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add String', UI.Key.Insert, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('insert'), self.insert, 'Insert String', UI.Shift.Insert, enabled=False, tags='string_selected')
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove String (Delete in Listbox, Shift+Delete in Textbox)', UI.Shift.Delete, enabled=False, tags='string_selected', add_shortcut_to_tooltip=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('up'), lambda: self.movestring(-1), 'Move String Up', Shift.Up, enabled=False, tags='string_selected', bind_shortcut=False)
-		self.toolbar.add_button(Assets.get_image('down'), lambda: self.movestring(1), 'Move String Down', Shift.Down, enabled=False, tags='string_selected', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('up'), lambda: self.movestring(-1), 'Move String Up', UI.Shift.Up, enabled=False, tags='string_selected', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('down'), lambda: self.movestring(1), 'Move String Down', UI.Shift.Down, enabled=False, tags='string_selected', bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find Strings', Ctrl.f, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('ffw'), self.goto, 'Go to', Ctrl.g, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find Strings', UI.Ctrl.f, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('ffw'), self.goto, 'Go to', UI.Ctrl.g, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('test'), self.preview, 'Test String', Ctrl.t, enabled=False, tags='string_selected')
+		self.toolbar.add_button(Assets.get_image('test'), self.preview, 'Test String', UI.Ctrl.t, enabled=False, tags='string_selected')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', UI.Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.tbl editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.tbl editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyTBL')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		self.toolbar.grid(row=0,column=0, padx=1,pady=1, sticky=EW)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.grid(row=0,column=0, padx=1,pady=1, sticky=UI.EW)
 
-		self.bind_all(Shift.Up(), lambda e: self.movestring(-1))
-		self.bind_all(Shift.Down(), lambda e: self.movestring(1))
+		self.bind_all(UI.Shift.Up(), lambda e: self.movestring(-1))
+		self.bind_all(UI.Shift.Down(), lambda e: self.movestring(1))
 
-		self.hor_pane = PanedWindow(self,orient=HORIZONTAL)
+		self.hor_pane = UI.PanedWindow(self,orient=UI.HORIZONTAL)
 
 		# listbox
-		self.listbox = ScrolledListbox(self.hor_pane, scroll_speed=2, width=35, height=1)
-		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
-		self.hor_pane.add(self.listbox, sticky=NSEW, minsize=200)
-		self.listbox.bind(WidgetEvent.Listbox.Select(), lambda e: self.update_string())
-		self.listbox.bind(Mouse.Click_Right(), self.popup)
+		self.listbox = UI.ScrolledListbox(self.hor_pane, scroll_speed=2, width=35, height=1)
+		self.listbox.pack(side=UI.LEFT, fill=UI.BOTH, expand=1)
+		self.hor_pane.add(self.listbox, sticky=UI.NSEW, minsize=200)
+		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), lambda e: self.update_string())
+		self.listbox.bind(UI.Mouse.Click_Right(), self.popup)
 
 		# Textbox
-		self.ver_pane = PanedWindow(self.hor_pane,orient=VERTICAL)
-		textframe = Frame(self.ver_pane, bd=2, relief=SUNKEN)
-		hscroll = Scrollbar(textframe, orient=HORIZONTAL)
-		vscroll = Scrollbar(textframe)
-		self.text = Text(textframe, height=1, bd=0, undo=True, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=False, state=DISABLED)
+		self.ver_pane = UI.PanedWindow(self.hor_pane,orient=UI.VERTICAL)
+		textframe = UI.Frame(self.ver_pane, bd=2, relief=UI.SUNKEN)
+		hscroll = UI.Scrollbar(textframe, orient=UI.HORIZONTAL)
+		vscroll = UI.Scrollbar(textframe)
+		self.text = UI.Text(textframe, height=1, bd=0, undo=True, maxundo=100, wrap=UI.NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=False, state=UI.DISABLED)
 		text_w = getattr(self.text, '_w')
 		self.text_orig = text_w + '_orig'
 		self.tk.call('rename', text_w, self.text_orig)
 		self.tk.createcommand(text_w, self.dispatch)
 		self.text.mark_set('textend', '1.0')
-		self.text.mark_gravity('textend', RIGHT)
-		self.text.grid(sticky=NSEW)
-		self.text.bind(Ctrl.a(), lambda e: self.after(1, self.selectall))
+		self.text.mark_gravity('textend', UI.RIGHT)
+		self.text.grid(sticky=UI.NSEW)
+		self.text.bind(UI.Ctrl.a(), lambda e: self.after_managed(1, self.selectall))
 		hscroll.config(command=self.text.xview)
-		hscroll.grid(sticky=EW)
+		hscroll.grid(sticky=UI.EW)
 		vscroll.config(command=self.text.yview)
-		vscroll.grid(sticky=NS, row=0, column=1)
+		vscroll.grid(sticky=UI.NS, row=0, column=1)
 		textframe.grid_rowconfigure(0, weight=1)
 		textframe.grid_columnconfigure(0, weight=1)
-		self.ver_pane.add(textframe, sticky=NSEW)
-		colors = Frame(self.ver_pane, bd=2, relief=SUNKEN)
-		hscroll = Scrollbar(colors, orient=HORIZONTAL)
-		vscroll = Scrollbar(colors)
-		text = Text(colors, height=1, bd=0, undo=True, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=False)
-		text.insert(END, '\n'.join([l[2:] for l in TBL.TBL_REF.split('\n')[1:-2]]))
-		text['state'] = DISABLED
-		text.grid(sticky=NSEW)
+		self.ver_pane.add(textframe, sticky=UI.NSEW)
+		colors = UI.Frame(self.ver_pane, bd=2, relief=UI.SUNKEN)
+		hscroll = UI.Scrollbar(colors, orient=UI.HORIZONTAL)
+		vscroll = UI.Scrollbar(colors)
+		text = UI.Text(colors, height=1, bd=0, undo=True, maxundo=100, wrap=UI.NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=False)
+		text.insert(UI.END, '\n'.join([l[2:] for l in TBL.TBL_REF.split('\n')[1:-2]]))
+		text['state'] = UI.DISABLED
+		text.grid(sticky=UI.NSEW)
 		hscroll.config(command=text.xview)
-		hscroll.grid(sticky=EW)
+		hscroll.grid(sticky=UI.EW)
 		vscroll.config(command=text.yview)
-		vscroll.grid(sticky=NS, row=0, column=1)
+		vscroll.grid(sticky=UI.NS, row=0, column=1)
 		colors.grid_rowconfigure(0, weight=1)
 		colors.grid_columnconfigure(0, weight=1)
-		self.ver_pane.add(colors, sticky=NSEW)
-		# self.ver_pane.pack(side=LEFT, fill=BOTH, expand=1)
-		self.hor_pane.add(self.ver_pane, sticky=NSEW, minsize=200)
+		self.ver_pane.add(colors, sticky=UI.NSEW)
+		self.hor_pane.add(self.ver_pane, sticky=UI.NSEW, minsize=200)
 
-		self.hor_pane.grid(row=1,column=0, sticky=NSEW)
+		self.hor_pane.grid(row=1,column=0, sticky=UI.NSEW)
 
 		#Statusbar
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.status.set('Load or create a TBL.')
-		self.stringstatus = StringVar()
-		statusbar = StatusBar(self)
+		self.stringstatus = UI.StringVar()
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save.gif'))
 		statusbar.add_label(self.stringstatus)
-		statusbar.grid(row=2,column=0, sticky=EW)
+		statusbar.grid(row=2,column=0, sticky=UI.EW)
 
 		self.grid_columnconfigure(0, weight=1)
 		self.grid_rowconfigure(1, weight=1)
@@ -175,8 +174,8 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.config_.panes.string_list.load_size(self.hor_pane)
 		self.config_.panes.color_list.load_size(self.ver_pane)
 
-		self.mpq_handler = MPQHandler(self.config_.mpqs)
-	
+		self.mpq_handler = MPQHandler(self.config_.settings.mpqs)
+
 	def initialize(self) -> None:
 		e = self.open_files()
 		if e:
@@ -194,11 +193,11 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			font10 = FNT.FNT()
 			unitpal = Palette.Palette()
 			icons = GRP.GRP()
-			tfontgam.load_file(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
-			self.mpq_handler.read_file(self.config_.settings.files.font8.file_path, lambda data: font8.load_file(data))
-			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, lambda data: font10.load_file(data))
-			unitpal.load_file(self.mpq_handler.load_file(self.config_.settings.files.unit_pal.file_path))
-			icons.load_file(self.mpq_handler.load_file(self.config_.settings.files.icons.file_path))
+			tfontgam.load(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
+			self.mpq_handler.read_file(self.config_.settings.files.font8.file_path, font8.load)
+			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, font10.load)
+			unitpal.load(self.mpq_handler.load_file(self.config_.settings.files.unit_pal.file_path))
+			icons.load(self.mpq_handler.load_file(self.config_.settings.files.icons.file_path))
 		except PyMSError as e:
 			err = e
 		else:
@@ -222,7 +221,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.stringstatus.set(f'String: {string_index}/{string_count}')
 
 	def update_string(self) -> None:
-		self.text_delete('1.0', END)
+		self.text_delete('1.0', UI.END)
 		if not self.tbl:
 			return
 		if not self.listbox.size():
@@ -231,16 +230,16 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.text_insert('1.0', TBL.decompile_string(self.tbl.strings[s], '\n'))
 		self.update_string_status()
 
-	def popup(self, event: Event) -> None:
+	def popup(self, event: UI.Event) -> None:
 		if not self.tbl:
 			return
 		self.listmenu.tag_enabled('string_selected', self.is_string_selected()) # type: ignore[attr-defined]
 		self.listmenu.post(event.x_root, event.y_root)
 
 	def selectall(self) -> None:
-		self.text.tag_remove(SEL, '1.0', END)
-		self.text.tag_add(SEL, '1.0', END)
-		self.text.mark_set(INSERT, '1.0')
+		self.text.tag_remove(UI.SEL, '1.0', UI.END)
+		self.text.tag_add(UI.SEL, '1.0', UI.END)
+		self.text.mark_set(UI.INSERT, '1.0')
 
 	def check_saved(self) -> CheckSaved:
 		if not self.tbl or not self.edited:
@@ -248,44 +247,45 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		file = self.file
 		if not file:
 			file = 'Unnamed.tbl'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		if save == MessageBox.NO:
-			return CheckSaved.saved
-		if save == MessageBox.CANCEL:
+		save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=UI.MessageBox.YES)
+		if save is None:
 			return CheckSaved.cancelled
+		if not save:
+			return CheckSaved.saved
 		if self.file:
 			return self.save()
-		else:
-			return self.saveas()
+		return self.saveas()
 
 	def is_file_open(self) -> bool:
-		return not not self.tbl
+		return self.tbl is not None
 
 	def is_string_selected(self) -> bool:
-		return not not self.listbox.curselection()
+		return bool(self.listbox.curselection())
 
 	def action_states(self) -> None:
 		file_open = self.is_file_open()
 		string_selected = self.is_string_selected()
 		self.toolbar.tag_enabled('file_open', file_open)
-		self.text['state'] = NORMAL if string_selected else DISABLED
+		self.text['state'] = UI.NORMAL if string_selected else UI.DISABLED
 		self.toolbar.tag_enabled('string_selected', string_selected)
 
 	def text_insert(self, pos: str, text: str) -> None:
 		self.tk.call((self.text_orig, 'insert', pos, text))
 
-	def text_delete(self, start: str, end: str | None = None):
+	def text_delete(self, start: str, end: str | None = None) -> None:
 		self.tk.call((self.text_orig, 'delete', start, end))
 
-	def dispatch(self, cmd: str, *args: str ) -> None:
+	def dispatch(self, cmd: str, *args: str) -> Any:
 		try:
 			r = self.tk.call((self.text_orig, cmd) + args)
-		except:
+		except UI.TclError:
+			raise
+		except Exception:
 			r = ''
 		if self.tbl and self.listbox.size() and cmd in ['insert','delete']:
 			if not self.edited:
 				self.edited = True
-				self.editstatus['state'] = NORMAL
+				self.editstatus['state'] = UI.NORMAL
 			i = int(self.listbox.curselection()[0])
 			self.tbl.strings[i] = TBL.compile_string(self.text.get('1.0','textend'))
 			self.listbox.delete(i)
@@ -298,13 +298,13 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.tbl'
 		if not file_path:
-			self.title('PyTBL %s' % LONG_VERSION)
+			self.title(f'PyTBL {LONG_VERSION}')
 		else:
-			self.title('PyTBL %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyTBL {LONG_VERSION} ({file_path})')
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
-		self.editstatus['state'] = NORMAL if edited else DISABLED
+		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 
 	def new(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
@@ -315,12 +315,28 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.mark_edited(False)
 		self.update_title()
 		if self.listbox.size():
-			self.text_delete('1.0', END)
-		self.listbox.delete(0, END)
+			self.text_delete('1.0', UI.END)
+		self.listbox.delete(0, UI.END)
 		self.stringstatus.set('')
 		self.action_states()
 
-	def open(self, file: str | None = None):
+	def _populate_from_tbl(self, tbl: TBL.TBL, file: str, status: str) -> None:
+		self.tbl = tbl
+		self.listbox.delete(0, UI.END)
+		self.text_delete('1.0', UI.END)
+		for string in tbl.strings:
+			self.listbox.insert(UI.END, TBL.decompile_string(string))
+		if self.listbox.size():
+			self.listbox.select_set(0)
+			self.listbox.see(0)
+		self.file = file
+		self.update_title()
+		self.status.set(status)
+		self.mark_edited(False)
+		self.action_states()
+		self.update_string()
+
+	def open(self, file: str | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if not file:
@@ -329,24 +345,11 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 				return
 		tbl = TBL.TBL()
 		try:
-			tbl.load_file(file)
+			tbl.load(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		self.tbl = tbl
-		self.listbox.delete(0, END)
-		self.text_delete('1.0', END)
-		for string in self.tbl.strings:
-			self.listbox.insert(END, TBL.decompile_string(string))
-		if self.listbox.size():
-			self.listbox.select_set(0)
-			self.listbox.see(0)
-		self.file = file
-		self.update_title()
-		self.status.set('Load Successful!')
-		self.mark_edited(False)
-		self.action_states()
-		self.update_string()
+		self._populate_from_tbl(tbl, file, 'Load Successful!')
 
 	def open_default(self) -> None:
 		self.open(Assets.mpq_file_path('rez','stat_txt.tbl'))
@@ -363,20 +366,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		self.tbl = tbl
-		self.listbox.delete(0, END)
-		self.text_delete('1.0', END)
-		for string in self.tbl.strings:
-			self.listbox.insert(END, TBL.decompile_string(string))
-		if self.listbox.size():
-			self.listbox.select_set(0)
-			self.listbox.see(0)
-		self.file = file
-		self.update_title()
-		self.status.set('Import Successful!')
-		self.mark_edited(False)
-		self.action_states()
-		self.update_string()
+		self._populate_from_tbl(tbl, file, 'Import Successful!')
 
 	def save(self) -> CheckSaved:
 		return self.saveas(file_path=self.file)
@@ -391,7 +381,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		elif not check_allow_overwrite_internal_file(file_path):
 			return CheckSaved.cancelled
 		try:
-			self.tbl.compile(file_path)
+			self.tbl.save(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled
@@ -421,20 +411,20 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.update_title()
 		self.status.set('Load or create a TBL.')
 		self.mark_edited(False)
-		self.listbox.delete(0, END)
-		self.text_delete('1.0', END)
+		self.listbox.delete(0, UI.END)
+		self.text_delete('1.0', UI.END)
 		self.stringstatus.set('')
 		self.action_states()
 
-	def add(self, index: int | Literal['end'] = END):
+	def add(self, index: int | Literal['end'] = UI.END) -> None:
 		if not self.tbl:
 			return
-		if index == END:
+		if index == UI.END:
 			self.tbl.strings.append('')
 		else:
 			self.tbl.strings.insert(index, '')
 		self.listbox.insert(index, '')
-		self.listbox.select_clear(0, END)
+		self.listbox.select_clear(0, UI.END)
 		self.listbox.select_set(index)
 		self.listbox.see(index)
 		self.mark_edited()
@@ -472,7 +462,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		n = i + delta
 		s = self.tbl.strings[i]
 		self.listbox.insert(n, TBL.decompile_string(s))
-		self.listbox.select_clear(0, END)
+		self.listbox.select_clear(0, UI.END)
 		self.listbox.select_set(n)
 		self.listbox.see(n)
 		self.tbl.strings[i] = self.tbl.strings[n]
@@ -486,10 +476,9 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			return
 		if not self.findwindow:
 			self.findwindow = FindDialog(self, self)
-			self.bind(Key.F3(), self.findwindow.findnext)
+			self.bind(UI.Key.F3(), self.findwindow.findnext)
 		else:
-			self.findwindow.make_active() # type: ignore[attr-defined]
-			self.findwindow.findentry.focus_set(highlight=True)
+			self.findwindow.show()
 
 	def goto(self) -> None:
 		if not self.is_file_open():
@@ -497,8 +486,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		if not self.gotowindow:
 			self.gotowindow = GotoDialog(self, self)
 		else:
-			self.gotowindow.make_active() # type: ignore[attr-defined]
-			self.gotowindow.gotoentry.focus_set(highlight=True)
+			self.gotowindow.show()
 
 	def preview(self) -> None:
 		if not self.is_string_selected():
@@ -506,11 +494,11 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		PreviewDialog(self, self)
 
 	def mpqsettings(self, err: PyMSError | None = None) -> None:
-		SettingsDialog(self, self.config_, self, err, self.mpq_handler)
+		SettingsDialog(parent=self, config=self.config_, delegate=self, err=err, mpq_handler=self.mpq_handler)
 
 	def register_registry(self) -> None:
 		try:
-			register_registry('PyTBL', 'tbl', '')
+			registry.register('PyTBL', 'tbl', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
@@ -534,7 +522,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 	def destroy(self) -> None:
 		if self.gotowindow is not None:
-			Toplevel.destroy(self.gotowindow)
+			self.gotowindow.destroy()
 		if self.findwindow is not None:
-			Toplevel.destroy(self.findwindow)
-		MainWindow.destroy(self)
+			self.findwindow.destroy()
+		UI.MainWindow.destroy(self)

@@ -6,44 +6,48 @@ from ..FileFormats import TBL
 from ..FileFormats import FNT
 
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 
 import re
 
-from typing import cast
 
-Character = tuple[Image, FNT.Size]
+Character = tuple[UI.AnyPhotoImage, FNT.Size]
 
 class PreviewDialog(PyMSDialog):
 	letter_space = 1
 	space_space = 4
 
-	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
 		self.delegate = delegate
-		self.icons: dict[str, tuple[Image, tuple[int, int, int, int]]] = {}
+		self.icons: dict[str, tuple[UI.AnyPhotoImage, tuple[int, int, int, int]]] = {}
 		self.characters: dict[str, dict[int, Character]] = {}
-		self.hotkey = BooleanVar()
+		self.hotkey = UI.BooleanVar()
 		self.hotkey.set(self.delegate.config_.preview.hotkey.value)
-		self.endatnull = BooleanVar()
+		self.endatnull = UI.BooleanVar()
 		self.endatnull.set(self.delegate.config_.preview.end_at_null.value)
 		PyMSDialog.__init__(self, parent, 'Text Previewer', resizable=(False,False))
 
-	def geticon(self, icon_name: str, frame_index: int) -> tuple[Image, tuple[int, int, int, int]]:
+	def geticon(self, icon_name: str, frame_index: int) -> tuple[UI.AnyPhotoImage, tuple[int, int, int, int]]:
 		if not icon_name in self.icons:
-			i = cast(GRP.ImageWithBounds, GRP.frame_to_photo(self.delegate.unitpal.palette, self.delegate.icons, frame_index))
-			self.icons[icon_name] = (i[0],(i[2]+1,i[4],0,0))
+			pixels, transindex = GRP.frame_pixels(self.delegate.icons, frame_index)
+			photo = GRP.frame_to_photo(self.delegate.unitpal.palette, pixels, transindex=transindex)
+			bounds = GRP.image_bounds(pixels, transindex)
+			self.icons[icon_name] = (photo,(bounds.x_max+1,bounds.y_max,0,0))
 		return self.icons[icon_name]
 
 	def preview(self) -> None:
-		self.canvas.delete(ALL)
+		self.canvas.delete(UI.ALL)
+		# `characters`/`icons` hold the only strong references keeping the PhotoImages
+		# alive, so they must only be cleared after the canvas items using them are
+		# deleted above.
 		self.characters.clear()
-		text = TBL.compile_string(self.delegate.text.get('1.0',END)[:-1])
+		text = TBL.compile_string(self.delegate.text.get('1.0',UI.END)[:-1])
 		if not text:
 			return
 		color = 2
 		display: list[list[Character]] = []
-		hotkey = ord(text[1])
-		if self.hotkey.get() and hotkey < 6:
+		hotkey = ord(text[1]) if len(text) > 1 else 0
+		if self.hotkey.get() and len(text) > 1 and hotkey < 6:
 			text = text[2:]
 			if self.endatnull.get() and '\x00' in text:
 				text = text[:text.index('\x00')]
@@ -66,7 +70,7 @@ class PreviewDialog(PyMSDialog):
 			display.append([])
 			for c in l:
 				a = ord(c)
-				if a >= fnt.start and a < fnt.start + len(fnt.letters):
+				if fnt.start <= a < fnt.start + len(fnt.letters):
 					a -= fnt.start
 					size = fnt.sizes[a][0]
 					if ord(c) == 32 :
@@ -75,47 +79,52 @@ class PreviewDialog(PyMSDialog):
 					if not c in self.characters:
 						self.characters[c] = {}
 					if not color in self.characters[c]:
-						self.characters[c][color] = (cast(Image, FNT.letter_to_photo(self.delegate.tfontgam, fnt.letters[a], color)), fnt.sizes[a])
+						self.characters[c][color] = (FNT.letter_to_photo(self.delegate.tfontgam, fnt.letters[a], color), fnt.sizes[a])
 					display[-1].append(self.characters[c][color])
 				elif a in FNT.COLOR_CODES_INGAME and not color in FNT.COLOR_OVERPOWER:
 					color = a
-			if w > width:
-				width = w
+			width = max(width, w)
 		if self.hotkey.get() and hotkey and hotkey < 6:
+			def set_icon(index: int, icon_name: str, frame_index: int) -> None:
+				# The offsets point into the synthetic resource line appended above, but
+				# glyphs outside the font range are filtered out while building the row,
+				# so it can be shorter than the offsets expect.
+				if index < len(display[-1]):
+					display[-1][index] = self.geticon(icon_name, frame_index)
 			if hotkey == 1:
-				display[-1][0] = self.geticon('mins',0)
-				display[-1][5] = self.geticon('gas',1)
-				display[-1][10] = self.geticon('supply',4)
+				set_icon(0, 'mins', 0)
+				set_icon(5, 'gas', 1)
+				set_icon(10, 'supply', 4)
 			elif hotkey == 2:
-				display[-1][0] = self.geticon('mins',0)
-				display[-1][5] = self.geticon('gas',1)
+				set_icon(0, 'mins', 0)
+				set_icon(5, 'gas', 1)
 			elif hotkey == 3:
-				display[-1][0] = self.geticon('energy',7)
+				set_icon(0, 'energy', 7)
 			elif hotkey in [4,5]:
-				display[-1][0] = self.geticon('mins',0)
-				display[-1][6] = self.geticon('gas',1)
+				set_icon(0, 'mins', 0)
+				set_icon(6, 'gas', 1)
 		self.canvas.config(width=width+10, height=fnt.height*len(display)+10)
 		y = 7
 		for letters in display:
 			x = 7
 			for l in letters:
-				self.canvas.create_image(x - l[1][2], y, image=l[0], anchor=NW)
+				self.canvas.create_image(x - l[1][2], y, image=l[0], anchor=UI.NW)
 				x += l[1][0] + self.letter_space
 			y += fnt.height
 
-	def widgetize(self) -> (Misc | None):
-		self.canvas = Canvas(self, width=200, height=16, background='#000000', bd=2, relief=SUNKEN)
+	def widgetize(self) -> (UI.Misc | None):
+		self.canvas = UI.Canvas(self, width=200, height=16, background='#000000', bd=2, relief=UI.SUNKEN)
 		self.canvas.pack(padx=5, pady=5)
-		f = Frame(self)
-		Checkbutton(f, text='Hotkey String', variable=self.hotkey, command=self.preview).pack(side=LEFT)
-		Checkbutton(f, text='End at Null', variable=self.endatnull, command=self.preview).pack(side=LEFT)
+		f = UI.Frame(self)
+		UI.Checkbutton(f, text='Hotkey String', variable=self.hotkey, command=self.preview).pack(side=UI.LEFT)
+		UI.Checkbutton(f, text='End at Null', variable=self.endatnull, command=self.preview).pack(side=UI.LEFT)
 		f.pack()
 		self.preview()
-		ok = Button(self, text='Ok', width=10, command=self.ok)
+		ok = UI.Button(self, text='Ok', width=10, command=self.ok)
 		ok.pack(pady=3)
 		return ok
 
-	def ok(self, event: Event | None = None) -> None:
+	def ok(self, _event: UI.Event | None = None) -> None:
 		self.delegate.config_.preview.hotkey.value = self.hotkey.get()
 		self.delegate.config_.preview.end_at_null.value = self.endatnull.get()
 		PyMSDialog.ok(self)

@@ -12,7 +12,7 @@ def main(): # type: () -> None
 		gui = PyTILE()
 		gui.startup()
 	else:
-		p = optparse.OptionParser(usage='usage: PyTILE [options]', version='PyTILE %s' % LONG_VERSION)
+		p = optparse.OptionParser(usage='usage: PyTILE [options]', version='PyTILE ' + LONG_VERSION)
 		p.add_option('--gui', help="Opens a file with the GUI", default='')
 		opt, _ = p.parse_args()
 		if opt.gui:

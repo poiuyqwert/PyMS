@@ -1,2 +1,4 @@
 -r ../requirements.txt
 types-Pillow
+pylint
+mypy

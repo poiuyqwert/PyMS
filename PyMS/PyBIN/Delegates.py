@@ -5,7 +5,7 @@ from ..FileFormats.DialogBIN import DialogBIN
 from ..FileFormats.FNT import FNT
 from ..FileFormats.PCX import PCX
 from ..Utilities.MPQHandler import MPQHandler
-from ..Utilities.UIKit import PILImage, ImageTk, Anchor, Canvas
+from ..Utilities import UIKit as UI
 
 from typing import Protocol
 
@@ -38,10 +38,10 @@ class NodeDelegate(Protocol):
 	def get_mpqhandler(self) -> MPQHandler:
 		...
 
-	def get_dialog_asset(self, asset_id: int) -> (PILImage.Image | None):
+	def get_dialog_asset(self, asset_id: int) -> (UI.PILImage.Image | None):
 		...
 
-	def get_dialog_frame(self, id: int) -> (PILImage.Image | None):
+	def get_dialog_frame(self, frame_id: int) -> (UI.PILImage.Image | None):
 		...
 
 	def get_show_hidden(self) -> bool:
@@ -56,10 +56,16 @@ class NodeDelegate(Protocol):
 	def get_show_animated(self) -> bool:
 		...
 
+	def get_show_hover_smks(self) -> bool:
+		...
+
 	def get_show_images(self) -> bool:
 		...
 
 	def get_show_text(self) -> bool:
+		...
+
+	def get_show_simple_names(self) -> bool:
 		...
 
 	def get_show_bounds_widget(self) -> bool:
@@ -83,23 +89,23 @@ class NodeDelegate(Protocol):
 	def get_tfont(self) -> (PCX | None):
 		...
 
-	def node_render_image_create(self, x: int, y: int, image: ImageTk.PhotoImage, anchor: Anchor) -> Canvas.Item: # type: ignore[name-defined]
+	def node_render_image_create(self, *, x: int, y: int, image: UI.AnyPhotoImage, anchor: UI.Anchor) -> UI.Canvas.Item: # type: ignore[name-defined]
 		...
 
-	def node_render_image_update(self, item: Canvas.Item, x: int, y: int, image: ImageTk.PhotoImage | None) -> None: # type: ignore[name-defined]
+	def node_render_image_update(self, *, item: UI.Canvas.Item, x: int, y: int, image: UI.AnyPhotoImage | None) -> None: # type: ignore[name-defined]
 		...
 
-	def node_render_rect_create(self, x1: int, y1: int, x2: int, y2: int, color: str) -> Canvas.Item: # type: ignore[name-defined]
+	def node_render_rect_create(self, *, x1: int, y1: int, x2: int, y2: int, color: str) -> UI.Canvas.Item: # type: ignore[name-defined]
 		...
 
-	def node_render_rect_update(self, item: Canvas.Item, x1: int, y1: int, x2: int, y2: int) -> None: # type: ignore[name-defined]
+	def node_render_rect_update(self, *, item: UI.Canvas.Item, x1: int, y1: int, x2: int, y2: int) -> None: # type: ignore[name-defined]
 		...
 
-	def node_render_lift(self, item: Canvas.Item) -> None: # type: ignore[name-defined]
+	def node_render_lift(self, item: UI.Canvas.Item) -> None: # type: ignore[name-defined]
 		...
 
-	def node_render_delete(self, item: Canvas.Item) -> None: # type: ignore[name-defined]
+	def node_render_delete(self, item: UI.Canvas.Item) -> None: # type: ignore[name-defined]
 		...
 
-	def capture_exception(self) -> None:
+	def record_asset_load_failure(self, asset: str, usage: str) -> None:
 		...

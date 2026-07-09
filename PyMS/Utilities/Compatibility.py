@@ -1,3 +1,4 @@
+# pylint: disable=consider-using-f-string
 
 import sys
 
@@ -17,15 +18,16 @@ def _show_error_uikit(program_name, message, warning): # type: (str, str, bool) 
 
 def _show_error_tkinter(program_name, message, warning): # type: (str, str, bool) -> bool
 	try:
-		import tkinter.messagebox as messagebox
-	except:
+		from tkinter import messagebox
+	except Exception:
 		import tkMessageBox as messagebox # type: ignore
 	if warning:
-		return messagebox.askyesno('Dependency Error', message + '\n\nWould you like to continue?')
-	messagebox.showerror('Dependency Error', message)
+		return messagebox.askyesno(program_name + ' Dependency Error', message + '\n\nWould you like to continue?')
+	messagebox.showerror(program_name + ' Dependency Error', message)
 	return False
 
 def _show_error_console(program_name, message, warning): # type: (str, str, bool) -> bool
+	print(program_name + ' error:')
 	print(message)
 	print('  Readme (Local): README.md')
 	print('  Readme (Online): https://github.com/poiuyqwert/PyMS#installation')
@@ -47,7 +49,7 @@ def show_error(program_name, message, warning=False): # type: (str, str, bool) -
 			should_continue = show_error_method(program_name, message, warning)
 			error = None
 			break
-		except Exception as e:
+		except Exception as e: # pylint: disable=broad-exception-caught
 			error = e
 			continue
 	if error is not None:
@@ -76,24 +78,29 @@ def check_compat(program_name, additional_requirements = Requirement.none): # ty
 		else:
 			show_error(program_name, 'Incorrect Python version (%d.%d). Please consult the Installation section of the Readme.' % (sys.version_info.major, sys.version_info.minor))
 
-	tcl_version = None
+	tcl_version = None # type: str | None
 	try:
 		import tkinter
-		tcl_version = tkinter.Tcl().call("info", "patchlevel")
-	except:
+	except Exception:
 		try:
 			import Tkinter as tkinter # type: ignore
-			tcl_version = tkinter.Tcl().call("info", "patchlevel")
-		except:
+		except Exception:
 			show_error(program_name, 'Tkinter is missing. Please consult the Installation section of the Readme.')
 
-	unsupported_tkinter = [
-		(True, '8.6.13')
-	]
-	import platform
-	is_mac = platform.system().lower() == 'darwin'
-	if (is_mac, tcl_version) in unsupported_tkinter:
-		show_error(program_name, 'Tkinter\'s Tcl/Tk version (%s) is incompatable. Please update your Python and/or Tcl/Tk version.' % tcl_version)
+	try:
+		tcl_version = tkinter.Tcl().call("info", "patchlevel")
+	except Exception:
+		pass
+	if tcl_version:
+		unsupported_tkinter = [
+			(True, '8.6.13')
+		]
+		import platform
+		is_mac = platform.system().lower() == 'darwin'
+		if (is_mac, tcl_version) in unsupported_tkinter:
+			show_error(program_name, 'Tkinter\'s Tcl/Tk version (%s) is incompatable. Please update your Python and/or Tcl/Tk version.' % tcl_version)
+	else:
+		show_error(program_name, 'Couldn\'t check Tkinter\'s Tcl/Tk version. It is possible that PyMS might not function properly.\nYou can continue to use the programs, or consult the Installation section of the Readme.', warning=True)
 
 	if additional_requirements & Requirement.MPQ:
 		from ..FileFormats.MPQ.MPQ import MPQ
@@ -102,7 +109,7 @@ def check_compat(program_name, additional_requirements = Requirement.none): # ty
 
 	if additional_requirements & Requirement.PIL:
 		try:
-			from PIL import Image
-			from PIL import ImageTk
-		except:
+			from PIL import Image as _Image
+			from PIL import ImageTk as _ImageTk
+		except Exception:
 			show_error(program_name, 'PIL/PILLOW is missing. Please consult the Installation section of the Readme.')

@@ -1,5 +1,5 @@
 
-from ...FileFormats.DAT import *
+from ...FileFormats import DAT
 from ...FileFormats.TBL import TBL, decompile_string
 
 from ...Utilities import Assets
@@ -11,7 +11,7 @@ import unittest
 class Test_Entry_Name(unittest.TestCase):
 	def test_generic_name(self) -> None:
 		entry_ids = (0, 1, 2, 3)
-		type = 'Entry'
+		entry_type = 'Entry'
 		id_count = 3
 		data_names = ['Name 1', 'Name 2', 'Name 3']
 
@@ -23,7 +23,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.generic(entry_id, type, id_count),
+				DAT.DATEntryName.generic(entry_id, entry_type, id_count),
 				expected_name
 			)
 
@@ -35,7 +35,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.generic(entry_id, type, id_count, data_names=data_names),
+				DAT.DATEntryName.generic(entry_id, entry_type, id_count, data_names=data_names),
 				expected_name
 			)
 
@@ -52,7 +52,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.generic(entry_id, type, id_count, data_names=data_names, name_overrides=name_overrides),
+				DAT.DATEntryName.generic(entry_id, entry_type, id_count, data_names=data_names, name_overrides=name_overrides),
 				expected_name,
 			)
 
@@ -69,16 +69,16 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.generic(entry_id, type, id_count, data_names=data_names, name_overrides=name_overrides),
+				DAT.DATEntryName.generic(entry_id, entry_type, id_count, data_names=data_names, name_overrides=name_overrides),
 				expected_name,
 			)
 
 	def test_unit_name(self) -> None:
 		entry_ids = (0, 114, 227, 228, 250, 251)
 		stat_txt = TBL()
-		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
+		stat_txt.load(resource_path('stat_txt.tbl', __file__))
 		unitnamestbl = TBL()
-		unitnamestbl.load_file(resource_path('unitnames.tbl', __file__))
+		unitnamestbl.load(resource_path('unitnames.tbl', __file__))
 
 		expected_names = (
 			'Unit #0',
@@ -90,7 +90,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.unit(entry_id),
+				DAT.DATEntryName.unit(entry_id),
 				expected_name
 			)
 
@@ -104,7 +104,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.unit(entry_id, data_names=Assets.data_cache(Assets.DataReference.Units)),
+				DAT.DATEntryName.unit(entry_id, data_names=Assets.data_cache(Assets.DataReference.Units)),
 				expected_name,
 			)
 
@@ -118,7 +118,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.unit(entry_id, stat_txt=stat_txt, data_names_usage=DataNamesUsage.ignore),
+				DAT.DATEntryName.unit(entry_id, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.ignore),
 				expected_name,
 			)
 
@@ -134,7 +134,7 @@ class Test_Entry_Name(unittest.TestCase):
 		decompiled_stat_txt.strings = [decompile_string(string) for string in stat_txt.strings]
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.unit(entry_id, stat_txt=decompiled_stat_txt, data_names_usage=DataNamesUsage.ignore, tbl_decompile=False),
+				DAT.DATEntryName.unit(entry_id, stat_txt=decompiled_stat_txt, data_names_usage=DAT.DataNamesUsage.ignore, tbl_decompile=False),
 				expected_name,
 			)
 
@@ -148,7 +148,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.unit(entry_id, stat_txt=stat_txt, data_names_usage=DataNamesUsage.ignore, unitnamestbl=unitnamestbl),
+				DAT.DATEntryName.unit(entry_id, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.ignore, unitnamestbl=unitnamestbl),
 				expected_name,
 			)
 
@@ -162,7 +162,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.unit(entry_id, stat_txt=stat_txt, data_names_usage=DataNamesUsage.ignore, tbl_raw_string=False),
+				DAT.DATEntryName.unit(entry_id, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.ignore, tbl_raw_string=False),
 				expected_name,
 			)
 
@@ -176,7 +176,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.unit(entry_id, stat_txt=stat_txt, unitnamestbl=unitnamestbl, data_names_usage=DataNamesUsage.ignore, tbl_raw_string=False),
+				DAT.DATEntryName.unit(entry_id, stat_txt=stat_txt, unitnamestbl=unitnamestbl, data_names_usage=DAT.DataNamesUsage.ignore, tbl_raw_string=False),
 				expected_name,
 			)
 
@@ -190,7 +190,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.unit(entry_id, data_names=Assets.data_cache(Assets.DataReference.Units), stat_txt=stat_txt, unitnamestbl=unitnamestbl, data_names_usage=DataNamesUsage.use),
+				DAT.DATEntryName.unit(entry_id, data_names=Assets.data_cache(Assets.DataReference.Units), stat_txt=stat_txt, unitnamestbl=unitnamestbl, data_names_usage=DAT.DataNamesUsage.use),
 				expected_name,
 			)
 
@@ -204,7 +204,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.unit(entry_id, data_names=Assets.data_cache(Assets.DataReference.Units), stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine),
+				DAT.DATEntryName.unit(entry_id, data_names=Assets.data_cache(Assets.DataReference.Units), stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine),
 				expected_name,
 			)
 
@@ -218,7 +218,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.unit(entry_id, data_names=Assets.data_cache(Assets.DataReference.Units), stat_txt=stat_txt, unitnamestbl=unitnamestbl, data_names_usage=DataNamesUsage.combine),
+				DAT.DATEntryName.unit(entry_id, data_names=Assets.data_cache(Assets.DataReference.Units), stat_txt=stat_txt, unitnamestbl=unitnamestbl, data_names_usage=DAT.DataNamesUsage.combine),
 				expected_name,
 			)
 
@@ -232,7 +232,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.unit(entry_id, data_names=Assets.data_cache(Assets.DataReference.Units), stat_txt=stat_txt, unitnamestbl=unitnamestbl, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False),
+				DAT.DATEntryName.unit(entry_id, data_names=Assets.data_cache(Assets.DataReference.Units), stat_txt=stat_txt, unitnamestbl=unitnamestbl, data_names_usage=DAT.DataNamesUsage.combine, tbl_raw_string=False),
 				expected_name,
 			)
 
@@ -252,7 +252,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.unit(entry_id, data_names=Assets.data_cache(Assets.DataReference.Units), stat_txt=stat_txt, unitnamestbl=unitnamestbl, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
+				DAT.DATEntryName.unit(entry_id, data_names=Assets.data_cache(Assets.DataReference.Units), stat_txt=stat_txt, unitnamestbl=unitnamestbl, data_names_usage=DAT.DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
 				expected_name,
 			)
 
@@ -272,16 +272,43 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.unit(entry_id, data_names=Assets.data_cache(Assets.DataReference.Units), stat_txt=stat_txt, unitnamestbl=unitnamestbl, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
+				DAT.DATEntryName.unit(entry_id, data_names=Assets.data_cache(Assets.DataReference.Units), stat_txt=stat_txt, unitnamestbl=unitnamestbl, data_names_usage=DAT.DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
 				expected_name,
 			)
+
+	def test_unit_name_strips_only_terminator_not_trailing_chars(self) -> None:
+		# The '<0>' terminator must be removed as a suffix, not as a set of
+		# characters, so a name whose text ends in '0', '<', or '>' is kept whole.
+		self.assertEqual(
+			DAT.DATEntryName.unit(0, stat_txt=['Level 10<0>'], data_names_usage=DAT.DataNamesUsage.ignore, tbl_decompile=False),
+			'Level 10'
+		)
+		# A raw (null-terminated) string must also have its terminator removed.
+		self.assertEqual(
+			DAT.DATEntryName.unit(0, stat_txt=['Unit 0\x00'], data_names_usage=DAT.DataNamesUsage.ignore, tbl_decompile=False),
+			'Unit 0'
+		)
+
+	def test_grp_flingy_returns_none_for_out_of_range_id(self) -> None:
+		flingydat = DAT.FlingyDAT()
+		flingydat.load(resource_path('flingy.dat', __file__))
+		spritesdat = DAT.SpritesDAT()
+		spritesdat.load(resource_path('sprites.dat', __file__))
+		imagesdat = DAT.ImagesDAT()
+		imagesdat.load(resource_path('images.dat', __file__))
+		imagestbl = TBL()
+		imagestbl.load(resource_path('images.tbl', __file__))
+		# An id equal to the entry count is out of range and must not raise.
+		self.assertIsNone(
+			DAT.DATEntryName.grp_flingy(flingydat.entry_count(), flingydat, spritesdat, imagesdat, imagestbl)
+		)
 
 	def test_weapon_name(self) -> None:
 		entry_ids = (0, 61, 129, 130)
 		stat_txt = TBL()
-		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
-		weaponsdat = WeaponsDAT()
-		weaponsdat.load_file(resource_path('weapons.dat', __file__))
+		stat_txt.load(resource_path('stat_txt.tbl', __file__))
+		weaponsdat = DAT.WeaponsDAT()
+		weaponsdat.load(resource_path('weapons.dat', __file__))
 		weaponsdat.expand_entries()
 		weaponsdat.get_entry(130).label = 570 # "General Duke<0>"
 
@@ -293,7 +320,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.weapon(entry_id),
+				DAT.DATEntryName.weapon(entry_id),
 				expected_name
 			)
 
@@ -305,7 +332,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.weapon(entry_id, data_names=Assets.data_cache(Assets.DataReference.Weapons)),
+				DAT.DATEntryName.weapon(entry_id, data_names=Assets.data_cache(Assets.DataReference.Weapons)),
 				expected_name
 			)
 
@@ -317,7 +344,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.weapon(entry_id, weaponsdat=weaponsdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.ignore),
+				DAT.DATEntryName.weapon(entry_id, weaponsdat=weaponsdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.ignore),
 				expected_name
 			)
 
@@ -331,7 +358,7 @@ class Test_Entry_Name(unittest.TestCase):
 		decompiled_stat_txt.strings = [decompile_string(string) for string in stat_txt.strings]
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.weapon(entry_id, weaponsdat=weaponsdat, stat_txt=decompiled_stat_txt, data_names_usage=DataNamesUsage.ignore, tbl_decompile=False),
+				DAT.DATEntryName.weapon(entry_id, weaponsdat=weaponsdat, stat_txt=decompiled_stat_txt, data_names_usage=DAT.DataNamesUsage.ignore, tbl_decompile=False),
 				expected_name
 			)
 
@@ -343,7 +370,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.weapon(entry_id, weaponsdat=weaponsdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.ignore, tbl_raw_string=False),
+				DAT.DATEntryName.weapon(entry_id, weaponsdat=weaponsdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.ignore, tbl_raw_string=False),
 				expected_name
 			)
 
@@ -355,7 +382,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.weapon(entry_id, data_names=Assets.data_cache(Assets.DataReference.Weapons), weaponsdat=weaponsdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine),
+				DAT.DATEntryName.weapon(entry_id, data_names=Assets.data_cache(Assets.DataReference.Weapons), weaponsdat=weaponsdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine),
 				expected_name
 			)
 
@@ -367,7 +394,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.weapon(entry_id, data_names=Assets.data_cache(Assets.DataReference.Weapons), weaponsdat=weaponsdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False),
+				DAT.DATEntryName.weapon(entry_id, data_names=Assets.data_cache(Assets.DataReference.Weapons), weaponsdat=weaponsdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine, tbl_raw_string=False),
 				expected_name
 			)
 
@@ -385,7 +412,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.weapon(entry_id, data_names=Assets.data_cache(Assets.DataReference.Weapons), weaponsdat=weaponsdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
+				DAT.DATEntryName.weapon(entry_id, data_names=Assets.data_cache(Assets.DataReference.Weapons), weaponsdat=weaponsdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
 				expected_name
 			)
 
@@ -403,18 +430,18 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.weapon(entry_id, data_names=Assets.data_cache(Assets.DataReference.Weapons), weaponsdat=weaponsdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
+				DAT.DATEntryName.weapon(entry_id, data_names=Assets.data_cache(Assets.DataReference.Weapons), weaponsdat=weaponsdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
 				expected_name
 			)
 
 	def test_image_name(self) -> None:
 		entry_ids = (0, 499, 998, 999)
-		imagesdat = ImagesDAT()
-		imagesdat.load_file(resource_path('images.dat', __file__))
+		imagesdat = DAT.ImagesDAT()
+		imagesdat.load(resource_path('images.dat', __file__))
 		imagesdat.expand_entries()
 		imagesdat.get_entry(999).grp_file = 3 # zerg\\zavBirth.grp
 		imagestbl = TBL()
-		imagestbl.load_file(resource_path('images.tbl', __file__))
+		imagestbl.load(resource_path('images.tbl', __file__))
 
 		expected_names = (
 			'Image #0',
@@ -424,7 +451,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.image(entry_id),
+				DAT.DATEntryName.image(entry_id),
 				expected_name
 			)
 
@@ -436,7 +463,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.image(entry_id, data_names=Assets.data_cache(Assets.DataReference.Images)),
+				DAT.DATEntryName.image(entry_id, data_names=Assets.data_cache(Assets.DataReference.Images)),
 				expected_name
 			)
 
@@ -448,7 +475,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.image(entry_id, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DataNamesUsage.ignore),
+				DAT.DATEntryName.image(entry_id, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DAT.DataNamesUsage.ignore),
 				expected_name
 			)
 
@@ -460,7 +487,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.image(entry_id, data_names=Assets.data_cache(Assets.DataReference.Images), imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DataNamesUsage.combine),
+				DAT.DATEntryName.image(entry_id, data_names=Assets.data_cache(Assets.DataReference.Images), imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DAT.DataNamesUsage.combine),
 				expected_name
 			)
 
@@ -478,7 +505,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.image(entry_id, data_names=Assets.data_cache(Assets.DataReference.Images), imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
+				DAT.DATEntryName.image(entry_id, data_names=Assets.data_cache(Assets.DataReference.Images), imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DAT.DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
@@ -496,22 +523,22 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.image(entry_id, data_names=Assets.data_cache(Assets.DataReference.Images), imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
+				DAT.DATEntryName.image(entry_id, data_names=Assets.data_cache(Assets.DataReference.Images), imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DAT.DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
 	def test_sprite_name(self) -> None:
 		entry_ids = (0, 258, 516, 517)
-		spritesdat = SpritesDAT()
-		spritesdat.load_file(resource_path('sprites.dat', __file__))
+		spritesdat = DAT.SpritesDAT()
+		spritesdat.load(resource_path('sprites.dat', __file__))
 		spritesdat.expand_entries()
 		spritesdat.get_entry(517).image = 999
-		imagesdat = ImagesDAT()
-		imagesdat.load_file(resource_path('images.dat', __file__))
+		imagesdat = DAT.ImagesDAT()
+		imagesdat.load(resource_path('images.dat', __file__))
 		imagesdat.expand_entries()
 		imagesdat.get_entry(999).grp_file = 3 # zerg\\zavBirth.grp
 		imagestbl = TBL()
-		imagestbl.load_file(resource_path('images.tbl', __file__))
+		imagestbl.load(resource_path('images.tbl', __file__))
 
 		expected_names = (
 			'Sprite #0',
@@ -521,7 +548,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sprite(entry_id),
+				DAT.DATEntryName.sprite(entry_id),
 				expected_name
 			)
 
@@ -533,7 +560,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sprite(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sprites)),
+				DAT.DATEntryName.sprite(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sprites)),
 				expected_name
 			)
 
@@ -545,7 +572,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sprite(entry_id, spritesdat=spritesdat, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DataNamesUsage.ignore),
+				DAT.DATEntryName.sprite(entry_id, spritesdat=spritesdat, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DAT.DataNamesUsage.ignore),
 				expected_name
 			)
 
@@ -557,7 +584,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sprite(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sprites), spritesdat=spritesdat, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DataNamesUsage.combine),
+				DAT.DATEntryName.sprite(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sprites), spritesdat=spritesdat, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DAT.DataNamesUsage.combine),
 				expected_name
 			)
 
@@ -575,7 +602,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sprite(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sprites), spritesdat=spritesdat, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
+				DAT.DATEntryName.sprite(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sprites), spritesdat=spritesdat, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DAT.DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
@@ -593,26 +620,26 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sprite(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sprites), spritesdat=spritesdat, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
+				DAT.DATEntryName.sprite(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sprites), spritesdat=spritesdat, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DAT.DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
 	def test_flingy_name(self) -> None:
 		entry_ids = (0, 104, 208, 209)
-		flingydat = FlingyDAT()
-		flingydat.load_file(resource_path('flingy.dat', __file__))
+		flingydat = DAT.FlingyDAT()
+		flingydat.load(resource_path('flingy.dat', __file__))
 		flingydat.expand_entries()
 		flingydat.get_entry(209).sprite = 517
-		spritesdat = SpritesDAT()
-		spritesdat.load_file(resource_path('sprites.dat', __file__))
+		spritesdat = DAT.SpritesDAT()
+		spritesdat.load(resource_path('sprites.dat', __file__))
 		spritesdat.expand_entries()
 		spritesdat.get_entry(517).image = 999
-		imagesdat = ImagesDAT()
-		imagesdat.load_file(resource_path('images.dat', __file__))
+		imagesdat = DAT.ImagesDAT()
+		imagesdat.load(resource_path('images.dat', __file__))
 		imagesdat.expand_entries()
 		imagesdat.get_entry(999).grp_file = 3 # zerg\\zavBirth.grp
 		imagestbl = TBL()
-		imagestbl.load_file(resource_path('images.tbl', __file__))
+		imagestbl.load(resource_path('images.tbl', __file__))
 
 		expected_names = (
 			'Flingy #0',
@@ -622,7 +649,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.flingy(entry_id),
+				DAT.DATEntryName.flingy(entry_id),
 				expected_name
 			)
 
@@ -634,7 +661,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.flingy(entry_id, data_names=Assets.data_cache(Assets.DataReference.Flingy)),
+				DAT.DATEntryName.flingy(entry_id, data_names=Assets.data_cache(Assets.DataReference.Flingy)),
 				expected_name
 			)
 
@@ -646,7 +673,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.flingy(entry_id, flingydat=flingydat, spritesdat=spritesdat, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DataNamesUsage.ignore),
+				DAT.DATEntryName.flingy(entry_id, flingydat=flingydat, spritesdat=spritesdat, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DAT.DataNamesUsage.ignore),
 				expected_name
 			)
 
@@ -658,7 +685,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.flingy(entry_id, data_names=Assets.data_cache(Assets.DataReference.Flingy), flingydat=flingydat, spritesdat=spritesdat, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DataNamesUsage.combine),
+				DAT.DATEntryName.flingy(entry_id, data_names=Assets.data_cache(Assets.DataReference.Flingy), flingydat=flingydat, spritesdat=spritesdat, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DAT.DataNamesUsage.combine),
 				expected_name
 			)
 
@@ -676,7 +703,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.flingy(entry_id, data_names=Assets.data_cache(Assets.DataReference.Flingy), flingydat=flingydat, spritesdat=spritesdat, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
+				DAT.DATEntryName.flingy(entry_id, data_names=Assets.data_cache(Assets.DataReference.Flingy), flingydat=flingydat, spritesdat=spritesdat, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DAT.DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
@@ -694,16 +721,16 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.flingy(entry_id, data_names=Assets.data_cache(Assets.DataReference.Flingy), flingydat=flingydat, spritesdat=spritesdat, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
+				DAT.DATEntryName.flingy(entry_id, data_names=Assets.data_cache(Assets.DataReference.Flingy), flingydat=flingydat, spritesdat=spritesdat, imagesdat=imagesdat, imagestbl=imagestbl, data_names_usage=DAT.DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
 	def test_upgrade_name(self) -> None:
 		entry_ids = (0, 30, 60, 61)
 		stat_txt = TBL()
-		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
-		upgradesdat = UpgradesDAT()
-		upgradesdat.load_file(resource_path('upgrades.dat', __file__))
+		stat_txt.load(resource_path('stat_txt.tbl', __file__))
+		upgradesdat = DAT.UpgradesDAT()
+		upgradesdat.load(resource_path('upgrades.dat', __file__))
 		upgradesdat.expand_entries()
 		upgradesdat.get_entry(61).label = 570 # "General Duke<0>"
 
@@ -715,7 +742,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.upgrade(entry_id),
+				DAT.DATEntryName.upgrade(entry_id),
 				expected_name
 			)
 
@@ -727,7 +754,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.upgrade(entry_id, data_names=Assets.data_cache(Assets.DataReference.Upgrades)),
+				DAT.DATEntryName.upgrade(entry_id, data_names=Assets.data_cache(Assets.DataReference.Upgrades)),
 				expected_name
 			)
 
@@ -739,7 +766,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.upgrade(entry_id, upgradesdat=upgradesdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.ignore),
+				DAT.DATEntryName.upgrade(entry_id, upgradesdat=upgradesdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.ignore),
 				expected_name
 			)
 
@@ -753,7 +780,7 @@ class Test_Entry_Name(unittest.TestCase):
 		decompiled_stat_txt.strings = [decompile_string(string) for string in stat_txt.strings]
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.upgrade(entry_id, upgradesdat=upgradesdat, stat_txt=decompiled_stat_txt, data_names_usage=DataNamesUsage.ignore, tbl_decompile=False),
+				DAT.DATEntryName.upgrade(entry_id, upgradesdat=upgradesdat, stat_txt=decompiled_stat_txt, data_names_usage=DAT.DataNamesUsage.ignore, tbl_decompile=False),
 				expected_name
 			)
 
@@ -765,7 +792,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.upgrade(entry_id, upgradesdat=upgradesdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.ignore, tbl_raw_string=False),
+				DAT.DATEntryName.upgrade(entry_id, upgradesdat=upgradesdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.ignore, tbl_raw_string=False),
 				expected_name
 			)
 
@@ -777,7 +804,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.upgrade(entry_id, data_names=Assets.data_cache(Assets.DataReference.Upgrades), upgradesdat=upgradesdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine),
+				DAT.DATEntryName.upgrade(entry_id, data_names=Assets.data_cache(Assets.DataReference.Upgrades), upgradesdat=upgradesdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine),
 				expected_name
 			)
 
@@ -789,7 +816,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.upgrade(entry_id, data_names=Assets.data_cache(Assets.DataReference.Upgrades), upgradesdat=upgradesdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False),
+				DAT.DATEntryName.upgrade(entry_id, data_names=Assets.data_cache(Assets.DataReference.Upgrades), upgradesdat=upgradesdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine, tbl_raw_string=False),
 				expected_name
 			)
 
@@ -807,7 +834,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.upgrade(entry_id, data_names=Assets.data_cache(Assets.DataReference.Upgrades), upgradesdat=upgradesdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
+				DAT.DATEntryName.upgrade(entry_id, data_names=Assets.data_cache(Assets.DataReference.Upgrades), upgradesdat=upgradesdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
 				expected_name
 			)
 
@@ -825,16 +852,16 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.upgrade(entry_id, data_names=Assets.data_cache(Assets.DataReference.Upgrades), upgradesdat=upgradesdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
+				DAT.DATEntryName.upgrade(entry_id, data_names=Assets.data_cache(Assets.DataReference.Upgrades), upgradesdat=upgradesdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
 				expected_name
 			)
 
 	def test_tech_name(self) -> None:
 		entry_ids = (0, 21, 43, 44)
 		stat_txt = TBL()
-		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
-		techdatadat = TechDAT()
-		techdatadat.load_file(resource_path('techdata.dat', __file__))
+		stat_txt.load(resource_path('stat_txt.tbl', __file__))
+		techdatadat = DAT.TechDAT()
+		techdatadat.load(resource_path('techdata.dat', __file__))
 		techdatadat.expand_entries()
 		techdatadat.get_entry(44).label = 570 # "General Duke<0>"
 
@@ -846,7 +873,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.tech(entry_id),
+				DAT.DATEntryName.tech(entry_id),
 				expected_name
 			)
 
@@ -858,7 +885,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.tech(entry_id, data_names=Assets.data_cache(Assets.DataReference.Techdata)),
+				DAT.DATEntryName.tech(entry_id, data_names=Assets.data_cache(Assets.DataReference.Techdata)),
 				expected_name
 			)
 
@@ -870,7 +897,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.tech(entry_id, techdatadat=techdatadat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.ignore),
+				DAT.DATEntryName.tech(entry_id, techdatadat=techdatadat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.ignore),
 				expected_name
 			)
 
@@ -884,7 +911,7 @@ class Test_Entry_Name(unittest.TestCase):
 		decompiled_stat_txt.strings = [decompile_string(string) for string in stat_txt.strings]
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.tech(entry_id, techdatadat=techdatadat, stat_txt=decompiled_stat_txt, data_names_usage=DataNamesUsage.ignore, tbl_decompile=False),
+				DAT.DATEntryName.tech(entry_id, techdatadat=techdatadat, stat_txt=decompiled_stat_txt, data_names_usage=DAT.DataNamesUsage.ignore, tbl_decompile=False),
 				expected_name
 			)
 
@@ -896,7 +923,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.tech(entry_id, techdatadat=techdatadat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.ignore, tbl_raw_string=False),
+				DAT.DATEntryName.tech(entry_id, techdatadat=techdatadat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.ignore, tbl_raw_string=False),
 				expected_name
 			)
 
@@ -908,7 +935,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.tech(entry_id, data_names=Assets.data_cache(Assets.DataReference.Techdata), techdatadat=techdatadat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine),
+				DAT.DATEntryName.tech(entry_id, data_names=Assets.data_cache(Assets.DataReference.Techdata), techdatadat=techdatadat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine),
 				expected_name
 			)
 
@@ -920,7 +947,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.tech(entry_id, data_names=Assets.data_cache(Assets.DataReference.Techdata), techdatadat=techdatadat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False),
+				DAT.DATEntryName.tech(entry_id, data_names=Assets.data_cache(Assets.DataReference.Techdata), techdatadat=techdatadat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine, tbl_raw_string=False),
 				expected_name
 			)
 
@@ -938,7 +965,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.tech(entry_id, data_names=Assets.data_cache(Assets.DataReference.Techdata), techdatadat=techdatadat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
+				DAT.DATEntryName.tech(entry_id, data_names=Assets.data_cache(Assets.DataReference.Techdata), techdatadat=techdatadat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
 				expected_name
 			)
 
@@ -956,16 +983,16 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.tech(entry_id, data_names=Assets.data_cache(Assets.DataReference.Techdata), techdatadat=techdatadat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
+				DAT.DATEntryName.tech(entry_id, data_names=Assets.data_cache(Assets.DataReference.Techdata), techdatadat=techdatadat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
 				expected_name
 			)
 
 	def test_sound_name(self) -> None:
 		entry_ids = (0, 571, 1143, 1144)
 		sfxdatatbl = TBL()
-		sfxdatatbl.load_file(resource_path('sfxdata.tbl', __file__))
-		sfxdatadat = SoundsDAT()
-		sfxdatadat.load_file(resource_path('sfxdata.dat', __file__))
+		sfxdatatbl.load(resource_path('sfxdata.tbl', __file__))
+		sfxdatadat = DAT.SoundsDAT()
+		sfxdatadat.load(resource_path('sfxdata.dat', __file__))
 		sfxdatadat.expand_entries()
 		sfxdatadat.get_entry(1144).sound_file = 2 # Misc\\Buzz.wav
 
@@ -977,7 +1004,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sound(entry_id),
+				DAT.DATEntryName.sound(entry_id),
 				expected_name
 			)
 
@@ -989,7 +1016,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sound(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sfxdata)),
+				DAT.DATEntryName.sound(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sfxdata)),
 				expected_name
 			)
 
@@ -1001,7 +1028,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sound(entry_id, sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, data_names_usage=DataNamesUsage.ignore),
+				DAT.DATEntryName.sound(entry_id, sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, data_names_usage=DAT.DataNamesUsage.ignore),
 				expected_name
 			)
 
@@ -1015,7 +1042,7 @@ class Test_Entry_Name(unittest.TestCase):
 		decompiled_sfxdatatbl.strings = [decompile_string(string) for string in sfxdatatbl.strings]
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sound(entry_id, sfxdatadat=sfxdatadat, sfxdatatbl=decompiled_sfxdatatbl, data_names_usage=DataNamesUsage.ignore, tbl_decompile=False),
+				DAT.DATEntryName.sound(entry_id, sfxdatadat=sfxdatadat, sfxdatatbl=decompiled_sfxdatatbl, data_names_usage=DAT.DataNamesUsage.ignore, tbl_decompile=False),
 				expected_name
 			)
 
@@ -1027,7 +1054,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sound(entry_id, sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, none_name='No sound', data_names_usage=DataNamesUsage.ignore),
+				DAT.DATEntryName.sound(entry_id, sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, none_name='No sound', data_names_usage=DAT.DataNamesUsage.ignore),
 				expected_name
 			)
 
@@ -1039,7 +1066,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sound(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sfxdata), sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, data_names_usage=DataNamesUsage.combine),
+				DAT.DATEntryName.sound(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sfxdata), sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, data_names_usage=DAT.DataNamesUsage.combine),
 				expected_name
 			)
 
@@ -1057,7 +1084,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sound(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sfxdata), sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
+				DAT.DATEntryName.sound(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sfxdata), sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, data_names_usage=DAT.DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
@@ -1075,18 +1102,18 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sound(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sfxdata), sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
+				DAT.DATEntryName.sound(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sfxdata), sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, data_names_usage=DAT.DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
 	def test_portrait_name(self) -> None:
 		entry_ids = (0, 54, 109, 110)
 		portdatatbl = TBL()
-		portdatatbl.load_file(resource_path('portdata.tbl', __file__))
-		portdatadat = PortraitsDAT()
-		portdatadat.load_file(resource_path('portdata.dat', __file__))
+		portdatatbl.load(resource_path('portdata.tbl', __file__))
+		portdatadat = DAT.PortraitsDAT()
+		portdatadat.load(resource_path('portdata.dat', __file__))
 		portdatadat.expand_entries()
-		portdatadat.get_entry(110).idle.portrait_file = 3 # tghost\TGhFid0
+		portdatadat.get_entry(110).idle.portrait_file = 3 # tghost\\TGhFid0
 
 		expected_names = (
 			'Portrait #0',
@@ -1096,7 +1123,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.portrait(entry_id),
+				DAT.DATEntryName.portrait(entry_id),
 				expected_name
 			)
 
@@ -1108,7 +1135,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.portrait(entry_id, data_names=Assets.data_cache(Assets.DataReference.Portdata)),
+				DAT.DATEntryName.portrait(entry_id, data_names=Assets.data_cache(Assets.DataReference.Portdata)),
 				expected_name
 			)
 
@@ -1116,11 +1143,11 @@ class Test_Entry_Name(unittest.TestCase):
 			'tmarine\\TMaFid0',
 			'UTassadar\\UTaFid0',
 			'UFlag12\\UF12Fid0',
-			'tghost\TGhFid0',
+			'tghost\\TGhFid0',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.portrait(entry_id, portdatadat=portdatadat, portdatatbl=portdatatbl, data_names_usage=DataNamesUsage.ignore),
+				DAT.DATEntryName.portrait(entry_id, portdatadat=portdatadat, portdatatbl=portdatatbl, data_names_usage=DAT.DataNamesUsage.ignore),
 				expected_name
 			)
 
@@ -1128,13 +1155,13 @@ class Test_Entry_Name(unittest.TestCase):
 			'tmarine\\TMaFid0',
 			'UTassadar\\UTaFid0',
 			'UFlag12\\UF12Fid0',
-			'tghost\TGhFid0',
+			'tghost\\TGhFid0',
 		)
 		decompiled_portdatatbl = TBL()
 		decompiled_portdatatbl.strings = [decompile_string(string) for string in portdatatbl.strings]
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.portrait(entry_id, portdatadat=portdatadat, portdatatbl=decompiled_portdatatbl, data_names_usage=DataNamesUsage.ignore, tbl_decompile=False),
+				DAT.DATEntryName.portrait(entry_id, portdatadat=portdatadat, portdatatbl=decompiled_portdatatbl, data_names_usage=DAT.DataNamesUsage.ignore, tbl_decompile=False),
 				expected_name
 			)
 
@@ -1142,11 +1169,11 @@ class Test_Entry_Name(unittest.TestCase):
 			'Marine (tmarine\\TMaFid0)',
 			'Gantrithor (UTassadar\\UTaFid0)',
 			'Flag (Blue) (Pl.12) (UFlag12\\UF12Fid0)',
-			'Expanded Portrait #110 (tghost\TGhFid0)',
+			'Expanded Portrait #110 (tghost\\TGhFid0)',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.portrait(entry_id, data_names=Assets.data_cache(Assets.DataReference.Portdata), portdatadat=portdatadat, portdatatbl=portdatatbl, data_names_usage=DataNamesUsage.combine),
+				DAT.DATEntryName.portrait(entry_id, data_names=Assets.data_cache(Assets.DataReference.Portdata), portdatadat=portdatadat, portdatatbl=portdatatbl, data_names_usage=DAT.DataNamesUsage.combine),
 				expected_name
 			)
 
@@ -1164,7 +1191,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.portrait(entry_id, data_names=Assets.data_cache(Assets.DataReference.Portdata), portdatadat=portdatadat, portdatatbl=portdatatbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
+				DAT.DATEntryName.portrait(entry_id, data_names=Assets.data_cache(Assets.DataReference.Portdata), portdatadat=portdatadat, portdatatbl=portdatatbl, data_names_usage=DAT.DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
@@ -1172,7 +1199,7 @@ class Test_Entry_Name(unittest.TestCase):
 			'Marine (tmarine\\TMaFid0) [V1]',
 			'Gantrithor (UTassadar\\UTaFid0) [V2]',
 			'Flag (Blue) (Pl.12) (UFlag12\\UF12Fid0) [V3]',
-			'Expanded Portrait #110 (tghost\TGhFid0) [V4]',
+			'Expanded Portrait #110 (tghost\\TGhFid0) [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),
@@ -1182,16 +1209,16 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.portrait(entry_id, data_names=Assets.data_cache(Assets.DataReference.Portdata), portdatadat=portdatadat, portdatatbl=portdatatbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
+				DAT.DATEntryName.portrait(entry_id, data_names=Assets.data_cache(Assets.DataReference.Portdata), portdatadat=portdatadat, portdatatbl=portdatatbl, data_names_usage=DAT.DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
 	def test_map_name(self) -> None:
 		entry_ids = (0, 32, 64, 65)
 		mapdatatbl = TBL()
-		mapdatatbl.load_file(resource_path('mapdata.tbl', __file__))
-		mapdatadat = CampaignDAT()
-		mapdatadat.load_file(resource_path('mapdata.dat', __file__))
+		mapdatatbl.load(resource_path('mapdata.tbl', __file__))
+		mapdatadat = DAT.CampaignDAT()
+		mapdatadat.load(resource_path('mapdata.dat', __file__))
 		mapdatadat.expand_entries()
 		mapdatadat.get_entry(65).map_file = 2 # campaign\\terran\\terran01
 
@@ -1203,7 +1230,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.map(entry_id),
+				DAT.DATEntryName.map(entry_id),
 				expected_name
 			)
 
@@ -1215,7 +1242,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.map(entry_id, data_names=Assets.data_cache(Assets.DataReference.Mapdata)),
+				DAT.DATEntryName.map(entry_id, data_names=Assets.data_cache(Assets.DataReference.Mapdata)),
 				expected_name
 			)
 
@@ -1227,7 +1254,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.map(entry_id, mapdatadat=mapdatadat, mapdatatbl=mapdatatbl, data_names_usage=DataNamesUsage.ignore),
+				DAT.DATEntryName.map(entry_id, mapdatadat=mapdatadat, mapdatatbl=mapdatatbl, data_names_usage=DAT.DataNamesUsage.ignore),
 				expected_name
 			)
 
@@ -1241,7 +1268,7 @@ class Test_Entry_Name(unittest.TestCase):
 		decompiled_mapdatatbl.strings = [decompile_string(string) for string in mapdatatbl.strings]
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.map(entry_id, mapdatadat=mapdatadat, mapdatatbl=decompiled_mapdatatbl, data_names_usage=DataNamesUsage.ignore, tbl_decompile=False),
+				DAT.DATEntryName.map(entry_id, mapdatadat=mapdatadat, mapdatatbl=decompiled_mapdatatbl, data_names_usage=DAT.DataNamesUsage.ignore, tbl_decompile=False),
 				expected_name
 			)
 
@@ -1253,7 +1280,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.map(entry_id, data_names=Assets.data_cache(Assets.DataReference.Mapdata), mapdatadat=mapdatadat, mapdatatbl=mapdatatbl, data_names_usage=DataNamesUsage.combine),
+				DAT.DATEntryName.map(entry_id, data_names=Assets.data_cache(Assets.DataReference.Mapdata), mapdatadat=mapdatadat, mapdatatbl=mapdatatbl, data_names_usage=DAT.DataNamesUsage.combine),
 				expected_name
 			)
 
@@ -1271,7 +1298,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.map(entry_id, data_names=Assets.data_cache(Assets.DataReference.Mapdata), mapdatadat=mapdatadat, mapdatatbl=mapdatatbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
+				DAT.DATEntryName.map(entry_id, data_names=Assets.data_cache(Assets.DataReference.Mapdata), mapdatadat=mapdatadat, mapdatatbl=mapdatatbl, data_names_usage=DAT.DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
@@ -1289,16 +1316,16 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.map(entry_id, data_names=Assets.data_cache(Assets.DataReference.Mapdata), mapdatadat=mapdatadat, mapdatatbl=mapdatatbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
+				DAT.DATEntryName.map(entry_id, data_names=Assets.data_cache(Assets.DataReference.Mapdata), mapdatadat=mapdatadat, mapdatatbl=mapdatatbl, data_names_usage=DAT.DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
 	def test_order_name(self) -> None:
 		entry_ids = (0, 94, 188, 189)
 		stat_txt = TBL()
-		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
-		ordersdat = OrdersDAT()
-		ordersdat.load_file(resource_path('orders.dat', __file__))
+		stat_txt.load(resource_path('stat_txt.tbl', __file__))
+		ordersdat = DAT.OrdersDAT()
+		ordersdat.load(resource_path('orders.dat', __file__))
 		ordersdat.expand_entries()
 		ordersdat.get_entry(189).label = 570 # "General Duke<0>"
 
@@ -1310,7 +1337,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.order(entry_id),
+				DAT.DATEntryName.order(entry_id),
 				expected_name
 			)
 
@@ -1322,7 +1349,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.order(entry_id, data_names=Assets.data_cache(Assets.DataReference.Orders)),
+				DAT.DATEntryName.order(entry_id, data_names=Assets.data_cache(Assets.DataReference.Orders)),
 				expected_name
 			)
 
@@ -1334,7 +1361,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.order(entry_id, ordersdat=ordersdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.ignore),
+				DAT.DATEntryName.order(entry_id, ordersdat=ordersdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.ignore),
 				expected_name
 			)
 
@@ -1348,7 +1375,7 @@ class Test_Entry_Name(unittest.TestCase):
 		decompiled_stat_txt.strings = [decompile_string(string) for string in stat_txt.strings]
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.order(entry_id, ordersdat=ordersdat, stat_txt=decompiled_stat_txt, data_names_usage=DataNamesUsage.ignore, tbl_decompile=False),
+				DAT.DATEntryName.order(entry_id, ordersdat=ordersdat, stat_txt=decompiled_stat_txt, data_names_usage=DAT.DataNamesUsage.ignore, tbl_decompile=False),
 				expected_name
 			)
 
@@ -1360,7 +1387,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.order(entry_id, ordersdat=ordersdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.ignore, tbl_raw_string=False),
+				DAT.DATEntryName.order(entry_id, ordersdat=ordersdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.ignore, tbl_raw_string=False),
 				expected_name
 			)
 
@@ -1372,7 +1399,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.order(entry_id, data_names=Assets.data_cache(Assets.DataReference.Orders), ordersdat=ordersdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine),
+				DAT.DATEntryName.order(entry_id, data_names=Assets.data_cache(Assets.DataReference.Orders), ordersdat=ordersdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine),
 				expected_name
 			)
 
@@ -1384,7 +1411,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.order(entry_id, data_names=Assets.data_cache(Assets.DataReference.Orders), ordersdat=ordersdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False),
+				DAT.DATEntryName.order(entry_id, data_names=Assets.data_cache(Assets.DataReference.Orders), ordersdat=ordersdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine, tbl_raw_string=False),
 				expected_name
 			)
 
@@ -1402,7 +1429,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.order(entry_id, data_names=Assets.data_cache(Assets.DataReference.Orders), ordersdat=ordersdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
+				DAT.DATEntryName.order(entry_id, data_names=Assets.data_cache(Assets.DataReference.Orders), ordersdat=ordersdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
 				expected_name
 			)
 
@@ -1420,6 +1447,6 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.order(entry_id, data_names=Assets.data_cache(Assets.DataReference.Orders), ordersdat=ordersdat, stat_txt=stat_txt, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
+				DAT.DATEntryName.order(entry_id, data_names=Assets.data_cache(Assets.DataReference.Orders), ordersdat=ordersdat, stat_txt=stat_txt, data_names_usage=DAT.DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
 				expected_name
 			)

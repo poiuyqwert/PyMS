@@ -13,7 +13,7 @@ class CodeHeader(Protocol):
 		...
 
 	def has_entry_point(self, entry_point: CodeBlock) -> bool:
-		return entry_point in self.get_entry_points()
+		return any(block is entry_point for block, _ in self.get_entry_points())
 
 	def serialize(self, serialize_context: SerializeContext) -> None:
 		...

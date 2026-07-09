@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionIVE2(CHKSection):
-	NAME = 'IVE2'
+	NAME = b'IVE2'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 
 	RELEASE = 11
@@ -27,12 +27,12 @@ class CHKSectionIVE2(CHKSection):
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.version = CHKSectionIVE2.RELEASE
-	
+
 	def load_data(self, data: bytes) -> None:
 		self.version = int(struct.unpack('<H', data[:2])[0])
-	
+
 	def save_data(self) -> bytes:
 		return struct.pack('<H', self.version)
 
 	def decompile(self) -> str:
-		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Version',str(self.version)), CHKSectionIVE2.VER_NAME(self.version))
+		return f'{self.NAME.decode("ascii")}:\n\t{pad("Version",str(self.version))} # {CHKSectionIVE2.VER_NAME(self.version)}\n'

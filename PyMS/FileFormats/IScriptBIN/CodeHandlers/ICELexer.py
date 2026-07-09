@@ -5,10 +5,10 @@ from ....Utilities.CodeHandlers import Tokens
 import re
 
 class ICELexer(Lexer):
-	class SymbolToken(Tokens.LiteralsToken):
+	class SymbolToken(Tokens.SymbolToken):
 		_literals = (':', '=', '(', ')', ',')
 
-	class NoneToken(Tokens.LiteralsToken):
+	class NoneToken(Tokens.SymbolToken):
 		_literals = ('[NONE]',)
 
 	class HeaderToken(Tokens.RegexToken):

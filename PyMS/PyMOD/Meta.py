@@ -27,9 +27,9 @@ class MetaHandler:
 
 	def load(self) -> bool:
 		try:
-			with open(self.file_path, 'r') as meta_file:
+			with open(self.file_path, 'r', encoding='utf-8') as meta_file:
 				meta = _json.load(meta_file)
-		except:
+		except Exception:
 			return False
 		if not isinstance(meta, dict):
 			return False
@@ -46,24 +46,24 @@ class MetaHandler:
 
 	def save(self) -> bool:
 		try:
-			with open(self.file_path, 'w') as meta_file:
+			with open(self.file_path, 'w', encoding='utf-8') as meta_file:
 				_json.dump(self.meta, meta_file, indent=4)
-		except:
+		except Exception:
 			return False
 		return True
 
-	def _update_meta_hashes(self, type: Literal['inputs', 'outputs'], file_paths: list[str], file_hashes: list[str] | None = None) -> bool:
+	def _update_meta_hashes(self, field: Literal['inputs', 'outputs'], file_paths: list[str], file_hashes: list[str] | None = None) -> bool:
 		if not file_hashes:
 			try:
 				file_hashes = list(compute_file_hash(file_path) for file_path in file_paths)
-			except:
+			except Exception:
 				pass
 		if not file_hashes:
 			return False
-		if not type in self.meta or not isinstance(self.meta[type], dict):
-			self.meta[type] = {}
+		if not field in self.meta or not isinstance(self.meta[field], dict):
+			self.meta[field] = {}
 		for file_path,file_hash in zip(file_paths, file_hashes):
-			self.meta[type][file_path] = file_hash
+			self.meta[field][file_path] = file_hash
 		return True
 
 	def update_input_metas(self, file_paths: list[str]) -> bool:
@@ -94,14 +94,14 @@ class MetaHandler:
 		return False
 
 def compute_file_hash(file_path: str) -> str:
-	hash = _hashlib.sha256()
+	hasher = _hashlib.sha256()
 
 	with open(file_path, 'rb') as file:
 		while True:
 			# Reading is buffered, so we can read smaller chunks.
-			chunk = file.read(hash.block_size)
+			chunk = file.read(hasher.block_size)
 			if not chunk:
 				break
-			hash.update(chunk)
+			hasher.update(chunk)
 
-	return hash.hexdigest()
+	return hasher.hexdigest()

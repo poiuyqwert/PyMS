@@ -13,9 +13,9 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionCOLR(CHKSection):
-	NAME = 'COLR'
+	NAME = b'COLR'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_BROODWAR, CHKRequirements.MODE_ALL)
-	
+
 	RED = 0
 	BLUE = 1
 	TEAL = 2
@@ -84,16 +84,16 @@ class CHKSectionCOLR(CHKSection):
 
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
-		self.colors = CHKSectionCOLR.DEFAULT_COLORS
-	
+		self.colors = list(CHKSectionCOLR.DEFAULT_COLORS)
+
 	def load_data(self, data: bytes) -> None:
 		self.colors = list(int(c) for c in struct.unpack('<8B', data[:8]))
-	
+
 	def save_data(self) -> bytes:
 		return struct.pack('<8B', *self.colors)
-	
+
 	def decompile(self) -> str:
-		result = '%s:\n' % (self.NAME)
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for p,c in enumerate(self.colors):
-			result += '\t%s # %s\n' % (pad('Player%d' % (p+1), str(c)), CHKSectionCOLR.COLOR_NAME(c))
+			result += f'\t{pad(f"Player{p+1}", str(c))} # {CHKSectionCOLR.COLOR_NAME(c)}\n'
 		return result

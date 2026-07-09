@@ -3,7 +3,7 @@ import re
 
 from typing import Self, Sequence
 
-class Token(object):
+class Token:
 	def __init__(self, raw_value: str) -> None:
 		self.raw_value = raw_value
 
@@ -11,15 +11,19 @@ class Token(object):
 	def match(cls, code: str, offset: int) -> (Self | None):
 		raise NotImplementedError(cls.__name__ + '.match()')
 
-	def __repr__(self):
-		return '<%s %s>' % (self.__class__.__name__, repr(self.raw_value))
+	def __repr__(self) -> str:
+		return f'<{self.__class__.__name__} {self.raw_value!r}>'
 
 class EOFToken(Token):
-	def __init__(self):
-		Token.__init__(self, None)
+	def __init__(self) -> None:
+		Token.__init__(self, '')
 
-	def __repr__(self):
-		return '<%s>' % self.__class__.__name__
+	@classmethod
+	def match(cls, code: str, offset: int) -> (Self | None):
+		return None
+
+	def __repr__(self) -> str:
+		return f'<{self.__class__.__name__}>'
 
 class RegexToken(Token):
 	_regexp: re.Pattern[str]
@@ -32,7 +36,7 @@ class RegexToken(Token):
 		return cls(match.group(0))
 
 class IdentifierToken(RegexToken):
-	_regexp = re.compile(r'[a-zA-Z_][a-zA-Z_0-9]+')
+	_regexp = re.compile(r'[a-zA-Z_][a-zA-Z_0-9]*')
 
 class IntegerToken(RegexToken):
 	_regexp = re.compile(r'-?[0-9]+')
@@ -46,14 +50,28 @@ class FloatToken(RegexToken):
 class StringToken(RegexToken):
 	_regexp = re.compile(r'"([^\\"]|\\.)*"|\'([^\\\']|\\.)*\'')
 
-class LiteralsToken(Token):
+class SymbolToken(Token):
 	_literals: Sequence[str]
 	__regexp: re.Pattern[str] | None = None
 
 	@classmethod
 	def match(cls, code: str, offset: int) -> (Self | None):
 		if cls.__regexp is None:
-			cls.__regexp = re.compile('|'.join(re.escape(literal) for literal in cls._literals))
+			cls.__regexp = re.compile('|'.join(re.escape(literal) for literal in sorted(cls._literals, key=len, reverse=True)))
+		match = cls.__regexp.match(code, offset)
+		if not match:
+			return None
+		return cls(match.group(0))
+
+class KeywordToken(Token):
+	_keywords: Sequence[str]
+	__regexp: re.Pattern[str] | None = None
+
+	@classmethod
+	def match(cls, code: str, offset: int) -> (Self | None):
+		if cls.__regexp is None:
+			alternatives = '|'.join(re.escape(keyword) for keyword in sorted(cls._keywords, key=len, reverse=True))
+			cls.__regexp = re.compile(rf'\b(?:{alternatives})\b')
 		match = cls.__regexp.match(code, offset)
 		if not match:
 			return None
@@ -76,4 +94,6 @@ class UnknownToken(RegexToken):
 	_regexp = re.compile(r'\s+|\S+')
 
 class BooleanToken(RegexToken):
-	_regexp = re.compile(r'true|false|1|0')
+	# The trailing word boundary stops a longer identifier (e.g. `truebox`) from
+	# being lexed as the boolean `true` plus a leftover token.
+	_regexp = re.compile(r'(?:true|false|1|0)\b')

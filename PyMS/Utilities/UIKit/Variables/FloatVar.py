@@ -4,10 +4,10 @@ from .IntegerVar import IntegerVar
 from tkinter import StringVar
 
 class FloatVar(IntegerVar):
-	def __init__(self, val='0', range=[None,None], exclude=[], callback=None, precision=None):
+	def __init__(self, val='0', val_range=None, *, exclude=None, callback=None, precision=None):
 		self.precision = precision
 		self.check = True
-		IntegerVar.__init__(self, val, range, exclude, callback)
+		IntegerVar.__init__(self, val, val_range, exclude, callback)
 
 	def editvalue(self, *_):
 		if self.check:
@@ -15,20 +15,20 @@ class FloatVar(IntegerVar):
 			if s:
 				try:
 					if self.range[0] is not None and self.range[0] >= 0 and self.get(True).startswith('-'):
-						raise Exception()
+						raise ValueError()
 					isfloat = self.get(True)
 					s = self.get()
 					if s in self.exclude:
-						raise Exception()
+						raise ValueError()
 					s = str(s)
 					if self.precision and not s.endswith('.0') and len(s)-s.index('.')-1 > self.precision:
-						raise Exception()
+						raise ValueError()
 					if not isfloat.endswith('.') and not isfloat.endswith('.0') and s.endswith('.0'):
 						s = s[:-2]
 						s = int(s)
 					else:
 						s = float(s)
-				except:
+				except Exception:
 					s = self.lastvalid
 				else:
 					if self.range[0] is not None and s < self.range[0]:
@@ -50,11 +50,11 @@ class FloatVar(IntegerVar):
 	def get(self, s=False):
 		try:
 			string = StringVar.get(self)
-		except:
+		except Exception:
 			string = ''
 		if s:
 			return string
 		try:
 			return float(string)
-		except:
+		except Exception:
 			return 0.0

@@ -5,48 +5,25 @@ from ..Utilities import JSON
 
 import json as _json
 
-from typing import Any, TypeGuard
-
-# def is_json(json: Any, check_keys: bool = False) -> TypeGuard[JSONArray]:
-# 	if not isinstance(json, list):
-# 		return False
-# 	for object in json:
-# 		if not isinstance(object, dict):
-# 			return False
-# 		if check_keys:
-# 			for key in object.keys():
-# 				if not isinstance(key, str):
-# 					return False
-# 	return True
-
-def is_json_value(json: Any) -> TypeGuard[JSON.Value]:
-	return False
-
-def is_json_object(json: Any) -> TypeGuard[JSON.Object]:
-	return False
-
-def is_json_array(json: Any) -> TypeGuard[JSON.Array]:
-	return False
-
-def load(input: IO.AnyInputText) -> JSON.Array | JSON.Object:
+def load(inp: IO.AnyInputText) -> JSON.Array | JSON.Object:
 	try:
-		with IO.InputText(input) as f:
+		with IO.InputText(inp) as f:
 			raw_json = f.read()
-	except:
-		raise PyMSError('Load', "Couldn't load json")
+	except Exception as exc:
+		raise PyMSError('Load', "Couldn't load json") from exc
 	try:
 		json = _json.loads(raw_json)
-	except:
-		raise PyMSError('Load', "Couldn't parse json")
+	except Exception as exc:
+		raise PyMSError('Load', "Couldn't parse json") from exc
 	return json
 
 def save(output: IO.AnyOutputText, json: JSON.Array | JSON.Object) -> None:
 	try:
 		raw_json = _json.dumps(json)
-	except:
-		raise PyMSError('Save', "Couldn't save json")
+	except Exception as exc:
+		raise PyMSError('Save', "Couldn't save json") from exc
 	try:
 		with IO.OutputText(output) as f:
 			f.write(raw_json)
-	except:
-		raise PyMSError('Save', "Couldn't open file")
+	except Exception as exc:
+		raise PyMSError('Save', "Couldn't open file") from exc

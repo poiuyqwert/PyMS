@@ -1,5 +1,5 @@
 
-from ..Widgets import *
+from ..Widgets import Tk
 from ..Widgets.Extensions import WindowExtensions
 
 class MainWindow(Tk, WindowExtensions):
@@ -14,44 +14,45 @@ class MainWindow(Tk, WindowExtensions):
 		# On Mac the main window doesn't get focused, so we use Cocoa to focus it
 		try:
 			from os import getpid
-			from Cocoa import NSRunningApplication, NSApplicationActivateIgnoringOtherApps # type: ignore[import]
+			from Cocoa import NSRunningApplication, NSApplicationActivateIgnoringOtherApps # type: ignore[import] # pylint: disable=import-error
 
 			app = NSRunningApplication.runningApplicationWithProcessIdentifier_(getpid())
 			app.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
-		except:
+		except Exception:
 			pass
-		self.after(1, self.initialize)
+		self.after_managed(1, self.initialize)
 		self.mainloop()
 
 	def set_icon(self, name: str) -> None:
-		from ... import Assets
+		from ... import Assets  # pylint: disable=cyclic-import
 		import os
 		try:
-			icon = Assets.get_image('%s.ico' % name)
+			icon = Assets.lookup_image(f'{name}.ico')
 			if not icon:
-				icon = Assets.get_image(name)
+				icon = Assets.lookup_image(name)
 			if not icon:
-				icon = Assets.get_image('PyMS.ico')
+				icon = Assets.lookup_image('PyMS.ico')
 			if not icon:
-				icon = Assets.get_image('PyMS')
-			try:
-				self.tk.call('wm', 'iconphoto', getattr(self, '_w'), '-default', icon) # Python3: self.wm_iconphoto(True, icon)
-			except:
-				self.wm_iconbitmap(default=icon)
-			return
-		except:
+				icon = Assets.lookup_image('PyMS')
+			if icon:
+				try:
+					self.tk.call('wm', 'iconphoto', getattr(self, '_w'), '-default', icon) # Python3: self.wm_iconphoto(True, icon)
+					return
+				except Exception:
+					self.wm_iconbitmap(default=icon)
+					return
+		except Exception:
 			pass
 		try:
-			icon_path = Assets.image_path('%s.xbm' % name)
+			icon_path = Assets.image_path(f'{name}.xbm')
 			if not os.path.exists(icon_path):
 				icon_path = Assets.image_path('PyMS.xbm')
-			icon_path = '@%s' % icon_path
+			icon_path = f'@{icon_path}'
 			self.wm_iconbitmap(default=icon_path)
-			return
-		except:
+		except Exception:
 			pass
 
 	def destroy(self) -> None:
-		from ... import Assets
+		from ... import Assets  # pylint: disable=cyclic-import
 		Assets.clear_image_cache()
 		return Tk.destroy(self)

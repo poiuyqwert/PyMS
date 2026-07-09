@@ -1,16 +1,15 @@
 
-from typing import Sequence
 from .Config import PyTRGConfig
 from .Delegates import MainDelegate
-from .FindReplaceDialog import FindReplaceDialog
 from .SettingsUI.SettingsDialog import SettingsDialog
+from .Tooltips import ActionsTooltip, ConditionsTooltip
 
 from ..FileFormats.TRG import TRG, Conditions, Actions, BriefingActions, UnitProperties, Parameters
 from ..FileFormats import TBL
 from ..FileFormats.AIBIN import AIBIN
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
-from ..Utilities.UIKit import *
+from ..Utilities import registry
+from ..Utilities import UIKit as UI
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
@@ -20,6 +19,7 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.AboutDialog import AboutDialog
+from ..Utilities.FindReplaceDialog import FindReplaceDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
@@ -28,30 +28,15 @@ from ..Utilities.EditedState import EditedState
 from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
 from ..Utilities.SponsorDialog import SponsorDialog
 
-from dataclasses import dataclass
 import re
 
-LONG_VERSION = 'v%s' % Assets.version('PyTRG')
+from typing import Sequence
 
-@dataclass
-class Completing:
-	initial_text: str
-	initial_start: str
-	initial_end: str
-	options: list[str]
-	option_index: int
-	current_end: str
-	current_text: str
+LONG_VERSION = 'v' + Assets.version('PyTRG')
 
-	def next_option(self) -> str:
-		self.option_index += 1
-		if self.option_index == len(self.options):
-			self.option_index = 0
-		return self.options[self.option_index]
-
-class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
+class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
-		MainWindow.__init__(self)
+		UI.MainWindow.__init__(self)
 		self.guifile = guifile
 
 		self.set_icon('PyTRG')
@@ -61,95 +46,84 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		setup_trace('PyTRG', self)
 
 		self.config_ = PyTRGConfig()
-		Theme.load_theme(self.config_.theme.value, self)
+		UI.Theme.load_theme(self.config_.theme.value, self)
 
 		self.trg: TRG.TRG | None = None
 		self.file: str | None = None
 		self.tbl: TBL.TBL
 		self.aibin: AIBIN.AIBIN
 		self.findwindow: FindReplaceDialog | None = None
-		
+
 		self.edited_state = EditedState()
 		self.edited_state.callback += self.update_edited
 
 		self.update_title()
 
 		#Toolbar
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import TRG', Ctrl.i)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import TRG', UI.Ctrl.i)
 		self.toolbar.add_gap()
-		def save():
+		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		def saveas():
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
+		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savegottrg'), self.savegottrg, 'Save *.got Compatable *.trg', Ctrl.g, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export TRG', Ctrl.e, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', Ctrl.t, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('savegottrg'), self.savegottrg, 'Save *.got Compatable *.trg', UI.Ctrl.g, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export TRG', UI.Ctrl.e, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', UI.Ctrl.t, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', Ctrl.f, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', UI.Ctrl.f, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', Ctrl.Alt.c)
+		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', UI.Ctrl.Alt.c)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage stat_txt.tbl and aiscript.bin files', Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage stat_txt.tbl and aiscript.bin files', UI.Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.trg editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.trg editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyTRG')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
-		self.complete: Completing | None = None
-		keywords: dict[str, None] = dict.fromkeys(('Trigger', 'BriefingTrigger', 'Conditions', 'Actions', 'String', 'UnitProperties'))
-		functions: dict[str, None] = {}
+		functions: set[str] = set()
 		for condition in Conditions.definitions_registry:
-			functions[condition.name] = None
-			for cparameter in condition.parameters:
-				if isinstance(cparameter, Parameters.HasKeywords):
-					for keyword in cparameter.keywords():
-						keywords[keyword] = None
+			functions.add(condition.name)
 		for action in Actions.definitions_registry + BriefingActions.definitions_registry:
-			functions[action.name] = None
-			for aparameter in action.parameters:
-				if isinstance(aparameter, Parameters.HasKeywords):
-					for keyword in aparameter.keywords():
-						keywords[keyword] = None
-		for property in UnitProperties.properties_definitions:
-			functions[property.name] = None
-		self.autocomptext = list(keywords.keys())
-		self.autocompfuncs: list[str] = list(functions.keys())
-		self.autocompfuncs.sort()
+			functions.add(action.name)
+		for unit_property in UnitProperties.properties_definitions:
+			functions.add(unit_property.name)
+		self.autocomptext = self.keywords()
+		self.autocompfuncs: list[str] = sorted(functions)
 
 		# Text editor
-		self.text = CodeText(self, self.edited_state, self)
-		self.text.pack(fill=BOTH, expand=1, padx=1, pady=1)
-		self.text.bind(CodeText.WidgetEvent.InsertCursorMoved(), self.statusupdate)
-		self.text.text.bind(WidgetEvent.Text.Selection(), self.statusupdate)
+		self.text = UI.CodeText(self, self.edited_state, self)
+		self.text.pack(fill=UI.BOTH, expand=1, padx=1, pady=1)
+		self.text.bind(UI.CodeText.WidgetEvent.InsertCursorMoved(), self.statusupdate)
+		self.text.text.bind(UI.WidgetEvent.Text.Selection(), self.statusupdate)
 
 		self.setup_syntax_highlighting()
 
 		#Statusbar
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.status.set('Load or create a TRG.')
-		self.codestatus = StringVar()
+		self.codestatus = UI.StringVar()
 		self.codestatus.set('Line: 1  Column: 0  Selected: 0')
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, weight=0.4)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_label(self.codestatus)
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 		self.config_.windows.main.load_size(self)
 
-		self.mpqhandler = MPQHandler(self.config_.mpqs)
+		self.mpqhandler = MPQHandler(self.config_.settings.mpqs)
 
 	def initialize(self) -> None:
 		e = self.open_files()
@@ -179,11 +153,11 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		condition_names = [condition.name for condition in Conditions.definitions_registry]
 		action_names = [action.name for action in Actions.definitions_registry]
 		keywords = self.keywords()
-		self.syntax_highlighting = SyntaxHighlighting(
+		self.syntax_highlighting = UI.SyntaxHighlighting(
 			syntax_components=(
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Comment',
 							description='The style of a comment.',
 							highlight_style=self.config_.highlights.comment
@@ -191,10 +165,10 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 						pattern=r'#[^\n]*$'
 					),
 				)),
-				SyntaxComponent((
+				UI.SyntaxComponent((
 					r'^[ \t]*',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Header',
 							description='The style of a `script` header.',
 							highlight_style=self.config_.highlights.header
@@ -202,10 +176,10 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 						pattern=r'Trigger(?=\([^\n]+\):)|Conditions(?=(?: \w+)?:)|Actions(?=(?: \w+)?:)|Constant(?= \w+:)|String(?= \d+:)|Property(?= \d+:)'
 					),
 				)),
-				SyntaxComponent((
+				UI.SyntaxComponent((
 					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Keyword',
 							description='The style of keywords.',
 							highlight_style=self.config_.highlights.keyword
@@ -214,10 +188,10 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 					),
 					r'\b'
 				)),
-				SyntaxComponent((
+				UI.SyntaxComponent((
 					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Condition',
 							description='The style of condition names.',
 							highlight_style=self.config_.highlights.condition
@@ -226,10 +200,10 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 					),
 					r'\b'
 				)),
-				SyntaxComponent((
+				UI.SyntaxComponent((
 					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Action',
 							description='The style of action names.',
 							highlight_style=self.config_.highlights.action
@@ -238,9 +212,9 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 					),
 					r'\b'
 				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Constant',
 							description='The style of constants.',
 							highlight_style=self.config_.highlights.constant
@@ -248,10 +222,10 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 						pattern=r'\{\w+\}'
 					),
 				)),
-				SyntaxComponent((
+				UI.SyntaxComponent((
 					r'(?<=Constant )',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Constant Definition',
 							description='The style of constant definitions.',
 							highlight_style=self.config_.highlights.constant_definition
@@ -260,10 +234,10 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 					),
 					r'(?=:)'
 				)),
-				SyntaxComponent((
+				UI.SyntaxComponent((
 					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Number',
 							description='The style of all numbers.',
 							highlight_style=self.config_.highlights.number
@@ -272,9 +246,9 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 					),
 					r'\b'
 				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='TBL Format',
 							description='The style of TBL formatted characters, like null: <0>',
 							highlight_style=self.config_.highlights.tbl_format
@@ -282,9 +256,9 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 						pattern=r'<0*(?:25[0-5]|2[0-4]\d|1?\d?\d)?>'
 					),
 				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Operator',
 							description='The style of the operators:\n    ( ) , = { }',
 							highlight_style=self.config_.highlights.operator
@@ -292,9 +266,9 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 						pattern=r'[():,\-]'
 					),
 				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Newline',
 							description='The style of newlines',
 							highlight_style=self.config_.highlights.newline
@@ -304,18 +278,18 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 				)),
 			),
 			highlight_components=(
-				HighlightComponent(
+				UI.HighlightComponent(
 					name='Selection',
 					description='The style of selected text in the editor.',
 					highlight_style=self.config_.highlights.selection,
 					tag='sel'
 				),
-				HighlightComponent(
+				UI.HighlightComponent(
 					name='Error',
 					description='The style of highlighted errors in the editor.',
 					highlight_style=self.config_.highlights.error
 				),
-				HighlightComponent(
+				UI.HighlightComponent(
 					name='Warning',
 					description='The style of highlighted warnings in the editor.',
 					highlight_style=self.config_.highlights.warning
@@ -324,13 +298,16 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		)
 		self.text.set_syntax_highlighting(self.syntax_highlighting)
 
+		ActionsTooltip(self.text.text)
+		ConditionsTooltip(self.text.text)
+
 	def open_files(self) -> (PyMSError | None):
 		self.mpqhandler.open_mpqs()
 		err = None
 		try:
 			tbl = TBL.TBL()
 			aibin = AIBIN.AIBIN()
-			tbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.stat_txt.file_path))
+			tbl.load(self.mpqhandler.load_file(self.config_.settings.files.stat_txt.file_path))
 			aibin.load(self.mpqhandler.load_file(self.config_.settings.files.aiscript.file_path), self.mpqhandler.load_file(self.config_.settings.files.bwscript.file_path))
 		except PyMSError as e:
 			err = e
@@ -346,41 +323,41 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		file = self.file
 		if not file:
 			file = 'Unnamed.trg'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		if save == MessageBox.NO:
-			return CheckSaved.saved
-		if save == MessageBox.CANCEL:
+		save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=UI.MessageBox.YES)
+		if save is None:
 			return CheckSaved.cancelled
+		if not save:
+			return CheckSaved.saved
 		if self.file:
 			return self.save()
-		else:
-			return self.saveas()
+		return self.saveas()
 
 	def is_file_open(self) -> bool:
 		return not not self.trg
 
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
-		self.text['state'] = NORMAL if self.is_file_open() else DISABLED
+		self.text['state'] = UI.NORMAL if self.is_file_open() else UI.DISABLED
 
-	def statusupdate(self, event: Event | None = None) -> None:
-		i = self.text.index(INSERT).split('.') + [0]
-		item = self.text.tag_ranges('Selection')
+	def statusupdate(self, _event: UI.Event | None = None) -> None:
+		line,column = self.text.index(UI.INSERT).split('.')
+		selected = 0
+		item = self.text.tag_ranges('sel')
 		if item:
-			i[2] = len(self.text.get(*item))
-		self.codestatus.set('Line: %s  Column: %s  Selected: %s' % tuple(i))
+			selected = len(self.text.get(*item))
+		self.codestatus.set(f'Line: {line}  Column: {column}  Selected: {selected}')
 
 	def update_title(self) -> None:
 		file_path = self.file
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.trg'
 		if not file_path:
-			self.title('PyTRG %s' % LONG_VERSION)
+			self.title(f'PyTRG {LONG_VERSION}')
 		else:
-			self.title('PyTRG %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyTRG {LONG_VERSION} ({file_path})')
 
 	def update_edited(self, edited: bool = True) -> None:
-		self.editstatus['state'] = NORMAL if edited else DISABLED
+		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 
 	def new(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
@@ -399,14 +376,14 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 			file = self.config_.last_path.trg.select_open(self)
 			if not file:
 				return
-		trg = TRG.TRG()
+		trg = TRG.TRG(self.tbl, self.aibin)
 		try:
 			trg.load(file)
-			data = IO.output_to_text(lambda f: trg.decompile(f))
-		except PyMSError as e:
+			data = IO.output_to_text(trg.decompile)
+		except PyMSError:
 			try:
 				trg.load(file, TRG.Format.got)
-				data = IO.output_to_text(lambda f: trg.decompile(f))
+				data = IO.output_to_text(trg.decompile)
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
@@ -425,11 +402,12 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		if not file:
 			return
 		try:
-			text = open(file,'r').read()
-		except:
-			ErrorDialog(self, PyMSError('Import','Could not open file "%s"' % file))
+			with open(file, 'r', encoding='utf-8') as f:
+				text = f.read()
+		except Exception:
+			ErrorDialog(self, PyMSError('Import', f'Could not open file "{file}"'))
 			return
-		self.trg = TRG.TRG()
+		self.trg = TRG.TRG(self.tbl, self.aibin)
 		self.file = file
 		self.update_title()
 		self.status.set('Import Successful!')
@@ -449,7 +427,7 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		elif not check_allow_overwrite_internal_file(file_path):
 			return CheckSaved.cancelled
 		try:
-			text = self.text.get('1.0', END)
+			text = self.text.get('1.0', UI.END)
 			self.trg.compile(text) # TODO: Warnings
 			self.trg.save(file_path)
 		except PyMSError as e:
@@ -468,7 +446,7 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		if not file:
 			return
 		try:
-			text = self.text.get('1.0', END)
+			text = self.text.get('1.0', UI.END)
 			self.trg.compile(text) # TODO: Warnings
 			self.trg.save(file, TRG.Format.got)
 		except PyMSError as e:
@@ -481,26 +459,27 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		if not file:
 			return
 		try:
-			f = open(file,'w')
-			f.write(self.text.get('1.0',END))
-			f.close()
+			with open(file, 'w', encoding='utf-8') as f:
+				f.write(self.text.get('1.0',UI.END))
 			self.status.set('Export Successful!')
 		except PyMSError as e:
 			ErrorDialog(self, e)
+		except Exception:
+			ErrorDialog(self, PyMSError('Export', f'Could not save file "{file}"'))
 
 	def test(self) -> None:
-		i = TRG.TRG()
+		i = TRG.TRG(self.tbl, self.aibin)
 		try:
-			text = self.text.get('1.0', END)
+			text = self.text.get('1.0', UI.END)
 			warnings = i.compile(text)
 		except PyMSError as e:
 			if e.line is not None:
-				self.text.see('%s.0' % e.line)
-				self.text.tag_add('Error', '%s.0' % e.line, '%s.end' % e.line)
+				self.text.see(f'{e.line}.0')
+				self.text.tag_add('Error', f'{e.line}.0', f'{e.line}.end')
 			if e.warnings:
 				for w in e.warnings:
 					if w.line is not None:
-						self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
+						self.text.tag_add('Warning', f'{w.line}.0', f'{w.line}.end')
 			ErrorDialog(self, e)
 			return
 		if warnings:
@@ -508,12 +487,12 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 			for w in warnings:
 				if w.line is not None:
 					if not c:
-						self.text.see('%s.0' % w.line)
+						self.text.see(f'{w.line}.0')
 						c = True
-					self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
+					self.text.tag_add('Warning', f'{w.line}.0', f'{w.line}.end')
 			WarningDialog(self, warnings, True)
 		else:
-			MessageBox.showinfo(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.')
+			UI.MessageBox.showinfo(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.')
 
 	def close(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
@@ -528,10 +507,9 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 	def find(self) -> None:
 		if not self.findwindow:
 			self.findwindow = FindReplaceDialog(self, self.text, self.config_.windows.find_replace)
-			self.bind(Key.F3(), self.findwindow.findnext)
+			self.bind(UI.Key.F3(), self.findwindow.findnext)
 		else:
-			self.findwindow.make_active() # type: ignore[attr-defined]
-			self.findwindow.findentry.focus_set(highlight=True)
+			self.findwindow.show()
 
 	def colors(self) -> None:
 		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())
@@ -539,11 +517,11 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 			self.text.update_highlight_styles()
 
 	def settings(self, err: PyMSError | None = None) -> None:
-		SettingsDialog(self, self.config_, self, err, self.mpqhandler)
+		SettingsDialog(parent=self, config=self.config_, delegate=self, err=err, mpq_handler=self.mpqhandler)
 
 	def register_registry(self) -> None:
 		try:
-			register_registry('PyTRG', 'trg', '')
+			registry.register('PyTRG', 'trg', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
@@ -563,76 +541,10 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		self.config_.save()
 		self.destroy()
 
-	def autocomplete(self) -> bool:
-		i = self.text.tag_ranges('Selection')
-		if i and '\n' in self.text.get(*i):
-			return False
-		def docomplete() -> None:
-			if not self.complete:
-				return
-			complete_text = self.complete.next_option()
-			current_end = '%s+%sc' % (self.complete.initial_start, len(self.complete.initial_text))
-			complete_end = '%s+%sc' % (self.complete.initial_start, len(complete_text))
-			self.text.delete(self.complete.initial_start, current_end)
-			self.text.insert(self.complete.initial_start, complete_text)
-			self.text.tag_remove('Selection', '1.0', END)
-			self.text.tag_add('Selection', self.complete.initial_end, complete_end)
-		start = self.text.index('%s -1c wordstart' % INSERT)
-		end = self.text.index('%s -1c wordend' % INSERT)
-		text = self.text.get(start, end)
-		if self.complete is not None:
-			if self.complete.initial_start != start or self.complete.initial_end != end or self.complete.initial_text != text:
-				self.complete = None
-			else:
-				docomplete()
-				return True
-		if text and text[0].lower() in 'abcdefghijklmnopqrstuvwxyz{':
-			ac = list(self.autocomptext)
-			m = re.match(r'\A\s*[a-z\{]+\Z', text)
-			if not m:
-				ac.extend(self.autocompfuncs)
-			for header in self.aibin.list_scripts():
-				if not header.id in ac:
-					ac.append(header.id)
-				cs = TBL.decompile_string(self.tbl.strings[header.string_id][:-1], '\x0A\x28\x29\x2C')
-				if not cs in ac:
-					ac.append(cs)
-			for ns in self.tbl.strings[:228]:
-				components = ns.split('\x00')
-				if components[1] != '*':
-					name = TBL.decompile_string('\x00'.join(components[:2]), '\x0A\x28\x29\x2C')
-				else:
-					name = TBL.decompile_string(components[0], '\x0A\x28\x29\x2C')
-				if not name in ac:
-					ac.append(name)
-			head = '1.0'
-			while True:
-				item = self.text.tag_nextrange('ConstDef', head)
-				if not item:
-					break
-				var = '{%s}' % self.text.get(*item)
-				if not var in ac:
-					ac.append(var)
-				head = item[1]
-			ac.sort()
-			if m:
-				ac = self.autocompfuncs + ac
-			r = False
-			matches = []
-			for v in ac:
-				if v and v.lower().startswith(text.lower()):
-					matches.append(v)
-			if matches:
-				self.complete = Completing(text, start, end, [text] + matches, 0, end, text)
-				docomplete()
-				r = True
-			return r
-		return False
-
 	def destroy(self) -> None:
 		if self.findwindow:
-			Toplevel.destroy(self.findwindow)
-		MainWindow.destroy(self)
+			self.findwindow.destroy()
+		UI.MainWindow.destroy(self)
 
 	# MainDelegate
 	def get_trg(self) -> TRG.TRG:
@@ -649,8 +561,42 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 	def autocomplete_override_keys(self) -> str:
 		return ' (,):'
 
+	RE_LOWERCASE_WORD = re.compile(r'\A\s*[a-z\{]+\Z')
 	def get_autocomplete_options(self, line: str) -> list[str] | None:
-		return None
+		text = line.split(' ')[-1]
+		if not text or not text[0].lower() in 'abcdefghijklmnopqrstuvwxyz{':
+			return None
+		options = list(self.autocomptext)
+		is_lowercase_word = PyTRG.RE_LOWERCASE_WORD.match(text) is not None
+		if not is_lowercase_word:
+			options.extend(self.autocompfuncs)
+		for header in self.aibin.list_scripts():
+			if not header.id in options:
+				options.append(header.id)
+			script_name = TBL.decompile_string(self.tbl.strings[header.string_id][:-1], '\x0A\x28\x29\x2C')
+			if not script_name in options:
+				options.append(script_name)
+		for ns in self.tbl.strings[:228]:
+			components = ns.split('\x00')
+			if components[1] != '*':
+				name = TBL.decompile_string('\x00'.join(components[:2]), '\x0A\x28\x29\x2C')
+			else:
+				name = TBL.decompile_string(components[0], '\x0A\x28\x29\x2C')
+			if not name in options:
+				options.append(name)
+		head = '1.0'
+		while True:
+			item = self.text.tag_nextrange('ConstantDefinition', head)
+			if not item:
+				break
+			constant = f'{{{self.text.get(*item)}}}'
+			if not constant in options:
+				options.append(constant)
+			head = item[1]
+		options.sort()
+		if is_lowercase_word:
+			options = self.autocompfuncs + options
+		return options
 
 	def jump_highlights(self) -> Sequence[str] | None:
 		return ('Error', 'Warning')

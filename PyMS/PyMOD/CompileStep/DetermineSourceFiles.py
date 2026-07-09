@@ -1,5 +1,5 @@
 
-from .BaseCompileStep import BaseCompileStep
+from .BaseCompileStep import BaseCompileStep, Bucket
 from .CreateDirectory import CreateDirectory
 from .PackageMPQ import PackageMPQ
 from .CompileGRP import CompileGRP
@@ -11,6 +11,9 @@ from .. import Source
 import os as _os
 
 class DetermineSourceFiles(BaseCompileStep):
+	def bucket(self) -> Bucket:
+		return Bucket.setup
+
 	def handle_source_item(self, source_item: Source.Item) -> list[BaseCompileStep]:
 		steps: list[BaseCompileStep] = []
 		if isinstance(source_item, Source.Folder):

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionIVER(CHKSection):
-	NAME = 'IVER'
+	NAME = b'IVER'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 
 	BETA = 9
@@ -33,12 +33,12 @@ class CHKSectionIVER(CHKSection):
 		verSect = chk.sections.get(CHKSectionVER.NAME)
 		if verSect and cast(CHKSectionVER, verSect).version == CHKSectionVER.BETA:
 			self.version = CHKSectionIVER.BETA
-	
+
 	def load_data(self, data: bytes) -> None:
 		self.version = int(struct.unpack('<H', data[:2])[0])
-	
+
 	def save_data(self) -> bytes:
 		return struct.pack('<H', self.version)
 
 	def decompile(self) -> str:
-		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Version',str(self.version)), CHKSectionIVER.VER_NAME(self.version))
+		return f'{self.NAME.decode("ascii")}:\n\t{pad("Version",str(self.version))} # {CHKSectionIVER.VER_NAME(self.version)}\n'

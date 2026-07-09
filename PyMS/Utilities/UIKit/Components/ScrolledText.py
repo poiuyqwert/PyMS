@@ -1,5 +1,8 @@
 
-from ..Widgets import *
+from ..Widgets import Frame, Scrollbar, Text
+from ..Constants import SUNKEN, HORIZONTAL, WORD, NSEW, NS, EW
+
+from tkinter import TclError
 
 class ScrolledText(Frame):
 	def __init__(self, *args, **kwargs):
@@ -23,15 +26,15 @@ class ScrolledText(Frame):
 
 		self._read_only = False
 		self._insertontime = None
-		self.textview._original_w = self.textview._w + '_original'
-		self.tk.call('rename', self.textview._w, self.textview._original_w)
+		self._original_w = self.textview._w + '_original'
+		self.tk.call('rename', self.textview._w, self._original_w)
 		self.tk.createcommand(self.textview._w, self.dispatch)
 
 	def dispatch(self, cmd, *args):
-		if self._read_only and (cmd == 'insert' or cmd == 'delete'):
+		if self._read_only and cmd in ('insert', 'delete'):
 			return ""
 		try:
-			return self.tk.call((self.textview._original_w, cmd) + args)
+			return self.tk.call((self._original_w, cmd) + args)
 		except TclError:
 			return ""
 
@@ -40,7 +43,7 @@ class ScrolledText(Frame):
 		if read_only:
 			self._insertontime = self.textview.cget('insertontime')
 			self.textview.configure(insertontime=0)
-		elif self._insertontime != None:
+		elif self._insertontime is not None:
 			self.textview.configure(insertontime=self._insertontime)
 
 	def insert(self, at_index, text, *tags):

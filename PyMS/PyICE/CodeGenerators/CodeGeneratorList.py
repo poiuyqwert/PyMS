@@ -2,7 +2,7 @@
 from . import CodeGenerator
 from ..Config import PyICEConfig
 
-from ...Utilities.UIKit import *
+from ...Utilities import UIKit as UI
 from ...Utilities import JSON
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import Config
@@ -201,18 +201,18 @@ class CodeGeneratorTypeList(CodeGenerator.CodeGeneratorType):
 	def count(self) -> int | None:
 		return self.repeater.count(len(self.values))
 
-	def value(self, lookup_value: Callable[[str], int]) -> str:
-		n = self.repeater.index(len(self.values), lookup_value('n'))
+	def value(self, lookup_value: Callable[[str], str]) -> str:
+		n = self.repeater.index(len(self.values), int(lookup_value('n')))
 		if n is None:
 			return ''
 		value = self.values[n]
 		variable_re = re.compile(r'\$([a-zA-Z0-9_]+)')
-		return variable_re.sub(lambda m: str(lookup_value(m.group(1))), value)
+		return variable_re.sub(lambda m: lookup_value(m.group(1)), value)
 
-	def description(self):
-		return 'Items from list: %s' % ', '.join(self.values)
+	def description(self) -> str:
+		return f'Items from list: {", ".join(self.values)}'
 
-	def build_editor(self, parent: Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
+	def build_editor(self, parent: UI.Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
 		return CodeGeneratorEditorList(parent, self, config.windows.generator.editor.list)
 
 class CodeGeneratorEditorList(CodeGenerator.CodeGeneratorEditor[CodeGeneratorTypeList]):
@@ -227,37 +227,37 @@ class CodeGeneratorEditorList(CodeGenerator.CodeGeneratorEditor[CodeGeneratorTyp
 		CodeGeneratorTypeListRepeaterRepeatInvertedForeverRepeatEnd
 	)
 
-	def __init__(self, parent: Misc, generator: CodeGeneratorTypeList, window_geometry_config: Config.WindowGeometry) -> None:
+	def __init__(self, parent: UI.Misc, generator: CodeGeneratorTypeList, window_geometry_config: Config.WindowGeometry) -> None:
 		CodeGenerator.CodeGeneratorEditor.__init__(self, parent, generator, window_geometry_config)
 
-		Label(self, text='Values:', anchor=W).pack(side=TOP, fill=X)
-		textframe = Frame(self, bd=2, relief=SUNKEN)
-		hscroll = Scrollbar(textframe, orient=HORIZONTAL)
-		vscroll = Scrollbar(textframe)
-		self.text = Text(textframe, height=1, bd=0, undo=1, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=0)
-		self.text.grid(sticky=NSEW)
-		# self.text.bind(Ctrl.a, lambda e: self.after(1, self.selectall))
+		UI.Label(self, text='Values:', anchor=UI.W).pack(side=UI.TOP, fill=UI.X)
+		textframe = UI.Frame(self, bd=2, relief=UI.SUNKEN)
+		hscroll = UI.Scrollbar(textframe, orient=UI.HORIZONTAL)
+		vscroll = UI.Scrollbar(textframe)
+		self.text = UI.Text(textframe, height=1, bd=0, undo=1, maxundo=100, wrap=UI.NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=0)
+		self.text.grid(sticky=UI.NSEW)
+		# self.text.bind(Ctrl.a, lambda e: self.after_managed(1, self.selectall))
 		hscroll.config(command=self.text.xview)
-		hscroll.grid(sticky=EW)
+		hscroll.grid(sticky=UI.EW)
 		vscroll.config(command=self.text.yview)
-		vscroll.grid(sticky=NS, row=0, column=1)
+		vscroll.grid(sticky=UI.NS, row=0, column=1)
 		textframe.grid_rowconfigure(0, weight=1)
 		textframe.grid_columnconfigure(0, weight=1)
-		textframe.pack(side=TOP, expand=1, fill=BOTH)
+		textframe.pack(side=UI.TOP, expand=1, fill=UI.BOTH)
 
-		self.repeater = IntVar()
+		self.repeater = UI.IntVar()
 
-		Label(self, text='Repeat:', anchor=W).pack(side=TOP, fill=X)
-		DropDown(self, self.repeater, [r.display_name() for r in CodeGeneratorEditorList.REPEATERS], width=20).pack(side=TOP, fill=X)
+		UI.Label(self, text='Repeat:', anchor=UI.W).pack(side=UI.TOP, fill=UI.X)
+		UI.DropDown(self, self.repeater, [r.display_name() for r in CodeGeneratorEditorList.REPEATERS], width=20).pack(side=UI.TOP, fill=UI.X)
 
-		self.text.insert(END, '\n'.join(generator.values))
+		self.text.insert(UI.END, '\n'.join(generator.values))
 		for n,repeater in enumerate(CodeGeneratorEditorList.REPEATERS):
 			if repeater.type_name() == self.generator.repeater.type_name():
 				self.repeater.set(n)
 				break
 
 	def save(self) -> None:
-		self.generator.values = self.text.get(1.0, END).rstrip('\n').split('\n')
+		self.generator.values = self.text.get('1.0', UI.END).rstrip('\n').split('\n')
 		self.generator.repeater = CodeGeneratorEditorList.REPEATERS[self.repeater.get()]()
 
 	def is_resizable(self) -> tuple[bool, bool]:

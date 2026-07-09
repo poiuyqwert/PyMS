@@ -1,24 +1,24 @@
 
 from .Config import PyLOConfig
-from .Delegates import FindDelegate
-from .FindReplaceDialog import FindReplaceDialog
 from .Constants import SIGNED_INT, RE_COORDINATES, RE_DRAG_COORDS
 from .SettingsDialog import SettingsDialog
+from .CodeTooltip import SelectionTooltip
 
 from ..FileFormats.LO import LO
 from ..FileFormats.Palette import Palette
 from ..FileFormats.GRP import CacheGRP, frame_to_photo
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
-from ..Utilities.UIKit import *
+from ..Utilities import registry
+from ..Utilities import UIKit as UI
 from ..Utilities.analytics import ga, GAScreen
-from ..Utilities.trace import setup_trace
+from ..Utilities.trace import setup_trace, get_tracer
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.AboutDialog import AboutDialog
+from ..Utilities.FindReplaceDialog import FindReplaceDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
@@ -30,18 +30,18 @@ from ..Utilities.SponsorDialog import SponsorDialog
 import io
 from enum import Enum
 
-from typing import Sequence, cast, Callable
+from typing import Sequence, Callable, Any
 
-LONG_VERSION = 'v%s' % Assets.version('PyLO')
+LONG_VERSION = 'v' + Assets.version('PyLO')
 
 class MouseEvent(Enum):
 	click = 0
 	drag = 1
 	release = 2
 
-class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
+class PyLO(UI.MainWindow, UI.CodeTextDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
-		MainWindow.__init__(self)
+		UI.MainWindow.__init__(self)
 		self.guifile = guifile
 
 		#Window
@@ -53,17 +53,17 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		setup_trace('PyLO', self)
 
 		self.config_ = PyLOConfig()
-		Theme.load_theme(self.config_.theme.value, self)
+		UI.Theme.load_theme(self.config_.theme.value, self)
 
 		self.lo: LO | None = None
 		self.file: str | None = None
 		self.findwindow: FindReplaceDialog | None = None
 		self.basegrp: CacheGRP | None = None
-		self.basegrp_cache: dict[int, Image | None] = {}
+		self.basegrp_cache: dict[int, UI.AnyPhotoImage | None] = {}
 		self.overlaygrp: CacheGRP | None = None
-		self.overlaygrp_cache: dict[int, Image | None] = {}
+		self.overlaygrp_cache: dict[int, UI.AnyPhotoImage | None] = {}
 		self.unitpal = Palette()
-		self.unitpal.load_file(Assets.palette_file_path('Units.pal'))
+		self.unitpal.load(Assets.palette_file_path('Units.pal'))
 		self.previewing_basegrp_frame: int | None = None
 		self.previewing_overlaygrp_frame: int | None = None
 		self.previewing_offset: tuple[int, int] | None = None
@@ -77,119 +77,118 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		self.update_title()
 
 		#Toolbar
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import LO?', Ctrl.i)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import LO?', UI.Ctrl.i)
 		self.toolbar.add_gap()
-		def save():
+		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		def saveas():
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
+		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export LO?', Ctrl.e, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', Ctrl.t, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export LO?', UI.Ctrl.e, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', UI.Ctrl.t, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_spacer(5)
-		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', Ctrl.f, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', UI.Ctrl.f, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', Ctrl.Alt.c)
+		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', UI.Ctrl.Alt.c)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage MPQ Settings', Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage MPQ Settings', UI.Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.lo? editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.lo? editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyLO')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
-		m = Frame(self)
+		m = UI.Frame(self)
 		# Text editor
-		self.text = CodeText(m, self.edited_state, self)
-		self.text.grid(sticky=NSEW)
-		self.text.bind(CodeText.WidgetEvent.InsertCursorMoved(), self.statusupdate)
-		self.text.text.bind(WidgetEvent.Text.Selection(), self.statusupdate)
-		self.text.bind(CodeText.WidgetEvent.TextChanged(), lambda _: self.previewupdate())
+		self.text = UI.CodeText(m, self.edited_state, self)
+		self.text.grid(sticky=UI.NSEW)
+		self.text.bind(UI.CodeText.WidgetEvent.InsertCursorMoved(), self.statusupdate)
+		self.text.text.bind(UI.WidgetEvent.Text.Selection(), self.statusupdate)
+		self.text.bind(UI.CodeText.WidgetEvent.TextChanged(), lambda _: self.previewupdate())
 
 		self.setup_syntax_highlighting()
-	
-		self.mpq_handler = MPQHandler(self.config_.mpqs)
 
-		self.usebasegrp = BooleanVar()
+		self.mpq_handler = MPQHandler(self.config_.settings.mpqs)
+
+		self.usebasegrp = UI.BooleanVar()
 		self.usebasegrp.set(self.config_.preview.use_base_grp.value)
-		self.usebasegrp.trace('w', self.update_grp_field_states)
-		self.useoverlaygrp = BooleanVar()
+		self.usebasegrp.trace_add('write', self.update_grp_field_states)
+		self.useoverlaygrp = UI.BooleanVar()
 		self.useoverlaygrp.set(self.config_.preview.use_overlay_grp.value)
-		self.useoverlaygrp.trace('w', self.update_grp_field_states)
-		self.baseframes = StringVar()
+		self.useoverlaygrp.trace_add('write', self.update_grp_field_states)
+		self.baseframes = UI.StringVar()
 		self.baseframes.set('Base Frame: - / -')
-		self.overlayframes = StringVar()
+		self.overlayframes = UI.StringVar()
 		self.overlayframes.set('Overlay Frame: - / -')
 
 		# Previewer
-		f = Frame(m)
-		c = Frame(f)
-		l = Frame(c)
-		Label(l, textvariable=self.baseframes, anchor=W).pack(side=LEFT)
-		Label(l, textvariable=self.overlayframes, anchor=W).pack(side=RIGHT)
-		l.pack(fill=X, expand=1)
-		self.canvas = Canvas(c, borderwidth=0, width=275, height=275, background='#000000', highlightthickness=0, theme_tag='preview') # type: ignore[call-arg]
-		def drag_callback(t: int, mouse_event: MouseEvent) -> Callable[[Event], None]:
-			def drag(event: Event) -> None:
-				self.drag(event, t, mouse_event)
+		f = UI.Frame(m)
+		c = UI.Frame(f)
+		l = UI.Frame(c)
+		UI.Label(l, textvariable=self.baseframes, anchor=UI.W).pack(side=UI.LEFT)
+		UI.Label(l, textvariable=self.overlayframes, anchor=UI.W).pack(side=UI.RIGHT)
+		l.pack(fill=UI.X, expand=1)
+		self.canvas = UI.Canvas(c, borderwidth=0, width=275, height=275, background='#000000', highlightthickness=0, theme_tag='preview') # type: ignore[call-arg]
+		def drag_callback(mouse_event: MouseEvent) -> Callable[[UI.Event], None]:
+			def drag(event: UI.Event) -> None:
+				self.drag(event, mouse_event)
 			return drag
-		for tt in [0,1]:
-			self.canvas.bind(Mouse.Click_Left(), drag_callback(tt, MouseEvent.click))
-			self.canvas.bind(Mouse.Drag_Left(), drag_callback(tt, MouseEvent.drag))
-			self.canvas.bind(ButtonRelease.Click_Left(), drag_callback(tt, MouseEvent.release))
-		self.canvas.pack(side=TOP)
-		self.framescroll = Scrollbar(c, orient=HORIZONTAL, command=self.scrolling)
+		self.canvas.bind(UI.Mouse.Click_Left(), drag_callback(MouseEvent.click))
+		self.canvas.bind(UI.Mouse.Drag_Left(), drag_callback(MouseEvent.drag))
+		self.canvas.bind(UI.ButtonRelease.Click_Left(), drag_callback(MouseEvent.release))
+		self.canvas.pack(side=UI.TOP)
+		self.framescroll = UI.Scrollbar(c, orient=UI.HORIZONTAL, command=self.scrolling)
 		self.framescroll.set(0,1)
-		self.framescroll.pack(side=TOP, fill=X)
-		c.pack(side=TOP)
+		self.framescroll.pack(side=UI.TOP, fill=UI.X)
+		c.pack(side=UI.TOP)
 
 		edited_state = EditedState()
-		self.base_grp_field = FileSettingView(f, edited_state, 'Base GRP', None, self.config_.settings.files.base_grp, self.mpq_handler, self.config_.settings.mpq_select_history, self.config_.windows.settings.mpq_select)
+		self.base_grp_field = FileSettingView(parent=f, edited_state=edited_state, name='Base GRP', description=None, setting=self.config_.settings.files.base_grp, mpq_handler=self.mpq_handler, mpq_history_config=self.config_.settings.mpq_select_history, mpq_window_geometry_config=self.config_.windows.settings.mpq_select)
 		self.base_grp_field.set_editable(False)
-		self.base_grp_field.pack(side=TOP, fill=X, padx=5)
-		self.overlay_grp_field = FileSettingView(f, edited_state, 'Overlay GRP', None, self.config_.settings.files.overlay_grp, self.mpq_handler, self.config_.settings.mpq_select_history, self.config_.windows.settings.mpq_select)
+		self.base_grp_field.pack(side=UI.TOP, fill=UI.X, padx=5)
+		self.overlay_grp_field = FileSettingView(parent=f, edited_state=edited_state, name='Overlay GRP', description=None, setting=self.config_.settings.files.overlay_grp, mpq_handler=self.mpq_handler, mpq_history_config=self.config_.settings.mpq_select_history, mpq_window_geometry_config=self.config_.windows.settings.mpq_select)
 		self.overlay_grp_field.set_editable(False)
-		self.overlay_grp_field.pack(side=TOP, fill=X, padx=5)
+		self.overlay_grp_field.pack(side=UI.TOP, fill=UI.X, padx=5)
 
-		x = Frame(f)
-		Checkbutton(x, text='Use base GRP', variable=self.usebasegrp, command=self.updateusebase).pack(side=LEFT)
-		Checkbutton(x, text='Use overlay GRP', variable=self.useoverlaygrp, command=self.updateuseoverlay).pack(side=RIGHT)
-		x.pack(side=TOP, fill=X, padx=5, pady=2)
-		f.grid(row=0, column=1, sticky=NS)
+		x = UI.Frame(f)
+		UI.Checkbutton(x, text='Use base GRP', variable=self.usebasegrp, command=self.updateusebase).pack(side=UI.LEFT)
+		UI.Checkbutton(x, text='Use overlay GRP', variable=self.useoverlaygrp, command=self.updateuseoverlay).pack(side=UI.RIGHT)
+		x.pack(side=UI.TOP, fill=UI.X, padx=5, pady=2)
+		f.grid(row=0, column=1, sticky=UI.NS)
 
 		m.grid_rowconfigure(0,weight=1)
 		m.grid_columnconfigure(0,weight=1)
-		m.pack(fill=BOTH, expand=1)
+		m.pack(fill=UI.BOTH, expand=1)
 
 		#Statusbar
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.status.set('Load or create a LO?.')
-		self.codestatus = StringVar()
+		self.codestatus = UI.StringVar()
 		self.codestatus.set('Line: 1  Column: 0  Selected: 0')
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 		self.config_.windows.main.load_size(self)
 
 	def setup_syntax_highlighting(self) -> None:
-		self.syntax_highlighting = SyntaxHighlighting(
+		self.syntax_highlighting = UI.SyntaxHighlighting(
 			syntax_components=(
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Comment',
 							description='The style of a comment.',
 							highlight_style=self.config_.highlights.comment
@@ -197,10 +196,10 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 						pattern=r'#[^\n]*$'
 					),
 				)),
-				SyntaxComponent((
+				UI.SyntaxComponent((
 					r'^[ \t]*',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Header',
 							description='The style of a `script` header.',
 							highlight_style=self.config_.highlights.header
@@ -208,10 +207,10 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 						pattern=r'Frame:'
 					),
 				)),
-				SyntaxComponent((
+				UI.SyntaxComponent((
 					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Number',
 							description='The style of all numbers.',
 							highlight_style=self.config_.highlights.number
@@ -220,9 +219,9 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 					),
 					r'\b'
 				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Operator',
 							description='The style of the operators:\n    ( ) : ,',
 							highlight_style=self.config_.highlights.operator
@@ -230,9 +229,9 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 						pattern=r'[():,]'
 					),
 				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Newline',
 							description='The style of newlines',
 							highlight_style=self.config_.highlights.newline
@@ -242,18 +241,18 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 				)),
 			),
 			highlight_components=(
-				HighlightComponent(
+				UI.HighlightComponent(
 					name='Selection',
 					description='The style of selected text in the editor.',
 					highlight_style=self.config_.highlights.selection,
 					tag='sel'
 				),
-				HighlightComponent(
+				UI.HighlightComponent(
 					name='Error',
 					description='The style of highlighted errors in the editor.',
 					highlight_style=self.config_.highlights.error
 				),
-				HighlightComponent(
+				UI.HighlightComponent(
 					name='Warning',
 					description='The style of highlighted warnings in the editor.',
 					highlight_style=self.config_.highlights.warning
@@ -261,6 +260,8 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 			)
 		)
 		self.text.set_syntax_highlighting(self.syntax_highlighting)
+
+		SelectionTooltip(self.text.text)
 
 	def initialize(self) -> None:
 		self.update_grp_field_states()
@@ -270,7 +271,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 			self.open(file=self.guifile)
 		UpdateDialog.check_update(self, 'PyLO')
 
-	def scrolling(self, scroll_type: str, amount: str, increment: str | None = None):
+	def scrolling(self, scroll_type: str, amount: str, increment: str | None = None) -> None:
 		if not self.overlaygrp:
 			return
 		increments = {'pages':17,'units':1}
@@ -289,12 +290,11 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		step = 1 / float(self.overlaygrp.frames)
 		self.framescroll.set(self.overlayframe*step, (self.overlayframe+1)*step)
 
-	def update_grp_field_states(self, *_) -> None:
+	def update_grp_field_states(self, *_: Any) -> None:
 		self.base_grp_field.set_enabled(self.usebasegrp.get())
 		self.overlay_grp_field.set_enabled(self.useoverlaygrp.get())
 
-	# TODO: What is `t` for?
-	def drag(self, event: Event, t, mouse_event: MouseEvent) -> None:
+	def drag(self, event: UI.Event, mouse_event: MouseEvent) -> None:
 		if not self.previewing_offset:
 			return
 		if mouse_event == MouseEvent.click:
@@ -304,13 +304,13 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 			offset = (max(-128,min(127,event.x + self.dragoffset[0])), max(-128,min(127,event.y + self.dragoffset[1])))
 			self.drawpreview(self.previewing_basegrp_frame, offset)
 		elif mouse_event == MouseEvent.release:
-			s = self.text.index('%s linestart' % INSERT)
-			m = RE_DRAG_COORDS.match(self.text.get(s,'%s lineend' % INSERT))
+			s = self.text.index(f'{UI.INSERT} linestart')
+			m = RE_DRAG_COORDS.match(self.text.get(s,f'{UI.INSERT} lineend'))
 			if m:
 				self.pauseupdate = True
 				with self.text.undo_group():
-					self.text.delete(s,'%s lineend' % INSERT)
-					self.text.insert(s,'%s%s%s%s%s' % (m.group(1),self.previewing_offset[0],m.group(2),self.previewing_offset[1],m.group(3)))
+					self.text.delete(s,f'{UI.INSERT} lineend')
+					self.text.insert(s,f'{m.group(1)}{self.previewing_offset[0]}{m.group(2)}{self.previewing_offset[1]}{m.group(3)}')
 				self.pauseupdate = False
 			self.dragoffset = None
 			self.text.text.edit_separator()
@@ -321,7 +321,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 			return
 		try:
 			g = CacheGRP()
-			g.load_file(self.mpq_handler.load_file(self.config_.settings.files.base_grp.file_path))
+			g.load(self.mpq_handler.load_file(self.config_.settings.files.base_grp.file_path))
 			self.updatebasegrp(g)
 		except PyMSError as e:
 			if self.usebasegrp.get():
@@ -334,7 +334,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 			return
 		try:
 			g = CacheGRP()
-			g.load_file(self.mpq_handler.load_file(self.config_.settings.files.overlay_grp.file_path))
+			g.load(self.mpq_handler.load_file(self.config_.settings.files.overlay_grp.file_path))
 			self.updateoverlaygrp(g)
 		except PyMSError as e:
 			if self.useoverlaygrp.get():
@@ -365,25 +365,24 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		file = self.file
 		if not file:
 			file = 'Unnamed.loa'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		if save == MessageBox.NO:
-			return CheckSaved.saved
-		if save == MessageBox.CANCEL:
+		save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=UI.MessageBox.YES)
+		if save is None:
 			return CheckSaved.cancelled
+		if not save:
+			return CheckSaved.saved
 		if self.file:
 			return self.save()
-		else:
-			return self.saveas()
+		return self.saveas()
 
 	def is_file_open(self) -> bool:
-		return not not self.lo
+		return self.lo is not None
 
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
-		self.text['state'] = NORMAL if self.is_file_open() else DISABLED
+		self.text['state'] = UI.NORMAL if self.is_file_open() else UI.DISABLED
 
-	def statusupdate(self, event: Event | None = None) -> None:
-		line, column = self.text.index(INSERT).split('.')
+	def statusupdate(self, _event: UI.Event | None = None) -> None:
+		line, column = self.text.index(UI.INSERT).split('.')
 		selected = 0
 		item = self.text.tag_ranges('sel')
 		if item:
@@ -399,7 +398,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		o = '-'
 		if self.basegrp:
 			bm = str(self.basegrp.frames)
-		if self.previewing_basegrp_frame:
+		if self.previewing_basegrp_frame is not None:
 			b = str(self.previewing_basegrp_frame + 1)
 		if self.overlaygrp:
 			om = str(self.overlaygrp.frames)
@@ -416,45 +415,57 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 	def previewupdate(self) -> None:
 		if self.pauseupdate:
 			return
-		m = RE_COORDINATES.match(self.text.get('%s linestart' % INSERT,'%s lineend' % INSERT))
+		m = RE_COORDINATES.match(self.text.get(f'{UI.INSERT} linestart',f'{UI.INSERT} lineend'))
 		if m:
-			index: str = INSERT
+			# Count the headers before the insert cursor with a single `tag_ranges`
+			# call, rather than one `tag_prevrange` round-trip per header
+			insert = self._line_column(self.text.index(UI.INSERT))
 			frame_index = -1
-			while True:
-				index_range = self.text.tag_prevrange('Header', index)
-				if not index_range:
+			header_ranges = self.text.tag_ranges('Header')
+			for header_start in header_ranges[::2]:
+				if self._line_column(str(header_start)) >= insert:
 					break
-				index = index_range[0]
 				frame_index += 1
 			if frame_index >= 0:
 				self.drawpreview(frame_index, (int(m.group(1)), int(m.group(2))))
 				return
-		self.canvas.delete(ALL)
+		self.canvas.delete(UI.ALL)
 		self.clear_preview()
 
-	def base_grp_frame(self, frame_index: int | None) -> (Image | None):
+	@staticmethod
+	def _line_column(index: str) -> tuple[int, int]:
+		line, column = index.split('.')
+		return (int(line), int(column))
+
+	def base_grp_frame(self, frame_index: int | None) -> (UI.AnyPhotoImage | None):
 		if frame_index is None or self.basegrp is None:
 			return None
 		if not frame_index in self.basegrp_cache:
 			try:
-				self.basegrp_cache[frame_index] = cast(Image, frame_to_photo(self.unitpal.palette, self.basegrp, frame_index, True, False))
-			except:
+				self.basegrp_cache[frame_index] = frame_to_photo(self.unitpal.palette, self.basegrp, frame_index)
+			except Exception:
+				if tracer := get_tracer():
+					tracer.trace_error()
 				self.basegrp_cache[frame_index] = None
 		return self.basegrp_cache[frame_index]
 
-	def overlay_grp_frame(self, frame_index: int | None) -> (Image | None):
+	def overlay_grp_frame(self, frame_index: int | None) -> (UI.AnyPhotoImage | None):
 		if frame_index is None or self.overlaygrp is None:
 			return None
 		if not frame_index in self.overlaygrp_cache:
 			try:
-				self.overlaygrp_cache[frame_index] = cast(Image, frame_to_photo(self.unitpal.palette, self.overlaygrp, frame_index, True, False))
-			except:
+				self.overlaygrp_cache[frame_index] = frame_to_photo(self.unitpal.palette, self.overlaygrp, frame_index)
+			except Exception:
+				if tracer := get_tracer():
+					tracer.trace_error()
 				self.overlaygrp_cache[frame_index] = None
 		return self.overlaygrp_cache[frame_index]
 
 	def drawpreview(self, frame_index: int | None, offset: tuple[int, int]) -> None:
-		if frame_index != self.previewing_basegrp_frame or offset != self.previewing_offset:
-			self.canvas.delete(ALL)
+		if (frame_index != self.previewing_basegrp_frame
+				or self.overlayframe != self.previewing_overlaygrp_frame
+				or offset != self.previewing_offset):
+			self.canvas.delete(UI.ALL)
 			basegrp_image = self.base_grp_frame(frame_index)
 			overlaygrp_image = self.overlay_grp_frame(self.overlayframe)
 			if self.usebasegrp.get() and basegrp_image:
@@ -477,26 +488,33 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.lo?'
 		if not file_path:
-			self.title('PyLO %s' % LONG_VERSION)
+			self.title(f'PyLO {LONG_VERSION}')
 		else:
-			self.title('PyLO %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyLO {LONG_VERSION} ({file_path})')
 
 	def update_edited(self, edited: bool = True) -> None:
-		self.editstatus['state'] = NORMAL if edited else DISABLED
+		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 		self.previewupdate()
 
-	def new(self):
+	def clear_grp_caches(self) -> None:
+		self.basegrp_cache.clear()
+		self.overlaygrp_cache.clear()
+
+	def reset_preview_state(self) -> None:
+		self.clear_grp_caches()
+		self.previewupdate()
+		self.updatescroll()
+		self.framesupdate()
+
+	def new(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.lo = LO()
 		self.file = None
 		self.status.set('Editing new LO?.')
 		self.update_title()
-		self.grp_cache = [{},{}]
 		self.overlayframe = 0
-		self.previewupdate()
-		self.updatescroll()
-		self.framesupdate()
+		self.reset_preview_state()
 		self.action_states()
 		self.text.load('Frame:\n\t(0, 0)')
 
@@ -510,7 +528,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		lo = LO()
 		d = io.StringIO()
 		try:
-			lo.load_file(file)
+			lo.load(file)
 			lo.decompile(d)
 		except PyMSError as e:
 			ErrorDialog(self, e)
@@ -520,32 +538,39 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		self.update_title()
 		self.status.set('Load Successful!')
 		self.overlayframe = 0
-		self.previewupdate()
-		self.updatescroll()
+		self.reset_preview_state()
 		self.action_states()
 		self.text.load(d.getvalue().rstrip('\n'))
 		self.text.see('1.0')
 		self.text.mark_set('insert', '2.0 lineend')
 
-	def iimport(self):
+	def iimport(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
+		file = self.config_.last_path.txt.select_open(self)
 		if not file:
 			return
 		try:
-			text = open(file,'r').read()
-		except:
-			ErrorDialog(self, PyMSError('Import', "Couldn't import file '%s'" % file))
+			with open(file, 'r', encoding='utf-8') as f:
+				text = f.read()
+		except Exception:
+			ErrorDialog(self, PyMSError('Import', f"Couldn't import file '{file}'"))
 			return
-		self.lo = LO()
+		lo = LO()
+		try:
+			lo.interpret(text)
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		except Exception:
+			ErrorDialog(self, PyMSError('Import', f"Couldn't import file '{file}'"))
+			return
+		self.lo = lo
 		self.file = file
 		self.update_title()
 		self.status.set('Import Successful!')
 		self.overlayframe = 0
-		self.previewupdate()
-		self.updatescroll()
-		self.framesupdate()
+		self.reset_preview_state()
 		self.action_states()
 		self.text.load(text.rstrip('\n'))
 
@@ -561,13 +586,15 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
 			return CheckSaved.cancelled
+		lo = LO()
 		try:
-			text = self.text.get('1.0', END)
-			self.lo.interpret(text)
-			self.lo.compile(file_path)
+			text = self.text.get('1.0', UI.END)
+			lo.interpret(text)
+			lo.save(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled
+		self.lo = lo
 		self.file = file_path
 		self.update_title()
 		self.status.set('Save Successful!')
@@ -581,27 +608,28 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		if not file:
 			return
 		try:
-			self.lo.decompile(file)
+			with open(file, 'w', encoding='utf-8') as f:
+				f.write(self.text.get('1.0', UI.END))
 			self.status.set('Export Successful!')
-		except PyMSError as e:
-			ErrorDialog(self, e)
+		except Exception:
+			ErrorDialog(self, PyMSError('Export', f"Couldn't export file '{file}'"))
 
 	def test(self) -> None:
 		i = LO()
 		try:
-			text = self.text.get('1.0', END)
+			text = self.text.get('1.0', UI.END)
 			i.interpret(text)
 		except PyMSError as e:
 			if e.line is not None:
-				self.text.see('%s.0' % e.line)
-				self.text.tag_add('Error', '%s.0' % e.line, '%s.end' % e.line)
+				self.text.see(f'{e.line}.0')
+				self.text.tag_add('Error', f'{e.line}.0', f'{e.line}.end')
 			if e.warnings:
 				for w in e.warnings:
 					if w.line is not None:
-						self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
+						self.text.tag_add('Warning', f'{w.line}.0', f'{w.line}.end')
 			ErrorDialog(self, e)
 			return
-		MessageBox.askquestion(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.', type=MessageBox.OK)
+		UI.MessageBox.showinfo(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.')
 
 	def close(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
@@ -611,20 +639,16 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		self.update_title()
 		self.status.set('Load or create a LO?.')
 		self.overlayframe = None
-		self.previewupdate()
-		self.updatescroll()
-		self.framesupdate()
-		self.grp_cache = [{},{}]
+		self.reset_preview_state()
 		self.text.load('')
 		self.action_states()
 
 	def find(self) -> None:
 		if not self.findwindow:
-			self.findwindow = FindReplaceDialog(self, self.config_.windows.find, self)
-			self.bind(Key.F3(), self.findwindow.findnext)
-		elif self.findwindow.state() == 'withdrawn':
-			self.findwindow.deiconify()
-		self.findwindow.focus_set()
+			self.findwindow = FindReplaceDialog(self, self.text, self.config_.windows.find)
+			self.bind(UI.Key.F3(), self.findwindow.findnext)
+		else:
+			self.findwindow.show()
 
 	def colors(self) -> None:
 		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())
@@ -635,12 +659,15 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		SettingsDialog(self, self.config_, self.mpq_handler)
 
 	def register_registry(self) -> None:
-		for type,ext in [('Attack','a'),('Birth','b'),('Landing Dust','d'),('Fire','f'),('Powerup','o'),('Shield/Smoke','s'),('Liftoff Dust','u'),('Misc.','g'),('Misc.','l'),('Misc.','x')]:
+		error: PyMSError | None = None
+		for lo_type,ext in [('Attack','a'),('Birth','b'),('Landing Dust','d'),('Fire','f'),('Powerup','o'),('Shield/Smoke','s'),('Liftoff Dust','u'),('Misc.','g'),('Misc.','l'),('Misc.','x')]:
 			try:
-				register_registry('PyLO','lo' + ext, type + ' Overlay')
+				registry.register('PyLO','lo' + ext, lo_type + ' Overlay')
 			except PyMSError as e:
-				ErrorDialog(self, e)
-				break
+				if error is None:
+					error = e
+		if error is not None:
+			ErrorDialog(self, error)
 
 	def help(self) -> None:
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyLO.md')
@@ -664,12 +691,8 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 
 	def destroy(self) -> None:
 		if self.findwindow:
-			Toplevel.destroy(self.findwindow)
-		MainWindow.destroy(self)
-
-	# FindDelegate
-	def get_text(self) -> CodeText:
-		return self.text
+			self.findwindow.destroy()
+		UI.MainWindow.destroy(self)
 
 	# CodeTextDelegate
 	def comment_symbols(self) -> list[str]:

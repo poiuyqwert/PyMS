@@ -41,7 +41,7 @@ def compress(algorithm_ids: int, data: bytes) -> bytes:
 			continue
 		algorithm = AlgorithmID.COMPRESSION_ALGORITHM.get(algorithm_id)
 		if algorithm is None:
-			raise PyMSError('Compression', "Unsupported or invalid algorithm ID '0x%02X'" % algorithm_id)
+			raise PyMSError('Compression', f"Unsupported or invalid algorithm ID '0x{algorithm_id:02X}'")
 		data = algorithm(data)
 	return data
 
@@ -51,7 +51,7 @@ def decompress(algorithm_ids: int, data: bytes) -> bytes:
 			continue
 		algorithm = AlgorithmID.DECOMPRESSION_ALGORITHM.get(algorithm_id)
 		if algorithm is None:
-			raise PyMSError('Decompression', "Unsupported or invalid algorithm ID '0x%02X'" % algorithm_id)
+			raise PyMSError('Decompression', f"Unsupported or invalid algorithm ID '0x{algorithm_id:02X}'")
 		data = algorithm(data)
 	return data
 

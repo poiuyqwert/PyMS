@@ -1,12 +1,10 @@
 
 from __future__ import annotations
 
-from PyMS.Utilities.UIKit import Misc
-
 from . import CodeGenerator
 from ..Config import PyICEConfig
 
-from ...Utilities.UIKit import *
+from ...Utilities import UIKit as UI
 from ...Utilities import JSON
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import Config
@@ -44,36 +42,36 @@ class CodeGeneratorTypeRange(CodeGenerator.CodeGeneratorType):
 	def count(self) -> int:
 		return len(list(range(self.start,self.stop+1,self.step)))
 
-	def value(self, lookup_value: Callable[[str], int]) -> str:
-		n = lookup_value('n')
+	def value(self, lookup_value: Callable[[str], str]) -> str:
+		n = int(lookup_value('n'))
 		r = list(range(self.start,self.stop+1,self.step))
 		if n >= len(r):
 			return ''
 		return str(r[n])
 
-	def description(self):
-		return '%d to %d, by adding %d' % (self.start,self.stop,self.step)
+	def description(self) -> str:
+		return f'{self.start} to {self.stop}, by adding {self.step}'
 
-	def build_editor(self, parent: Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
+	def build_editor(self, parent: UI.Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
 		return CodeGeneratorEditorRange(parent, self, config.windows.generator.editor.range)
 
 class CodeGeneratorEditorRange(CodeGenerator.CodeGeneratorEditor[CodeGeneratorTypeRange]):
-	def __init__(self, parent: Misc, generator: CodeGeneratorTypeRange, window_geometry_config: Config.WindowGeometry) -> None:
+	def __init__(self, parent: UI.Misc, generator: CodeGeneratorTypeRange, window_geometry_config: Config.WindowGeometry) -> None:
 		CodeGenerator.CodeGeneratorEditor.__init__(self, parent, generator, window_geometry_config)
 
-		self.start = IntegerVar(0,[0,None])
+		self.start = UI.IntegerVar(0,[0,None])
 		self.start.set(self.generator.start)
-		self.stop = IntegerVar(0,[0,None])
+		self.stop = UI.IntegerVar(0,[0,None])
 		self.stop.set(self.generator.stop)
-		self.step = IntegerVar(1,[1,None])
+		self.step = UI.IntegerVar(1,[1,None])
 		self.step.set(self.generator.step)
 
-		Label(self, text='From ').pack(side=LEFT)
-		Entry(self, textvariable=self.start, width=5).pack(side=LEFT)
-		Label(self, text=' to ').pack(side=LEFT)
-		Entry(self, textvariable=self.stop, width=5).pack(side=LEFT)
-		Label(self, text=', by adding ').pack(side=LEFT)
-		Entry(self, textvariable=self.step, width=5).pack(side=LEFT)
+		UI.Label(self, text='From ').pack(side=UI.LEFT)
+		UI.Entry(self, textvariable=self.start, width=5).pack(side=UI.LEFT)
+		UI.Label(self, text=' to ').pack(side=UI.LEFT)
+		UI.Entry(self, textvariable=self.stop, width=5).pack(side=UI.LEFT)
+		UI.Label(self, text=', by adding ').pack(side=UI.LEFT)
+		UI.Entry(self, textvariable=self.step, width=5).pack(side=UI.LEFT)
 
 	def save(self) -> None:
 		self.generator.start = self.start.get()

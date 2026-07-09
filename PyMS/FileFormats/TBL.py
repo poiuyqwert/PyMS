@@ -1,11 +1,8 @@
 
 from ..Utilities.PyMSError import PyMSError
-from ..Utilities.fileutils import load_file
-from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities import IO
 
 import struct, re
-
-from typing import BinaryIO
 
 TBL_REF = """#----------------------------------------------------
 # Misc.
@@ -87,30 +84,38 @@ TBL_REF = """#----------------------------------------------------
 DEF_DECOMPILE = ''.join([chr(x) for x in range(32)]) + '#<>'
 
 def compile_string(string: str) -> str:
-	def special_chr(o):
-		c = int(o.group(1)) 
+	def special_chr(o: re.Match) -> str:
+		c = int(o.group(1))
 		if -1 > c or 255 < c:
 			return o.group(0)
 		return chr(c)
 	return re.sub(r'<(\d+)>', special_chr, string)
 
 def decompile_string(string: str, exclude: str = '', include: str = '') -> str:
-	def special_chr(o):
-		return '<%s>' % ord(o.group(0))
+	def special_chr(o: re.Match) -> str:
+		return f'<{ord(o.group(0))}>'
 	decompile = DEF_DECOMPILE + include
 	if exclude:
-		decompile = re.sub('[%s]' % re.escape(exclude),'',decompile)
-	return re.sub('([%s])' % decompile, special_chr, string)
+		decompile = re.sub(f'[{re.escape(exclude)}]','',decompile)
+	return re.sub(f'([{decompile}])', special_chr, string)
+
+def simplify_string(string: str) -> str:
+	# Strip a leading hotkey marker: a single lowercase letter followed by a control character.
+	string = re.sub(r'^[a-z][\x00-\x1f]', '', string)
+	# Strip any remaining control (non-display) characters.
+	string = re.sub(r'[\x00-\x1f]', '', string)
+	return string
 
 class TBL:
 	def __init__(self) -> None:
 		self.strings: list[str] = []
 
-	def load_file(self, file: str | BinaryIO) -> None:
-		data = load_file(file, 'TBL')
+	def load(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		try:
 			n = int(struct.unpack('<H', data[:2])[0])
-			offsets = list(int(v) for v in struct.unpack('<%sH' % n, data[2:2+2*n]))
+			offsets = list(int(v) for v in struct.unpack(f'<{n}H', data[2:2+2*n]))
 			findlen = list(offsets) + [len(data)]
 			findlen.sort(reverse=True)
 			lengths: dict[int, int] = {}
@@ -120,69 +125,57 @@ class TBL:
 					end = findlen[i-1]
 					lengths[start] = end-start
 			strings: list[str] = []
-			for i in range(len(offsets)):
-				o = offsets[i]
+			for o in offsets:
 				l = lengths[o]
 				strings.append(data[o:o+l].decode('utf-8'))
 			self.strings = strings
-		except:
-			raise PyMSError('Load',"Unsupported TBL file '%s', could possibly be corrupt" % file)
+		except Exception as exc:
+			raise PyMSError('Load', "Unsupported TBL file, could possibly be corrupt") from exc
 
 	def interpret(self, file: str) -> None:
 		try:
-			f = open(file,'r')
-			lines = f.readlines()
-			f.close()
-		except:
-			raise PyMSError('Interpreting',"Could not load file '%s'" % file)
+			with open(file, 'r', encoding='utf-8') as f:
+				lines = f.readlines()
+		except Exception as exc:
+			raise PyMSError('Interpreting', f"Could not load file '{file}'") from exc
 		strings: list[str] = []
 		for l in lines:
 			line = l.split('#',1)[0]
 			if line:
 				if len(strings) == 65536:
-					raise PyMSError('Interpreting',"There are too many string entries (max entries is 65536)")
+					raise PyMSError('Interpreting', "There are too many string entries (max entries is 65536)")
 				s = compile_string(line.rstrip('\r\n'))
 				strings.append(s)
 		self.strings = strings
 
-	def save_data(self) -> bytes:
+	def save(self, output: IO.AnyOutputBytes) -> None:
 		o = 2 + 2 * len(self.strings)
-		header = struct.pack('<H', len(self.strings))
-		data = b''
+		header = bytearray(struct.pack('<H', len(self.strings)))
+		data = bytearray()
 		for s in self.strings:
 			if not s.endswith('\x00'):
 				s += '\x00'
 			header += struct.pack('<H', o)
 			data += s.encode('utf-8')
 			o += len(s)
-		return header + data
+		with IO.OutputBytes(output) as f:
+			f.write(bytes(header + data))
 
-	def compile(self, file: str) -> None:
+	def decompile(self, file: IO.AnyOutputText, ref: bool = False) -> None:
 		try:
-			f = AtomicWriter(file)
-		except:
-			raise PyMSError('Compile',"Could not load file '%s'" % file)
-		data = self.save_data()
-		f.write(data)
-		f.close()
-
-	def decompile(self, file: str, ref: bool = False) -> None:
-		try:
-			f = AtomicWriter(file)
-		except:
-			raise PyMSError('Decompile',"Could not load file '%s'" % file)
-		if ref:
-			f.write(TBL_REF.encode())
-		for s in self.strings:
-			f.write((decompile_string(s) + '\n').encode())
-		f.close()
+			with IO.OutputText(file) as f:
+				if ref:
+					f.write(TBL_REF)
+				for s in self.strings:
+					f.write(decompile_string(s) + '\n')
+		except Exception as exc:
+			raise PyMSError('Decompile', f"Could not load file '{file}'") from exc
 
 #t = TBL()
-#t.load_file('Data\stat_txt.tbl')
+#t.load('Data\stat_txt.tbl')
 #t.decompile('test.txt')
 # t.interpret('test.txt')
-# t.compile('test.tbl')
-# t.compile('test.tbl')
+# t.save('test.tbl')
 # o = open('out.txt','w')
 # def getord(o):
    # return '<%s>' % ord(o.group(0))

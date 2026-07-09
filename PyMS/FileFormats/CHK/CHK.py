@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from .CHKRequirements import CHKRequirements
 from .CHKSectionUnknown import CHKSectionUnknown
-from .Sections import *
+from . import Sections
 
 from ...FileFormats import TBL
 from ...FileFormats.AIBIN import AIBIN
@@ -11,58 +11,55 @@ from ...FileFormats.AIBIN import AIBIN
 from .CHKSection import CHKSection
 
 from ...Utilities import Assets
-from ...Utilities.fileutils import load_file
+from ...Utilities import IO
 from ...Utilities.PyMSError import PyMSError
-from ...Utilities.AtomicWriter import AtomicWriter
 
 import struct
 
-from typing import TYPE_CHECKING, Type, TypeVar
-if TYPE_CHECKING:
-	from typing import BinaryIO
+from typing import Type, TypeVar
 
 S = TypeVar('S', bound=CHKSection)
 
 class CHK:
-	SECTION_TYPES: dict[str, Type[CHKSection]] = {
-		CHKSectionTYPE.NAME:CHKSectionTYPE,
-		CHKSectionVER.NAME:CHKSectionVER,
-		CHKSectionIVER.NAME:CHKSectionIVER,
-		CHKSectionIVE2.NAME:CHKSectionIVE2,
-		CHKSectionVCOD.NAME:CHKSectionVCOD,
-		CHKSectionIOWN.NAME:CHKSectionIOWN,
-		CHKSectionOWNR.NAME:CHKSectionOWNR,
-		CHKSectionERA.NAME:CHKSectionERA,
-		CHKSectionDIM.NAME:CHKSectionDIM,
-		CHKSectionSIDE.NAME:CHKSectionSIDE,
-		CHKSectionMTXM.NAME:CHKSectionMTXM,
-		CHKSectionPUNI.NAME:CHKSectionPUNI,
-		CHKSectionUPGR.NAME:CHKSectionUPGR,
-		CHKSectionPTEC.NAME:CHKSectionPTEC,
-		CHKSectionUNIT.NAME:CHKSectionUNIT,
-		CHKSectionTILE.NAME:CHKSectionTILE,
-		CHKSectionDD2.NAME:CHKSectionDD2,
-		CHKSectionTHG2.NAME:CHKSectionTHG2,
-		CHKSectionMASK.NAME:CHKSectionMASK,
-		CHKSectionSTR.NAME:CHKSectionSTR,
-		CHKSectionUPRP.NAME:CHKSectionUPRP,
-		CHKSectionUPUS.NAME:CHKSectionUPUS,
-		CHKSectionMRGN.NAME:CHKSectionMRGN,
-		CHKSectionTRIG.NAME:CHKSectionTRIG,
-		CHKSectionMBRF.NAME:CHKSectionMBRF,
-		CHKSectionSPRP.NAME:CHKSectionSPRP,
-		CHKSectionFORC.NAME:CHKSectionFORC,
-		CHKSectionWAV.NAME:CHKSectionWAV,
-		CHKSectionUNIS.NAME:CHKSectionUNIS,
-		CHKSectionUPGS.NAME:CHKSectionUPGS,
-		CHKSectionTECS.NAME:CHKSectionTECS,
-		CHKSectionSWNM.NAME:CHKSectionSWNM,
-		CHKSectionCOLR.NAME:CHKSectionCOLR,
-		CHKSectionPUPx.NAME:CHKSectionPUPx,
-		CHKSectionPTEx.NAME:CHKSectionPTEx,
-		CHKSectionUNIx.NAME:CHKSectionUNIx,
-		CHKSectionUPGx.NAME:CHKSectionUPGx,
-		CHKSectionTECx.NAME:CHKSectionTECx
+	SECTION_TYPES: dict[bytes, Type[CHKSection]] = {
+		Sections.CHKSectionTYPE.NAME:Sections.CHKSectionTYPE,
+		Sections.CHKSectionVER.NAME:Sections.CHKSectionVER,
+		Sections.CHKSectionIVER.NAME:Sections.CHKSectionIVER,
+		Sections.CHKSectionIVE2.NAME:Sections.CHKSectionIVE2,
+		Sections.CHKSectionVCOD.NAME:Sections.CHKSectionVCOD,
+		Sections.CHKSectionIOWN.NAME:Sections.CHKSectionIOWN,
+		Sections.CHKSectionOWNR.NAME:Sections.CHKSectionOWNR,
+		Sections.CHKSectionERA.NAME:Sections.CHKSectionERA,
+		Sections.CHKSectionDIM.NAME:Sections.CHKSectionDIM,
+		Sections.CHKSectionSIDE.NAME:Sections.CHKSectionSIDE,
+		Sections.CHKSectionMTXM.NAME:Sections.CHKSectionMTXM,
+		Sections.CHKSectionPUNI.NAME:Sections.CHKSectionPUNI,
+		Sections.CHKSectionUPGR.NAME:Sections.CHKSectionUPGR,
+		Sections.CHKSectionPTEC.NAME:Sections.CHKSectionPTEC,
+		Sections.CHKSectionUNIT.NAME:Sections.CHKSectionUNIT,
+		Sections.CHKSectionTILE.NAME:Sections.CHKSectionTILE,
+		Sections.CHKSectionDD2.NAME:Sections.CHKSectionDD2,
+		Sections.CHKSectionTHG2.NAME:Sections.CHKSectionTHG2,
+		Sections.CHKSectionMASK.NAME:Sections.CHKSectionMASK,
+		Sections.CHKSectionSTR.NAME:Sections.CHKSectionSTR,
+		Sections.CHKSectionUPRP.NAME:Sections.CHKSectionUPRP,
+		Sections.CHKSectionUPUS.NAME:Sections.CHKSectionUPUS,
+		Sections.CHKSectionMRGN.NAME:Sections.CHKSectionMRGN,
+		Sections.CHKSectionTRIG.NAME:Sections.CHKSectionTRIG,
+		Sections.CHKSectionMBRF.NAME:Sections.CHKSectionMBRF,
+		Sections.CHKSectionSPRP.NAME:Sections.CHKSectionSPRP,
+		Sections.CHKSectionFORC.NAME:Sections.CHKSectionFORC,
+		Sections.CHKSectionWAV.NAME:Sections.CHKSectionWAV,
+		Sections.CHKSectionUNIS.NAME:Sections.CHKSectionUNIS,
+		Sections.CHKSectionUPGS.NAME:Sections.CHKSectionUPGS,
+		Sections.CHKSectionTECS.NAME:Sections.CHKSectionTECS,
+		Sections.CHKSectionSWNM.NAME:Sections.CHKSectionSWNM,
+		Sections.CHKSectionCOLR.NAME:Sections.CHKSectionCOLR,
+		Sections.CHKSectionPUPx.NAME:Sections.CHKSectionPUPx,
+		Sections.CHKSectionPTEx.NAME:Sections.CHKSectionPTEx,
+		Sections.CHKSectionUNIx.NAME:Sections.CHKSectionUNIx,
+		Sections.CHKSectionUPGx.NAME:Sections.CHKSectionUPGx,
+		Sections.CHKSectionTECx.NAME:Sections.CHKSectionTECx
 	}
 
 	def __init__(self, stat_txt: TBL.TBL | str | None = None, aiscript: AIBIN.AIBIN | str | None = None) -> None:
@@ -72,7 +69,7 @@ class CHK:
 			if stat_txt is None:
 				stat_txt = Assets.mpq_file_path('rez', 'stat_txt.tbl')
 			self.stat_txt = TBL.TBL()
-			self.stat_txt.load_file(stat_txt)
+			self.stat_txt.load(stat_txt)
 		if isinstance(aiscript, AIBIN.AIBIN):
 			self.aiscript = aiscript
 		else:
@@ -80,14 +77,14 @@ class CHK:
 				aiscript = Assets.mpq_file_path('scripts', 'aiscript.bin')
 			self.aiscript = AIBIN.AIBIN()#stat_txt=self.stat_txt)
 			self.aiscript.load(aiscript, bw_input=None)
-		self.sections: dict[str, CHKSection] = {}
-		self.section_order: list[str] = []
+		self.sections: dict[bytes, CHKSection] = {}
+		self.section_order: list[bytes] = []
 
-	def get_section_named(self, name: str, game_mode: int = CHKRequirements.MODE_ALL) -> CHKSection | None:
+	def get_section_named(self, name: bytes, game_mode: int = CHKRequirements.MODE_ALL) -> CHKSection | None:
 		sect_class = CHK.SECTION_TYPES[name]
 		required = False
 
-		if name == CHKSectionVER.NAME:
+		if name == Sections.CHKSectionVER.NAME:
 			required = True
 		elif sect_class:
 			required = sect_class.REQUIREMENTS.is_required(self, game_mode)
@@ -98,49 +95,58 @@ class CHK:
 		return sect
 
 	def get_section(self, section_type: Type[S], game_mode: int = CHKRequirements.MODE_ALL) -> S | None:
-		required = section_type.REQUIREMENTS.is_required(self, game_mode)
+		if section_type.NAME == Sections.CHKSectionVER.NAME:
+			required = True
+		else:
+			required = section_type.REQUIREMENTS.is_required(self, game_mode)
 		sect = self.sections.get(section_type.NAME)
-		if not isinstance(sect, section_type):
+		if sect is not None and not isinstance(sect, section_type):
 			return None
 		if required and sect is None:
 			sect = section_type(self)
-			self.sections[section_type.name] = sect
+			self.sections[section_type.NAME] = sect
 		return sect
 
 	def player_color(self, player: int) -> int:
-		colors = CHKSectionCOLR.DEFAULT_COLORS
-		if colr := self.get_section(CHKSectionCOLR):
-			colors = colr.colors
-		colors.extend((CHKSectionCOLR.GREEN,CHKSectionCOLR.PALE_YELLOW,CHKSectionCOLR.TAN,CHKSectionCOLR.NEUTRAL))
+		colors = list(Sections.CHKSectionCOLR.DEFAULT_COLORS)
+		if colr := self.get_section(Sections.CHKSectionCOLR):
+			colors = list(colr.colors)
+		colors.extend((Sections.CHKSectionCOLR.GREEN,Sections.CHKSectionCOLR.PALE_YELLOW,Sections.CHKSectionCOLR.TAN,Sections.CHKSectionCOLR.NEUTRAL))
 		return colors[player]
 
-	def load_file(self, file: str | BinaryIO) -> None:
-		data = load_file(file, 'CHK')
+	def load(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		try:
-			self.load_data(data)
+			self._load_data(data)
 		except PyMSError as e:
 			raise e
-		except:
-			raise PyMSError('Load',"Unsupported CHK file '%s', could possibly be corrupt" % file)
+		except Exception as exc:
+			raise PyMSError('Load', "Unsupported CHK file, could possibly be corrupt") from exc
 
-	def load_data(self, data: bytes) -> None:
+	def _load_data(self, data: bytes) -> None:
 		offset = 0
-		sections: dict[str, CHKSection] = {}
-		section_order: list[str] = []
+		sections: dict[bytes, CHKSection] = {}
+		section_order: list[bytes] = []
 		toProcess: list[CHKSection] = []
-		while offset < len(data)-8:
+		while offset + 8 <= len(data):
 			header = struct.unpack('<4sL', data[offset:offset+8])
-			name = str(header[0])
+			name = header[0]
 			length = int(header[1])
 			offset += 8
 			sect_class = CHK.SECTION_TYPES.get(name)
+			# TODO: Handle repeated sections in a more SC way
 			if not sect_class:
 				sect: CHKSection = CHKSectionUnknown(self, name)
 			else:
 				sect = sect_class(self)
 			sect.load_data(data[offset:offset+min(length,len(data)-offset)])
+			# A name can legitimately appear more than once; the sections dict
+			# keeps the last occurrence (last-wins), so record each name in the
+			# order only once to avoid writing it repeatedly on save.
+			if name not in sections:
+				section_order.append(name)
 			sections[name] = sect
-			section_order.append(name)
 			if sect.requires_post_processing():
 				toProcess.append(sect)
 			offset += length
@@ -149,19 +155,12 @@ class CHK:
 		for sect in toProcess:
 			sect.process_data()
 
-	def save_file(self, file: str) -> None:
-		data = self.save_data()
-		try:
-			f = AtomicWriter(file)
-		except:
-			raise PyMSError('Save',"Could not save CHK to file '%s'" % file)
-		f.write(data)
-		f.close()
-
-	def save_data(self) -> bytes:
+	def save(self, output: IO.AnyOutputBytes) -> None:
 		result = b''
-		order: list[str] = []
-		order.extend(self.section_order)
+		order: list[bytes] = []
+		for name in self.section_order:
+			if not name in order:
+				order.append(name)
 		for name in list(self.sections.keys()):
 			if not name in order:
 				order.append(name)
@@ -171,4 +170,5 @@ class CHK:
 				data = section.save_data()
 				result += struct.pack('<4sL', section.NAME, len(data))
 				result += data
-		return result
+		with IO.OutputBytes(output) as f:
+			f.write(result)

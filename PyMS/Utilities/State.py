@@ -5,7 +5,7 @@ from .Callback import Callback
 
 from typing import Any, Callable
 
-class State(object):
+class State:
 	@staticmethod
 	def _get(field: str) -> Callable[[State], Any]:
 		attr = '_' + field
@@ -16,11 +16,11 @@ class State(object):
 	@staticmethod
 	def _set(field: str) -> Callable[[State, Any], None]:
 		attr = '_' + field
-		def _set(self: State, value: Any) -> None:
-			if getattr(self, attr) == value:
+		def _set(state: State, value: Any) -> None:
+			if getattr(state, attr) == value:
 				return
-			setattr(self, attr, value)
-			self.__field_updated(field)
+			setattr(state, attr, value)
+			state._field_updated(field) # pylint: disable=protected-access
 		return _set
 
 	@staticmethod
@@ -30,7 +30,7 @@ class State(object):
 	def __init__(self) -> None:
 		self.__callbacks: dict[str | None, Callback] = {}
 
-	def __field_updated(self, field: str) -> None:
+	def _field_updated(self, field: str) -> None:
 		callback = self.__callbacks.get(field)
 		if callback:
 			callback()

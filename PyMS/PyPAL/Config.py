@@ -2,7 +2,7 @@
 from ..FileFormats.Palette import Palette
 
 from ..Utilities import Config
-from ..Utilities.UIKit import Size
+from ..Utilities import UIKit as UI
 
 def _migrate_1_to_2(data: dict) -> None:
 	Config.migrate_fields(data, (
@@ -21,7 +21,7 @@ class PyPALConfig(Config.Config):
 	class Windows(Config.Group):
 		class Settings(Config.Group):
 			def __init__(self) -> None:
-				self.main = Config.WindowGeometry(default_size=Size(550,380))
+				self.main = Config.WindowGeometry(default_size=UI.Size(550,380))
 				super().__init__()
 
 		def __init__(self) -> None:

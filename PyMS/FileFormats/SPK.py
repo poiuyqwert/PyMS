@@ -27,6 +27,7 @@ class SPKImage:
 		self.pixels: Pixels = pixels if pixels else [[]]
 
 class SPK:
+	MAX_LAYERS = 5
 	LAYER_ORIGIN = (-8, -8)
 	LAYER_SIZE = (648, 488)
 	PARALLAX_RATIOS = [16/256.0, 21/256.0, 26/256.0, 31/256.0, 36/256.0]
@@ -35,17 +36,17 @@ class SPK:
 		self.layers: list[SPKLayer] = []
 		self.images: list[SPKImage] = []
 
-	def load_file(self, input: IO.AnyInputBytes) -> None:
-		with IO.InputBytes(input) as f:
-			data = f.read()
+	def load(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as input_bytes:
+			data = input_bytes.read()
 		try:
-			self.load_data(data)
+			self._load_data(data)
 		except PyMSError as e:
 			raise e
-		except:
-			raise PyMSError('Load',"Unsupported SPK file, could possibly be corrupt")
+		except Exception as exc:
+			raise PyMSError('Load', "Unsupported SPK file, could possibly be corrupt") from exc
 
-	def load_data(self, data: bytes) -> None:
+	def _load_data(self, data: bytes) -> None:
 		layer_count = struct.unpack('<H', data[:2])[0]
 		star_counts = []
 		o = 2
@@ -78,15 +79,16 @@ class SPK:
 		self.layers = layers
 		self.images = list(images.values())
 
-	def interpret_file(self, filepath: str, layer_count: int) -> None:
+	def interpret_file(self, filepath: IO.AnyInputBytes, layer_count: int) -> None:
 		bmp = BMP.BMP()
 		try:
-			bmp.load_file(filepath)
-		except:
-			raise PyMSError('Interpreting',"Could not load file '%s'" % filepath)
+			bmp.load(filepath)
+		except Exception as exc:
+			source = filepath if isinstance(filepath, str) else 'BMP data'
+			raise PyMSError('Interpreting', f"Could not load file '{source}'") from exc
 		height = int(bmp.height / float(layer_count))
 		if bmp.height % height:
-			raise PyMSError('Interpreting',"Image is not the correct height to fit %d layers" % layer_count)
+			raise PyMSError('Interpreting', f"Image is not the correct height to fit {layer_count} layers")
 		layers = list(SPKLayer() for _ in range(layer_count))
 		runs_by_row = []
 		for bmp_row in bmp.image:
@@ -101,7 +103,7 @@ class SPK:
 					run[1] = x-1
 					run = None
 			if run:
-				run[1] = len(bmp_row)
+				run[1] = len(bmp_row) - 1
 		images: dict[tuple[tuple[int, ...], ...], SPKImage] = {}
 		for y,row in enumerate(runs_by_row):
 			for x1,x2 in row:
@@ -152,12 +154,12 @@ class SPK:
 		self.layers = layers
 		self.images = list(images.values())
 
-	def save_file(self, output: IO.AnyOutputBytes) -> None:
-		data = self.save_data()
+	def save(self, output: IO.AnyOutputBytes) -> None:
+		data = self._save_data()
 		with IO.OutputBytes(output) as f:
 			f.write(data)
 
-	def save_data(self) -> bytes:
+	def _save_data(self) -> bytes:
 		headers = struct.pack('<H', len(self.layers))
 		pixels = b''
 		pixels_offset = 2
@@ -174,7 +176,7 @@ class SPK:
 					pixels += struct.pack('<HH', star.image.width, star.image.height)
 					pixels_offset += 4
 					for row in star.image.pixels:
-						pixels += struct.pack('<%dB' % star.image.width, *row)
+						pixels += struct.pack(f'<{star.image.width}B', *row)
 					pixels_offset += star.image.width * star.image.height
 				headers += struct.pack('<HHL', star.x, star.y, images[lookup])
 		return headers + pixels
@@ -197,7 +199,7 @@ class SPK:
 							image[star.y+y+ly][star.x+x] = star.image.pixels[y][x]
 		bmp = BMP.BMP()
 		bmp.set_pixels(image, palette.palette)
-		bmp.save_file(filepath)
+		bmp.save(filepath)
 
 # import PAL, BMP
 # if __name__ == '__main__':

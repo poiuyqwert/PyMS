@@ -1,8 +1,6 @@
 
 from ...FileFormats.IScriptBIN.CodeHandlers import ICEParseContext, ICELexer, DataContext, ICESerializeContext
 
-from ...Utilities.CodeHandlers.Formatters import Formatters
-
 import io
 
 def parse_context(code: str, data_context: DataContext | None = None) -> ICEParseContext:

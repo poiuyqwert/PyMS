@@ -28,12 +28,12 @@ class CompileTBL(BaseCompileStep):
 		try:
 			tbl.interpret(source_path)
 		except Exception as e:
-			raise CompileError(f"Couldn't parse `{source_path}`", internal_exception=e)
+			raise CompileError(f"Couldn't parse `{source_path}`", internal_exception=e) from e
 		self.log('  Parsing completed!')
 		self.log(f'Compiling `{self.source_file.display_name()}`...')
 		try:
-			tbl.compile(destination_path)
+			tbl.save(destination_path)
 		except Exception as e:
-			raise CompileError("Couldn't save TBL", internal_exception=e)
+			raise CompileError("Couldn't save TBL", internal_exception=e) from e
 		self.log('  TBL compiled!')
 		return None

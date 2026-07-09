@@ -1,13 +1,13 @@
 
 from .Config import PyMODConfig
 from . import Source
-from .CompileThread import *
+from .CompileThread import CompileThread
 from .ExtractDialog import ExtractDialog
 from .SettingsUI.SettingsDialog import SettingsDialog
 from .Project import Project
 from .NameDialog import NameDialog
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities import Assets
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -20,86 +20,87 @@ from ..Utilities.ErrorDialog import ErrorDialog
 
 import os, shutil
 
-LONG_VERSION = 'v%s' % Assets.version('PyMOD')
+LONG_VERSION = f"v{Assets.version('PyMOD')}"
 
 class TabID:
 	files = 'files'
 	logs = 'logs'
 
-class PyMOD(MainWindow):
+class PyMOD(UI.MainWindow):
 	def __init__(self) -> None:
 		self.config_ = PyMODConfig()
 
 		#Window
-		MainWindow.__init__(self)
+		UI.MainWindow.__init__(self)
 		self.set_icon('PyMOD')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyMOD', Assets.version('PyMOD'))
 		ga.track(GAScreen('PyMOD'))
 		self.minsize(400,350)
 		setup_trace('PyMOD', self)
-		Theme.load_theme(self.config_.theme.value, self)
+		UI.Theme.load_theme(self.config_.theme.value, self)
 
 		self.project: Project | None = None
 		self.compile_thread: CompileThread | None = None
+		self.edited = False
 
 		self.mpqhandler = MPQHandler(self.config_.mpqs)
 
 		self.update_title()
 
 		#Toolbar
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.manage_settings, "Manage Settings", Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.manage_settings, "Manage Settings", UI.Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyMOD')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
-		self.notebook = Notebook(self)
-		self.notebook.pack(side=TOP, padx=2, fill=BOTH, expand=1)
+		self.notebook = UI.Notebook(self)
+		self.notebook.pack(side=UI.TOP, padx=2, fill=UI.BOTH, expand=1)
 
-		frame = Frame(self.notebook)
-		self.files_tree = TreeList(frame)
-		self.files_tree.pack(padx=3, pady=3, fill=BOTH, expand=1)
-		self.refresh_button = Button(frame, text='Refresh', command=self.refresh_files, state=DISABLED)
-		self.refresh_button.pack(side=BOTTOM, pady=(5, 0))
+		frame = UI.Frame(self.notebook)
+		self.files_tree = UI.TreeList(frame)
+		self.files_tree.pack(padx=3, pady=3, fill=UI.BOTH, expand=1)
+		self.refresh_button = UI.Button(frame, text='Refresh', command=self.refresh_files, state=UI.DISABLED)
+		self.refresh_button.pack(side=UI.BOTTOM, pady=(5, 0))
 		self.notebook.add_tab(frame, 'Files', TabID.files)
 
-		frame = Frame(self.notebook)
-		self.logs_textview = ScrolledText(frame)
+		frame = UI.Frame(self.notebook)
+		self.logs_textview = UI.ScrolledText(frame)
 		self.logs_textview.set_read_only(True)
-		self.logs_textview.textview.tag_configure('error', foreground=Theme.get_color('log', 'error', default='#FF0000'))
-		self.logs_textview.textview.tag_configure('warning', foreground=Theme.get_color('log', 'warning', default='#FFA500'))
-		self.logs_textview.textview.tag_configure('success', foreground=Theme.get_color('log', 'success', default='#00FF00'))
-		self.logs_textview.pack(padx=3, pady=3, fill=BOTH, expand=1)
+		self.logs_textview.textview.tag_configure('error', foreground=UI.Theme.get_color('log', 'error', default='#FF0000'))
+		self.logs_textview.textview.tag_configure('warning', foreground=UI.Theme.get_color('log', 'warning', default='#FFA500'))
+		self.logs_textview.textview.tag_configure('success', foreground=UI.Theme.get_color('log', 'success', default='#00FF00'))
+		self.logs_textview.pack(padx=3, pady=3, fill=UI.BOTH, expand=1)
 		self.notebook.add_tab(frame, 'Logs', TabID.logs)
 
-		frame = Frame(self)
-		self.extract_button = Button(frame, text='Extract', command=self.extract, state=DISABLED)
-		self.extract_button.pack(side=LEFT, padx=(0,10))
-		self.compile_button = Button(frame, text='Compile', command=self.compile, state=DISABLED)
-		self.compile_button.pack(side=LEFT)
-		self.clean_button = Button(frame, text='Clean', command=self.clean, state=DISABLED)
-		self.clean_button.pack(side=LEFT)
-		self.cancel_button = Button(frame, text='Cancel', command=self.cancel, state=DISABLED)
-		self.cancel_button.pack(side=LEFT)
-		frame.pack(side=TOP, pady=5)
+		frame = UI.Frame(self)
+		self.extract_button = UI.Button(frame, text='Extract', command=self.extract, state=UI.DISABLED)
+		self.extract_button.pack(side=UI.LEFT, padx=(0,10))
+		self.compile_button = UI.Button(frame, text='Compile', command=self.compile, state=UI.DISABLED)
+		self.compile_button.pack(side=UI.LEFT)
+		self.clean_button = UI.Button(frame, text='Clean', command=self.clean, state=UI.DISABLED)
+		self.clean_button.pack(side=UI.LEFT)
+		self.cancel_button = UI.Button(frame, text='Cancel', command=self.cancel, state=UI.DISABLED)
+		self.cancel_button.pack(side=UI.LEFT)
+		frame.pack(side=UI.TOP, pady=5)
 
 		#Statusbar
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.status.set('Open or create a Mod Project.')
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, width=35)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 		self.config_.windows.main.load_size(self)
 
@@ -108,32 +109,32 @@ class PyMOD(MainWindow):
 
 	def update_title(self) -> None:
 		if not self.project:
-			self.title('PyMOD %s' % LONG_VERSION)
+			self.title(f'PyMOD {LONG_VERSION}')
 		else:
-			self.title('PyMOD %s (%s)' % (LONG_VERSION, self.project.path))
+			self.title(f'PyMOD {LONG_VERSION} ({self.project.path})')
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
-		self.editstatus['state'] = NORMAL if edited else DISABLED
+		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 
 	def update_states(self) -> None:
 		is_project_open = not not self.project
 		is_compiling = not not self.compile_thread
 		self.toolbar.tag_enabled('file_open', is_project_open)
-		self.refresh_button['state'] = NORMAL if is_project_open and not is_compiling else DISABLED
-		self.extract_button['state'] = NORMAL if is_project_open and not is_compiling else DISABLED
-		self.compile_button['state'] = NORMAL if is_project_open and not is_compiling else DISABLED
-		self.clean_button['state'] = NORMAL if is_project_open and not is_compiling else DISABLED
-		self.cancel_button['state'] = NORMAL if is_compiling else DISABLED
+		self.refresh_button['state'] = UI.NORMAL if is_project_open and not is_compiling else UI.DISABLED
+		self.extract_button['state'] = UI.NORMAL if is_project_open and not is_compiling else UI.DISABLED
+		self.compile_button['state'] = UI.NORMAL if is_project_open and not is_compiling else UI.DISABLED
+		self.clean_button['state'] = UI.NORMAL if is_project_open and not is_compiling else UI.DISABLED
+		self.cancel_button['state'] = UI.NORMAL if is_compiling else UI.DISABLED
 
 	def refresh_files(self) -> None:
-		self.files_tree.delete(ALL)
+		self.files_tree.delete(UI.ALL)
 		if not self.project:
 			return
 		if source_graph := self.project.update_source_graph():
 			self.files_tree.build(((source_graph, True),), lambda node: tuple((item,None if isinstance(item, Source.File) else True) for item in node.children) if isinstance(node, Source.Folder) else (), lambda node: node.display_name())
 		else:
-			self.files_tree.delete(ALL)
+			self.files_tree.delete(UI.ALL)
 
 	def new(self) -> None:
 		parent_path = self.config_.last_path.project.select_open(self, title='Select Containing Folder')
@@ -148,8 +149,8 @@ class PyMOD(MainWindow):
 			return
 		try:
 			os.mkdir(project_path)
-		except:
-			ErrorDialog(self, PyMSError('New', f"Couldn't create folder `{project_path}`", capture_exception=True))
+		except Exception as e:
+			ErrorDialog(self, PyMSError('New', f"Couldn't create folder `{project_path}`", cause=e))
 			return
 		self.open(project_path)
 
@@ -182,7 +183,7 @@ class PyMOD(MainWindow):
 		if not self.project.source_graph:
 			return
 		self.notebook.display(TabID.logs)
-		self.logs_textview.delete('1.0', END)
+		self.logs_textview.delete('1.0', UI.END)
 		self.compile_thread = CompileThread(self.project)
 		self.compile_thread.start()
 		self.update_states()
@@ -192,17 +193,17 @@ class PyMOD(MainWindow):
 		if self.project is None:
 			return
 		self.notebook.display(TabID.logs)
-		self.logs_textview.delete('1.0', END)
-		self.logs_textview.insert(END, f'Cleaning intermediates folder `{self.project.intermediates_path}`...')
+		self.logs_textview.delete('1.0', UI.END)
+		self.logs_textview.insert(UI.END, f'Cleaning intermediates folder `{self.project.intermediates_path}`...')
 		if not os.path.exists(self.project.intermediates_path):
-			self.logs_textview.insert(END, f"\n  Folder doesn't exist, no cleanup required")
+			self.logs_textview.insert(UI.END, "\n  Folder doesn't exist, no cleanup required")
 			return
 		try:
 			shutil.rmtree(self.project.intermediates_path)
-		except:
-			self.logs_textview.insert(END, "\n  Couldn't clean intermediaters folder", 'error')
+		except Exception:
+			self.logs_textview.insert(UI.END, "\n  Couldn't clean intermediaters folder", 'error')
 			return
-		self.logs_textview.insert(END, '\n  Clean complete!', 'success')
+		self.logs_textview.insert(UI.END, '\n  Clean complete!', 'success')
 
 	def cancel(self) -> None:
 		if not self.compile_thread:
@@ -215,11 +216,11 @@ class PyMOD(MainWindow):
 		while True:
 			try:
 				message = self.compile_thread.output_queue.get(False)
-			except:
+			except Exception:
 				break
 			if isinstance(message, CompileThread.OutputMessage.Log):
-				self.logs_textview.insert(END, message.text + '\n', message.tag)
-				self.logs_textview.textview.see(END)
+				self.logs_textview.insert(UI.END, message.text + '\n', message.tag)
+				self.logs_textview.textview.see(UI.END)
 			self.compile_thread.output_queue.task_done()
 		if not self.compile_thread.is_alive():
 			self.compile_thread = None

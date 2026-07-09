@@ -1,14 +1,15 @@
 
-from ..Widgets import *
+from ..Widgets import Label, Misc
+from ..Event import Event
 from ..Font import Font
-from ..EventPattern import *
+from ..EventPattern import Cursor, Mouse
 
 import webbrowser
 
 from typing import Callable
 
 class Hotlink(Label):
-	def __init__(self, parent: Misc, text: str, callback: str | Callable[[Event], None] | None = None, font: Font | None = None, hover_font: Font | None = None):
+	def __init__(self, parent: Misc, text: str, callback: str | Callable[[Event], None] | None = None, *, font: Font | None = None, hover_font: Font | None = None):
 		self.font = font or Font()
 		self.hover_font = hover_font or Font(underline=True)
 		Label.__init__(self, parent, text=text, foreground='#0000FF', cursor='hand2', font=self.font)
@@ -21,8 +22,8 @@ class Hotlink(Label):
 			else:
 				self.bind(Mouse.Click_Left(), callback)
 
-	def enter(self, e: Event) -> None:
+	def enter(self, _event: Event) -> None:
 		self['font'] = self.hover_font
 
-	def leave(self, e: Event) -> None:
+	def leave(self, _event: Event) -> None:
 		self['font'] = self.font

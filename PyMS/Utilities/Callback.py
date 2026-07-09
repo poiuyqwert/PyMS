@@ -13,7 +13,7 @@ class Callback(Generic[P]):
 	def add(self, callback: Callable[P, None]) -> None:
 		self.callbacks.append(callback)
 
-	def __add__(self, callback: Callable[P, None]) -> Self:
+	def __iadd__(self, callback: Callable[P, None]) -> Self:
 		self.add(callback)
 		return self
 
@@ -22,7 +22,7 @@ class Callback(Generic[P]):
 			return
 		self.callbacks.remove(callback)
 
-	def __sub__(self, callback: Callable[P, None]) -> Self:
+	def __isub__(self, callback: Callable[P, None]) -> Self:
 		self.remove(callback)
 		return self
 
@@ -30,5 +30,5 @@ class Callback(Generic[P]):
 		self.callbacks = [callback]
 
 	def __call__(self, *args: P.args, **kwargs: P.kwargs) -> None:
-		for callback in self.callbacks:
+		for callback in list(self.callbacks):
 			callback(*args, **kwargs)

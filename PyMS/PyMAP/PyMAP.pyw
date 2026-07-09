@@ -1,3 +1,5 @@
+# Dead Python-2 code, not part of the suite (no launcher, nothing imports it).
+# pylint: disable=wildcard-import,unused-wildcard-import
 from Libs.utils import *
 from Libs.setutils import *
 from Libs.trace import setup_trace
@@ -1113,7 +1115,7 @@ class BWImage:
 				grp_file = self.ui.mpqhandler.get_file('MPQ:' + self.grpFile)
 				try:
 					grp = GRP.CacheGRP()
-					grp.load_file(grp_file)
+					grp.load(grp_file)
 				except PyMSError as e:
 					return None
 				self.grp = grp
@@ -1585,13 +1587,13 @@ class EditLayerLocations(EditLayer):
 			y = y1+mouseY
 			locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
 			if button_event & EditLayer.MOUSE_DOWN or button_event & EditLayer.MOUSE_DOUBLE:
-	 			self.current_event = []
-	 			unused = None
-	 			for l in self.zOrder:
-	 				if l == 63 and not self.show_anywhere:
+				self.current_event = []
+				unused = None
+				for l in self.zOrder:
+					if l == 63 and not self.show_anywhere:
 						continue
 					location = locations.locations[l]
-	 				if location.in_use():
+					if location.in_use():
 						x1,y1,x2,y2 = location.normalized_coords()
 						if button_event & EditLayer.MOUSE_DOWN:
 							event = resize_event(location,x,y)
@@ -2188,7 +2190,7 @@ class PyMAP(Tk):
 			else:
 				Frame(toolbar, width=btn).pack(side=LEFT)
 		self.edit_layer_index = IntVar(0)
-		self.edit_layer_index.trace('w', self.change_edit_layer)
+		self.edit_layer_index.trace_add('write', self.change_edit_layer)
 		self.edit_layer_dropdown = DropDown(toolbar, self.edit_layer_index, [l.name for l in self.edit_layers], width=25)
 		self.edit_layer_dropdown.pack(side=LEFT, padx=2)
 		toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
@@ -2335,13 +2337,13 @@ class PyMAP(Tk):
 			imagestbl = TBL.TBL()
 			imagestbl.load_file(self.mpqhandler.get_file(self.profile['imagestbl']))
 			unitsdat = DAT.UnitsDAT(stat_txt)
-			unitsdat.load_file(self.mpqhandler.get_file(self.profile['unitsdat']))
+			unitsdat.load(self.mpqhandler.get_file(self.profile['unitsdat']))
 			flingydat = DAT.FlingyDAT(stat_txt)
-			flingydat.load_file(self.mpqhandler.get_file(self.profile['flingydat']))
+			flingydat.load(self.mpqhandler.get_file(self.profile['flingydat']))
 			spritesdat = DAT.SpritesDAT(stat_txt)
-			spritesdat.load_file(self.mpqhandler.get_file(self.profile['spritesdat']))
+			spritesdat.load(self.mpqhandler.get_file(self.profile['spritesdat']))
 			imagesdat = DAT.ImagesDAT(stat_txt)
-			imagesdat.load_file(self.mpqhandler.get_file(self.profile['imagesdat']))
+			imagesdat.load(self.mpqhandler.get_file(self.profile['imagesdat']))
 			aibin = AIBIN.AIBIN(bwscript=None, units=unitsdat, upgrades=None, techs=None, stat_txt=stat_txt)
 			aibin.load_file(self.mpqhandler.get_file(self.profile['aiscript']))
 			iscriptbin = IScriptBIN.IScriptBIN(weaponsdat=None, flingydat=flingydat, imagesdat=imagesdat, spritesdat=spritesdat, soundsdat=None, stat_txt=stat_txt, imagestbl=imagestbl, sfxdatatbl=None)
@@ -2350,14 +2352,14 @@ class PyMAP(Tk):
 			pal = PAL.Palette()
 			for p in ['Units','bfire','gfire','ofire','Terrain']:#,'Icons']:
 				try:
-					pal.load_file(self.settings.get('%s.pal' % p,os.path.join(BASE_DIR, 'Palettes', '%s%spal' % (p,os.extsep))))
-				except:
+					pal.load(self.settings.get('%s.pal' % p,os.path.join(BASE_DIR, 'Palettes', '%s%spal' % (p,os.extsep))))
+				except Exception:
 					if p == 'Units':
 						raise
 					continue
 				palettes[p] = pal.palette
 			tunitpcx = PCX.PCX()
-			tunitpcx.load_file(self.mpqhandler.get_file(self.profile['tunitpcx']))
+			tunitpcx.load(self.mpqhandler.get_file(self.profile['tunitpcx']))
 		except PyMSError as e:
 			err = e
 		else:
@@ -2385,7 +2387,7 @@ class PyMAP(Tk):
 				for layer in self.map_layers:
 					layer.tick(dt)
 				self.mapCanvas.update_idletasks()
-				self.tick_alarm = self.after(FRAME_DELAY,self.tick)
+				self.tick_alarm = self.after_managed(FRAME_DELAY,self.tick)
 			else:
 				self.tick_alarm = None
 
@@ -2393,7 +2395,7 @@ class PyMAP(Tk):
 		if self.tick_alarm is not None:
 			cancel = self.tick_alarm
 			self.tick_alarm = None
-			self.after_cancel(cancel)
+			self.after_cancel_managed(cancel)
 
 	def file_settings(self, key=None, err=None):
 		data = [
@@ -2551,7 +2553,9 @@ class PyMAP(Tk):
 				else:
 					self.saveas()
 
-	def select_file(self, title, open=True, ext='.scx', filetypes=[('BroodWar Map','*.scx'),('StarCraft Map','*.scm'),('Raw Map','*.chk'),('All Files','*')], parent=None):
+	def select_file(self, title, open=True, ext='.scx', filetypes=None, parent=None):
+		if filetypes is None:
+			filetypes = [('BroodWar Map','*.scx'),('StarCraft Map','*.scm'),('Raw Map','*.chk'),('All Files','*')]
 		if parent is None:
 			parent = self
 		path = self.settings.get('lastpath', BASE_DIR)
@@ -2608,12 +2612,12 @@ class PyMAP(Tk):
 					chkfile = SFileOpenFileEx(scmap, 'staredit\\scenario.chk')
 					if not SFInvalidHandle(chkfile):
 						data,_ = SFileReadFile(chkfile)
-						chk.load_data(data)
+						chk.load(data)
 						SFileCloseFile(chkfile)
 						chkfile = None
 					SFileCloseArchive(scmap)
 				else:
-					chk.load_file(file)
+					chk.load(file)
 				era = chk.get_section(CHKSectionERA.NAME)
 				if era:
 					tilesetName = CHKSectionERA.TILESET_FILE(era.tileset)
@@ -2641,7 +2645,7 @@ class PyMAP(Tk):
 						tilesetFiles.append(tilesetFile)
 					if len(tilesetFiles) == len(tilesetPaths):
 						tileset = Tilesets.Tileset()
-						tileset.load_file(*tilesetFiles)
+						tileset.load(tilesetFiles[0], vf4=tilesetFiles[1], vx4=tilesetFiles[2], vr4=tilesetFiles[3], dddata=tilesetFiles[4], wpe=tilesetFiles[5])
 					self.mpqhandler.close_mpqs()
 			except PyMSError as e:
 				self.mpqhandler.close_mpqs()
@@ -2680,7 +2684,7 @@ class PyMAP(Tk):
 			self.saveas()
 			return
 		try:
-			self.chk.save_file(self.file)
+			self.chk.save(self.file)
 			self.status.set('Save Successful!')
 			self.edited = False
 			self.editstatus['state'] = DISABLED

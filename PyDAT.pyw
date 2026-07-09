@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# pylint: disable=consider-using-f-string,raise-missing-from
 
 from PyMS.Utilities.Compatibility import check_compat
 check_compat('PyDAT')
@@ -59,16 +60,16 @@ def main(): # type: () -> None
 						try:
 							for i in opt.ids.split(','):
 								ids.append(int(i))
-								if ids[-1] < 0 or ids[-1] >= dat.count:
-									raise PyMSError('Options',"Invalid ID '%s'" % ids[-1])
-						except:
-							raise PyMSError('Options','Invalid ID list')
+						except Exception as exc:
+							raise PyMSError('Options','Invalid ID list', cause=exc)
 					else:
 						ids = None
 					print("Reading DAT '%s'..." % args[0])
-					dat.load_file(args[0])
+					dat.load(args[0])
 					print(" - '%s' read successfully\nDecompiling DAT file '%s'..." % (args[0],args[0]))
-					dat.decompile(args[1], opt.reference, ids)
+					data = dat.export_entries(ids) #, opt.reference)
+					with open(args[1], 'w', encoding='utf-8') as f:
+						f.write(data)
 					print(" - '%s' written succesfully" % args[1])
 				else:
 					if opt.basedat:
@@ -76,11 +77,11 @@ def main(): # type: () -> None
 					else:
 						basedat = Assets.mpq_file_path('arr','%s%sdat' % (['units','weapons','flingy','sprites','images','upgrades','techdata','sfxdata','portdata','mapdata','orders'][opt.type],os.extsep))
 					print("Loading base DAT file '%s'..." % basedat)
-					dat.load_file(basedat)
+					dat.load(basedat)
 					print(" - '%s' read successfully\nInterpreting file '%s'..." % (basedat,args[0]))
-					dat.interpret(args[0])
+					dat.import_file(args[0])
 					print(" - '%s' read successfully\nCompiling file '%s' to DAT format..." % (args[0],args[0]))
-					dat.compile(args[1])
+					dat.save(args[1])
 					print(" - '%s' written succesfully" % args[1])
 			except PyMSError as e:
 				print(repr(e))

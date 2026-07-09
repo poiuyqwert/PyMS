@@ -47,13 +47,14 @@ class BaseCompileStep:
 		self.compile_thread.output_queue.put(CompileThread.OutputMessage.Log(message, tag=tag))
 
 	def warning(self, warning: PyMSWarning) -> None:
+		from ..CompileThread import CompileThread
 		self.compile_thread.output_queue.put(CompileThread.OutputMessage.Log(repr(warning), tag='warning'))
 
 	def warnings(self, warnings: list[PyMSWarning]) -> None:
 		for warning in warnings:
 			self.warning(warning)
 
-	def load_config(self, type: Type[C], source_item: Source.Item, optional: bool = False, log: bool = True) -> C | None:
+	def load_config(self, config_type: Type[C], source_item: Source.Item, optional: bool = False, log: bool = True) -> C | None:
 		config_path = source_item.config_path()
 		if log:
 			self.log(f'Checking for `config.json` for `{source_item.name}`...')
@@ -62,7 +63,7 @@ class BaseCompileStep:
 				self.log('  No `config.json` found, using default settings')
 			return None
 		try:
-			config = JSON.load_file(config_path, type)
+			config = JSON.load_file(config_path, config_type)
 			if log:
 				self.log('  Config loaded!')
 			return config
@@ -71,4 +72,4 @@ class BaseCompileStep:
 				if log:
 					self.log("  Error loading `config.json`, continuing without it")
 				return None
-			raise CompileError("Couldn't load `config.json`", internal_exception=e)
+			raise CompileError("Couldn't load `config.json`", internal_exception=e) from e

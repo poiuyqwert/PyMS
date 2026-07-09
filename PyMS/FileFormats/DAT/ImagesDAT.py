@@ -3,7 +3,9 @@ from . import AbstractDAT
 from . import DATFormat
 from . import DATCoders
 
-from typing import cast
+from collections import OrderedDict
+
+from typing import cast, Any
 
 class DATImage(AbstractDAT.AbstractDATEntry):
 	class Property:
@@ -54,23 +56,23 @@ class DATImage(AbstractDAT.AbstractDATEntry):
 		unknown8 = 8
 		uknonwn9 = 9
 
-	def __init__(self):
-		self.grp_file = 0
-		self.gfx_turns = 0
-		self.clickable = 0
-		self.use_full_iscript = 0
-		self.draw_if_cloaked = 0
-		self.draw_function = 0
-		self.remapping = 0
-		self.iscript_id = 0
-		self.shield_overlay = 0
-		self.attack_overlay = 0
-		self.damage_overlay = 0
-		self.special_overlay = 0
-		self.landing_dust_overlay = 0
-		self.lift_off_dust_overlay = 0
+	def __init__(self) -> None:
+		self.grp_file: int = 0
+		self.gfx_turns: int = 0
+		self.clickable: int = 0
+		self.use_full_iscript: int = 0
+		self.draw_if_cloaked: int = 0
+		self.draw_function: int = 0
+		self.remapping: int = 0
+		self.iscript_id: int = 0
+		self.shield_overlay: int = 0
+		self.attack_overlay: int = 0
+		self.damage_overlay: int = 0
+		self.special_overlay: int = 0
+		self.landing_dust_overlay: int = 0
+		self.lift_off_dust_overlay: int = 0
 
-	def load_values(self, values):
+	def load_values(self, values: tuple[int | DATFormat.DATType | None, ...]) -> None:
 		self.grp_file,\
 		self.gfx_turns,\
 		self.clickable,\
@@ -85,9 +87,9 @@ class DATImage(AbstractDAT.AbstractDATEntry):
 		self.special_overlay,\
 		self.landing_dust_overlay,\
 		self.lift_off_dust_overlay\
-			= values
+			= values # type: ignore[assignment]
 
-	def save_values(self):
+	def save_values(self) -> tuple[int | DATFormat.DATType | None, ...]:
 		return (
 			self.grp_file,
 			self.gfx_turns,
@@ -106,12 +108,12 @@ class DATImage(AbstractDAT.AbstractDATEntry):
 		)
 
 	EXPORT_NAME = 'Image'
-	def _export_data(self, export_properties, data):
+	def _export_data(self, export_properties: list[str] | None, data: OrderedDict[str, Any]) -> None:
 		self._export_property_value(export_properties, DATImage.Property.grp_file, self.grp_file, data)
-		self._export_property_value(export_properties, DATImage.Property.gfx_turns, self.gfx_turns, data, _ImagePropertyCoder.gfx_turns)
-		self._export_property_value(export_properties, DATImage.Property.clickable, self.clickable, data, _ImagePropertyCoder.clickable)
-		self._export_property_value(export_properties, DATImage.Property.use_full_iscript, self.use_full_iscript, data, _ImagePropertyCoder.use_full_iscript)
-		self._export_property_value(export_properties, DATImage.Property.draw_if_cloaked, self.draw_if_cloaked, data, _ImagePropertyCoder.draw_if_cloaked)
+		self._export_property_value(export_properties, DATImage.Property.gfx_turns, self.gfx_turns, data, property_encoder=_ImagePropertyCoder.gfx_turns)
+		self._export_property_value(export_properties, DATImage.Property.clickable, self.clickable, data, property_encoder=_ImagePropertyCoder.clickable)
+		self._export_property_value(export_properties, DATImage.Property.use_full_iscript, self.use_full_iscript, data, property_encoder=_ImagePropertyCoder.use_full_iscript)
+		self._export_property_value(export_properties, DATImage.Property.draw_if_cloaked, self.draw_if_cloaked, data, property_encoder=_ImagePropertyCoder.draw_if_cloaked)
 		self._export_property_value(export_properties, DATImage.Property.draw_function, self.draw_function, data)
 		self._export_property_value(export_properties, DATImage.Property.remapping, self.remapping, data)
 		self._export_property_value(export_properties, DATImage.Property.iscript_id, self.iscript_id, data)
@@ -122,7 +124,7 @@ class DATImage(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, DATImage.Property.landing_dust_overlay, self.landing_dust_overlay, data)
 		self._export_property_value(export_properties, DATImage.Property.lift_off_dust_overlay, self.lift_off_dust_overlay, data)
 
-	def _import_data(self, data):
+	def _import_data(self, data: dict[str, Any]) -> None:
 		grp_file = self._import_property_value(data, DATImage.Property.grp_file)
 		gfx_turns = self._import_property_value(data, DATImage.Property.gfx_turns, _ImagePropertyCoder.gfx_turns)
 		clickable = self._import_property_value(data, DATImage.Property.clickable, _ImagePropertyCoder.clickable)
@@ -241,4 +243,4 @@ class ImagesDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "images.dat"
 
 	def get_entry(self, index: int) -> DATImage:
-		return cast(DATImage, super(ImagesDAT, self).get_entry(index))
+		return cast(DATImage, super().get_entry(index))

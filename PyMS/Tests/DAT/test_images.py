@@ -1,5 +1,6 @@
 
 from ...FileFormats.DAT import ImagesDAT
+from ...Utilities import IO
 
 from ..utils import resource_path
 
@@ -11,8 +12,8 @@ class Test_Images(unittest.TestCase):
 			expected = f.read()
 
 		dat = ImagesDAT()
-		dat.load_data(expected)
+		dat.load(expected)
 
-		result = dat.save_data()
+		result = IO.output_to_bytes(dat.save)
 
 		self.assertEqual(result, expected)

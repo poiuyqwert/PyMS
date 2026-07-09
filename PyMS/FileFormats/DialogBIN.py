@@ -1,8 +1,8 @@
 
+from __future__ import annotations
+
 from . import TBL
 
-from ..Utilities.utils import flags
-from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities import IO
 
@@ -390,7 +390,7 @@ DIALOG_FRAME_BL = 6
 DIALOG_FRAME_B = 7
 DIALOG_FRAME_BR = 8
 
-class BINWidget(object):
+class BINWidget:
 	BYTE_SIZE = 86
 	STRUCT =            '<L6H4LH5L4HLL4HLL'
 	BYTE_SIZE_REMASTERED = 88
@@ -452,9 +452,24 @@ class BINWidget(object):
 	# Remastered
 	TYPE_HTML = 15
 
-	INTERFACE_ID = 65535
-
-	TYPE_NAMES = ['Dialog','Deafult Button','Button','Option Button','CheckBox','Image','Slider','Unknown','TextBox','Label (Left Align)','Label (Right Align)','Label (Center Align)','ListBox','ComboBox','Highlight Button','HTML']
+	TYPE_NAMES = [
+		'Dialog',
+		'Default Button',
+		'Button',
+		'Option Button',
+		'CheckBox',
+		'Image',
+		'Slider',
+		'Unknown',
+		'TextBox',
+		'Label (Left Align)',
+		'Label (Center Align)',
+		'Label (Right Align)',
+		'ListBox',
+		'ComboBox',
+		'Highlight Button',
+		'HTML'
+	]
 
 	def __init__(self, ctrl_type: int = TYPE_DIALOG) -> None:
 		self.x1 = 0
@@ -467,8 +482,7 @@ class BINWidget(object):
 		self.string = ''
 		self.flags = BINWidget.FLAG_VISIBLE
 		self.unknown2 = 0
-		self.identifier = BINWidget.INTERFACE_ID
-		BINWidget.INTERFACE_ID -= 1
+		self.identifier = 65535
 		self.scr_unknown1 = 0
 		self.type = ctrl_type
 		self.unknown3 = 0
@@ -490,6 +504,42 @@ class BINWidget(object):
 		if self.type in (BINWidget.TYPE_DEFAULT_BTN, BINWidget.TYPE_BUTTON, BINWidget.TYPE_OPTION_BTN, BINWidget.TYPE_CHECKBOX, BINWidget.TYPE_SLIDER, BINWidget.TYPE_TEXTBOX, BINWidget.TYPE_LISTBOX, BINWidget.TYPE_COMBOBOX, BINWidget.TYPE_HIGHLIGHT_BTN, BINWidget.TYPE_HTML):
 			self.flags |= BINWidget.FLAG_RESPONSIVE
 
+	def copy(self) -> BINWidget:
+		clone = BINWidget(self.type)
+		clone.restore(self)
+		return clone
+
+	def restore(self, other: BINWidget) -> None:
+		self.x1 = other.x1
+		self.y1 = other.y1
+		self.x2 = other.x2
+		self.y2 = other.y2
+		self.width = other.width
+		self.height = other.height
+		self.unknown1 = other.unknown1
+		self.string = other.string
+		self.flags = other.flags
+		self.unknown2 = other.unknown2
+		self.identifier = other.identifier
+		self.scr_unknown1 = other.scr_unknown1
+		self.type = other.type
+		self.unknown3 = other.unknown3
+		self.unknown4 = other.unknown4
+		self.unknown5 = other.unknown5
+		self.unknown6 = other.unknown6
+		self.responsive_x1 = other.responsive_x1
+		self.responsive_y1 = other.responsive_y1
+		self.responsive_x2 = other.responsive_x2
+		self.responsive_y2 = other.responsive_y2
+		self.unknown7 = other.unknown7
+		self.smk = other.smk
+		self.text_offset_x = other.text_offset_x
+		self.text_offset_y = other.text_offset_y
+		self.responsive_width = other.responsive_width
+		self.responsive_height = other.responsive_height
+		self.unknown8 = other.unknown8
+		self.unknown9 = other.unknown9
+
 	def bounding_box(self) -> tuple[int, int, int, int]:
 		x1 = (self.x1 if self.x1 < self.x2 else self.x2)
 		y1 = (self.y1 if self.y1 < self.y2 else self.y2)
@@ -508,14 +558,14 @@ class BINWidget(object):
 		return self.type in (BINWidget.TYPE_BUTTON, BINWidget.TYPE_HIGHLIGHT_BTN, BINWidget.TYPE_OPTION_BTN, BINWidget.TYPE_DEFAULT_BTN)
 
 	def display_text(self) -> (str | None):
-		if self.type != BINWidget.TYPE_DIALOG and self.type != BINWidget.TYPE_IMAGE and self.type != BINWidget.TYPE_HTML:
+		if self.type not in (BINWidget.TYPE_DIALOG, BINWidget.TYPE_IMAGE, BINWidget.TYPE_HTML):
 			if self.is_button() and self.flags & (BINWidget.FLAG_VIRTUAL_HOTKEY | BINWidget.FLAG_HAS_HOTKEY):
 				return self.string[1:]
 			else:
 				return self.string
 		return None
 
-class BINSMK(object):
+class BINSMK:
 	BYTE_SIZE = 30
 	ATTR_NAMES = ('overlay_smk','flags','unknown1','filename','unknown2','offset_x','offset_y','unknown3','unknown4')
 
@@ -540,16 +590,41 @@ class BINSMK(object):
 		self.unknown3 = 0
 		self.unknown4 = 0
 
+	def copy(self) -> BINSMK:
+		clone = BINSMK()
+		clone.restore(self)
+		return clone
+
+	def restore(self, other: BINSMK) -> None:
+		self.widgets = other.widgets
+		self.overlay_smk = other.overlay_smk
+		self.flags = other.flags
+		self.unknown1 = other.unknown1
+		self.filename = other.filename
+		self.unknown2 = other.unknown2
+		self.offset_x = other.offset_x
+		self.offset_y = other.offset_y
+		self.unknown3 = other.unknown3
+		self.unknown4 = other.unknown4
+
 	def add_widget(self, widget: BINWidget) -> None:
 		self.widgets.append(widget)
 
 	def remove_widget(self, widget: BINWidget) -> None:
 		self.widgets.remove(widget)
 
+def flags(value: int | str, length: int) -> int | str:
+	if isinstance(value, str):
+		if len(value) != length or value.replace('0','').replace('1',''):
+			raise PyMSError('Flags', 'Invalid flags')
+		return sum(int(x)*(2**n) for n,x in enumerate(reversed(value)))
+	return ''.join(reversed([str(value//(2**n)%2) for n in range(length)]))
+
 class DialogBIN:
 	def __init__(self, remastered: bool = False) -> None:
 		self.remastered = remastered
 		dialog = BINWidget()
+		dialog.identifier = 0
 		dialog.x2 = 639
 		dialog.y2 = 479
 		dialog.width = 640
@@ -557,17 +632,20 @@ class DialogBIN:
 		self.widgets = [dialog]
 		self.smks: list[BINSMK] = []
 
-	def load_file(self, input: IO.AnyInputBytes) -> None:
-		with IO.InputBytes(input) as f:
-			data = f.read()
+	def add_widget(self, widget: BINWidget) -> None:
+		self.widgets.append(widget)
+
+	def load(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as input_bytes:
+			data = input_bytes.read()
 		try:
-			self.load_data(data)
+			self._load_data(data)
 		except PyMSError as e:
 			raise e
-		except:
-			raise PyMSError('Load',"Unsupported Dialog BIN file, could possibly be corrupt")
+		except Exception as exc:
+			raise PyMSError('Load', "Unsupported Dialog BIN file, could possibly be corrupt") from exc
 
-	def load_data(self, data: bytes) -> None:
+	def _load_data(self, data: bytes) -> None:
 		widgets: list[BINWidget] = []
 		smk_map: dict[int, BINSMK] = {}
 		smks: list[BINSMK] = []
@@ -575,7 +653,7 @@ class DialogBIN:
 			smk_info = list(struct.unpack('<LH3LHHLL',data[offset:offset+BINSMK.BYTE_SIZE]))
 			filename_offset = smk_info[3]
 			end_offset = data.find(b'\0', filename_offset)
-			smk_info[3] = data[filename_offset:end_offset]
+			smk_info[3] = data[filename_offset:end_offset].decode('utf-8')
 			smk = BINSMK()
 			smk_map[offset] = smk
 			smks.append(smk)
@@ -609,16 +687,16 @@ class DialogBIN:
 					setattr(widget, attr, value)
 
 			if widget.type > widget_max:
-				raise PyMSError('Load', "Invalid widget type '%s'" % widget_info[11])
+				raise PyMSError('Load', f"Invalid widget type '{widget_info[11]}'")
 
-			if widget.string:
+			if string_offset:
 				end_offset = data.find(b'\0', string_offset)
 				widget.string = data[string_offset:end_offset].decode('utf-8')
 
 			if widget.type == BINWidget.TYPE_DIALOG:
 				next_widget = smk_offset
-			if widget.smk:
-				if not widget.smk in smk_map:
+			elif smk_offset:
+				if not smk_offset in smk_map:
 					load_smk(smk_offset)
 				widget.smk = smk_map[smk_offset]
 
@@ -636,7 +714,7 @@ class DialogBIN:
 				load_widget(next_widget, remastered)
 		try:
 			load_widget(0, False)
-		except:
+		except Exception:
 			widgets = []
 			smk_map = {}
 			smks = []
@@ -645,12 +723,12 @@ class DialogBIN:
 		self.widgets = widgets
 		self.smks = smks
 
-	def save_file(self, output: IO.AnyOutputBytes, remastered: bool | None = None):
-		data = self.save_data(remastered)
+	def save(self, output: IO.AnyOutputBytes, remastered: bool | None = None) -> None:
+		data = self._save_data(remastered)
 		with IO.OutputBytes(output) as f:
 			f.write(data)
 
-	def save_data(self, remastered: bool | None = None) -> bytes:
+	def _save_data(self, remastered: bool | None = None) -> bytes:
 		remastered = (self.remastered or self.remastered_required()) if remastered is None else remastered
 		widget_struct = BINWidget.STRUCT_REMASTERED if remastered else BINWidget.STRUCT
 		widget_size = BINWidget.BYTE_SIZE_REMASTERED if remastered else BINWidget.BYTE_SIZE
@@ -660,7 +738,7 @@ class DialogBIN:
 		string_offsets = {}
 		smk_offset = len(self.widgets) * widget_size
 		offsets = [0, smk_offset, smk_offset + len(self.smks) * BINSMK.BYTE_SIZE]
-		results: list[bytes] = [b'',b'',b'']
+		results: list[bytearray] = [bytearray(), bytearray(), bytearray()]
 		def save_string(string: str) -> int:
 			if not string:
 				return 0
@@ -729,9 +807,9 @@ class DialogBIN:
 			save_widget(widget, next_offset)
 		return b''.join(results)
 
-	def interpret_file(self, input: IO.AnyInputText) -> None:
-		with IO.InputText(input) as f:
-			text = f.read()
+	def interpret_file(self, any_input: IO.AnyInputText) -> None:
+		with IO.InputText(any_input) as input_text:
+			text = input_text.read()
 		self.interpret_data(text)
 
 	def interpret_data(self, data: str) -> None:
@@ -762,7 +840,7 @@ class DialogBIN:
 			if m:
 				smk_id = int(m.group(1))
 				if smk_id in smks:
-					raise PyMSError('Interpreting',"Duplicate definition for SMK '%s'" % smk_id,n,line)
+					raise PyMSError('Interpreting', f"Duplicate definition for SMK '{smk_id}'", line=n, code=line)
 				working = BINSMK()
 				if smk_id in backfill_smks:
 					for obj in backfill_smks[smk_id]:
@@ -774,23 +852,23 @@ class DialogBIN:
 				smks[smk_id] = working
 				continue
 			if not working:
-				raise PyMSError('Interpreting','Unexpected line, expected a Widget or SMK header',n,line)
+				raise PyMSError('Interpreting', 'Unexpected line, expected a Widget or SMK header', line=n, code=line)
 			m = re.match(r'^(\S+)(?:\s+(.+))?$', line)
 			if not m:
-				raise PyMSError('Interpreting','Unexpected line, expected a field value',n,line)
+				raise PyMSError('Interpreting', 'Unexpected line, expected a field value', line=n, code=line)
 			attr = m.group(1)
 			value = m.group(2)
 			if isinstance(working, BINWidget):
 				if not attr in BINWidget.ATTR_NAMES_REMASTERED:
-					raise PyMSError('Interpreting',"Invalid Widget attribute name '%s'" % attr,n,line)
+					raise PyMSError('Interpreting', f"Invalid Widget attribute name '{attr}'", line=n, code=line)
 				if attr == 'smk':
 					if value == 'None':
 						value = None
 					else:
 						try:
 							smk_id = int(value)
-						except:
-							raise PyMSError('Interpreting',"Invalid SMK id '%s', expected an Integer or 'None'" % value,n,line)
+						except Exception as exc:
+							raise PyMSError('Interpreting', f"Invalid SMK id '{value}', expected an Integer or 'None'", line=n, code=line) from exc
 						value = get_smk(smk_id)
 				elif attr == 'string':
 					if value is None:
@@ -799,23 +877,23 @@ class DialogBIN:
 						value = TBL.compile_string(value)
 				elif attr == 'flags':
 					# todo: try catch
-					value = flags(value, 27)
+					value = flags(value, 32)
 				else:
 					# todo: try catch
-					value = int(value)	
+					value = int(value)
 				if attr in BINWidget.ATTR_NAMES_REMASTERED and not attr in BINWidget.ATTR_NAMES:
 					remastered = True
 			else:
 				if not attr in BINSMK.ATTR_NAMES:
-					raise PyMSError('Interpreting',"Invalid SMK attribute name '%s'" % attr,n,line)
+					raise PyMSError('Interpreting', f"Invalid SMK attribute name '{attr}'", line=n, code=line)
 				if attr == 'overlay_smk':
 					if value == 'None':
 						value = None
 					else:
 						try:
 							smk_id = int(value)
-						except:
-							raise PyMSError('Interpreting',"Invalid SMK id '%s', expected an Integer or 'None'" % value,n,line)
+						except Exception as exc:
+							raise PyMSError('Interpreting', f"Invalid SMK id '{value}', expected an Integer or 'None'", line=n, code=line) from exc
 						value = get_smk(smk_id)
 				elif attr == 'filename':
 					value = TBL.compile_string(value)
@@ -825,15 +903,13 @@ class DialogBIN:
 					value = int(value)
 			setattr(working, attr, value)
 		if backfill_smks:
-			raise PyMSError('Interpreting',"SMK %s is missing" % list(backfill_smks.keys())[0])
-		for i in range(len(widgets)):
-			widget = widgets[i]
+			raise PyMSError('Interpreting', f"SMK {list(backfill_smks.keys())[0]} is missing")
+		for index, widget in enumerate(widgets):
 			if widget.type == BINWidget.TYPE_DIALOG:
-				del widgets[i]
-				widgets.insert(i,widget)
+				widgets.insert(0, widgets.pop(index))
 				break
 		else:
-			raise PyMSError('Interpreting','No dialog found.')
+			raise PyMSError('Interpreting', 'No dialog found.')
 		self.widgets = widgets
 		self.smks = list(smk for i,smk in sorted(smks.items(),key=lambda s: s[0]))
 		self.remastered = remastered
@@ -847,9 +923,9 @@ class DialogBIN:
 		remastered = (self.remastered or self.remastered_required()) if remastered is None else remastered
 		result = ''
 		attrs: Sequence[str] = BINSMK.ATTR_NAMES
-		longest = sorted(len(n) for n in attrs)[-1]
+		longest = max(len(n) for n in attrs)
 		for i,smk in enumerate(self.smks):
-			result += 'SMK %d:\n' % i
+			result += f'SMK {i}:\n'
 			for attr in attrs:
 				value = getattr(smk, attr)
 				hint = ''
@@ -859,10 +935,10 @@ class DialogBIN:
 					value = TBL.decompile_string(value)
 				elif attr == 'flags':
 					value = flags(value, 5)
-				result += '\t%s%s%s%s%s\n' % (attr,' ' * (longest - len(attr) + 1),value,' # ' if hint else '',hint)
+				result += f'\t{attr}{" " * (longest - len(attr) + 1)}{value}{" # " if hint else ""}{hint}\n'
 			result += '\n'
 		attrs = BINWidget.ATTR_NAMES_REMASTERED if remastered else BINWidget.ATTR_NAMES
-		longest = sorted(len(n) for n in attrs)[-1]
+		longest = max(len(n) for n in attrs)
 		for widget in self.widgets:
 			result += 'Widget:\n'
 			for attr in attrs:
@@ -873,13 +949,13 @@ class DialogBIN:
 				elif attr == 'string' and value is not None:
 					value = TBL.decompile_string(value)
 				elif attr == 'flags':
-					value = flags(value, 27)
+					value = flags(value, 32)
 				elif attr == 'type':
 					if value < len(BINWidget.TYPE_NAMES):
 						hint = BINWidget.TYPE_NAMES[value]
 					else:
 						hint = 'Unknown'
-				result += '\t%s%s%s%s%s\n' % (attr,' ' * (longest - len(attr) + 1),value,' # ' if hint else '',hint)
+				result += f'\t{attr}{" " * (longest - len(attr) + 1)}{value}{" # " if hint else ""}{hint}\n'
 			result += '\n'
 		return result
 
@@ -891,12 +967,11 @@ class DialogBIN:
 
 # if __name__ == '__main__':
 # 	dialogbin = DialogBIN()
-# 	dialogbin.load_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.bin')
-# 	data = dialogbin.save_data()
-# 	dialogbin.load_data(data)
+# 	dialogbin.load('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.bin')
+# 	data = IO.output_to_bytes(dialogbin.save)
+# 	dialogbin.load(data)
 # 	dialogbin.decompile_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.txt')
 # 	dialogbin.interpret_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.txt')
-# 	data = dialogbin.save_data()
-# 	dialogbin.load_data(data)
+# 	data = IO.output_to_bytes(dialogbin.save)
+# 	dialogbin.load(data)
 # 	dialogbin.decompile_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain2.txt')
-

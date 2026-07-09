@@ -1,5 +1,5 @@
 
-from .ICEByteCodeHandler import ICEByteCodeHandler
+from .ICELanguage import ICELanguage
 from .ICESerializeContext import ICESerializeContext
 from .ICEParseContext import ICEParseContext
 from .ICELexer import ICELexer

@@ -3,7 +3,9 @@ from . import AbstractDAT
 from . import DATFormat
 from . import DATCoders
 
-from typing import cast
+from collections import OrderedDict
+
+from typing import cast, Any
 
 class DATUnit(AbstractDAT.AbstractDATEntry):
 	class Property:
@@ -117,7 +119,7 @@ class DATUnit(AbstractDAT.AbstractDATEntry):
 		neutral     = 1 << 7
 		RACE_FLAGS  = (zerg | terran | protoss)
 		GROUP_FLAGS = (men | building | factory | independent | neutral)
-	
+
 	class StarEditAvailabilityFlag:
 		non_neutral           = 1 << 0
 		unit_listing          = 1 << 1
@@ -136,64 +138,64 @@ class DATUnit(AbstractDAT.AbstractDATEntry):
 		no_guard   = 1 << 1
 		ALL_FLAGS  = (no_suicide | no_guard)
 
-	def __init__(self):
-		self.graphics = 0
-		self.subunit1 = 228
-		self.subunit2 = 228
-		self.infestation = 0
-		self.construction_animation = 0
-		self.unit_direction = 0
-		self.shield_enabled = 0
-		self.shield_amount = 0
-		self.hit_points = DATFormat.DATTypeHitPoints()
-		self.elevation_level = 0
+	def __init__(self) -> None:
+		self.graphics: int = 0
+		self.subunit1: int = 228
+		self.subunit2: int = 228
+		self.infestation: int | None = 0
+		self.construction_animation: int = 0
+		self.unit_direction: int = 0
+		self.shield_enabled: int = 0
+		self.shield_amount: int = 0
+		self.hit_points: DATFormat.DATTypeHitPoints = DATFormat.DATTypeHitPoints()
+		self.elevation_level: int = 0
 		# TODO: Get more info
-		self.unknown_flags = 0
-		self.sublabel = 0
-		self.comp_ai_idle = 0
-		self.human_ai_idle = 0
-		self.return_to_idle = 0
-		self.attack_unit = 0
-		self.attack_move = 0
-		self.ground_weapon = 0
-		self.max_ground_hits = 0
-		self.air_weapon = 0
-		self.max_air_hits = 0
-		self.ai_internal = 0
-		self.special_ability_flags = 0
-		self.target_acquisition_range = 0
-		self.sight_range = 0
-		self.armor_upgrade = 0
-		self.unit_size = 0
-		self.armor = 0
-		self.right_click_action = 0
-		self.ready_sound = 0
-		self.what_sound_start = 0
-		self.what_sound_end = 0
-		self.pissed_sound_start = 0
-		self.pissed_sound_end = 0
-		self.yes_sound_start = 0
-		self.yes_sound_end = 0
-		self.staredit_placement_size = DATFormat.DATTypeSize()
-		self.addon_position = DATFormat.DATTypePosition()
-		self.unit_extents = DATFormat.DATTypeExtents()
-		self.portrait = 0
-		self.mineral_cost = 0
-		self.vespene_cost = 0
-		self.build_time = 0
-		self.requirements = 65535
-		self.staredit_group_flags = 0
-		self.supply_provided = DATFormat.DATTypeSupply()
-		self.supply_required = DATFormat.DATTypeSupply()
-		self.space_required = 0
-		self.space_provided = 0
-		self.build_score = 0
-		self.destroy_score = 0
-		self.unit_map_string = 0
-		self.broodwar_unit_flag = 0
-		self.staredit_availability_flags = 0
+		self.unknown_flags: int = 0
+		self.sublabel: int = 0
+		self.comp_ai_idle: int = 0
+		self.human_ai_idle: int = 0
+		self.return_to_idle: int = 0
+		self.attack_unit: int = 0
+		self.attack_move: int = 0
+		self.ground_weapon: int = 0
+		self.max_ground_hits: int = 0
+		self.air_weapon: int = 0
+		self.max_air_hits: int = 0
+		self.ai_internal: int = 0
+		self.special_ability_flags: int = 0
+		self.target_acquisition_range: int = 0
+		self.sight_range: int = 0
+		self.armor_upgrade: int = 0
+		self.unit_size: int = 0
+		self.armor: int = 0
+		self.right_click_action: int = 0
+		self.ready_sound: int | None = 0
+		self.what_sound_start: int = 0
+		self.what_sound_end: int = 0
+		self.pissed_sound_start: int | None = 0
+		self.pissed_sound_end: int | None = 0
+		self.yes_sound_start: int | None = 0
+		self.yes_sound_end: int | None = 0
+		self.staredit_placement_size: DATFormat.DATTypeSize = DATFormat.DATTypeSize()
+		self.addon_position: DATFormat.DATTypePosition | None = DATFormat.DATTypePosition()
+		self.unit_extents: DATFormat.DATTypeExtents = DATFormat.DATTypeExtents()
+		self.portrait: int = 0
+		self.mineral_cost: int = 0
+		self.vespene_cost: int = 0
+		self.build_time: int = 0
+		self.requirements: int = 65535
+		self.staredit_group_flags: int = 0
+		self.supply_provided: DATFormat.DATTypeSupply = DATFormat.DATTypeSupply()
+		self.supply_required: DATFormat.DATTypeSupply = DATFormat.DATTypeSupply()
+		self.space_required: int = 0
+		self.space_provided: int = 0
+		self.build_score: int = 0
+		self.destroy_score: int = 0
+		self.unit_map_string: int = 0
+		self.broodwar_unit_flag: int = 0
+		self.staredit_availability_flags: int = 0
 
-	def load_values(self, values):
+	def load_values(self, values: tuple[int | DATFormat.DATType | None, ...]) -> None:
 		self.graphics,\
 		self.subunit1,\
 		self.subunit2,\
@@ -248,9 +250,9 @@ class DATUnit(AbstractDAT.AbstractDATEntry):
 		self.unit_map_string,\
 		self.broodwar_unit_flag,\
 		self.staredit_availability_flags\
-			= values
+			= values # type: ignore[assignment]
 
-	def save_values(self):
+	def save_values(self) -> tuple[int | DATFormat.DATType | None, ...]:
 		return (
 			self.graphics,
 			self.subunit1,
@@ -308,16 +310,43 @@ class DATUnit(AbstractDAT.AbstractDATEntry):
 			self.staredit_availability_flags
 		)
 
-	def limit(self, id):
-		self.infestation = None
-		self.ready_sound = None
-		self.pissed_sound_start = None
-		self.pissed_sound_end = None
-		self.yes_sound_start = None
-		self.yes_sound_end = None
-		self.addon_position = None
+	def limit(self, entry_id: int) -> None:
+		infestation_prop = UnitsDAT.FORMAT.get_property(DATUnit.Property.infestation)
+		assert infestation_prop is not None
+		if not infestation_prop.is_on_entry(entry_id):
+			self.infestation = None
 
-	def expand(self):
+		ready_sound_prop = UnitsDAT.FORMAT.get_property(DATUnit.Property.ready_sound)
+		assert ready_sound_prop is not None
+		if not ready_sound_prop.is_on_entry(entry_id):
+			self.ready_sound = None
+
+		pissed_sound_start_prop = UnitsDAT.FORMAT.get_property(DATUnit.Property.pissed_sound_start)
+		assert pissed_sound_start_prop is not None
+		if not pissed_sound_start_prop.is_on_entry(entry_id):
+			self.pissed_sound_start = None
+
+		pissed_sound_end_prop = UnitsDAT.FORMAT.get_property(DATUnit.Property.pissed_sound_end)
+		assert pissed_sound_end_prop is not None
+		if not pissed_sound_end_prop.is_on_entry(entry_id):
+			self.pissed_sound_end = None
+
+		yes_sound_start_prop = UnitsDAT.FORMAT.get_property(DATUnit.Property.yes_sound_start)
+		assert yes_sound_start_prop is not None
+		if not yes_sound_start_prop.is_on_entry(entry_id):
+			self.yes_sound_start = None
+
+		yes_sound_end_prop = UnitsDAT.FORMAT.get_property(DATUnit.Property.yes_sound_end)
+		assert yes_sound_end_prop is not None
+		if not yes_sound_end_prop.is_on_entry(entry_id):
+			self.yes_sound_end = None
+
+		addon_position_prop = UnitsDAT.FORMAT.get_property(DATUnit.Property.addon_position)
+		assert addon_position_prop is not None
+		if not addon_position_prop.is_on_entry(entry_id):
+			self.addon_position = None
+
+	def expand(self) -> None:
 		self.infestation = self.infestation or 0
 		self.ready_sound = self.ready_sound or 0
 		self.pissed_sound_start = self.pissed_sound_start or 0
@@ -327,7 +356,7 @@ class DATUnit(AbstractDAT.AbstractDATEntry):
 		self.addon_position = self.addon_position or DATFormat.DATTypePosition()
 
 	EXPORT_NAME = 'Unit'
-	def _export_data(self, export_properties, data):
+	def _export_data(self, export_properties: list[str] | None, data: OrderedDict[str, Any]) -> None:
 		self._export_property_value(export_properties, DATUnit.Property.graphics, self.graphics, data)
 		self._export_property_value(export_properties, DATUnit.Property.subunit1, self.subunit1, data)
 		self._export_property_value(export_properties, DATUnit.Property.subunit2, self.subunit2, data)
@@ -336,9 +365,9 @@ class DATUnit(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, DATUnit.Property.unit_direction, self.unit_direction, data)
 		self._export_property_value(export_properties, DATUnit.Property.shield_enabled, self.shield_enabled, data)
 		self._export_property_value(export_properties, DATUnit.Property.shield_amount, self.shield_amount, data)
-		self._export_property_value(export_properties, DATUnit.Property.hit_points, self.hit_points, data, _UnitPropertyCoder.hit_points)
+		self._export_property_value(export_properties, DATUnit.Property.hit_points, self.hit_points, data, property_encoder=_UnitPropertyCoder.hit_points)
 		self._export_property_value(export_properties, DATUnit.Property.elevation_level, self.elevation_level, data)
-		self._export_property_value(export_properties, DATUnit.Property.unknown_flags, self.unknown_flags, data, _UnitPropertyCoder.unknown_flags)
+		self._export_property_value(export_properties, DATUnit.Property.unknown_flags, self.unknown_flags, data, property_encoder=_UnitPropertyCoder.unknown_flags)
 		self._export_property_value(export_properties, DATUnit.Property.sublabel, self.sublabel, data)
 		self._export_property_value(export_properties, DATUnit.Property.comp_ai_idle, self.comp_ai_idle, data)
 		self._export_property_value(export_properties, DATUnit.Property.human_ai_idle, self.human_ai_idle, data)
@@ -350,7 +379,7 @@ class DATUnit(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, DATUnit.Property.air_weapon, self.air_weapon, data)
 		self._export_property_value(export_properties, DATUnit.Property.max_air_hits, self.max_air_hits, data)
 		self._export_property_value(export_properties, DATUnit.Property.ai_internal, self.ai_internal, data)
-		self._export_property_value(export_properties, DATUnit.Property.special_ability_flags, self.special_ability_flags, data, _UnitPropertyCoder.special_ability_flags)
+		self._export_property_value(export_properties, DATUnit.Property.special_ability_flags, self.special_ability_flags, data, property_encoder=_UnitPropertyCoder.special_ability_flags)
 		self._export_property_value(export_properties, DATUnit.Property.target_acquisition_range, self.target_acquisition_range, data)
 		self._export_property_value(export_properties, DATUnit.Property.sight_range, self.sight_range, data)
 		self._export_property_value(export_properties, DATUnit.Property.armor_upgrade, self.armor_upgrade, data)
@@ -364,26 +393,26 @@ class DATUnit(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, DATUnit.Property.pissed_sound_end, self.pissed_sound_end, data)
 		self._export_property_value(export_properties, DATUnit.Property.yes_sound_start, self.yes_sound_start, data)
 		self._export_property_value(export_properties, DATUnit.Property.yes_sound_end, self.yes_sound_end, data)
-		self._export_property_value(export_properties, DATUnit.Property.staredit_placement_size, self.staredit_placement_size, data, _UnitPropertyCoder.staredit_placement_size)
-		self._export_property_value(export_properties, DATUnit.Property.addon_position, self.addon_position, data, _UnitPropertyCoder.addon_position)
-		self._export_property_value(export_properties, DATUnit.Property.unit_extents, self.unit_extents, data, _UnitPropertyCoder.unit_extents)
+		self._export_property_value(export_properties, DATUnit.Property.staredit_placement_size, self.staredit_placement_size, data, property_encoder=_UnitPropertyCoder.staredit_placement_size)
+		self._export_property_value(export_properties, DATUnit.Property.addon_position, self.addon_position, data, property_encoder=_UnitPropertyCoder.addon_position)
+		self._export_property_value(export_properties, DATUnit.Property.unit_extents, self.unit_extents, data, property_encoder=_UnitPropertyCoder.unit_extents)
 		self._export_property_value(export_properties, DATUnit.Property.portrait, self.portrait, data)
 		self._export_property_value(export_properties, DATUnit.Property.mineral_cost, self.mineral_cost, data)
 		self._export_property_value(export_properties, DATUnit.Property.vespene_cost, self.vespene_cost, data)
 		self._export_property_value(export_properties, DATUnit.Property.build_time, self.build_time, data)
 		self._export_property_value(export_properties, DATUnit.Property.requirements, self.requirements, data)
-		self._export_property_value(export_properties, DATUnit.Property.staredit_group_flags, self.staredit_group_flags, data, _UnitPropertyCoder.staredit_group_flags)
-		self._export_property_value(export_properties, DATUnit.Property.supply_provided, self.supply_provided, data, _UnitPropertyCoder.supply_provided)
-		self._export_property_value(export_properties, DATUnit.Property.supply_required, self.supply_required, data, _UnitPropertyCoder.supply_required)
+		self._export_property_value(export_properties, DATUnit.Property.staredit_group_flags, self.staredit_group_flags, data, property_encoder=_UnitPropertyCoder.staredit_group_flags)
+		self._export_property_value(export_properties, DATUnit.Property.supply_provided, self.supply_provided, data, property_encoder=_UnitPropertyCoder.supply_provided)
+		self._export_property_value(export_properties, DATUnit.Property.supply_required, self.supply_required, data, property_encoder=_UnitPropertyCoder.supply_required)
 		self._export_property_value(export_properties, DATUnit.Property.space_required, self.space_required, data)
 		self._export_property_value(export_properties, DATUnit.Property.space_provided, self.space_provided, data)
 		self._export_property_value(export_properties, DATUnit.Property.build_score, self.build_score, data)
 		self._export_property_value(export_properties, DATUnit.Property.destroy_score, self.destroy_score, data)
 		self._export_property_value(export_properties, DATUnit.Property.unit_map_string, self.unit_map_string, data)
 		self._export_property_value(export_properties, DATUnit.Property.broodwar_unit_flag, self.broodwar_unit_flag, data)
-		self._export_property_value(export_properties, DATUnit.Property.staredit_availability_flags, self.staredit_availability_flags, data, _UnitPropertyCoder.staredit_availability_flags)
+		self._export_property_value(export_properties, DATUnit.Property.staredit_availability_flags, self.staredit_availability_flags, data, property_encoder=_UnitPropertyCoder.staredit_availability_flags)
 
-	def _import_data(self, data):
+	def _import_data(self, data: dict[str, Any]) -> None:
 		graphics = self._import_property_value(data, DATUnit.Property.graphics)
 		subunit1 = self._import_property_value(data, DATUnit.Property.subunit1)
 		subunit2 = self._import_property_value(data, DATUnit.Property.subunit2)
@@ -884,4 +913,4 @@ class UnitsDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "units.dat"
 
 	def get_entry(self, index: int) -> DATUnit:
-		return cast(DATUnit, super(UnitsDAT, self).get_entry(index))
+		return cast(DATUnit, super().get_entry(index))

@@ -21,6 +21,7 @@ LOCALE_CHOICES: tuple[tuple[str, int | None], ...] = (
 
 def find_locale_index(find_locale: int) -> int:
 	for index,(_, locale) in enumerate(LOCALE_CHOICES):
-		if find_locale == locale or locale is None:
+		if locale == find_locale:
 			return index
-	return -1
+	# Locales without their own entry resolve to the trailing 'Other' entry
+	return len(LOCALE_CHOICES) - 1

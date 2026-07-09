@@ -2,7 +2,7 @@
 from ..FileFormats.AIBIN import AIBIN
 from ..FileFormats.AIBIN.CodeHandlers import AISerializeContext, AIParseContext, DataContext
 
-from ..Utilities.UIKit import AnyWindow
+from ..Utilities import UIKit as UI
 from ..Utilities import IO
 from ..Utilities.CodeHandlers.Formatters import Formatters
 
@@ -15,7 +15,7 @@ class MainDelegate(Protocol):
 	def get_data_context(self) -> DataContext:
 		...
 
-	def save_code(self, code: str, parent: AnyWindow) -> bool:
+	def save_code(self, code_or_path: str, parent: UI.AnyWindow) -> bool:
 		...
 
 	# def get_export_references(self) -> bool:
@@ -27,13 +27,19 @@ class MainDelegate(Protocol):
 	def get_serialize_context(self, output: BuiltinIO[str]) -> AISerializeContext:
 		...
 
-	def get_parse_context(self, input: IO.AnyInputText) -> AIParseContext:
+	def get_parse_context(self, any_input: IO.AnyInputText) -> AIParseContext:
 		...
 
 	def select_scripts(self, ids: list[str], keep_existing: bool = False) -> None:
 		...
 
-	def iimport(self, import_paths: list[str] | None, parent: AnyWindow | None) -> None:
+	def iimport(self, import_paths: list[str] | None, parent: UI.AnyWindow | None) -> None:
+		...
+
+	def get_find_history(self) -> UI.InputHistory:
+		...
+
+	def get_replace_history(self) -> UI.InputHistory:
 		...
 
 class ActionDelegate(Protocol):

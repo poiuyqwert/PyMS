@@ -1,10 +1,9 @@
 
 from __future__ import annotations
 
-from .UIKit import FileDialog, parse_resizable, FileType, AnyWindow, Geometry, GeometryAdjust, Size, PanedWindow, HORIZONTAL, Misc, Font
+from . import UIKit as UI
 
 from . import Assets
-from .MPQHandler import MPQHandler
 from . import JSON
 
 from numbers import Number
@@ -12,7 +11,9 @@ import os, json, re, enum
 from dataclasses import dataclass
 from copy import deepcopy
 
-from typing import Any, Protocol, runtime_checkable, Generic, TypeVar, Callable, Generator, overload, Literal, cast
+from typing import Any, Protocol, runtime_checkable, Generic, TypeVar, Callable, Generator, overload, Literal, TYPE_CHECKING, assert_never
+if TYPE_CHECKING:
+	from .MPQHandler import MPQHandler
 
 def migrate_nest(data: dict, keypath: tuple[str, ...]) -> dict:
 	'''Ensure there are nested `dict` objects in all parts of the keypath'''
@@ -33,11 +34,12 @@ def migrate_field(data: dict, from_keypath: tuple[str, ...], to_keypath: tuple[s
 		if not key in obj:
 			return
 		value = obj[key]
+		obj = value
 	if len(to_keypath) > 1:
 		data = migrate_nest(data, to_keypath[:-1])
 	data[to_keypath[-1]] = value
 
-def migrate_fields(data: dict, keypaths: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...]):
+def migrate_fields(data: dict, keypaths: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...]) -> None:
 	for from_keypath,to_keypath in keypaths:
 		migrate_field(data, from_keypath, to_keypath)
 
@@ -86,10 +88,10 @@ class Group(ConfigObject):
 				attr = attr + '_'
 				if not hasattr(self, attr):
 					continue
-			object = getattr(self, attr)
-			if not isinstance(object, ConfigObject):
+			obj = getattr(self, attr)
+			if not isinstance(obj, ConfigObject):
 				continue
-			object.decode(attr_data)
+			obj.decode(attr_data)
 
 	def reset(self) -> None:
 		for _, value in Group._fields(self):
@@ -111,21 +113,28 @@ class Config(Group):
 	def __init__(self) -> None:
 		Group.__init__(self)
 		if self._name is None or self._version is None:
-			raise NotImplementedError('`_name` and/or `_version` are not set for `%s`' % self.__class__.__name__)
+			raise NotImplementedError(f'`_name` and/or `_version` are not set for `{self.__class__.__name__}`')
 		self.load()
+
+	def _read(self) -> JSON.Value:
+		with open(Assets.settings_file_path(self._name), 'r', encoding='utf-8') as f:
+			return json.load(f)
+
+	def _write(self, data: JSON.Object) -> None:
+		with open(Assets.settings_file_path(self._name), 'w', encoding='utf-8') as f:
+			json.dump(data, f, sort_keys=True, indent=4)
 
 	def load(self) -> None:
 		data: JSON.Object | None = None
 		try:
-			with open(Assets.settings_file_path(self._name), 'r') as f:
-				raw_data = json.load(f)
+			raw_data = self._read()
 			if isinstance(raw_data, dict):
 				data = dict(raw_data)
 			if data:
 				version = data.get('version')
 				try:
 					version = int(version) # type: ignore[arg-type]
-				except:
+				except Exception:
 					version = None
 				if version is None or (version != self._version and self._migrations is None):
 					data = None
@@ -136,7 +145,7 @@ class Config(Group):
 							migration(data)
 				if data is not None:
 					del data['version']
-		except:
+		except Exception:
 			from . import trace
 			if tracer := trace.get_tracer():
 				tracer.trace_error()
@@ -145,14 +154,12 @@ class Config(Group):
 			self.decode(data)
 
 	def save(self) -> None:
-		import os
 		try:
 			data = self.encode()
 			assert isinstance(data, dict)
 			data['version'] = self._version
-			with open(Assets.settings_file_path(self._name), 'w') as f:
-				json.dump(data, f, sort_keys=True, indent=4)
-		except:
+			self._write(data)
+		except Exception:
 			from . import trace
 			if tracer := trace.get_tracer():
 				tracer.trace_error()
@@ -256,36 +263,36 @@ class Boolean(ConfigObject):
 		self.value = self._saved_state
 
 class WindowGeometry(ConfigObject):
-	def __init__(self, *, default_size: Size | None = None, default_centered: bool = True) -> None:
+	def __init__(self, *, default_size: UI.Size | None = None, default_centered: bool = True) -> None:
 		self._geometry: str | None = None
 		self._saved_state: str | None = self._geometry
 		self._default_size = default_size
 		self._default_centered = default_centered
 
-	def save_size(self, window: AnyWindow, closing: bool = True) -> None:
-		resizable_w,resizable_h = parse_resizable(window.resizable())
-		geometry = Geometry.of(window)
+	def save_size(self, window: UI.AnyWindow) -> None:
+		resizable_w,resizable_h = UI.parse_resizable(window.resizable())
+		geometry = UI.Geometry.of(window)
 		if resizable_w or resizable_h:
 			if geometry.maximized:
 				window.wm_state('normal')
 				window.update_idletasks()
-				geometry = Geometry.of(window)
+				geometry = UI.Geometry.of(window)
 				geometry.maximized = True
 			self._geometry = geometry.text
 		else:
-			self._geometry = GeometryAdjust(pos=geometry.pos).text
+			self._geometry = UI.GeometryAdjust(pos=geometry.pos).text
 
-	def load_size(self, window: AnyWindow) -> None:
-		if self._geometry and (geometry_adjust := GeometryAdjust.parse(self._geometry)):
+	def load_size(self, window: UI.AnyWindow) -> None:
+		if self._geometry and (geometry_adjust := UI.GeometryAdjust.parse(self._geometry)):
 			# if position:
 			# 	geometry_adjust.pos = position
-			resizable_w,resizable_h = parse_resizable(window.resizable())
+			resizable_w,resizable_h = UI.parse_resizable(window.resizable())
 			can_maximize = (resizable_w and resizable_h)
 			if (resizable_w or resizable_h) and (geometry := geometry_adjust.geometry):
-				cur_geometry = Geometry.of(window)
-				min_size = Size.of(window.minsize())
+				cur_geometry = UI.Geometry.of(window)
+				min_size = UI.Size.of(window.minsize())
 				# max_w,max_h = window.maxsize()
-				screen_size = Size(window.winfo_screenwidth(), window.winfo_screenheight())
+				screen_size = UI.Size(window.winfo_screenwidth(), window.winfo_screenheight())
 				geometry.clamp(size=screen_size, min_size=min_size)
 				if not resizable_w:
 					geometry.size.width = cur_geometry.size.width
@@ -300,17 +307,17 @@ class WindowGeometry(ConfigObject):
 			if geometry_adjust.maximized and can_maximize:
 				try:
 					window.wm_state('zoomed')
-				except:
+				except Exception:
 					pass
 		else:
 			window.update_idletasks()
-			geometry = Geometry.of(window)
-			geometry_adjust = GeometryAdjust()
+			geometry = UI.Geometry.of(window)
+			geometry_adjust = UI.GeometryAdjust()
 			if self._default_size:
 				geometry.size = self._default_size
 				geometry_adjust.size = self._default_size
 			if self._default_centered:
-				screen_size = Size(window.winfo_screenwidth(), window.winfo_screenheight())
+				screen_size = UI.Size(window.winfo_screenwidth(), window.winfo_screenheight())
 				geometry_adjust.pos = screen_size.center - geometry.size // 2
 			window.geometry(geometry_adjust.text)
 
@@ -318,7 +325,7 @@ class WindowGeometry(ConfigObject):
 		return self._geometry
 
 	def decode(self, geometry: JSON.Value) -> None:
-		if not isinstance(geometry, str) or Geometry.parse(geometry) is None:
+		if not isinstance(geometry, str) or UI.Geometry.parse(geometry) is None:
 			return
 		self._geometry = geometry
 
@@ -332,15 +339,15 @@ class WindowGeometry(ConfigObject):
 		self._geometry = self._saved_state
 
 class PaneSizes(ConfigObject):
-	def __init__(self, *, defaults: list[int] = [], pane_index: int | None = None) -> None:
-		self._defaults = defaults
-		self._sizes: list[int] = self._defaults
+	def __init__(self, *, defaults: tuple[int, ...] | None = None, pane_index: int | None = None) -> None:
+		self._defaults: tuple[int, ...] = defaults or ()
+		self._sizes: tuple[int, ...] = self._defaults
 		self._pane_index = pane_index
-		self._saved_state: list[int] = list(self._sizes)
+		self._saved_state: tuple[int, ...] = self._sizes
 
-	def save_size(self, paned_window: PanedWindow) -> None:
+	def save_size(self, paned_window: UI.PanedWindow) -> None:
 		paned_window.update()
-		axis_index = 0 if paned_window.cget('orient') == HORIZONTAL else 1
+		axis_index = 0 if paned_window.cget('orient') == UI.HORIZONTAL else 1
 		if self._pane_index is not None:
 			pane_indexes = [self._pane_index]
 		else:
@@ -351,13 +358,13 @@ class PaneSizes(ConfigObject):
 			coord = paned_window.sash_coord(pane_index)[axis_index]
 			sizes.append(coord - offset)
 			offset = coord
-		self._sizes = sizes
+		self._sizes = tuple(sizes)
 
-	def load_size(self, paned_window: PanedWindow) -> None:
+	def load_size(self, paned_window: UI.PanedWindow) -> None:
 		if not self._sizes:
 			return
 		paned_window.update()
-		axis_index = 0 if paned_window.cget('orient') == HORIZONTAL else 1
+		axis_index = 0 if paned_window.cget('orient') == UI.HORIZONTAL else 1
 		if self._pane_index is not None:
 			pane_indexes = [self._pane_index]
 		else:
@@ -380,7 +387,7 @@ class PaneSizes(ConfigObject):
 			if not isinstance(size, int):
 				return
 			sizes.append(size)
-		self._sizes = sizes
+		self._sizes = tuple(sizes)
 
 	def reset(self) -> None:
 		self._sizes = self._defaults
@@ -392,24 +399,24 @@ class PaneSizes(ConfigObject):
 		self._sizes = self._saved_state
 
 class File(ConfigObject):
-	def __init__(self, *, default: str, name: str, filetypes: list[FileType], initial_filename: str | None = None) -> None:
+	def __init__(self, *, default: str, name: str, filetypes: list[UI.FileType], initial_filename: str | None = None) -> None:
 		self._default = default
 		self.file_path = self._default
-		self._name = name
-		self._filetypes = FileType.include_all_files(filetypes)
-		self._default_extension = FileType.default_extension(filetypes)
+		self.name = name
+		self.filetypes = UI.FileType.include_all_files(filetypes)
+		self._default_extension = UI.FileType.default_extension(filetypes)
 		self._initial_filename = initial_filename or os.path.basename(self.file_path)
 		self._saved_state = self.file_path
 
-	def select_file(self, parent: Misc, name: str | None = None, filetypes: list[FileType] | None = None) -> str | None:
+	def select_file(self, parent: UI.Misc, name: str | None = None, filetypes: list[UI.FileType] | None = None) -> str | None:
 		window = parent.winfo_toplevel()
 		setattr(window, '_pyms__window_blocking', True)
 		initial_dir: str | None = None
-		path = FileDialog.askopenfilename(
+		path = UI.FileDialog.askopenfilename(
 			parent=window,
-			title=f'Select {name or self._name}',
+			title=f'Select {name or self.name}',
 			initialdir=initial_dir or Assets.base_dir,
-			filetypes=filetypes or self._filetypes,
+			filetypes=filetypes or self.filetypes,
 			defaultextension=self._default_extension,
 			initialfile=self._initial_filename
 		)
@@ -418,9 +425,9 @@ class File(ConfigObject):
 		# 	self.file_path = path
 		return path
 
-	def select_mpq(self, parent: Misc, mpq_handler: MPQHandler, history_config: List, window_geometry_config: WindowGeometry, name: str | None = None, filetype: FileType | None = None) -> str | None:
-		from .MPQSelect import MPQSelect
-		mpq_select = MPQSelect(parent, mpq_handler, name or self._name, filetype or self._filetypes[0],history_config, window_geometry_config, action=MPQSelect.Action.select)
+	def select_mpq(self, *, parent: UI.Misc, mpq_handler: MPQHandler, history_config: List, window_geometry_config: WindowGeometry, name: str | None = None, filetype: UI.FileType | None = None) -> str | None:
+		from .MPQSelect import MPQSelect # pylint: disable=cyclic-import
+		mpq_select = MPQSelect(parent=parent, mpqhandler=mpq_handler, name=name or self.name, filetype=filetype or self.filetypes[0], history_config=history_config, window_geometry_config=window_geometry_config, action=MPQSelect.Action.select)
 		return mpq_select.file
 
 	def encode(self) -> JSON.Value:
@@ -453,6 +460,8 @@ class FileOpType(enum.Enum):
 				op_name = 'Save' if save else 'Open'
 			case FileOpType.import_export:
 				op_name = 'Export' if save else 'Import'
+			case _:
+				assert_never(self)
 		plural = ('s' if name[-1].islower() else "'s") if multiple else ''
 		return f'{op_name} {name}{plural}'
 
@@ -463,6 +472,8 @@ class FileOpType(enum.Enum):
 				return 'save'
 			case FileOpType.import_export:
 				return 'export'
+			case _:
+				assert_never(self)
 
 	@property
 	def open_key(self) -> str:
@@ -471,55 +482,64 @@ class FileOpType(enum.Enum):
 				return 'open'
 			case FileOpType.import_export:
 				return 'import'
+			case _:
+				assert_never(self)
 
 class SelectFile(ConfigObject):
-	def __init__(self, *, name: str, filetypes: list[FileType], op_type: FileOpType = FileOpType.open_save, initial_filename: str | None = None) -> None:
+	def __init__(self, *, name: str, filetypes: list[UI.FileType], op_type: FileOpType = FileOpType.open_save, initial_filename: str | None = None) -> None:
 		self._open_directory = Assets.base_dir
 		self._saved_state_open = self._open_directory
 		self._save_directory = Assets.base_dir
 		self._saved_state_save = self._save_directory
 		self._name = name
-		self._filetypes = FileType.include_all_files(filetypes)
-		self._default_extension = FileType.default_extension(filetypes)
+		self._filetypes = UI.FileType.include_all_files(filetypes)
+		self._default_extension = UI.FileType.default_extension(filetypes)
 		self._op_type = op_type
 		self._initial_filename = initial_filename
 
 	@overload
-	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: Literal[False] = False) -> str | None: ...
+	def _select_file(self, *, parent: UI.Misc, save: bool, title: str | None, filetypes: list[UI.FileType] | None, multiple: Literal[False] = False, filename: str | None = None) -> str | None:
+		...
 	@overload
-	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: Literal[True]) -> list[str] | None: ...
-	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: bool = False, filename: str | None = None) -> str | list[str] | None:
+	def _select_file(self, *, parent: UI.Misc, save: bool, title: str | None, filetypes: list[UI.FileType] | None, multiple: Literal[True] = True, filename: str | None = None) -> list[str] | None:
+		...
+	def _select_file(self, *, parent: UI.Misc, save: bool, title: str | None, filetypes: list[UI.FileType] | None, multiple: bool = False, filename: str | None = None) -> str | list[str] | None:
 		window = parent.winfo_toplevel()
 		setattr(window, '_pyms__window_blocking', True)
+		default_extension = UI.FileType.default_extension(filetypes) if filetypes else self._default_extension
 		path: str | list[str] | None
 		if save:
-			path = FileDialog.asksaveasfilename(
+			path = UI.FileDialog.asksaveasfilename(
 				parent=window,
 				title=title or self._op_type.title(self._name, True),
 				initialdir=self._save_directory if save else self._open_directory,
 				filetypes=filetypes or self._filetypes,
-				defaultextension=self._default_extension,
+				defaultextension=default_extension,
 				initialfile=filename or self._initial_filename
 			)
 		else:
 			if multiple:
-				paths = FileDialog.askopenfilenames(
+				paths = UI.FileDialog.askopenfilenames(
 					parent=window,
 					title=title or self._op_type.title(self._name, False, multiple),
 					initialdir=self._save_directory if save else self._open_directory,
 					filetypes=filetypes or self._filetypes,
-					defaultextension=self._default_extension
+					defaultextension=default_extension
 				)
 				if isinstance(paths, tuple):
 					path = list(paths)
+				else:
+					path = paths
 			else:
-				path = FileDialog.askopenfilename(
+				path = UI.FileDialog.askopenfilename(
 					parent=window,
 					title=title or self._op_type.title(self._name, False, multiple),
 					initialdir=self._save_directory if save else self._open_directory,
 					filetypes=filetypes or self._filetypes,
-					defaultextension=self._default_extension
+					defaultextension=default_extension
 				)
+		if not path:
+			path = None
 		from .fileutils import check_allow_overwrite_internal_file
 		if save and path is not None:
 			if isinstance(path, (list, tuple)):
@@ -540,14 +560,14 @@ class SelectFile(ConfigObject):
 				self._open_directory = directory
 		return path
 
-	def select_open(self, parent: Misc, title: str | None = None, filetypes: list[FileType] | None = None) -> str | None:
-		return self._select_file(parent, False, title, filetypes)
+	def select_open(self, parent: UI.Misc, title: str | None = None, filetypes: list[UI.FileType] | None = None) -> str | None:
+		return self._select_file(parent=parent, save=False, title=title, filetypes=filetypes)
 
-	def select_open_multiple(self, parent: Misc, title: str | None = None, filetypes: list[FileType] | None = None) -> list[str] | None:
-		return self._select_file(parent, False, title, filetypes, True)
+	def select_open_multiple(self, parent: UI.Misc, title: str | None = None, filetypes: list[UI.FileType] | None = None) -> list[str] | None:
+		return self._select_file(parent=parent, save=False, title=title, filetypes=filetypes, multiple=True)
 
-	def select_save(self, parent: Misc, title: str | None = None, filetypes: list[FileType] | None = None, filename: str | None = None) -> str | None:
-		return self._select_file(parent, True, title, filetypes)
+	def select_save(self, parent: UI.Misc, title: str | None = None, filetypes: list[UI.FileType] | None = None, filename: str | None = None) -> str | None:
+		return self._select_file(parent=parent, save=True, title=title, filetypes=filetypes, multiple=False, filename=filename)
 
 	def encode(self) -> JSON.Value:
 		return {
@@ -626,36 +646,42 @@ class SelectFile(ConfigObject):
 class SelectDirectory(ConfigObject):
 	def __init__(self, *, title: str = 'Select Folder') -> None:
 		self.path = Assets.base_dir
-		self._saved_state = self.path
+		self.is_set = False
+		self._saved_state = (self.path, self.is_set)
 		self._title = title
 
-	def select_open(self, parent: Misc, title: str | None = None) -> str | None:
+	def select_open(self, parent: UI.Misc, title: str | None = None) -> str | None:
 		window = parent.winfo_toplevel()
 		setattr(window, '_pyms__window_blocking', True)
-		path = FileDialog.askdirectory(parent=window, title=title or self._title, initialdir=self.path or Assets.base_dir)
+		path = UI.FileDialog.askdirectory(parent=window, title=title or self._title, initialdir=self.path or Assets.base_dir)
 		setattr(window, '_pyms__window_blocking', False)
 		if path:
 			self.path = path
+			self.is_set = True
 		return path
 
 	def encode(self) -> JSON.Value:
+		if not self.is_set:
+			return None
 		return self.path
 
 	def decode(self, directory: JSON.Value) -> None:
 		if not isinstance(directory, str) or not os.path.exists(directory):
 			return
 		self.path = directory
+		self.is_set = True
 
 	def reset(self) -> None:
 		self.path = Assets.base_dir
+		self.is_set = False
 
 	def store_state(self) -> None:
-		self._saved_state = self.path
+		self._saved_state = (self.path, self.is_set)
 
 	def restore_state(self) -> None:
-		self.path = self._saved_state
+		self.path, self.is_set = self._saved_state
 
-class Warning(ConfigObject):
+class Warn(ConfigObject):
 	def __init__(self, *, message: str, title: str = 'Warning!', remember_version: int = 1) -> None:
 		self._seen_version = 0
 		self._saved_state = self._seen_version
@@ -663,11 +689,11 @@ class Warning(ConfigObject):
 		self._title = title
 		self._remember_version = remember_version
 
-	def present(self, parent: Misc) -> None:
+	def present(self, parent: UI.Misc, message: str | None = None, title: str | None = None) -> None:
 		if self._remember_version <= self._seen_version:
 			return
 		from .WarnDialog import WarnDialog
-		dialog = WarnDialog(parent, self._message, self._title, show_dont_warn=True)
+		dialog = WarnDialog(parent, message or self._message, title or self._title, show_dont_warn=True)
 		if dialog.dont_warn.get():
 			self._seen_version = self._remember_version
 
@@ -690,9 +716,9 @@ class Warning(ConfigObject):
 
 V = TypeVar('V', int, float, str, bool, dict)
 class Dictionary(ConfigObject, Generic[V]):
-	def __init__(self, *, value_type: type[V], defaults: dict[str, V] = {}) -> None:
+	def __init__(self, *, value_type: type[V], defaults: dict[str, V] | None = None) -> None:
 		self.value_type: type[V] = value_type
-		self._defaults: dict[str, V] = dict(defaults)
+		self._defaults: dict[str, V] = dict(defaults or {})
 		self.data: dict[str, V] = dict(self._defaults)
 		self._saved_state: dict[str, V] = self.data
 
@@ -717,9 +743,9 @@ class Dictionary(ConfigObject, Generic[V]):
 		self.data = dict(self._saved_state)
 
 class List(ConfigObject, Generic[V]):
-	def __init__(self, *, value_type: type[V], defaults: list[V] = []) -> None:
+	def __init__(self, *, value_type: type[V], defaults: list[V] | None = None) -> None:
 		self.value_type: type[V] = value_type
-		self._defaults: list[V] = list(defaults)
+		self._defaults: list[V] = list(defaults or [])
 		self.data: list[V] = list(self._defaults)
 		self._saved_state: list[V] = self.data
 
@@ -747,9 +773,9 @@ class List(ConfigObject, Generic[V]):
 
 O = TypeVar('O', bound=JSON.Codable)
 class JSONList(ConfigObject, Generic[O]):
-	def __init__(self, *, value_type: type[O], defaults: list[O] = []) -> None:
+	def __init__(self, *, value_type: type[O], defaults: list[O] | None = None) -> None:
 		self.value_type: type[O] = value_type
-		self._defaults: list[O] = list(defaults)
+		self._defaults: list[O] = list(defaults or [])
 		self.data: list[O] = list(self._defaults)
 		self._saved_state: list[O] = self.data
 
@@ -758,7 +784,7 @@ class JSONList(ConfigObject, Generic[O]):
 		for obj in self.data:
 			try:
 				data.append(obj.to_json())
-			except:
+			except Exception:
 				continue
 		return data
 
@@ -771,7 +797,7 @@ class JSONList(ConfigObject, Generic[O]):
 				continue
 			try:
 				self.data.append(self.value_type.from_json(value))
-			except:
+			except Exception:
 				continue
 
 	def reset(self) -> None:
@@ -797,7 +823,7 @@ class Enum(ConfigObject, Generic[E]):
 	def decode(self, data: JSON.Value) -> None:
 		try:
 			value = self._enum_type(data)
-		except:
+		except Exception:
 			return
 		self.value = value
 
@@ -824,7 +850,7 @@ class Color(ConfigObject):
 	def decode(self, value: JSON.Value) -> None:
 		if not isinstance(value, str):
 			return
-		if not Color.RE_MATCH.match(value):
+		if not Color.RE_MATCH.fullmatch(value):
 			return
 		self.value = value
 
@@ -851,7 +877,7 @@ class Style:
 		if self.background is not None:
 			configuration['background'] = self.background
 		if self.bold:
-			configuration['font'] = Font.fixed().bolded()
+			configuration['font'] = UI.Font.fixed().bolded()
 		return configuration
 
 	def copy(self) -> Style:
@@ -875,14 +901,13 @@ class HighlightStyle(ConfigObject):
 		}
 
 	def decode(self, value: JSON.Value) -> None:
-		from .UIKit.Font import Font
 		if not isinstance(value, dict):
 			return
 		foreground = value.get('foreground')
-		if not isinstance(foreground, str) or not Color.RE_MATCH.match(foreground):
+		if not isinstance(foreground, str) or not Color.RE_MATCH.fullmatch(foreground):
 			foreground = None
 		background = value.get('background')
-		if not isinstance(background, str) or not Color.RE_MATCH.match(background):
+		if not isinstance(background, str) or not Color.RE_MATCH.fullmatch(background):
 			background = None
 		bold = value.get('bold')
 		if not isinstance(bold, bool):

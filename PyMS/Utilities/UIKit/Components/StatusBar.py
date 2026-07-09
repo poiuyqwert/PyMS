@@ -1,8 +1,13 @@
 
-from ..Widgets import *
+from ..Widgets import Frame, Label, Misc
+from ..Constants import DISABLED, NS, NSEW, SUNKEN, W
+from ..Variables import StringVar
+from ..Images import PhotoImage
+
+from typing import Any
 
 class StatusBar(Frame):
-	def __init__(self, parent: Misc, *args, **kwargs):
+	def __init__(self, parent: Misc, *args: Any, **kwargs: Any) -> None:
 		self._weights: list[float | None] = []
 		Frame.__init__(self, parent, *args, **kwargs)
 
@@ -22,7 +27,7 @@ class StatusBar(Frame):
 		self._adjust_weights()
 		return label
 
-	def add_icon(self, image: Image, weight: float = 0) -> Label:
+	def add_icon(self, image: PhotoImage, weight: float = 0) -> Label:
 		label = Label(self, image=image, bd=0, state=DISABLED)
 		setattr(label, '_image', image)
 		label.grid(row=0, column=len(self._weights), padx=1, sticky=NS)

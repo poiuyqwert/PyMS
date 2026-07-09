@@ -2,44 +2,45 @@
 from .Config import PyMODConfig
 
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
 
-import os
+import os, re
 
 class ExtractDialog(PyMSDialog):
-	def __init__(self, parent: Misc, mpqhandler: MPQHandler, config: PyMODConfig) -> None:
+	def __init__(self, parent: UI.Misc, mpqhandler: MPQHandler, config: PyMODConfig) -> None:
 		self.mpqhandler = mpqhandler
-		self.search = StringVar()
+		self.search = UI.StringVar()
 		self.search.set('*')
 		self.search.trace('w', self.updatesearch)
 		self.config_ = config
-		self.regex = IntVar()
+		self.search_history = UI.InputHistory(config=config.extract.history)
+		self.regex = UI.IntVar()
 		self.regex.set(0)
 		self.files: list[str] = []
 		self.resettimer: str | None = None
 		self.searchtimer: str | None = None
 		PyMSDialog.__init__(self, parent, 'Extract')
 
-	def widgetize(self) -> Widget:
-		self.listbox = ScrolledListbox(self, width=35, height=10)
-		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
+	def widgetize(self) -> UI.Widget:
+		self.listbox = UI.ScrolledListbox(self, width=35, height=10)
+		self.listbox.pack(fill=UI.BOTH, padx=1, pady=1, expand=1)
 		self.listbox.focus_set()
 
-		frame = Frame(self)
-		self.textdrop = TextDropDown(frame, self.search, self.config_.extract.history.data)
+		frame = UI.Frame(self)
+		self.textdrop = UI.TextDropDown(frame, self.search, self.search_history)
 		self.textdrop_entry_c = self.textdrop.entry['bg']
-		self.textdrop.pack(side=LEFT, fill=X, padx=1, pady=2)
-		Radiobutton(frame, text='Wildcard', variable=self.regex, value=0, command=self.updatelist).pack(side=LEFT, padx=1, pady=2)
-		Radiobutton(frame, text='Regex', variable=self.regex, value=1, command=self.updatelist).pack(side=LEFT, padx=1, pady=2)
-		frame.pack(fill=X)
+		self.textdrop.pack(side=UI.LEFT, fill=UI.X, padx=1, pady=2)
+		UI.Radiobutton(frame, text='Wildcard', variable=self.regex, value=0, command=self.updatelist).pack(side=UI.LEFT, padx=1, pady=2)
+		UI.Radiobutton(frame, text='Regex', variable=self.regex, value=1, command=self.updatelist).pack(side=UI.LEFT, padx=1, pady=2)
+		frame.pack(fill=UI.X)
 
-		frame = Frame(self)
-		self.extract_button = Button(frame, text='Extract', width=10, command=self.extract)
-		self.extract_button.pack(side=LEFT, padx=1, pady=3)
-		Button(frame, text='Done', width=10, command=self.cancel).pack(side=LEFT, padx=1, pady=3)
-		frame.pack(side=BOTTOM)
+		frame = UI.Frame(self)
+		self.extract_button = UI.Button(frame, text='Extract', width=10, command=self.extract)
+		self.extract_button.pack(side=UI.LEFT, padx=1, pady=3)
+		UI.Button(frame, text='Done', width=10, command=self.cancel).pack(side=UI.LEFT, padx=1, pady=3)
+		frame.pack(side=UI.BOTTOM)
 
 		self.listfiles()
 
@@ -73,23 +74,23 @@ class ExtractDialog(PyMSDialog):
 		if self.searchtimer:
 			self.after_cancel(self.searchtimer)
 			self.searchtimer = None
-		self.listbox.delete(0,END)
+		self.listbox.delete(0,UI.END)
 		s = self.search.get()
 		if not self.regex.get():
 			s = '^' + re.escape(s).replace('\\?','.').replace('\\*','.+?') + '$'
 		try:
 			r = re.compile(s)
-		except:
+		except Exception:
 			self.resettimer = self.after(1000, self.updatecolor)
 			self.textdrop.entry['bg'] = '#FFB4B4'
 		else:
-			for f in filter(lambda p: r.match(p), self.files):
-				self.listbox.insert(END,f)
+			for f in filter(r.match, self.files):
+				self.listbox.insert(UI.END,f)
 		if self.listbox.size():
 			self.listbox.select_set(0)
-			self.extract_button['state'] = NORMAL
+			self.extract_button['state'] = UI.NORMAL
 		else:
-			self.extract_button['state'] = DISABLED
+			self.extract_button['state'] = UI.DISABLED
 
 	def updatecolor(self) -> None:
 		if self.resettimer:

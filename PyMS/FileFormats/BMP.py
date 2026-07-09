@@ -1,13 +1,12 @@
 
+from __future__ import annotations
+
 from .Images import Pixels, RawPalette
 
-from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
-from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities import IO
 
 import struct, math
-
-from typing import BinaryIO
 
 def getPadding(value: int, alignment: int) -> int:
 	return int(math.ceil(value/float(alignment)))*alignment - value
@@ -40,6 +39,8 @@ class RLE:
 							if len(image) < height:
 								image.extend([[0] * width] * (height - len(image)))
 							break
+						if len(image) == height:
+							break
 						image.append([])
 				else:
 					n = data[offset+1]
@@ -49,32 +50,30 @@ class RLE:
 				image[-1].extend([data[offset+1]] * data[offset])
 			offset += 2
 		image.reverse()
-		for y in range(len(image)):
-			if len(image[y]) > width:
-				del image[y][width:]
+		for row in image:
+			if len(row) > width:
+				del row[width:]
 		return image
 
 class BMP:
-	def __init__(self, palette: RawPalette = []) -> None:
+	def __init__(self, palette: RawPalette | None = None) -> None:
 		self.width = 0
 		self.height = 0
-		self.palette = palette
+		self.palette: RawPalette = palette if palette is not None else []
 		self.image: Pixels = []
 
-	def load_file(self, file: str | BinaryIO, issize: tuple[int, int] | None = None) -> None:
-		data = load_file(file, 'BMP')
-		self.load_data(data, issize=issize)
-
-	def load_data(self, data: bytes, issize: tuple[int, int] | None = None) -> None:
+	def load(self, any_input: IO.AnyInputBytes, issize: tuple[int, int] | None = None) -> None:
+		with IO.InputBytes(any_input) as input_bytes:
+			data = input_bytes.read()
 		if data[:2] != b'BM':
-			raise PyMSError('Load',"Invalid BMP file (no BMP header)")
+			raise PyMSError('Load', "Invalid BMP file (no BMP header)")
 		try:
 			pixels_offset, dib_header_size, width, height, bitcount, compression, colors_used = \
 				tuple(int(v) for v in struct.unpack('<4LxxHL12xL',data[10:50]))
-			if issize and width != issize[0] and height != issize[1]:
-				raise PyMSError('Load', "Invalid dimensions (Expected %sx%s, got %sx%s)" % (issize[0],issize[1],width,height))
+			if issize and (width != issize[0] or height != issize[1]):
+				raise PyMSError('Load', f"Invalid dimensions (Expected {issize[0]}x{issize[1]}, got {width}x{height})")
 			if bitcount != 8 or not compression in [0,1]:
-				raise PyMSError('Load',"The BMP is not in the correct form. It must be 256 color (8 bit), with RLE compression or no compression at all.")
+				raise PyMSError('Load', "The BMP is not in the correct form. It must be 256 color (8 bit), with RLE compression or no compression at all.")
 			if not colors_used:
 				colors_used = 256
 			palette: RawPalette = []
@@ -87,17 +86,17 @@ class BMP:
 				pad = getPadding(width,4)
 				for y in range(height):
 					x = pixels_offset+(width+pad)*y
-					image.append(list(int(v) for v in struct.unpack('%sB%s' % (width, 'x' * pad),data[x:x+width+pad])))
+					image.append(list(int(v) for v in struct.unpack(f"{width}B{'x' * pad}",data[x:x+width+pad])))
 				image.reverse()
-				for y in range(len(image)):
-					if len(image[y]) > width:
-						del image[y][width:]
+				for row in image:
+					if len(row) > width:
+						del row[width:]
 			else:
 				image = RLE.decompress(data[pixels_offset:], width, height)
 		except PyMSError:
 			raise
-		except:
-			raise PyMSError('Load',"Unsupported BMP file, could possibly be corrupt")
+		except Exception as exc:
+			raise PyMSError('Load', "Unsupported BMP file, could possibly be corrupt") from exc
 		self.width = width
 		self.height = height
 		self.palette = palette
@@ -110,15 +109,11 @@ class BMP:
 			self.palette = list(palette)
 		self.image = [list(y) for y in image]
 
-	def save_file(self, file: str) -> None:
-		try:
-			f = AtomicWriter(file)
-		except:
-			raise PyMSError('Save',"Could not save BMP to file '%s'" % file)
+	def save(self, output: IO.AnyOutputBytes) -> None:
 		data = b''
 		pad = getPadding(self.width,4)
 		for y in self.image:
-			data = struct.pack('<%sB%s' % (self.width, 'x' * pad), *y) + data
+			data = struct.pack(f"<{self.width}B{'x' * pad}", *y) + data
 		palette = list(self.palette)
 		if len(palette) < 256:
 			palette.extend([(0,0,0)] * (256-len(palette)))
@@ -128,5 +123,5 @@ class BMP:
 			t.reverse()
 			data = struct.pack('<3Bx', t[0], t[1], t[2]) + data
 		data = struct.pack('<HH4LHH6L', 0, 0, 1078, 40, self.width, self.height, 1, 8, 0, len(data) - 1024, 0, 0, 0, 0) + data
-		f.write(b'BM' + struct.pack('<L',len(data) + 6) + data)
-		f.close()
+		with IO.OutputBytes(output) as f:
+			f.write(b'BM' + struct.pack('<L',len(data) + 6) + data)

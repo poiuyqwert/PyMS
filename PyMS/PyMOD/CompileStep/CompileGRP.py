@@ -64,7 +64,7 @@ class CompileGRP(BaseCompileStep):
 
 		if config.frames_mode in (FramesMode.single_vertical, FramesMode.single_framesets) and len(frame_paths) > 1:
 			raise CompileError(f'Too many frames for `{config.frames_mode.value}` frame mode')
-		
+
 		destination_path = self.compile_thread.project.source_path_to_intermediates_path(self.source_file.path, self.source_file.name)
 		if not self.compile_thread.meta.check_requires_update(inputs, [destination_path]):
 			self.log(f'No changes required for `{self.source_file.display_name()}`.')
@@ -79,10 +79,10 @@ class CompileGRP(BaseCompileStep):
 			size = None
 			for frame_path in sorted(frame_paths):
 				try:
-					bmp.load_file(frame_path, issize=size)
+					bmp.load(frame_path, issize=size)
 				except Exception as e:
-					raise CompileError(f"Couldn't load '{frame_path}'", internal_exception=e)
-				if size == None:
+					raise CompileError(f"Couldn't load '{frame_path}'", internal_exception=e) from e
+				if size is None:
 					size = (bmp.width, bmp.height)
 				grp.add_frame(bmp.image)
 		else:
@@ -90,15 +90,15 @@ class CompileGRP(BaseCompileStep):
 				raise CompileError(f'Frame mode `{config.frames_mode}` requires `frame_count` to be set in `config.json`')
 			frame_path = frame_paths[0]
 			try:
-				bmp.load_file(frame_path)
+				bmp.load(frame_path)
 			except Exception as e:
-				raise CompileError(f"Couldn't load '{frame_path}'", internal_exception=e)
+				raise CompileError(f"Couldn't load '{frame_path}'", internal_exception=e) from e
 			grp.add_frames(bmp.image, config.frame_count, config.frames_mode == FramesMode.single_vertical)
 		try:
-			grp.save_file(destination_path, uncompressed=config.uncompressed)
+			grp.save(destination_path, uncompressed=config.uncompressed)
 		except Exception as e:
-			raise CompileError("Couldn't save GRP", internal_exception=e)
-		self.log('  GRP compiled!')		
+			raise CompileError("Couldn't save GRP", internal_exception=e) from e
+		self.log('  GRP compiled!')
 
 		self.compile_thread.meta.update_input_metas(inputs)
 		self.compile_thread.meta.update_output_metas([destination_path])

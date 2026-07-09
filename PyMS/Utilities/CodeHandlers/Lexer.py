@@ -9,6 +9,12 @@ import re, dataclasses
 from typing import Type, TypeVar, Callable
 from enum import Enum
 
+__all__ = [
+	'Stop',
+	'State',
+	'Lexer',
+]
+
 class Stop(Enum):
 	proceed = 0
 	exclude = 1
@@ -20,7 +26,7 @@ class State:
 	line: int = 0
 
 T = TypeVar('T', bound=Token)
-class Lexer(object):
+class Lexer:
 	def __init__(self, code: str) -> None:
 		self.code = code
 		self._lines_of_code_cache: list[str] | None = None
@@ -29,11 +35,11 @@ class Lexer(object):
 		self.skip_tokens: list[Type[Token]] = []
 		self.rollbacks: list[State] = []
 
-	_newline_regexp = re.compile(r'\r?\n|\r(?!=\n)')
+	_newline_regexp = re.compile(r'\r?\n|\r(?!\n)')
 	def get_line_of_code(self, line: int) -> str | None:
 		if self._lines_of_code_cache is None:
 			self._lines_of_code_cache = Lexer._newline_regexp.split(self.code)
-		if line >= 0 and line < len(self._lines_of_code_cache):
+		if 0 <= line < len(self._lines_of_code_cache):
 			return self._lines_of_code_cache[line]
 		return None
 
@@ -62,6 +68,17 @@ class Lexer(object):
 				break
 
 	def next_token(self, peek: bool = False) -> Token:
+		if peek:
+			# Peeking must be side-effect free: capture the full state and restore
+			# it so whitespace/comment skipping and line tracking don't leak out.
+			saved_state = dataclasses.replace(self.state)
+			try:
+				return self._read_token()
+			finally:
+				self.state = saved_state
+		return self._read_token()
+
+	def _read_token(self) -> Token:
 		self._skip()
 		token: Token | None = None
 		while not token:
@@ -76,9 +93,8 @@ class Lexer(object):
 				if not token:
 					raise PyMSError('Parse', 'Could not match token')
 			if token:
-				if not peek:
-					self.state.offset += len(token.raw_value)
-					self._check_token(token)
+				self.state.offset += len(token.raw_value)
+				self._check_token(token)
 				if type(token) in self.skip_tokens:
 					token = None
 		return token
@@ -106,20 +122,26 @@ class Lexer(object):
 			token = self.next_token()
 		return token
 
-	# Read all tokens as a string until EOF or the `stop` callback returns `True`
+	# Read all tokens as a string until EOF or the `stop` callback says to stop
 	def read_open_string(self, stop: Callable[[Token], Stop]) -> StringToken:
 		self._skip()
 		start = self.state.offset
+		end = self.state.offset
 		while True:
-			token = self.next_token(peek=True)
+			before = dataclasses.replace(self.state)
+			token = self._read_token()
 			if isinstance(token, EOFToken):
+				end = self.state.offset
 				break
 			should_stop = stop(token)
-			if should_stop != Stop.exclude:
-				self.next_token()
-			if should_stop != Stop.proceed:
+			if should_stop == Stop.exclude:
+				# Leave the terminator (and any whitespace before it) unconsumed.
+				self.state = before
 				break
-		return StringToken(self.code[start:self.state.offset])
+			end = self.state.offset
+			if should_stop == Stop.include:
+				break
+		return StringToken(self.code[start:end])
 
 	def skip(self, skip_token_types: Type[Token] | tuple[Type[Token], ...], peek: bool = False) -> Token:
 		if not isinstance(skip_token_types, tuple):
@@ -142,3 +164,8 @@ class Lexer(object):
 
 	def rollback(self, state: State) -> None:
 		self.state = dataclasses.replace(state)
+
+	def get_raw(self, from_state: State, to_state: State | None = None) -> str:
+		if to_state is None:
+			to_state = self.state
+		return self.code[from_state.offset:to_state.offset]

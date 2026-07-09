@@ -4,14 +4,12 @@ from __future__ import annotations
 try:
 	from PIL import Image as PILImage
 	from PIL import ImageTk
-except:
+except Exception:
 	from ...Utilities.DependencyError import DependencyError
-	import sys, os
+	import sys
 	e = DependencyError('PyMS', 'Pillow is missing. Please consult the Installation section of the Readme.')
 	e.startup()
 	sys.exit()
-
-from tkinter import Image
 
 from .CV5 import CV5, CV5Group
 from .VF4 import VF4, VF4Megatile
@@ -31,10 +29,11 @@ import os, math
 from dataclasses import dataclass
 from enum import Enum
 
-from typing import Callable, cast, Sequence
+from collections.abc import Callable, Sequence
+from typing import assert_never
 
 
-def megatile_to_photo(tileset: Tileset, megatile_id: int) -> Image:
+def megatile_to_photo(tileset: Tileset, megatile_id: int) -> ImageTk.PhotoImage:
 	megatile = tileset.vx4.get_megatile(megatile_id)
 	pi = PILImage.new('P', (32,32))
 	pal: list[int] = []
@@ -51,9 +50,9 @@ def megatile_to_photo(tileset: Tileset, megatile_id: int) -> Image:
 	for row in image:
 		put.extend(row)
 	pi.putdata(put)
-	return cast(Image, ImageTk.PhotoImage(pi))
+	return ImageTk.PhotoImage(pi)
 
-def minitile_to_photo(tileset: Tileset, minitile: VX4Minitile) -> Image:
+def minitile_to_photo(tileset: Tileset, minitile: VX4Minitile) -> ImageTk.PhotoImage:
 	image = tileset.vr4.get_image(minitile.image_id)
 	pi = PILImage.new('P', (24,24))
 	pal: list[int] = []
@@ -67,12 +66,24 @@ def minitile_to_photo(tileset: Tileset, minitile: VX4Minitile) -> Image:
 		for x in p * 3:
 			put.extend((x,x,x))
 	pi.putdata(put)
-	return cast(Image, ImageTk.PhotoImage(pi))
+	return ImageTk.PhotoImage(pi)
 
 class TileType(Enum):
 	group = 0
 	mega = 1
 	mini = 2
+
+	@staticmethod
+	def display_name(tile_type: TileType) -> str:
+		match tile_type:
+			case TileType.group:
+				return 'MegaTile Group'
+			case TileType.mega:
+				return 'MegaTile'
+			case TileType.mini:
+				return 'MiniTile'
+			case _:
+				assert_never(tile_type)
 
 # HEIGHT_LOW  = 0
 # HEIGHT_MID  = (1 << 1)
@@ -96,7 +107,7 @@ class ImportGraphicsOptions:
 class ImportSettingsOptions:
 	repeater: Serialize.Repeater = Serialize.repeater_ignore
 
-class Tileset(object):
+class Tileset:
 	cv5: CV5
 	cv5_path: str | None
 	vf4: VF4
@@ -125,7 +136,7 @@ class Tileset(object):
 	def minitiles_remaining(self) -> int:
 		return self.vr4.images_remaining(expanded_vx4=self.vx4.is_expanded())
 
-	def new_file(self, cv5: CV5 | None = None, vf4: VF4 | None = None, vx4: VX4 | None = None, vr4: VR4 | None = None, dddata: DDDataBIN | None = None, wpe: Palette | None = None) -> None:
+	def new_file(self, *, cv5: CV5 | None = None, vf4: VF4 | None = None, vx4: VX4 | None = None, vr4: VR4 | None = None, dddata: DDDataBIN | None = None, wpe: Palette | None = None) -> None:
 		if cv5:
 			self.cv5 = cv5
 		else:
@@ -157,70 +168,80 @@ class Tileset(object):
 			self.wpe = Palette()
 		self.wpe_path = None
 
-	def load_file(self, cv5_path: str, vf4_path: str | None = None, vx4_path: str | None = None, vr4_path: str | None = None, dddata_path: str | None = None, wpe_path: str | None = None) -> None:
-		path = os.path.dirname(cv5_path)
-		name = os.path.basename(cv5_path)
-		if name.split(os.extsep)[-1].lower() == 'cv5':
-			name = name[:-4]
-		if not vf4_path:
-			vf4_path = os.path.join(path, '%s%svf4' % (name,os.extsep))
-		if not vx4_path:
-			vx4_path = os.path.join(path, '%s%svx4ex' % (name,os.extsep))
-			# Check for and prefer expanded vx4 files
-			if not os.path.exists(vx4_path):
-				vx4_path = os.path.join(path, '%s%svx4' % (name,os.extsep))
-		if not vr4_path:
-			vr4_path = os.path.join(path, '%s%svr4' % (name,os.extsep))
-		if not dddata_path:
-			dddata_path = os.path.join(path, name, 'dddata%sbin' % os.extsep)
-		if not wpe_path:
-			wpe_path = os.path.join(path, '%s%swpe' % (name,os.extsep))
+	# Tileset is a composite of six separate binary files. When `cv5` is a path, any
+	# component not explicitly supplied is auto-derived from it as a sibling path.
+	def load(self, cv5: IO.AnyInputBytes, *, vf4: IO.AnyInputBytes | None = None, vx4: IO.AnyInputBytes | None = None, vr4: IO.AnyInputBytes | None = None, dddata: IO.AnyInputBytes | None = None, wpe: IO.AnyInputBytes | None = None) -> None:
+		if isinstance(cv5, str):
+			path = os.path.dirname(cv5)
+			name = os.path.basename(cv5)
+			if name.split(os.extsep)[-1].lower() == 'cv5':
+				name = name[:-4]
+			if vf4 is None:
+				vf4 = os.path.join(path, f'{name}{os.extsep}vf4')
+			if vx4 is None:
+				vx4 = os.path.join(path, f'{name}{os.extsep}vx4ex')
+				# Check for and prefer expanded vx4 files
+				if not os.path.exists(vx4):
+					vx4 = os.path.join(path, f'{name}{os.extsep}vx4')
+			if vr4 is None:
+				vr4 = os.path.join(path, f'{name}{os.extsep}vr4')
+			if dddata is None:
+				dddata = os.path.join(path, name, f'dddata{os.extsep}bin')
+			if wpe is None:
+				wpe = os.path.join(path, f'{name}{os.extsep}wpe')
+		if vf4 is None or vx4 is None or vr4 is None or dddata is None or wpe is None:
+			raise PyMSError('Load', 'Tileset requires all component files (pass a cv5 path to auto-derive siblings)')
 		self.cv5 = CV5()
-		self.cv5.load_file(cv5_path)
+		self.cv5.load(cv5)
 		self.vf4 = VF4()
-		self.vf4.load_file(vf4_path)
+		self.vf4.load(vf4)
 		self.vx4 = VX4()
-		self.vx4.load_file(vx4_path)
+		self.vx4.load(vx4)
 		self.vr4 = VR4()
-		self.vr4.load_file(vr4_path)
+		self.vr4.load(vr4)
 		self.dddata = DDDataBIN()
-		self.dddata.load_file(dddata_path)
+		self.dddata.load(dddata)
 		self.wpe = Palette()
-		self.wpe.load_file(wpe_path)
-		self.cv5_path = cv5_path
-		self.vf4_path = vf4_path
-		self.vx4_path = vx4_path
-		self.vr4_path = vr4_path
-		self.dddata_path = dddata_path
-		self.wpe_path = wpe_path
+		self.wpe.load(wpe)
+		self.cv5_path = cv5 if isinstance(cv5, str) else None
+		self.vf4_path = vf4 if isinstance(vf4, str) else None
+		self.vx4_path = vx4 if isinstance(vx4, str) else None
+		self.vr4_path = vr4 if isinstance(vr4, str) else None
+		self.dddata_path = dddata if isinstance(dddata, str) else None
+		self.wpe_path = wpe if isinstance(wpe, str) else None
 
-	def save_file(self, cv5_path: str, vf4_path: str | None = None, vx4_path: str | None = None, vr4_path: str | None = None, dddata_path: str | None = None, wpe_path: str | None = None) -> None:
-		path = os.path.dirname(cv5_path)
-		name = os.path.basename(cv5_path)
-		if name.endswith(os.extsep + 'cv5'):
-			name = name[:-4]
-		if vf4_path is None:
-			vf4_path = os.path.join(path, '%s%svf4' % (name,os.extsep))
-		if vx4_path is None:
-			expanded = 'ex' if self.vx4.is_expanded() else ''
-			vx4_path = os.path.join(path, '%s%svx4%s' % (name,os.extsep,expanded))
-		if vr4_path is None:
-			vr4_path = os.path.join(path, '%s%svr4' % (name,os.extsep))
-		dddir = os.path.join(path, name)
-		if dddata_path is None:
-			dddata_path = os.path.join(dddir, 'dddata%sbin' % os.extsep)
-		if wpe_path is None:
-			wpe_path = os.path.join(path, '%s%swpe' % (name,os.extsep))
-		self.cv5.save_file(cv5_path)
-		self.vf4.save_file(vf4_path)
-		self.vx4.save_file(vx4_path)
-		self.vr4.save_file(vr4_path)
-		if not os.path.exists(dddir):
-			os.mkdir(dddir)
-		self.dddata.save_file(dddata_path)
-		self.wpe.save_sc_wpe(wpe_path)
+	def save(self, cv5: IO.AnyOutputBytes, *, vf4: IO.AnyOutputBytes | None = None, vx4: IO.AnyOutputBytes | None = None, vr4: IO.AnyOutputBytes | None = None, dddata: IO.AnyOutputBytes | None = None, wpe: IO.AnyOutputBytes | None = None) -> None:
+		if isinstance(cv5, str):
+			path = os.path.dirname(cv5)
+			name = os.path.basename(cv5)
+			if name.endswith(os.extsep + 'cv5'):
+				name = name[:-4]
+			if vf4 is None:
+				vf4 = os.path.join(path, f'{name}{os.extsep}vf4')
+			if vx4 is None:
+				expanded = 'ex' if self.vx4.is_expanded() else ''
+				vx4 = os.path.join(path, f'{name}{os.extsep}vx4{expanded}')
+			if vr4 is None:
+				vr4 = os.path.join(path, f'{name}{os.extsep}vr4')
+			dddir = os.path.join(path, name)
+			if dddata is None:
+				dddata = os.path.join(dddir, f'dddata{os.extsep}bin')
+			if wpe is None:
+				wpe = os.path.join(path, f'{name}{os.extsep}wpe')
+			if not os.path.exists(dddir):
+				os.mkdir(dddir)
+		if vf4 is None or vx4 is None or vr4 is None or dddata is None or wpe is None:
+			raise PyMSError('Save', 'Tileset requires all component outputs (pass a cv5 path to auto-derive siblings)')
+		self.cv5.save(cv5)
+		self.vf4.save(vf4)
+		self.vx4.save(vx4)
+		self.vr4.save(vr4)
+		self.dddata.save(dddata)
+		self.wpe.save_sc_wpe(wpe)
 
-	def import_graphics(self, tiletype: TileType, bmpfiles: list[str], ids: list[int] | None = None, options: ImportGraphicsOptions = ImportGraphicsOptions()) -> list[int]:
+	def import_graphics(self, tiletype: TileType, bmpfiles: list[str], ids: list[int] | None = None, options: ImportGraphicsOptions | None = None) -> list[int]:
+		if options is None:
+			options = ImportGraphicsOptions()
 		if ids:
 			ids = list(ids)
 		else:
@@ -229,13 +250,13 @@ class Tileset(object):
 		pixels: list[list[int]] = []
 		for path in bmpfiles:
 			bmp = BMP()
-			bmp.load_file(path)
+			bmp.load(path)
 			if tiletype == TileType.group and (bmp.width != 512 or bmp.height % 32):
-				raise PyMSError('Interpreting','The image is not the correct size for tile groups (got %sx%s, expected width to be 512 and height to be a multiple of 32)' % (bmp.width,bmp.height))
+				raise PyMSError('Interpreting', f'The image is not the correct size for tile groups (got {bmp.width}x{bmp.height}, expected width to be 512 and height to be a multiple of 32)')
 			elif tiletype == TileType.mega and (bmp.width % 32 or bmp.height % 32):
-				raise PyMSError('Interpreting','The image is not the correct size for megatiles (got %sx%s, expected width and height to be multiples of 32)' % (bmp.width,bmp.height))
+				raise PyMSError('Interpreting', f'The image is not the correct size for megatiles (got {bmp.width}x{bmp.height}, expected width and height to be multiples of 32)')
 			elif tiletype == TileType.mini and (bmp.width % 8 or bmp.height % 8):
-				raise PyMSError('Interpreting','The image is not the correct size for minitiles (got %sx%s, expected width and height to be multiples of 8)' % (bmp.width,bmp.height))
+				raise PyMSError('Interpreting', f'The image is not the correct size for minitiles (got {bmp.width}x{bmp.height}, expected width and height to be multiples of 8)')
 			pixels.extend(bmp.image)
 
 		new_images: list[VR4Image] = []
@@ -266,48 +287,48 @@ class Tileset(object):
 			image = new_images[i]
 			image_hash = VR4.image_hash(image)
 			found = False
-			if tiletype != TileType.mini or not len(ids):
+			if tiletype != TileType.mini or not ids:
 				existing_normal_ids, existing_flipped_ids = self.vr4.find_image_ids(image)
 				existing_all_ids = existing_normal_ids + existing_flipped_ids
 				if len(existing_all_ids) and (options.minitiles_reuse_duplicates_old or options.minitiles_reuse_null_with_id in existing_all_ids):
-					flipped = not len(existing_normal_ids)
+					flipped = not existing_normal_ids
 					if not flipped or options.minitiles_reuse_duplicates_flipped:
 						found = True
 						del new_images[i]
 						minitile_details.append(VX4Minitile(existing_all_ids[0], flipped))
 				if not found:
-					existing_normal_ids = image_lookup.get(image_hash,[])
+					existing_normal_ids = list(image_lookup.get(image_hash, ()))
 					flipped_hash = VR4.image_hash(image, True)
-					existing_flipped_ids = image_lookup.get(flipped_hash,[])
+					existing_flipped_ids = list(image_lookup.get(flipped_hash, ()))
 					existing_all_ids = existing_normal_ids + existing_flipped_ids
 					if len(existing_all_ids) and (options.minitiles_reuse_duplicates_new or options.minitiles_reuse_null_with_id in existing_all_ids):
-						flipped = not len(existing_normal_ids)
+						flipped = not existing_normal_ids
 						if not flipped or options.minitiles_reuse_duplicates_flipped:
 							found = True
 							del new_images[i]
 							minitile_details.append(VX4Minitile(existing_all_ids[0], flipped))
 			if not found:
-				id = new_id
+				image_id = new_id
 				if tiletype == TileType.mini and len(ids):
-					id = ids[0]
+					image_id = ids[0]
 					del ids[0]
-					update_images.append((id, new_images[i]))
+					update_images.append((image_id, new_images[i]))
 					del new_images[i]
 				else:
 					if tiletype == TileType.mini:
 						new_ids.append(new_id)
 					new_id += 1
 					i += 1
-				minitile_details.append(VX4Minitile(id, False))
+				minitile_details.append(VX4Minitile(image_id, False))
 				if image_hash in image_lookup:
-					image_lookup[image_hash].append(id)
+					image_lookup[image_hash].append(image_id)
 				else:
-					image_lookup[image_hash] = [id]
+					image_lookup[image_hash] = [image_id]
 		if len(new_images) > self.minitiles_remaining():
 			if self.vx4.is_expanded() or not options.minitiles_expand_allowed or (callable(options.minitiles_expand_allowed) and not options.minitiles_expand_allowed()):
-				raise PyMSError('Importing','Import aborted because it exceeded the maximum minitile image count (%d + %d > %d)' % (self.vr4.image_count(),len(new_images),VR4.MAX_ID+1))
+				raise PyMSError('Importing', f'Import aborted because it exceeded the maximum minitile image count ({self.vr4.image_count()} + {len(new_images)} > {VR4.MAX_ID+1})')
 			self.vx4.expand()
-		if tiletype == TileType.group or tiletype == TileType.mega:
+		if tiletype in (TileType.group, TileType.mega):
 			megas_w = minis_w // 4
 			megas_h = minis_h // 4
 			for y in range(megas_h):
@@ -325,7 +346,7 @@ class Tileset(object):
 			while i < len(new_megatiles):
 				tile_hash = hash(new_megatiles[i])
 				found = False
-				if tiletype != TileType.mega or not len(ids):
+				if tiletype != TileType.mega or not ids:
 					existing_ids = self.vx4.find_megatile_ids(new_megatiles[i])
 					if len(existing_ids) and (options.megatiles_reuse_duplicates_old or options.megatiles_reuse_null_with_id in existing_ids):
 						del new_megatiles[i]
@@ -338,59 +359,59 @@ class Tileset(object):
 							megatile_ids.append(existing_ids[0])
 							found = True
 				if not found:
-					id = new_id
+					image_id = new_id
 					if tiletype == TileType.mega and len(ids):
-						id = ids[0]
+						image_id = ids[0]
 						del ids[0]
-						update_megatiles.append((id, new_megatiles[i]))
+						update_megatiles.append((image_id, new_megatiles[i]))
 						del new_megatiles[i]
 					else:
 						if tiletype == TileType.mega:
 							new_ids.append(new_id)
 						new_id += 1
 						i += 1
-					megatile_ids.append(id)
+					megatile_ids.append(image_id)
 					if tile_hash in mega_lookup:
-						mega_lookup[tile_hash].append(id)
+						mega_lookup[tile_hash].append(image_id)
 					else:
-						mega_lookup[tile_hash] = [id]
+						mega_lookup[tile_hash] = [image_id]
 			if len(new_megatiles) > self.megatiles_remaining():
-				raise PyMSError('Importing','Import aborted because it exceeded the maximum megatile count (%d + %d > %d)' % (self.vf4.megatile_count(),len(new_megatiles),VF4.MAX_ID+1))
+				raise PyMSError('Importing', f'Import aborted because it exceeded the maximum megatile count ({self.vf4.megatile_count()} + {len(new_megatiles)} > {VF4.MAX_ID+1})')
 			if tiletype == TileType.group:
 				groups = megas_h
 				if tiletype == TileType.group and options.groups_ignore_extra and groups > len(ids):
 					groups = len(ids)
 				for n in range(groups):
-					megatile_ids = megatile_ids[n*16:(n+1)*16]
+					group_megatile_ids = megatile_ids[n*16:(n+1)*16]
 					if len(ids):
-						id = ids[0]
+						image_id = ids[0]
 						del ids[0]
-						update_groups.append((id,megatile_ids))
+						update_groups.append((image_id,group_megatile_ids))
 					else:
 						if tiletype == TileType.group:
 							new_ids.append(self.cv5.group_count() + len(new_groups))
-						new_groups.append(megatile_ids)
+						new_groups.append(group_megatile_ids)
 				if len(new_groups) > self.groups_remaining():
-					raise PyMSError('Importing','Import aborted because it exceeded the maximum megatile group count (%d + %d > %d)' % (self.cv5.group_count(),len(new_groups),CV5.MAX_ID+1))
+					raise PyMSError('Importing', f'Import aborted because it exceeded the maximum megatile group count ({self.cv5.group_count()} + {len(new_groups)} > {CV5.MAX_ID+1})')
 		# Update minitiles
 		for new_image in new_images:
 			self.vr4.add_image(new_image)
-		for id,image in update_images:
-			self.vr4.set_image(id, image)
+		for image_id,image in update_images:
+			self.vr4.set_image(image_id, image)
 		# Update megatiles
 		for megatile in new_megatiles:
 			self.vx4.add_megatile(megatile)
 		for _ in range(len(new_megatiles)):
 			self.vf4.add_megatile(VF4Megatile())
-		for id,tile in update_megatiles:
-			self.vx4.set_megatile(id, tile)
+		for image_id,tile in update_megatiles:
+			self.vx4.set_megatile(image_id, tile)
 		# Update megatile groups
 		for megatile_ids in new_groups:
 			group = CV5Group()
 			group.megatile_ids = megatile_ids
 			self.cv5.add_group(group)
-		for id,megatile_ids in update_groups:
-			self.cv5.get_group(id).megatile_ids = megatile_ids
+		for image_id,megatile_ids in update_groups:
+			self.cv5.get_group(image_id).megatile_ids = megatile_ids
 		return new_ids
 
 	def export_graphics(self, tiletype: TileType, path: str, ids: list[int]) -> None:
@@ -400,7 +421,7 @@ class Tileset(object):
 		tile_width = 0
 		tiles_high = 0
 		tile_height = 0
-		def calc_dims(tiles):
+		def calc_dims(tiles: int) -> tuple[int, int]:
 			for f in range(int(math.sqrt(tiles)),0,-1):
 				if not tiles % f:
 					return (tiles // f, f)
@@ -411,8 +432,8 @@ class Tileset(object):
 			tiletype = TileType.mega
 			groups = ids
 			ids = []
-			for id in groups:
-				ids.extend(self.cv5.get_group(id).megatile_ids)
+			for group_id in groups:
+				ids.extend(self.cv5.get_group(group_id).megatile_ids)
 		elif tiletype == TileType.mega:
 			tiles_wide,tiles_high = calc_dims(len(ids))
 			tile_width,tile_height = 32,32
@@ -439,12 +460,12 @@ class Tileset(object):
 				image = self.vr4.get_image(mini_id)
 				for row_y,row in enumerate(image):
 					bmp.image[mini_y+row_y].extend(row)
-		bmp.save_file(path)
+		bmp.save(path)
 
 	def export_group_settings(self, output: IO.AnyOutputText, ids: Sequence[int], fields: Serialize.Fields | None = None) -> None:
 		with IO.OutputText(output) as file:
 			if self.cv5_path is not None:
-				file.write("# Exported from %s\n" % self.cv5_path)
+				file.write(f"# Exported from {self.cv5_path}\n")
 			groups = list((self.cv5.get_group(id), id) for id in ids)
 			def get_definition(group: object) -> (Serialize.Definition | None):
 				if not isinstance(group, CV5Group):
@@ -454,34 +475,38 @@ class Tileset(object):
 				return TileGroupDef
 			file.write(Serialize.encode_texts(groups, get_definition, fields))
 
-	def import_group_settings(self, input: IO.AnyInputText, ids: list[int], options: ImportSettingsOptions = ImportSettingsOptions()) -> None:
-		with IO.InputText(input) as file:
-			text = file.read()
+	def import_group_settings(self, any_input: IO.AnyInputText, ids: list[int], options: ImportSettingsOptions | None = None) -> None:
+		if options is None:
+			options = ImportSettingsOptions()
+		with IO.InputText(any_input) as input_text:
+			text = input_text.read()
 
 		def get_group(n: int, definition: Serialize.Definition) -> CV5Group:
 			if n >= len(ids):
 				raise PyMSError('Internal', f'Attempted to import on group {n} with only {len(ids)} being imported')
-			id = ids[n]
-			group = self.cv5.get_group(id)
+			group_id = ids[n]
+			group = self.cv5.get_group(group_id)
 			if definition == TileGroupDef and group.type == CV5Group.TYPE_DOODAD:
-				raise PyMSError('Import', f'Attempting to import TileGroup onto DoodadGroup {id}')
-			elif definition == DoodadGroupDef and group.type != CV5Group.TYPE_DOODAD:
-				raise PyMSError('Import', f'Attempting to import DoodadGroup onto TileGroup {id}')
+				raise PyMSError('Import', f'Attempting to import TileGroup onto DoodadGroup {group_id}')
+			if definition == DoodadGroupDef and group.type != CV5Group.TYPE_DOODAD:
+				raise PyMSError('Import', f'Attempting to import DoodadGroup onto TileGroup {group_id}')
 			return group
 		Serialize.decode_text(text, [TileGroupDef, DoodadGroupDef], get_group, len(ids), options.repeater)
 
 	def export_megatile_settings(self, output: IO.AnyOutputText, ids: list[int], fields: Serialize.Fields | None = None) -> None:
 		with IO.OutputText(output) as file:
 			if self.vf4_path is not None:
-				file.write("# Exported from %s\n" % self.vf4_path)
+				file.write(f"# Exported from {self.vf4_path}\n")
 			megatiles = list((self.vf4.get_megatile(id), id) for id in ids)
 			file.write(Serialize.encode_texts(megatiles, lambda _: MegatileDef, fields))
 
-	def import_megatile_settings(self, input: IO.AnyInputText, ids: list[int], options: ImportSettingsOptions = ImportSettingsOptions()) -> None:
-		with IO.InputText(input) as file:
-			text = file.read()
+	def import_megatile_settings(self, any_input: IO.AnyInputText, ids: list[int], options: ImportSettingsOptions | None = None) -> None:
+		if options is None:
+			options = ImportSettingsOptions()
+		with IO.InputText(any_input) as input_text:
+			text = input_text.read()
 
-		def get_megatile(n: int, definition: Serialize.Definition) -> VF4Megatile:
+		def get_megatile(n: int, _definition: Serialize.Definition) -> VF4Megatile:
 			if n >= len(ids):
 				raise PyMSError('Internal', f'Attempted to import on group {n} with only {len(ids)} being imported')
 			return self.vf4.get_megatile(ids[n])

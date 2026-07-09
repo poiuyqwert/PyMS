@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# pylint: disable=consider-using-f-string
 
 from PyMS.Utilities.Compatibility import check_compat, Requirement
 check_compat('PyFNT', Requirement.PIL)
@@ -8,8 +9,10 @@ def main(): # type: () -> None
 
 	from PyMS.FileFormats.FNT import FNT, fnttobmp, bmptofnt
 	from PyMS.FileFormats.BMP import BMP
+	from PyMS.FileFormats.Palette import Palette
 
 	from PyMS.Utilities.PyMSError import PyMSError
+	from PyMS.Utilities import Assets
 
 	import os, optparse, sys
 
@@ -36,12 +39,20 @@ def main(): # type: () -> None
 			if len(args) == 1:
 				args.append('%s%s%s' % (os.path.join(path,os.extsep.join(os.path.basename(args[0]).split(os.extsep)[:-1])), os.extsep, ext))
 			if opt.convert:
+				pal = Palette()
+				print("Reading Icons.pal...")
+				try:
+					pal.load(Assets.palette_file_path('Icons.pal'))
+					print(" - Read Icons.pal successfully")
+				except PyMSError as e:
+					print(repr(e))
+					return
 				fnt = FNT()
 				print("Reading FNT '%s'..." % args[0])
 				try:
-					fnt.load_file(args[0])
+					fnt.load(args[0])
 					print(" - '%s' read successfully\nDecompiling FNT to file '%s'..." % (args[0], args[1]))
-					fnttobmp(fnt,args[1])
+					fnttobmp(fnt, pal.palette, args[1])
 					print(" - '%s' written succesfully" % args[1])
 				except PyMSError as e:
 					print(repr(e))
@@ -51,7 +62,7 @@ def main(): # type: () -> None
 				t = opt.specifics.split(',')
 				try:
 					lowi,letters = int(t),int(t)
-				except:
+				except Exception:
 					print('Invalid compiling specifics (must be lowest ASCII index followed by amount of letters, seperated by a comma)')
 				else:
 					if lowi < 1 or lowi > 255:
@@ -64,7 +75,7 @@ def main(): # type: () -> None
 						bmp = BMP()
 						print("Reading BMP '%s'..." % args[0])
 						try:
-							bmp.load_file(args[0])
+							bmp.load(args[0])
 							print(" - '%s' read successfully\nDecompiling BMP to file '%s'..." % (args[0], args[1]))
 							bmptofnt(bmp, lowi, letters, args[1])
 							print(" - '%s' written succesfully" % args[1])

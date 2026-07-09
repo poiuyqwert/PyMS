@@ -4,27 +4,23 @@ from __future__ import annotations
 try:
 	from PIL import Image as PILImage
 	from PIL import ImageTk
-except:
-	from ..Utilities import Assets
+except Exception:
 	from ..Utilities.DependencyError import DependencyError
-	import sys, os
-	e = DependencyError('PyMS','PIL is missing. Please consult the Installation section of the Readme.')
-	e.startup()
+	import sys
+	err_dialog = DependencyError('PyMS','PIL is missing. Please consult the Installation section of the Readme.')
+	err_dialog.startup()
 	sys.exit()
 
 from . import BMP
 from . import PCX
 from .Images import Pixels, RGBA, RawPalette
 
-from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
-from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities import IO
 
 import struct
 
-from typing import Dict, Tuple, BinaryIO
-
-Remapping = Dict[int, int | Tuple[int, int]]
+Remapping = dict[int, int | tuple[int, int]]
 
 # Maps the color characters to special palette index
 COLOR_CODES_INGAME: Remapping = {
@@ -92,7 +88,7 @@ def letter_to_photo(palette: PCX.PCX, letter: Pixels, color: int, remap: Remappi
 	pal: list[RGBA] = []
 	for n,c in enumerate(palette.palette):
 		alpha = 0
-		if n != palette.image[color_map[0]][color_map[1] * 8] and c != [255,0,255]:
+		if n != palette.image[color_map[0]][color_map[1] * 8] and c != (255,0,255):
 			alpha = 255
 		pal.append((c[0],c[1],c[2],alpha))
 	# TODO: Why do we need `type: ignore`?
@@ -108,7 +104,7 @@ def fnttobmp(fnt: FNT, pal: RawPalette, file: str | None = None) -> BMP.BMP | No
 	b.width = len(b.image[0])
 	if file is None:
 		return b
-	b.save_file(file)
+	b.save(file)
 	return None
 
 def bmptofnt(bmp: BMP.BMP, lowi: int, letters: int, file: str | None = None) -> FNT | None:
@@ -120,10 +116,10 @@ def bmptofnt(bmp: BMP.BMP, lowi: int, letters: int, file: str | None = None) -> 
 			f.letters[-1].append(y[f.width * l:f.width * (l+1)])
 	if file is None:
 		return f
-	f.save_file(file)
+	f.save(file)
 	return None
 
-Size = Tuple[int, int, int, int]
+Size = tuple[int, int, int, int]
 
 class FNT:
 	def __init__(self) -> None:
@@ -133,10 +129,11 @@ class FNT:
 		self.letters: list[Pixels] = []
 		self.sizes: list[Size] = []
 
-	def load_file(self, file: str | BinaryIO) -> None:
-		data = load_file(file, 'FNT')
+	def load(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		if data[:4] != b'FONT':
-			raise PyMSError('Load',"Invalid FNT file '%s' (invalid header)" % file)
+			raise PyMSError('Load', "Invalid FNT file (invalid header)")
 		try:
 			lowi,highi,maxw,maxh = tuple(int(v) for v in struct.unpack('<4B',data[4:8]))
 			letters: list[Pixels] = []
@@ -176,24 +173,17 @@ class FNT:
 			self.start = lowi
 			self.letters = letters
 			self.sizes = sizes
-		except:
-			raise PyMSError('Load',"Unsupported FNT file '%s', could possibly be corrupt" % file)
+		except Exception as exc:
+			raise PyMSError('Load', "Unsupported FNT file, could possibly be corrupt") from exc
 
-	def save_file(self, file: str) -> None:
-		try:
-			f = AtomicWriter(file)
-		except:
-			raise PyMSError('Compile',"Could not load file '%s'" % file)
-		header = b'FONT'
-		header += self.start.to_bytes()
-		header += (self.start+len(self.letters)-1).to_bytes()
-		header += self.width.to_bytes()
-		header += self.height.to_bytes()
+	def save(self, output: IO.AnyOutputBytes) -> None:
+		header = bytearray(b'FONT')
+		header += struct.pack('<4B', self.start, self.start+len(self.letters)-1, self.width, self.height)
 		o = 8+4*len(self.letters)
-		data = b''
+		data = bytearray()
 		hist: dict[bytes, int] = {}
 		for d in self.letters:
-			ldata = b''
+			ldata = bytearray()
 			maxw = len(d[0])
 			w,h,xo,yo = 0,0,999,-1
 			for y,yd in enumerate(d):
@@ -212,29 +202,27 @@ class FNT:
 			else:
 				w -= xo
 				h -= yo
-				ldata += w.to_bytes()
-				ldata += h.to_bytes()
-				ldata += xo.to_bytes()
-				ldata += yo.to_bytes()
+				ldata += struct.pack('<4B', w, h, xo, yo)
 				skip = 0
 				for row in d[yo:yo+h]:
 					for x in row[xo:xo+w]:
 						if not x and skip < 31:
 							skip += 1
 						else:
-							ldata += ((skip << 3) + x).to_bytes()
+							ldata += struct.pack('<B', (skip << 3) + x)
 							skip = 0
 				if skip:
-					ldata += (skip << 3).to_bytes()
-				if ldata in hist:
-					header += struct.pack('<L',hist[ldata])
+					ldata += struct.pack('<B', skip << 3)
+				ldata_key = bytes(ldata)
+				if ldata_key in hist:
+					header += struct.pack('<L', hist[ldata_key])
 				else:
-					header += struct.pack('<L',o)
-					hist[ldata] = o
+					header += struct.pack('<L', o)
+					hist[ldata_key] = o
 					data += ldata
 					o += len(ldata)
-		f.write(header + data)
-		f.close()
+		with IO.OutputBytes(output) as f:
+			f.write(bytes(header + data))
 
 # from BMP import *
 # import sys

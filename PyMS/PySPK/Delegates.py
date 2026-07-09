@@ -4,7 +4,7 @@ from .Config import PySPKConfig
 from ..FileFormats import SPK
 from ..FileFormats import Palette
 
-from ..Utilities.UIKit import IntVar, Image
+from ..Utilities import UIKit as UI
 
 from typing import Protocol
 
@@ -12,9 +12,9 @@ class MainDelegate(Protocol):
 	spk: SPK.SPK | None
 	platform_wpe: Palette.Palette
 	config_: PySPKConfig
-	tool: IntVar
-	visible: IntVar
-	locked: IntVar
+	tool: UI.IntVar
+	visible: UI.IntVar
+	locked: UI.IntVar
 	selected_stars: list[SPK.SPKStar]
 	selected_image: SPK.SPKImage | None
 
@@ -30,7 +30,7 @@ class MainDelegate(Protocol):
 	def update_selection(self) -> None:
 		...
 
-	def get_image(self, spkimage: SPK.SPKImage) -> (Image | None):
+	def get_image(self, spkimage: SPK.SPKImage) -> (UI.AnyPhotoImage | None):
 		...
 
 	def action_states(self) -> None:

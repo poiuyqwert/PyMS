@@ -190,7 +190,7 @@ TileGroup:
 		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
-	
+
 	def test_flags_walkable_empty(self) -> None:
 		tileset = test_tileset()
 		expected = f"""
@@ -451,7 +451,7 @@ TileGroup:
 		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
-	
+
 	def test_flags_walkable_full(self) -> None:
 		tileset = test_tileset()
 		expected = f"""
@@ -700,7 +700,7 @@ TileGroup:
 		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
-	
+
 	def test_flags_walkable_flags(self) -> None:
 		tileset = test_tileset()
 		expected = f"""
@@ -1061,7 +1061,7 @@ DoodadGroup:
 		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
-	
+
 	def test_flags_walkable_empty(self) -> None:
 		tileset = test_tileset()
 		expected = f"""
@@ -1376,7 +1376,7 @@ DoodadGroup:
 		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
-	
+
 	def test_flags_walkable_full(self) -> None:
 		tileset = test_tileset()
 		expected = f"""
@@ -1691,7 +1691,7 @@ DoodadGroup:
 		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
-	
+
 	def test_flags_walkable_flags(self) -> None:
 		tileset = test_tileset()
 		expected = f"""
