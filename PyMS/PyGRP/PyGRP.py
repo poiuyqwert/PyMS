@@ -567,17 +567,17 @@ BMP's must be imported with the same style they were exported as.""")
 		file = self.config_.last_path.bmp.select_save(self, title='Export Frames To...')
 		if file:
 			self.status.set('Extracting frames, please wait...')
-			name = os.extsep.join(os.path.basename(file).replace(' ','').split(os.extsep)[:-1])
 			self.update_idletasks()
 			try:
 				bmp_style = self.get_bmp_style()
 				bmps = grp_to_bmps(self.grp, self.palettes[self.pal].palette, bmp_style, indexs)
-				path = os.path.dirname(file)
 				if bmp_style == BMPStyle.bmp_per_frame:
+					path = os.path.dirname(file)
+					name = os.extsep.join(os.path.basename(file).replace(' ','').split(os.extsep)[:-1])
 					for n,bmp in enumerate(bmps):
 						bmp.save(os.path.join(path, frame_bmp_name(name, n)))
 				else:
-					bmps[0].save(os.path.join(path, f'{name}{os.extsep}bmp'))
+					bmps[0].save(file)
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				return

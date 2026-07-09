@@ -452,12 +452,13 @@ class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, Errorab
 			ai_path = self.config_.last_path.bin.select_save(self, title='Save aiscript.bin')
 			if not ai_path:
 				return CheckSaved.cancelled
-		if not check_allow_overwrite_internal_file(ai_path):
+		elif not check_allow_overwrite_internal_file(ai_path):
 			return CheckSaved.cancelled
-		if self.ai.has_bwscripts() and not bw_path:
-			bw_path = self.config_.last_path.bin.select_save(self, title='Save bwscript.bin (Cancel to save aiscript.bin only)')
-		if bw_path and not check_allow_overwrite_internal_file(bw_path):
-			return CheckSaved.cancelled
+		if self.ai.has_bwscripts():
+			if not bw_path:
+				bw_path = self.config_.last_path.bin.select_save(self, title='Save bwscript.bin (Cancel to save aiscript.bin only)')
+			elif not check_allow_overwrite_internal_file(bw_path):
+				return CheckSaved.cancelled
 		try:
 			self.ai.save(ai_path, bw_path)
 		except PyMSError as e:

@@ -20,6 +20,7 @@ from ..Utilities import Assets
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
+from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.SponsorDialog import SponsorDialog
@@ -672,6 +673,9 @@ class PyMPQ(UI.MainWindow):
 			for index in self.listbox.cur_selection():
 				file_entry = self.display_files[index]
 				path_components = file_entry.file_name.decode('utf-8').split('\\')
+				output_path = os.path.join(path,*path_components)
+				if not check_allow_overwrite_internal_file(output_path):
+					continue
 				try:
 					os.makedirs(os.path.join(path,*path_components[:-1]))
 				except (OSError, IOError) as e:
@@ -682,7 +686,7 @@ class PyMPQ(UI.MainWindow):
 				except Exception:
 					ErrorDialog(self, PyMSError('Extract', f"Couldn't read file '{file_entry.file_name.decode('utf-8')}' from MPQ"))
 					continue
-				with open(os.path.join(path,*path_components),'wb') as f:
+				with open(output_path,'wb') as f:
 					f.write(data)
 
 	def mansets(self, event: UI.Event | None = None) -> None:
