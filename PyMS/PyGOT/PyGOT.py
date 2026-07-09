@@ -60,8 +60,8 @@ class PyGOT(UI.MainWindow):
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('codeedit'), lambda: self.trg(TRG.Format.got), 'Convert *.trg to GOT compatable', UI.Ctrl.t)
-		self.toolbar.add_button(Assets.get_image('insert'), lambda: self.trg(TRG.Format.normal), 'Revert GOT compatable *.trg', UI.Ctrl.Alt.t)
+		self.toolbar.add_button(Assets.get_image('codeedit'), lambda: self.trg(TRG.Format.got), 'Convert *.trg to GOT compatible', UI.Ctrl.t)
+		self.toolbar.add_button(Assets.get_image('insert'), lambda: self.trg(TRG.Format.normal), 'Revert GOT compatible *.trg', UI.Ctrl.Alt.t)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", UI.Ctrl.m)
 		self.toolbar.add_section()
@@ -80,7 +80,7 @@ class PyGOT(UI.MainWindow):
 			self.action_states()
 		self.name = UI.SStringVar(length=32, callback=edited)
 		self.gametype_id = UI.IntegerVar(0,[0,31], callback=edited)
-		self.league_id = UI.IntegerVar(0, [0,255])
+		self.league_id = UI.IntegerVar(0, [0,255], callback=edited)
 		self.subtype_name = UI.SStringVar(length=32, callback=edited)
 		self.subtype_id = UI.IntegerVar(0,[0,7], callback=edited)
 		self.subtype_display = UI.IntegerVar(0, [0,56533], callback=edited)
@@ -137,7 +137,7 @@ class PyGOT(UI.MainWindow):
 		f = UI.Frame(l)
 		UI.Label(f, text='Name:').grid(sticky=UI.E)
 		self.subtype_name_entry = UI.Entry(f, textvariable=self.subtype_name, font=UI.Font.fixed(), width=32, state=UI.DISABLED)
-		UI.Tooltip(self.subtype_name_entry, 'The label for the variation (ie, the one to set greed amount)\nThis should be the same for each variation of a tempalte')
+		UI.Tooltip(self.subtype_name_entry, 'The label for the variation (ie, the one to set greed amount)\nThis should be the same for each variation of a template')
 		self.subtype_name_entry.grid(row=0, column=1, pady=1, columnspan=3)
 
 		UI.Label(f, text='Display:').grid(sticky=UI.E)
@@ -184,6 +184,10 @@ class PyGOT(UI.MainWindow):
 
 		self.victory_condition_dropdown, self.victory_condition_entry = add_with_value('Victory Conditions', self.victory_condition, list(o.display_name for o in GOT.VictoryCondition.ALL()), self.victory_condition_value)
 		self.resources_dropdown, self.resources_entry = add_with_value('Resource Type', self.resources, list(o.display_name for o in GOT.Resources.ALL()), self.resources_value)
+		def value_entry_states(*_: Any) -> None:
+			self.update_value_entry_states()
+		self.victory_condition.trace_add('write', value_entry_states)
+		self.resources.trace_add('write', value_entry_states)
 		self.unit_stats_dropdown = add_without_value('Unit Stats', self.unit_stats, list(o.display_name for o in GOT.UnitStats.ALL()))
 		self.fog_of_war_dropdown = add_without_value('Fog of War', self.fog_of_war, list(o.display_name for o in GOT.FogOfWar.ALL()))
 		self.starting_units_dropdown = add_without_value('Starting Units', self.starting_units, list(o.display_name for o in GOT.StartingUnits.ALL()))
@@ -228,7 +232,7 @@ class PyGOT(UI.MainWindow):
 		return self.saveas()
 
 	def is_file_open(self) -> bool:
-		return not not self.got
+		return self.got is not None
 
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
@@ -255,11 +259,13 @@ class PyGOT(UI.MainWindow):
 		)
 		for field in fields:
 			field['state'] = UI.NORMAL if self.is_file_open() else UI.DISABLED
-		if self.got:
-			victory = GOT.VictoryCondition(self.victory_condition.get())
-			self.victory_condition_entry['state'] = UI.NORMAL if victory.requires_value else UI.DISABLED
-			resources = GOT.Resources(self.resources.get())
-			self.resources_entry['state'] = UI.NORMAL if resources.requires_value else UI.DISABLED
+		self.update_value_entry_states()
+
+	def update_value_entry_states(self) -> None:
+		victory = GOT.VictoryCondition(self.victory_condition.get())
+		self.victory_condition_entry['state'] = UI.NORMAL if self.is_file_open() and victory.requires_value else UI.DISABLED
+		resources = GOT.Resources(self.resources.get())
+		self.resources_entry['state'] = UI.NORMAL if self.is_file_open() and resources.requires_value else UI.DISABLED
 
 	def reset(self) -> None:
 		self.name.check = False
@@ -310,8 +316,8 @@ class PyGOT(UI.MainWindow):
 		self.file = None
 		self.status.set('Editing new Game Template.')
 		self.update_title()
-		self.mark_edited(False)
 		self.reset()
+		self.mark_edited(False)
 		self.action_states()
 
 	def team_mode_to_dropdown_index(self, team_mode: GOT.TeamMode) -> int:
@@ -405,7 +411,7 @@ class PyGOT(UI.MainWindow):
 			ErrorDialog(self, e)
 			return
 		self.got = got
-		self.file = file
+		self.file = None
 		self.update_title()
 		self.load_values()
 		self.status.set('Import Successful!')
@@ -418,6 +424,10 @@ class PyGOT(UI.MainWindow):
 	def saveas(self, file_path: str | None = None) -> CheckSaved:
 		if not self.got:
 			return CheckSaved.saved
+		for field_name,value in (('Name', self.name.get()), ('Variation name', self.subtype_name.get())):
+			if len(value.encode('utf-8')) > 32:
+				ErrorDialog(self, PyMSError('Save', f"{field_name} '{value}' is too long (must be at most 32 bytes when encoded as UTF-8)"))
+				return CheckSaved.cancelled
 		if not file_path:
 			file_path = self.config_.last_path.got.select_save(self)
 			if not file_path:
@@ -443,6 +453,7 @@ class PyGOT(UI.MainWindow):
 		if not file:
 			return
 		try:
+			self.save_values()
 			self.got.decompile(file)
 			self.status.set('Export Successful!')
 		except PyMSError as e:
@@ -460,20 +471,20 @@ class PyGOT(UI.MainWindow):
 		self.action_states()
 
 	def trg(self, trg_format: TRG.Format) -> None:
-		file = self.config_.last_path.trg.select_open(self)
-		if not file:
+		input_path = self.config_.last_path.trg.select_open(self)
+		if not input_path:
 			return
 		trg = TRG.TRG()
 		try:
-			trg.load(file)
+			trg.load(input_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		file = self.config_.last_path.trg.select_save(self)
-		if not file:
+		output_path = self.config_.last_path.trg.select_save(self)
+		if not output_path:
 			return
 		try:
-			trg.save(file, trg_format)
+			trg.save(output_path, trg_format)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
