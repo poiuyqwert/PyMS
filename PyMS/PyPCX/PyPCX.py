@@ -40,6 +40,7 @@ class PyPCX(UI.MainWindow):
 		self.pcx: PCX | None = None
 		self.file: str | None = None
 		self.image: UI.AnyPhotoImage | None = None
+		self.canvas_image: UI.Canvas.Item | None = None
 		self.edited = False
 
 		self.update_title()
@@ -98,19 +99,27 @@ class PyPCX(UI.MainWindow):
 		UpdateDialog.check_update(self, 'PyPCX')
 
 	def is_file_open(self) -> bool:
-		return not not self.pcx
+		return self.pcx is not None
 
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
 		self.editstatus['state'] = UI.NORMAL if self.edited else UI.DISABLED
 
+	def mark_edited(self, edited: bool = True) -> None:
+		self.edited = edited
+		self.action_states()
+
 	def preview(self) -> None:
 		if not self.pcx:
 			return
 		self.canvas.config(width=self.pcx.width,height=self.pcx.height)
-		self.canvas.pack(side=UI.TOP)
+		if not self.canvas.winfo_manager():
+			self.canvas.pack(side=UI.TOP)
 		self.image = frame_to_photo(self.pcx.palette, self.pcx)
-		self.canvas.create_image(0, 0, image=self.image, anchor=UI.NW)
+		if self.canvas_image is not None:
+			self.canvas_image.config(image=self.image)
+		else:
+			self.canvas_image = self.canvas.create_image(0, 0, image=self.image, anchor=UI.NW)
 		self.action_states()
 
 	def check_saved(self) -> CheckSaved:
@@ -153,7 +162,7 @@ class PyPCX(UI.MainWindow):
 		self.pcx = pcx
 		self.file = file
 		self.update_title()
-		self.edited = False
+		self.mark_edited(False)
 		self.status.set('Load Successful!')
 		self.preview()
 
@@ -174,11 +183,10 @@ class PyPCX(UI.MainWindow):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled
-		self.edited = False
-		self.status.set('Save Successful!')
-		self.action_states()
 		self.file = file_path
 		self.update_title()
+		self.mark_edited(False)
+		self.status.set('Save Successful!')
 		return CheckSaved.saved
 
 	def loadpal(self) -> None:
@@ -194,7 +202,7 @@ class PyPCX(UI.MainWindow):
 			ErrorDialog(self, e)
 			return
 		self.pcx.palette = list(pal.palette)
-		self.edited = True
+		self.mark_edited()
 		self.preview()
 
 	def savepal(self, file_type: Palette.FileType = Palette.FileType.sc_pal) -> None:
@@ -240,10 +248,10 @@ class PyPCX(UI.MainWindow):
 			return
 		if not self.pcx:
 			self.pcx = PCX()
-			self.file = 'Unnamed.pcx'
+			self.file = None
 			self.update_title()
 		self.pcx.load_pixels(b.image,b.palette)
-		self.edited = False
+		self.mark_edited()
 		self.preview()
 		self.status.set('Image imported successfully!')
 
@@ -255,6 +263,7 @@ class PyPCX(UI.MainWindow):
 		self.update_title()
 		self.status.set('Load a PCX or import a BMP.')
 		self.canvas.delete(UI.ALL)
+		self.canvas_image = None
 		self.canvas.forget()
 		self.image = None
 		self.action_states()
@@ -267,7 +276,6 @@ class PyPCX(UI.MainWindow):
 
 	def sets(self) -> None:
 		SettingsDialog(self, self.config_)
-		# SettingsDialog(self, [('Theme',)], (550,380), err, settings=self.settings)
 
 	def help(self) -> None:
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyPCX.md')

@@ -139,7 +139,7 @@ class Canvas(_Tk.Canvas, MiscExtensions):
 		return [Canvas.Item(self, item_id) for item_id in _Tk.Canvas.find_above(self, item_id_or_tag)]
 
 	def find_all(self) -> list[Canvas.Item]: # type: ignore[override]
-		return [Canvas.Item(self, item_id) for item_id in _Tk.Canvas.find(self)]
+		return [Canvas.Item(self, item_id) for item_id in _Tk.Canvas.find_all(self)]
 
 	def find_below(self, item_id_or_tag: int | str) -> list[Canvas.Item]: # type: ignore[override]
 		return [Canvas.Item(self, item_id) for item_id in _Tk.Canvas.find_below(self,item_id_or_tag)]
