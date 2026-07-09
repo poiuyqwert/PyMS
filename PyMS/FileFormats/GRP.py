@@ -366,8 +366,18 @@ class GRP:
 		self.transindex = transindex
 
 	def add_frame(self, frame: Pixels, validate: bool = True) -> None:
-		if validate and self.images:
-			frame_index = len(self.images)
+		frame_index = len(self.images)
+		if not self.images:
+			height = len(frame)
+			width = len(frame[0]) if frame else 0
+			if validate:
+				for (y, line) in enumerate(frame):
+					line_width = len(line)
+					if line_width != width:
+						raise PyMSError('GRP', f'Adding frame {frame_index} line {y} has unexpected width (got {line_width}, expected {width})')
+			self.height = height
+			self.width = width
+		elif validate:
 			frame_height = len(frame)
 			if frame_height != self.height:
 				raise PyMSError('GRP', f'Adding frame {frame_index} has unexpected height (got {frame_height}, expected {self.height})')

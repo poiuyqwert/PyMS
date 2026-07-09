@@ -50,27 +50,34 @@ class CompileGRP(BaseCompileStep):
 		return Bucket.make_intermediates
 
 	def execute(self) -> list[BaseCompileStep] | None:
-		self.log(f'Determining GRP frames for `{self.source_file.display_name()}`...')
+		self.log(f'Determining GRP input files for `{self.source_file.display_name()}`...')
 		frame_paths = self.source_file.frame_paths()
 		if not frame_paths:
-			raise CompileError(f'No frames found for `{self.source_file.display_name()}')
-		self.log(f'  {len(frame_paths)} frames found.')
+			raise CompileError(f'No input files found for `{self.source_file.display_name()}')
+		self.log(f'  {len(frame_paths)} input files found.')
 		inputs = list(frame_paths)
 
-		self.log(f'Checking for `config.json` for `{self.source_file.display_name()}`...')
 		config: CompileGRP.Config = CompileGRP.Config.default()
 		if loaded_config := self.load_config(CompileGRP.Config, self.source_file):
 			config = loaded_config
 
 		if config.frames_mode in (FramesMode.single_vertical, FramesMode.single_framesets) and len(frame_paths) > 1:
-			raise CompileError(f'Too many frames for `{config.frames_mode.value}` frame mode')
+			raise CompileError(f'Too many input files for `{config.frames_mode.value}` frame mode (must be 1, got {len(frame_paths)})')
 
 		destination_path = self.compile_thread.project.source_path_to_intermediates_path(self.source_file.path, self.source_file.name)
 		if not self.compile_thread.meta.check_requires_update(inputs, [destination_path]):
 			self.log(f'No changes required for `{self.source_file.display_name()}`.')
 			return None
 
-		self.log(f'Compiling `{self.source_file.display_name()}`...')
+		frame_count = 0
+		if config.frames_mode == FramesMode.separate_bmps:
+			frame_count = len(frame_paths)
+		else:
+			if config.frame_count is None or config.frame_count < 1:
+				raise CompileError(f'Frame mode `{config.frames_mode}` requires `frame_count` to be set in `config.json`')
+			frame_count = config.frame_count
+
+		self.log(f'Compiling `{self.source_file.display_name()}` ({frame_count} frames)...')
 		from ...FileFormats.BMP import BMP
 		from ...FileFormats.GRP import GRP
 		grp = GRP()
@@ -86,14 +93,12 @@ class CompileGRP(BaseCompileStep):
 					size = (bmp.width, bmp.height)
 				grp.add_frame(bmp.image)
 		else:
-			if not config.frame_count:
-				raise CompileError(f'Frame mode `{config.frames_mode}` requires `frame_count` to be set in `config.json`')
 			frame_path = frame_paths[0]
 			try:
 				bmp.load(frame_path)
 			except Exception as e:
 				raise CompileError(f"Couldn't load '{frame_path}'", internal_exception=e) from e
-			grp.add_frames(bmp.image, config.frame_count, config.frames_mode == FramesMode.single_vertical)
+			grp.add_frames(bmp.image, frame_count, config.frames_mode == FramesMode.single_vertical)
 		try:
 			grp.save(destination_path, uncompressed=config.uncompressed)
 		except Exception as e:

@@ -57,7 +57,7 @@ class BaseCompileStep:
 	def load_config(self, config_type: Type[C], source_item: Source.Item, optional: bool = False, log: bool = True) -> C | None:
 		config_path = source_item.config_path()
 		if log:
-			self.log(f'Checking for `config.json` for `{source_item.name}`...')
+			self.log(f'Checking `config.json` for `{source_item.name}`...')
 		if not os.path.isfile(config_path):
 			if log:
 				self.log('  No `config.json` found, using default settings')
