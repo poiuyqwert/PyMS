@@ -27,7 +27,7 @@ class TabID:
 	logs = 'logs'
 
 class PyMOD(UI.MainWindow):
-	def __init__(self) -> None:
+	def __init__(self, open_path: str | None = None) -> None:
 		self.config_ = PyMODConfig()
 
 		#Window
@@ -42,20 +42,19 @@ class PyMOD(UI.MainWindow):
 
 		self.project: Project | None = None
 		self.compile_thread: CompileThread | None = None
-		self.edited = False
 
-		self.mpqhandler = MPQHandler(self.config_.mpqs)
+		self.mpqhandler = MPQHandler(self.config_.settings.mpqs)
 
 		self.update_title()
 
 		#Toolbar
 		self.toolbar = UI.Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n, tags='not_compiling')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, tags='not_compiling')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags=('file_open', 'not_compiling'))
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.manage_settings, "Manage Settings", UI.Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.manage_settings, "Manage Settings", UI.Ctrl.m, tags='not_compiling')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyMOD')
@@ -98,11 +97,15 @@ class PyMOD(UI.MainWindow):
 		self.status.set('Open or create a Mod Project.')
 		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, width=35)
-		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
 		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
+		self.update_states()
+
 		self.config_.windows.main.load_size(self)
+
+		if open_path:
+			self.open(open_path)
 
 	def initialize(self) -> None:
 		UpdateDialog.check_update(self, 'PyMOD')
@@ -113,14 +116,11 @@ class PyMOD(UI.MainWindow):
 		else:
 			self.title(f'PyMOD {LONG_VERSION} ({self.project.path})')
 
-	def mark_edited(self, edited: bool = True) -> None:
-		self.edited = edited
-		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
-
 	def update_states(self) -> None:
 		is_project_open = not not self.project
 		is_compiling = not not self.compile_thread
 		self.toolbar.tag_enabled('file_open', is_project_open)
+		self.toolbar.tag_enabled('not_compiling', not is_compiling)
 		self.refresh_button['state'] = UI.NORMAL if is_project_open and not is_compiling else UI.DISABLED
 		self.extract_button['state'] = UI.NORMAL if is_project_open and not is_compiling else UI.DISABLED
 		self.compile_button['state'] = UI.NORMAL if is_project_open and not is_compiling else UI.DISABLED
@@ -147,26 +147,43 @@ class PyMOD(UI.MainWindow):
 		if os.path.exists(project_path):
 			ErrorDialog(self, PyMSError('New', f"Couldn't create project, `{project_path}` already exists"))
 			return
+		project = Project(project_path)
 		try:
-			os.mkdir(project_path)
-		except Exception as e:
-			ErrorDialog(self, PyMSError('New', f"Couldn't create folder `{project_path}`", cause=e))
+			project.new()
+		except PyMSError as e:
+			ErrorDialog(self, e)
 			return
-		self.open(project_path)
+		self.open_project(project)
 
 	def open(self, project_path: str | None = None) -> None:
 		if not project_path:
 			project_path = self.config_.last_path.project.select_open(self)
 		if not project_path:
 			return
+		project = Project(project_path)
+		try:
+			project.load()
+		except PyMSError:
+			if not UI.MessageBox.askyesno(parent=self, title='Initialize Project?', message=f'`{project_path}` is not a PyMOD project. Initialize it as one?'):
+				return
+			try:
+				project.new()
+			except PyMSError as e:
+				ErrorDialog(self, e)
+				return
+		self.open_project(project)
+
+	def open_project(self, project: Project) -> None:
 		self.close()
-		self.project = Project(project_path)
+		self.project = project
+		self.status.set(f'Project `{os.path.basename(project.path)}` opened.')
 		self.update_title()
 		self.refresh_files()
 		self.update_states()
 
 	def close(self) -> None:
 		self.project = None
+		self.status.set('Open or create a Mod Project.')
 		self.update_title()
 		self.refresh_files()
 		self.update_states()
@@ -186,6 +203,7 @@ class PyMOD(UI.MainWindow):
 		self.logs_textview.delete('1.0', UI.END)
 		self.compile_thread = CompileThread(self.project)
 		self.compile_thread.start()
+		self.status.set('Compiling...')
 		self.update_states()
 		self.watch_compile()
 
@@ -200,10 +218,12 @@ class PyMOD(UI.MainWindow):
 			return
 		try:
 			shutil.rmtree(self.project.intermediates_path)
-		except Exception:
-			self.logs_textview.insert(UI.END, "\n  Couldn't clean intermediaters folder", 'error')
+		except Exception as e:
+			self.logs_textview.insert(UI.END, f"\n  Couldn't clean intermediates folder: {e}", 'error')
+			self.status.set('Clean failed.')
 			return
 		self.logs_textview.insert(UI.END, '\n  Clean complete!', 'success')
+		self.status.set('Clean complete.')
 
 	def cancel(self) -> None:
 		if not self.compile_thread:
@@ -213,6 +233,9 @@ class PyMOD(UI.MainWindow):
 	def watch_compile(self) -> None:
 		if self.compile_thread is None:
 			return
+		# Capture liveness before draining, so a thread that logs its final messages and exits
+		# mid-drain gets one more pass before being considered finished
+		was_alive = self.compile_thread.is_alive()
 		while True:
 			try:
 				message = self.compile_thread.output_queue.get(False)
@@ -222,15 +245,15 @@ class PyMOD(UI.MainWindow):
 				self.logs_textview.insert(UI.END, message.text + '\n', message.tag)
 				self.logs_textview.textview.see(UI.END)
 			self.compile_thread.output_queue.task_done()
-		if not self.compile_thread.is_alive():
+		if not was_alive:
 			self.compile_thread = None
+			self.status.set('Compile finished.')
 			self.update_states()
-		if not self.compile_thread:
 			return
 		self.after(200, self.watch_compile)
 
 	def manage_settings(self) -> None:
-		SettingsDialog(self, self.config_)
+		SettingsDialog(self, self.config_, self.mpqhandler)
 
 	def help(self) -> None:
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyMOD.md')
@@ -239,6 +262,11 @@ class PyMOD(UI.MainWindow):
 		AboutDialog(self, 'PyMOD', LONG_VERSION)
 
 	def exit(self) -> None:
+		if self.compile_thread is not None and self.compile_thread.is_alive():
+			if not UI.MessageBox.askyesno(parent=self, title='Compile in Progress', message='A compile is in progress. Cancel the compile and exit?'):
+				return
+			self.compile_thread.input_queue.put(CompileThread.InputMessage.Abort())
+			self.compile_thread.join()
 		self.config_.windows.main.save_size(self)
 		self.config_.save()
 		self.destroy()

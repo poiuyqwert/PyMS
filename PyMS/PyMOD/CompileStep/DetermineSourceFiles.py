@@ -14,22 +14,25 @@ class DetermineSourceFiles(BaseCompileStep):
 	def bucket(self) -> Bucket:
 		return Bucket.setup
 
-	def handle_source_item(self, source_item: Source.Item) -> list[BaseCompileStep]:
+	def handle_source_item(self, source_item: Source.Item, inside_mpq: bool = False) -> list[BaseCompileStep]:
 		steps: list[BaseCompileStep] = []
 		if isinstance(source_item, Source.Folder):
-			steps.extend(self.handle_source_folder(source_item))
+			steps.extend(self.handle_source_folder(source_item, inside_mpq))
 		elif isinstance(source_item, Source.File):
 			steps.extend(self.handle_source_file(source_item))
 		return steps
 
-	def handle_source_folder(self, source_folder: Source.Folder) -> list[BaseCompileStep]:
+	def handle_source_folder(self, source_folder: Source.Folder, inside_mpq: bool = False) -> list[BaseCompileStep]:
+		is_mpq = isinstance(source_folder, Source.MPQ)
 		steps: list[BaseCompileStep] = [
-			CreateDirectory(self.compile_thread, self.compile_thread.project.source_path_to_intermediates_path(source_folder.path))
+			CreateDirectory(self.compile_thread, self.compile_thread.project.source_path_to_intermediates_path(source_folder.path), Bucket.make_intermediates)
 		]
 		for source_item in source_folder.children:
-			steps.extend(self.handle_source_item(source_item))
+			steps.extend(self.handle_source_item(source_item, inside_mpq or is_mpq))
+		# Children are handled before this folder's own package step is appended, so a nested MPQ is
+		# always packaged before the MPQ containing it embeds it
 		if isinstance(source_folder, Source.MPQ):
-			steps.append(PackageMPQ(self.compile_thread, source_folder))
+			steps.append(PackageMPQ(self.compile_thread, source_folder, embedded=inside_mpq))
 		return steps
 
 	def handle_source_file(self, source_file: Source.File) -> list[BaseCompileStep]:

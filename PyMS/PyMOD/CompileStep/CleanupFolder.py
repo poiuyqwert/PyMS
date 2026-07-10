@@ -35,7 +35,7 @@ class CleanupFolder(BaseCompileStep):
 					raise CompileError("Couldn't cleanup contents") from exc
 				else:
 					had_error = True
-					return None
+					continue
 		if had_error:
 			self.log('  Cleanup done, but not fully complete.', tag='warning')
 		else:

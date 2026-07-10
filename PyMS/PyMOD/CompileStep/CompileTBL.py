@@ -18,7 +18,7 @@ class CompileTBL(BaseCompileStep):
 
 	def execute(self) -> list[BaseCompileStep] | None:
 		from ...FileFormats.TBL import TBL
-		source_path = _os.path.join(self.source_file.path, self.source_file.name.replace('.tbl', '.txt'))
+		source_path = _os.path.join(self.source_file.path, _os.path.splitext(self.source_file.name)[0] + '.txt')
 		destination_path = self.compile_thread.project.source_path_to_intermediates_path(self.source_file.path, self.source_file.name)
 		if not self.compile_thread.meta.check_requires_update([source_path], [destination_path]):
 			self.log(f'No changes required for `{self.source_file.display_name()}`.')
@@ -36,4 +36,6 @@ class CompileTBL(BaseCompileStep):
 		except Exception as e:
 			raise CompileError("Couldn't save TBL", internal_exception=e) from e
 		self.log('  TBL compiled!')
+		self.compile_thread.meta.update_input_metas([source_path])
+		self.compile_thread.meta.update_output_metas([destination_path])
 		return None

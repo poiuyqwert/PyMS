@@ -6,6 +6,8 @@ from .. import Source
 
 from ...Utilities import JSON
 
+import os as _os
+
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -60,6 +62,9 @@ class CompileGRP(BaseCompileStep):
 		config: CompileGRP.Config = CompileGRP.Config.default()
 		if loaded_config := self.load_config(CompileGRP.Config, self.source_file):
 			config = loaded_config
+		config_path = self.source_file.config_path()
+		if _os.path.isfile(config_path):
+			inputs.append(config_path)
 
 		if config.frames_mode in (FramesMode.single_vertical, FramesMode.single_framesets) and len(frame_paths) > 1:
 			raise CompileError(f'Too many input files for `{config.frames_mode.value}` frame mode (must be 1, got {len(frame_paths)})')

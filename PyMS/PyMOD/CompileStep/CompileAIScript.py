@@ -37,7 +37,7 @@ class CompileAIScript(BaseCompileStep):
 				tbl = TBL()
 				tbl.load(stattxt_tbl_path)
 				stattxt_tbl = tbl
-				self.log('  stat_txt.tbl loadad!')
+				self.log('  stat_txt.tbl loaded!')
 			except Exception:
 				self.log("  Couldn't load stat_txt.tbl, continuing without it.", tag='warning')
 		else:
@@ -50,7 +50,7 @@ class CompileAIScript(BaseCompileStep):
 				tbl = TBL()
 				tbl.load(unitnames_tbl_path)
 				unitnames_tbl = tbl
-				self.log('  unitnames.tbl loadad!')
+				self.log('  unitnames.tbl loaded!')
 			except Exception:
 				self.log("  Couldn't load unitnames.tbl, continuing without it.", tag='warning')
 		else:
@@ -63,7 +63,7 @@ class CompileAIScript(BaseCompileStep):
 				_units_dat = UnitsDAT()
 				_units_dat.load(units_dat_path)
 				units_dat = _units_dat
-				self.log('  units.dat loadad!')
+				self.log('  units.dat loaded!')
 			except Exception:
 				self.log("  Couldn't load units.dat, continuing without it.", tag='warning')
 		else:
@@ -76,7 +76,7 @@ class CompileAIScript(BaseCompileStep):
 				_upgrades_dat = UpgradesDAT()
 				_upgrades_dat.load(upgrades_dat_path)
 				upgrades_dat = _upgrades_dat
-				self.log('  upgrades.dat loadad!')
+				self.log('  upgrades.dat loaded!')
 			except Exception:
 				self.log("  Couldn't load upgrades.dat, continuing without it.", tag='warning')
 		else:
@@ -89,7 +89,7 @@ class CompileAIScript(BaseCompileStep):
 				_techdata_dat = TechDAT()
 				_techdata_dat.load(techdata_dat_path)
 				techdata_dat = _techdata_dat
-				self.log('  techdata.dat loadad!')
+				self.log('  techdata.dat loaded!')
 			except Exception:
 				self.log("  Couldn't load techdata.dat, continuing without it.", tag='warning')
 		else:
@@ -110,8 +110,12 @@ class CompileAIScript(BaseCompileStep):
 
 		aiscript_path = self.compile_thread.project.source_path_to_intermediates_path(self.source_file.path, 'aiscript.bin')
 		bwscript_path = self.compile_thread.project.source_path_to_intermediates_path(self.source_file.path, 'bwscript.bin')
-		# TODO: What if bwscript.bin is not needed?
-		if not self.compile_thread.meta.check_requires_update(script_paths + extdef_paths, [aiscript_path, bwscript_path]):
+		# `bwscript.bin` is only an output when the scripts require it, so only include it in the
+		# incremental check when the previous compile produced it
+		output_paths = [aiscript_path]
+		if self.compile_thread.meta.has_output(bwscript_path):
+			output_paths.append(bwscript_path)
+		if not self.compile_thread.meta.check_requires_update(script_paths + extdef_paths, output_paths):
 			self.log(f'No changes required for `{self.source_file.display_name()}`.')
 			return None
 		# TODO: Base files to build on top of?
@@ -155,25 +159,31 @@ class CompileAIScript(BaseCompileStep):
 			new_ai_size, new_bw_size = aibin.can_add_scripts(scripts)
 			if new_ai_size is not None:
 				ai_size, _ = aibin.calculate_sizes()
-				raise CompileError(f"There is not enough room in your aiscript.bin to add `{script_path}`. The current file is {ai_size}B out of the max 65535B, these changes would make the file {new_ai_size}B.")
+				raise CompileError(f"There is not enough room in your aiscript.bin to add `{script_path}`. The current file is {ai_size}B out of the max {aibin.max_size()}B, these changes would make the file {new_ai_size}B.")
 			if new_bw_size is not None:
 				_, bw_size = aibin.calculate_sizes()
-				raise CompileError(f"There is not enough room in your bwscript.bin to add `{script_path}`. The current file is {bw_size}B out of the max 65535B, these changes would make the file {new_bw_size}B.")
+				raise CompileError(f"There is not enough room in your bwscript.bin to add `{script_path}`. The current file is {bw_size}B out of the max {aibin.max_size()}B, these changes would make the file {new_bw_size}B.")
 			if parse_context.warnings:
 				self.warnings(parse_context.warnings)
 			aibin.add_scripts(scripts)
 			self.log('  Script parsed!')
 
+		# Only write `bwscript.bin` when the scripts require it — a stub `bwscript.bin` packaged
+		# into the MPQ would shadow the game's real one and wipe out all vanilla Brood War AI
+		has_bwscripts = aibin.has_bwscripts()
 		filenames = 'aiscript.bin'
-		if aibin.has_bwscripts():
+		if has_bwscripts:
 			filenames += ' and bwscript.bin'
 		self.log(f'Compiling {filenames}...')
 		try:
-			aibin.save(aiscript_path, bwscript_path)
+			aibin.save(aiscript_path, bwscript_path if has_bwscripts else None)
 		except Exception as e:
 			raise CompileError(f"Couldn't compile {filenames}", internal_exception=e) from e
 
 		self.log(f'  {filenames} compiled!')
 		self.compile_thread.meta.update_input_metas(script_paths + extdef_paths)
-		self.compile_thread.meta.update_output_metas([aiscript_path, bwscript_path])
+		output_paths = [aiscript_path]
+		if has_bwscripts:
+			output_paths.append(bwscript_path)
+		self.compile_thread.meta.update_output_metas(output_paths)
 		return None

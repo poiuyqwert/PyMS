@@ -10,7 +10,7 @@ class CleanupIntermediates(BaseCompileStep):
 	def execute(self) -> list[BaseCompileStep] | None:
 		self.log('Cleaning up intermediate files...')
 		if not _os.path.isdir(self.compile_thread.project.intermediates_path):
-			self.log("  Folder doesn't exit, no cleanup required")
+			self.log("  Folder doesn't exist, no cleanup required")
 			return None
 		for folder_path, _, file_names in _os.walk(self.compile_thread.project.intermediates_path):
 			for file_name in file_names:

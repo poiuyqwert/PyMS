@@ -33,7 +33,7 @@ class CompileThread(_Thread):
 		self.project = project
 		self.input_queue: _Queue[CompileThread.InputMessage._Base] = _Queue()
 		self.output_queue: _Queue[CompileThread.OutputMessage._Base] = _Queue()
-		self.meta = MetaHandler(project.meta_path)
+		self.meta = MetaHandler(project.meta_path, project.path)
 
 	def log(self, message: str, tag: str | None = None) -> None:
 		self.output_queue.put(CompileThread.OutputMessage.Log(message, tag=tag))
@@ -53,15 +53,24 @@ class CompileThread(_Thread):
 			self.log('Compile aborted.')
 		return abort
 
+	def save_partial_meta(self) -> None:
+		# Preserve the hash bookkeeping from steps that completed before the abort/error, but only
+		# once the on-disk meta has been loaded (otherwise saving would discard prior build info).
+		# Entries are not pruned since not every step got a chance to mark its files as used.
+		if not self.meta.ready:
+			return
+		self.log('\n')
+		CompileStep.SaveMeta(self, prune=False).execute()
+
 	def run(self) -> None:
 		started = _datetime.now()
 		self.log(f"Compile started at {started.strftime('%H:%M:%S')}...")
 
 		buckets: dict[CompileStep.Bucket, list[CompileStep.BaseCompileStep]] = {
 			CompileStep.Bucket.setup: [
-				CompileStep.CreateDirectory(self, self.project.build_path),
+				CompileStep.CreateDirectory(self, self.project.build_path, CompileStep.Bucket.setup),
 				CompileStep.CleanupFolder(self, self.project.artifacts_path),
-				CompileStep.CreateDirectory(self, self.project.artifacts_path),
+				CompileStep.CreateDirectory(self, self.project.artifacts_path, CompileStep.Bucket.setup),
 				CompileStep.LoadMeta(self),
 				CompileStep.DetermineSourceFiles(self),
 			],
@@ -78,6 +87,7 @@ class CompileThread(_Thread):
 			steps = buckets[bucket]
 			for step in steps:
 				if self.check_abort():
+					self.save_partial_meta()
 					return
 				try:
 					self.log('\n')
@@ -85,15 +95,17 @@ class CompileThread(_Thread):
 					if new_steps:
 						for new_step in new_steps:
 							if new_step.bucket() < bucket:
-								raise CompileStep.CompileError(f'Attempting to add new compile step to bucket `{new_step.bucket}` when in bucket `{bucket}')
+								raise CompileStep.CompileError(f'Attempting to add new compile step to bucket `{new_step.bucket()}` when in bucket `{bucket}`')
 							buckets[new_step.bucket()].append(new_step)
 				except CompileStep.CompileError as e:
 					self.log('ERROR: ' + str(e), tag='error')
 					if e.internal_exception:
 						self.log('INTERNAL ERROR:\n' + '\n'.join(_traceback.format_exception(e.internal_exception)), tag='error')
+					self.save_partial_meta()
 					return
 				except Exception:
 					self.log('ERROR:\n' + _traceback.format_exc(), tag='error')
+					self.save_partial_meta()
 					return
 
 		ended = _datetime.now()

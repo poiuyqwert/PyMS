@@ -5,6 +5,8 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import UIKit as UI
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
+from ..Utilities.PyMSError import PyMSError
+from ..Utilities.ErrorDialog import ErrorDialog
 
 import os, re
 
@@ -53,8 +55,9 @@ class ExtractDialog(PyMSDialog):
 		def get_files_list(mpqhandler: MPQHandler) -> list[str]:
 			files: list[str] = []
 			for file_entry in mpqhandler.list_files():
-				if not file_entry.file_name in files:
-					files.append(file_entry.file_name.decode('utf-8'))
+				file_name = file_entry.file_name.decode('utf-8')
+				if not file_name in files:
+					files.append(file_name)
 			for path,_,filenames in os.walk(Assets.mpq_dir):
 				for filename in filenames:
 					mpq_filename = Assets.mpq_file_path_to_file_name(os.path.join(path, filename))
@@ -63,8 +66,15 @@ class ExtractDialog(PyMSDialog):
 			files.sort()
 			return files
 		def update_files_list(files: list[str] | Exception | None) -> None:
-			# TODO: Exception or None cases?
 			if not isinstance(files, list):
+				error: PyMSError
+				if isinstance(files, PyMSError):
+					error = files
+				elif isinstance(files, Exception):
+					error = PyMSError('Extract', "Couldn't list MPQ files", cause=files)
+				else:
+					error = PyMSError('Extract', "Couldn't list MPQ files")
+				ErrorDialog(self, error)
 				return
 			self.files = files
 			self.updatelist()

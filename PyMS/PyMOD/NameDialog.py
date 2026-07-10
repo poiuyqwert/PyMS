@@ -34,11 +34,18 @@ class NameDialog(PyMSDialog):
 		self.window_geometry_config.load_size(self)
 
 	def ok(self, _event: UI.Event | None = None) -> None:
-		project_path = os.path.join(self.parent_path, self.name_var.get())
+		name = self.name_var.get().strip()
+		if not name:
+			ErrorDialog(self, PyMSError('New', 'Enter a name for the project'))
+			return
+		if os.sep in name or (os.altsep and os.altsep in name) or name in (os.curdir, os.pardir):
+			ErrorDialog(self, PyMSError('New', f'`{name}` is not a valid project name'))
+			return
+		project_path = os.path.join(self.parent_path, name)
 		if os.path.exists(project_path):
 			ErrorDialog(self, PyMSError('New', f"Couldn't create project, `{project_path}` already exists"))
 			return
-		self.name = self.name_var.get()
+		self.name = name
 		PyMSDialog.ok(self)
 
 	def dismiss(self) -> None:

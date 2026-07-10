@@ -4,7 +4,7 @@ from .File import File
 import re, os
 
 class AIScript(File):
-	RE_NAME = re.compile(r'^aiscript.bin$')
+	RE_NAME = re.compile(r'^aiscript\.bin$')
 
 	@classmethod
 	def matches(cls, folder_name: str) -> float:

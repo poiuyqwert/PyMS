@@ -8,12 +8,14 @@ if TYPE_CHECKING:
 	from ..CompileThread import CompileThread
 
 class CreateDirectory(BaseCompileStep):
-	def __init__(self, compile_thread: 'CompileThread', path: str) -> None:
+	# Directories are legitimately created in multiple phases, so the bucket is caller-provided
+	def __init__(self, compile_thread: 'CompileThread', path: str, bucket: Bucket) -> None:
 		BaseCompileStep.__init__(self, compile_thread)
 		self.path = path
+		self._bucket = bucket
 
 	def bucket(self) -> Bucket:
-		return Bucket.make_intermediates
+		return self._bucket
 
 	def execute(self) -> list[BaseCompileStep] | None:
 		self.log(f'Checking directory: {self.path}')
