@@ -8,19 +8,27 @@ The layout of the folder determines what gets built. Everything you want package
 
 ```
 MyMod/
+  .pymod_project.json
   MyMod.mpq/
+    config.json
     arr/
       units.dat
+	  units.dat.config.json
     rez/
       stat_txt.tbl/
         stat_txt.txt
     scripts/
       aiscript.bin/
-        my_scripts.txt
+		unitdef.txt 
+		Ter3.txt
+		PB1A.txt
     unit/terran/marine.grp/
-      frame000.bmp
-      frame001.bmp
+      frame 000.bmp
+      frame 001.bmp
       ...
+	unit/protoss/dragoon.grp/
+	  config.json
+	  frames.bmp
 ```
 
 ## Source types
