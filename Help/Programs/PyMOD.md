@@ -7,28 +7,32 @@ A project is just a folder containing your mod's sources, marked as a PyMOD proj
 The layout of the folder determines what gets built. Everything you want packaged into an MPQ goes inside a folder whose name ends with `.mpq`:
 
 ```
-MyMod/
-  .pymod_project.json
-  MyMod.mpq/
-    config.json
-    arr/
-      units.dat
-	  units.dat.config.json
-    rez/
-      stat_txt.tbl/
-        stat_txt.txt
-    scripts/
-      aiscript.bin/
-		unitdef.txt 
-		Ter3.txt
-		PB1A.txt
-    unit/terran/marine.grp/
-      frame 000.bmp
-      frame 001.bmp
-      ...
-	unit/protoss/dragoon.grp/
-	  config.json
-	  frames.bmp
+┬ MyMod/
+├── .pymod_project.json
+└─┬ MyMod.mpq/
+  ├── config.json
+  ├─┬ arr/
+  │ ├── units.dat
+  │ └── units.dat.config.json
+  ├─┬ rez/
+  │ └─┬ stat_txt.tbl/
+  │   └── stat_txt.txt
+  ├─┬ scripts/
+  │ └─┬ aiscript.bin/
+  │   ├── unitdef.txt
+  │   ├── Ter3.txt
+  │   ├── PB1A.txt
+  │   └── ...
+  └─┬ unit/
+    ├─┬ terran/
+    │ └─┬ marine.grp/
+    │   ├── frame 000.bmp
+    │   ├── frame 001.bmp
+    │   └── ...
+    └─┬ protoss/
+      └─┬ dragoon.grp/
+        ├── config.json
+        └── frames.bmp
 ```
 
 ## Source types
