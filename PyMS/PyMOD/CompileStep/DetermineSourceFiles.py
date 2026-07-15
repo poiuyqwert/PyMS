@@ -5,6 +5,7 @@ from .PackageMPQ import PackageMPQ
 from .CompileGRP import CompileGRP
 from .CompileAIScript import CompileAIScript
 from .CompileTBL import CompileTBL
+from .CompileDAT import CompileDAT
 from .CopyFile import CopyFile
 from .. import Source
 
@@ -43,6 +44,8 @@ class DetermineSourceFiles(BaseCompileStep):
 			steps.append(CompileAIScript(self.compile_thread, source_file))
 		elif isinstance(source_file, Source.TBL):
 			steps.append(CompileTBL(self.compile_thread, source_file))
+		elif isinstance(source_file, Source.DAT):
+			steps.append(CompileDAT(self.compile_thread, source_file))
 		else:
 			destination_path = _os.path.join(_os.path.split(self.compile_thread.project.source_path_to_intermediates_path(source_file.path))[0], source_file.name)
 			steps.append(CopyFile(self.compile_thread, source_file.path, destination_path))

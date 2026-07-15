@@ -6,6 +6,7 @@ from .MPQ import MPQ
 from .GRP import GRP
 from .AIScript import AIScript
 from .TBL import TBL
+from .DAT import DAT
 
 from typing import Type as _Type
 
@@ -14,4 +15,5 @@ ITEM_TYPES: list[_Type[Item]] = [
 	GRP,
 	AIScript,
 	TBL,
+	DAT,
 ]

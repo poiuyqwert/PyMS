@@ -19,6 +19,14 @@ class Test_source_detection(unittest.TestCase):
 		self.assertEqual(Source.TBL.matches('stat_txt.tbl'), 1)
 		self.assertEqual(Source.TBL.matches('.tbl'), 0)
 
+	def test_dat_requires_an_exact_file_name(self) -> None:
+		self.assertEqual(Source.DAT.matches('units.dat'), 1)
+		self.assertEqual(Source.DAT.matches('sfxdata.dat'), 1)
+		self.assertEqual(Source.DAT.matches('custom.dat'), 0)
+		self.assertEqual(Source.DAT.matches('UNITS.DAT'), 0)
+		self.assertEqual(Source.DAT.matches('units.dat.bak'), 0)
+		self.assertEqual(Source.DAT.matches('.dat'), 0)
+
 	def test_mpq_matches_the_extension(self) -> None:
 		self.assertEqual(Source.MPQ.matches('mod.mpq'), 1)
 		self.assertEqual(Source.MPQ.matches('mod.mpq.bak'), 0)
