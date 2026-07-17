@@ -49,7 +49,7 @@ Source types are detected by folder name:
 | `units.dat`, `weapons.dat`, etc. | [DAT file](#dat-files-unitsdat-weaponsdat-etc) | `.txt` entry files (and optionally a base `.dat`), compiled into the DAT file |
 | `*.grp` | [GRP graphic](#grp-graphics-grp) | `.bmp` frame files, compiled into a [.grp](/Help/Files/GRP.md) |
 | `*.tbl` | [TBL strings](#tbl-strings-tbl) | A `.txt` file of the same base name, compiled into a [.tbl](/Help/Files/TBL.md) |
-| `aiscript.bin` | [AI scripts](#ai-scripts-aiscriptbin) | `.txt` AI script sources (and `*def.txt` extdefs), compiled into `aiscript.bin` (and `bwscript.bin` when scripts require it) |
+| `aiscript.bin` | [AI scripts](#ai-scripts-aiscriptbin) | `.txt` AI script sources (and `*def.txt` extdefs, and optionally base `.bin` files), compiled into `aiscript.bin` (and `bwscript.bin` when scripts require it) |
 
 Anything else is handled as described in [Other folders and files](#other-folders-and-files).
 
@@ -100,7 +100,17 @@ The folder contains `.bmp` frame files, compiled into a [.grp](/Help/Files/GRP.m
 The folder contains a `.txt` file with the same base name as the folder (e.g. `stat_txt.tbl/stat_txt.txt`), compiled into a [.tbl](/Help/Files/TBL.md) of the folder's name. There is no configuration for TBL sources.
 
 ### AI scripts (`aiscript.bin`)
-The folder contains `.txt` AI script sources, along with optional `*def.txt` external definition files which are loaded first. All scripts are compiled together into `aiscript.bin` — and `bwscript.bin` when any script requires it (`bwscript.bin` is only produced in that case, so vanilla Brood War AI is not wiped out by a stub file). There is no configuration for AI script sources.
+The folder contains `.txt` AI script sources, along with optional `*def.txt` external definition files which are loaded first. All scripts are compiled together into `aiscript.bin` — and `bwscript.bin` when any script requires it (`bwscript.bin` is only produced in that case, so vanilla Brood War AI is not wiped out by a stub file).
+
+By default the compile starts from empty files containing only your scripts. To build on top of existing files instead, place a base `aiscript.bin` in the folder named the same as the folder itself (e.g. `aiscript.bin/aiscript.bin`), optionally with a base `bwscript.bin` beside it. Your scripts are added on top of the base scripts, replacing any base script with the same ID. A base `bwscript.bin` can only be used together with a base `aiscript.bin`, since it can't be interpreted without the `aiscript.bin` that references its scripts.
+
+The files can be expanded beyond the format's normal size limit with a `config.json` inside the folder:
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `expanded` | `false` | Compile expanded files, raising the maximum file size. Not required if the base files are already expanded |
+
+If the compiled files are expanded — whether through `expanded` or already-expanded base files — a warning is output to the compile log as a reminder that the game requires a plugin to use expanded AI script files.
 
 ### Other folders and files
 Any other folder is treated as a plain folder: it is recreated in the output and its contents are processed individually. Any other file is copied into the mod as-is (inside an MPQ its compression can be configured with a `<name>.config.json`, see [MPQ packages](#mpq-packages-mpq)). Files and folders starting with `.` are ignored, as are `config.json`/`*.config.json` configuration files.

@@ -18,6 +18,20 @@ class AIScript(File):
 	def output_files(self) -> list[str]:
 		return ['aiscript.bin', 'bwscript.bin']
 
+	# A file in the folder named the same as the folder (e.g. `aiscript.bin/aiscript.bin`), and a
+	# `bwscript.bin` beside it, are user-supplied base files for the scripts to be compiled on top of
+	def base_aiscript_path(self) -> str | None:
+		base_aiscript_path = os.path.join(self.path, 'aiscript.bin')
+		if os.path.isfile(base_aiscript_path):
+			return base_aiscript_path
+		return None
+
+	def base_bwscript_path(self) -> str | None:
+		base_bwscript_path = os.path.join(self.path, 'bwscript.bin')
+		if os.path.isfile(base_bwscript_path):
+			return base_bwscript_path
+		return None
+
 	def script_paths(self) -> list[str]:
 		script_paths: list[str] = []
 		for filename in os.listdir(self.path):
