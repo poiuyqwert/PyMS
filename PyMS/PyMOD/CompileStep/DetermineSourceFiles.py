@@ -7,6 +7,7 @@ from .CompileAIScript import CompileAIScript
 from .CompileTBL import CompileTBL
 from .CompileDAT import CompileDAT
 from .CopyFile import CopyFile
+from .CopyArtifact import CopyArtifact
 from .. import Source
 
 import os as _os
@@ -20,7 +21,7 @@ class DetermineSourceFiles(BaseCompileStep):
 		if isinstance(source_item, Source.Folder):
 			steps.extend(self.handle_source_folder(source_item, inside_mpq))
 		elif isinstance(source_item, Source.File):
-			steps.extend(self.handle_source_file(source_item))
+			steps.extend(self.handle_source_file(source_item, inside_mpq))
 		return steps
 
 	def handle_source_folder(self, source_folder: Source.Folder, inside_mpq: bool = False) -> list[BaseCompileStep]:
@@ -36,7 +37,7 @@ class DetermineSourceFiles(BaseCompileStep):
 			steps.append(PackageMPQ(self.compile_thread, source_folder, embedded=inside_mpq))
 		return steps
 
-	def handle_source_file(self, source_file: Source.File) -> list[BaseCompileStep]:
+	def handle_source_file(self, source_file: Source.File, inside_mpq: bool = False) -> list[BaseCompileStep]:
 		steps: list[BaseCompileStep] = []
 		if isinstance(source_file, Source.GRP):
 			steps.append(CompileGRP(self.compile_thread, source_file))
@@ -49,6 +50,12 @@ class DetermineSourceFiles(BaseCompileStep):
 		else:
 			destination_path = _os.path.join(_os.path.split(self.compile_thread.project.source_path_to_intermediates_path(source_file.path))[0], source_file.name)
 			steps.append(CopyFile(self.compile_thread, source_file.path, destination_path))
+		# Files inside an MPQ ship inside the packaged archive; everything else is a final deliverable
+		if not inside_mpq:
+			intermediates_folder = _os.path.dirname(self.compile_thread.project.source_path_to_intermediates_path(source_file.path))
+			artifacts_folder = _os.path.dirname(self.compile_thread.project.source_path_to_artifacts_path(source_file.path))
+			for file_name in source_file.output_files():
+				steps.append(CopyArtifact(self.compile_thread, _os.path.join(intermediates_folder, file_name), _os.path.join(artifacts_folder, file_name)))
 		return steps
 
 	def execute(self) -> list[BaseCompileStep] | None:
