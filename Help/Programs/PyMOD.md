@@ -50,6 +50,7 @@ Source types are detected by folder name:
 | `*.grp` | [GRP graphic](#grp-graphics-grp) | `.bmp` frame files, compiled into a [.grp](/Help/Files/GRP.md) |
 | `*.tbl` | [TBL strings](#tbl-strings-tbl) | A `.txt` file of the same base name, compiled into a [.tbl](/Help/Files/TBL.md) |
 | `aiscript.bin` | [AI scripts](#ai-scripts-aiscriptbin) | `.txt` AI script sources (and `*def.txt` extdefs, and optionally base `.bin` files), compiled into `aiscript.bin` (and `bwscript.bin` when scripts require it) |
+| `iscript.bin` | [Iscripts](#iscripts-iscriptbin) | `.txt` iscript sources (and optionally a base `.bin` file), compiled into `iscript.bin` |
 
 Anything else is handled as described in [Other folders and files](#other-folders-and-files).
 
@@ -111,6 +112,11 @@ The files can be expanded beyond the format's normal size limit with a `config.j
 | `expanded` | `false` | Compile expanded files, raising the maximum file size. Not required if the base files are already expanded |
 
 If the compiled files are expanded — whether through `expanded` or already-expanded base files — a warning is output to the compile log as a reminder that the game requires a plugin to use expanded AI script files.
+
+### Iscripts (`iscript.bin`)
+The folder contains `.txt` iscript sources in the text format exported by PyICE. All scripts are compiled together into [iscript.bin](/Help/Files/iscript.bin.md).
+
+By default the compile starts from an empty file containing only your scripts. To build on top of an existing file instead, place a base `iscript.bin` in the folder named the same as the folder itself (e.g. `iscript.bin/iscript.bin`). Your scripts are added on top of the base scripts, replacing any base script with the same ID. There is no configuration for iscript sources.
 
 ### Other folders and files
 Any other folder is treated as a plain folder: it is recreated in the output and its contents are processed individually. Any other file is copied into the mod as-is (inside an MPQ its compression can be configured with a `<name>.config.json`, see [MPQ packages](#mpq-packages-mpq)). Files and folders starting with `.` are ignored, as are `config.json`/`*.config.json` configuration files.

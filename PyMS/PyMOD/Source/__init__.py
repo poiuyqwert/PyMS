@@ -5,6 +5,7 @@ from .File import File
 from .MPQ import MPQ
 from .GRP import GRP
 from .AIScript import AIScript
+from .IScript import IScript
 from .TBL import TBL
 from .DAT import DAT
 
@@ -14,6 +15,7 @@ ITEM_TYPES: list[_Type[Item]] = [
 	MPQ,
 	GRP,
 	AIScript,
+	IScript,
 	TBL,
 	DAT,
 ]

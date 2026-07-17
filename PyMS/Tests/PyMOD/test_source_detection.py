@@ -10,6 +10,13 @@ class Test_source_detection(unittest.TestCase):
 		self.assertEqual(Source.AIScript.matches('aiscript_bin'), 0)
 		self.assertEqual(Source.AIScript.matches('aiscript.bin.bak'), 0)
 
+	def test_iscript_requires_an_exact_name(self) -> None:
+		self.assertEqual(Source.IScript.matches('iscript.bin'), 1)
+		self.assertEqual(Source.IScript.matches('iscriptxbin'), 0)
+		self.assertEqual(Source.IScript.matches('iscript_bin'), 0)
+		self.assertEqual(Source.IScript.matches('iscript.bin.bak'), 0)
+		self.assertEqual(Source.IScript.matches('aiscript.bin'), 0)
+
 	def test_grp_requires_a_named_grp_extension(self) -> None:
 		self.assertEqual(Source.GRP.matches('marine.grp'), 1)
 		self.assertEqual(Source.GRP.matches('.grp'), 0)

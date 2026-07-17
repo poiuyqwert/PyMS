@@ -4,6 +4,7 @@ from .CreateDirectory import CreateDirectory
 from .PackageMPQ import PackageMPQ
 from .CompileGRP import CompileGRP
 from .CompileAIScript import CompileAIScript
+from .CompileIScript import CompileIScript
 from .CompileTBL import CompileTBL
 from .CompileDAT import CompileDAT
 from .CopyFile import CopyFile
@@ -43,6 +44,8 @@ class DetermineSourceFiles(BaseCompileStep):
 			steps.append(CompileGRP(self.compile_thread, source_file))
 		elif isinstance(source_file, Source.AIScript):
 			steps.append(CompileAIScript(self.compile_thread, source_file))
+		elif isinstance(source_file, Source.IScript):
+			steps.append(CompileIScript(self.compile_thread, source_file))
 		elif isinstance(source_file, Source.TBL):
 			steps.append(CompileTBL(self.compile_thread, source_file))
 		elif isinstance(source_file, Source.DAT):
