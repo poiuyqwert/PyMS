@@ -18,6 +18,10 @@ class Project:
 		self.build_path = _os.path.join(path, '.build')
 		self.intermediates_path = _os.path.join(self.build_path, 'intermediates')
 		self.artifacts_path = _os.path.join(self.build_path, 'artifacts')
+		# Artifacts are staged here during a compile and only swapped into `artifacts_path` once the
+		# whole build succeeds, so a failed build never destroys the previous artifacts
+		self.staging_path = _os.path.join(self.build_path, 'staging')
+		self.previous_artifacts_path = _os.path.join(self.build_path, 'artifacts.old')
 		self.meta_path = _os.path.join(self.build_path, 'meta.json')
 		self.source_graph: Source.Item | None = None
 
@@ -62,14 +66,16 @@ class Project:
 	def source_path_to_intermediates_path(self, source_path: str, base_name: str | None = None) -> str:
 		return self._map_path(source_path, self.intermediates_path, base_name)
 
-	def source_path_to_artifacts_path(self, source_path: str, base_name: str | None = None) -> str:
-		return self._map_path(source_path, self.artifacts_path, base_name)
+	def source_path_to_staging_path(self, source_path: str, base_name: str | None = None) -> str:
+		return self._map_path(source_path, self.staging_path, base_name)
 
 	def update_source_graph(self) -> Source.Item | None:
 		root: Source.Item | None = None
 		parent_folders: dict[str, Source.Folder] = {}
 		for folder_path, folder_names, file_names in _os.walk(self.path, topdown=True):
-			folder_names[:] = list(folder_name for folder_name in folder_names if not folder_name.startswith('.'))
+			# Sorted so step order, packaged file order, and the files tree don't depend on the
+			# filesystem's enumeration order
+			folder_names[:] = sorted(folder_name for folder_name in folder_names if not folder_name.startswith('.'))
 			folder_name = _os.path.basename(folder_path)
 			detected_source_type: Type[Source.Item] = Source.Folder
 			detected_source_confidence: float = 0
@@ -86,7 +92,7 @@ class Project:
 				root = item
 			if isinstance(item, Source.Folder):
 				parent_folders[folder_path] = item
-				for file_name in file_names:
+				for file_name in sorted(file_names):
 					if file_name.startswith('.') or file_name == 'config.json' or file_name.endswith('.config.json'):
 						continue
 					file_path = _os.path.join(folder_path, file_name)

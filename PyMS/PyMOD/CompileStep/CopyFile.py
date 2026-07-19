@@ -26,6 +26,5 @@ class CopyFile(BaseCompileStep):
 		except Exception as exc:
 			raise CompileError("Couldn't copy file") from exc
 		self.log('  Copy completed!')
-		self.compile_thread.meta.update_input_metas([self.source_path])
-		self.compile_thread.meta.update_output_metas([self.destination_path])
+		self.compile_thread.meta.update_metas([self.source_path], [self.destination_path])
 		return None

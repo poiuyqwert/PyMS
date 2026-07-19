@@ -8,7 +8,7 @@ from ...Utilities import JSON
 
 import os, enum
 
-from typing import TYPE_CHECKING, TypeVar, Type
+from typing import TYPE_CHECKING, Protocol, TypeVar, Type
 if TYPE_CHECKING:
 	from ..CompileThread import CompileThread
 
@@ -31,7 +31,12 @@ class CompileError(Exception):
 		super().__init__(message)
 		self.internal_exception = internal_exception
 
+class DataContextFile(Protocol):
+	def load(self, path: str, /) -> None:
+		...
+
 C = TypeVar('C', bound=JSON.Decodable)
+F = TypeVar('F', bound=DataContextFile)
 class BaseCompileStep:
 	def __init__(self, compile_thread: 'CompileThread') -> None:
 		self.compile_thread = compile_thread
@@ -69,7 +74,26 @@ class BaseCompileStep:
 			return config
 		except Exception as e:
 			if optional:
-				if log:
-					self.log("  Error loading `config.json`, continuing without it")
+				# A broken config silently falling back to defaults is a debugging trap, so this
+				# warning is not gated by `log`
+				self.log(f"  Couldn't load `config.json` for `{source_item.name}`, continuing without it", tag='warning')
 				return None
 			raise CompileError("Couldn't load `config.json`", internal_exception=e) from e
+
+	# The data context files a script compiler uses for name resolution are all loaded from the
+	# intermediates of the MPQ containing the source, and are all optional in the same way
+	def load_data_context_file(self, file_type: Type[F], source_item: Source.Item, *mpq_path: str) -> F | None:
+		file_name = mpq_path[-1]
+		self.log(f'Attempting to load {file_name} for data context...')
+		file_path = self.compile_thread.project.intermediates_relative_mpq_path(source_item.path, *mpq_path)
+		if not file_path or not os.path.isfile(file_path):
+			self.log(f'  {file_name} not found, continuing without it.')
+			return None
+		data_file = file_type()
+		try:
+			data_file.load(file_path)
+		except Exception:
+			self.log(f"  Couldn't load {file_name}, continuing without it.", tag='warning')
+			return None
+		self.log(f'  {file_name} loaded!')
+		return data_file

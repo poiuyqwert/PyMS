@@ -46,78 +46,13 @@ class CompileAIScript(BaseCompileStep):
 	def data_context(self) -> CodeHandlers.DataContext:
 		from ...FileFormats.TBL import TBL
 		from ...FileFormats.DAT import UnitsDAT, UpgradesDAT, TechDAT
-		stattxt_tbl: TBL | None = None
-		unitnames_tbl: TBL | None = None
-		units_dat: UnitsDAT | None = None
-		upgrades_dat: UpgradesDAT | None = None
-		techdata_dat: TechDAT | None = None
-
-		self.log('Attempting to load stat_txt.tbl for data context...')
-		stattxt_tbl_path = self.compile_thread.project.intermediates_relative_mpq_path(self.source_file.path, 'rez', 'stat_txt.tbl')
-		if stattxt_tbl_path and _os.path.isfile(stattxt_tbl_path):
-			try:
-				tbl = TBL()
-				tbl.load(stattxt_tbl_path)
-				stattxt_tbl = tbl
-				self.log('  stat_txt.tbl loaded!')
-			except Exception:
-				self.log("  Couldn't load stat_txt.tbl, continuing without it.", tag='warning')
-		else:
-			self.log('  stat_txt.tbl not found, continuing without it.')
-
-		self.log('Attempting to load unitnames.tbl for data context...')
-		unitnames_tbl_path = self.compile_thread.project.intermediates_relative_mpq_path(self.source_file.path, 'rez', 'unitnames.tbl')
-		if unitnames_tbl_path and _os.path.isfile(unitnames_tbl_path):
-			try:
-				tbl = TBL()
-				tbl.load(unitnames_tbl_path)
-				unitnames_tbl = tbl
-				self.log('  unitnames.tbl loaded!')
-			except Exception:
-				self.log("  Couldn't load unitnames.tbl, continuing without it.", tag='warning')
-		else:
-			self.log('  unitnames.tbl not found, continuing without it.')
-
-		self.log('Attempting to load units.dat for data context...')
-		units_dat_path = self.compile_thread.project.intermediates_relative_mpq_path(self.source_file.path, 'arr', 'units.dat')
-		if units_dat_path and _os.path.isfile(units_dat_path):
-			try:
-				_units_dat = UnitsDAT()
-				_units_dat.load(units_dat_path)
-				units_dat = _units_dat
-				self.log('  units.dat loaded!')
-			except Exception:
-				self.log("  Couldn't load units.dat, continuing without it.", tag='warning')
-		else:
-			self.log('  units.dat not found, continuing without it.')
-
-		self.log('Attempting to load upgrades.dat for data context...')
-		upgrades_dat_path = self.compile_thread.project.intermediates_relative_mpq_path(self.source_file.path, 'arr', 'upgrades.dat')
-		if upgrades_dat_path and _os.path.isfile(upgrades_dat_path):
-			try:
-				_upgrades_dat = UpgradesDAT()
-				_upgrades_dat.load(upgrades_dat_path)
-				upgrades_dat = _upgrades_dat
-				self.log('  upgrades.dat loaded!')
-			except Exception:
-				self.log("  Couldn't load upgrades.dat, continuing without it.", tag='warning')
-		else:
-			self.log('  upgrades.dat not found, continuing without it.')
-
-		self.log('Attempting to load techdata.dat for data context...')
-		techdata_dat_path = self.compile_thread.project.intermediates_relative_mpq_path(self.source_file.path, 'arr', 'techdata.dat')
-		if techdata_dat_path and _os.path.isfile(techdata_dat_path):
-			try:
-				_techdata_dat = TechDAT()
-				_techdata_dat.load(techdata_dat_path)
-				techdata_dat = _techdata_dat
-				self.log('  techdata.dat loaded!')
-			except Exception:
-				self.log("  Couldn't load techdata.dat, continuing without it.", tag='warning')
-		else:
-			self.log('  techdata.dat not found, continuing without it.')
-
-		return CodeHandlers.DataContext(stattxt_tbl=stattxt_tbl, unitnames_tbl=unitnames_tbl, units_dat=units_dat, upgrades_dat=upgrades_dat, techdata_dat=techdata_dat)
+		return CodeHandlers.DataContext(
+			stattxt_tbl = self.load_data_context_file(TBL, self.source_file, 'rez', 'stat_txt.tbl'),
+			unitnames_tbl = self.load_data_context_file(TBL, self.source_file, 'rez', 'unitnames.tbl'),
+			units_dat = self.load_data_context_file(UnitsDAT, self.source_file, 'arr', 'units.dat'),
+			upgrades_dat = self.load_data_context_file(UpgradesDAT, self.source_file, 'arr', 'upgrades.dat'),
+			techdata_dat = self.load_data_context_file(TechDAT, self.source_file, 'arr', 'techdata.dat'),
+		)
 
 	def load_base_aibin(self, config: CompileAIScript.Config) -> AIBIN.AIBIN:
 		aibin = AIBIN.AIBIN()
@@ -248,9 +183,8 @@ class CompileAIScript(BaseCompileStep):
 			raise CompileError(f"Couldn't compile {filenames}", internal_exception=e) from e
 
 		self.log(f'  {filenames} compiled!')
-		self.compile_thread.meta.update_input_metas(inputs)
 		output_paths = [aiscript_path]
 		if has_bwscripts:
 			output_paths.append(bwscript_path)
-		self.compile_thread.meta.update_output_metas(output_paths)
+		self.compile_thread.meta.update_metas(inputs, output_paths)
 		return None

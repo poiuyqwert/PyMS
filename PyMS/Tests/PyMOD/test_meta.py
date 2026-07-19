@@ -27,8 +27,7 @@ class MetaTestCase(unittest.TestCase):
 		return file_path in self.hashes and file_path not in self.missing_files
 
 	def record_build(self, input_paths: list[str], output_paths: list[str]) -> None:
-		self.meta.update_input_metas(input_paths)
-		self.meta.update_output_metas(output_paths)
+		self.meta.update_metas(input_paths, output_paths)
 
 
 class Test_check_requires_update(MetaTestCase):
@@ -82,13 +81,54 @@ class Test_check_requires_update(MetaTestCase):
 		self.record_build([source], [destination])
 		self.assertTrue(self.meta.check_requires_update([source, config], [destination]))
 
+	def test_removed_input_requires_update(self) -> None:
+		source = project_path('source.txt')
+		config = project_path('config.json')
+		destination = project_path('.build', 'intermediates', 'source.txt')
+		self.hashes[source] = 'hash1'
+		self.hashes[config] = 'hash2'
+		self.hashes[destination] = 'hash3'
+		self.record_build([source, config], [destination])
+		self.assertTrue(self.meta.check_requires_update([source], [destination]))
+
+	def test_input_order_requires_no_update(self) -> None:
+		source_a = project_path('a.txt')
+		source_b = project_path('b.txt')
+		destination = project_path('.build', 'intermediates', 'out.bin')
+		self.hashes[source_a] = 'hash1'
+		self.hashes[source_b] = 'hash2'
+		self.hashes[destination] = 'hash3'
+		self.record_build([source_b, source_a], [destination])
+		self.assertFalse(self.meta.check_requires_update([source_a, source_b], [destination]))
+
+	def test_renamed_input_with_identical_contents_requires_update(self) -> None:
+		# The output can depend on input file names (e.g. GRP frame order), not just their contents
+		old_source = project_path('frame 001.bmp')
+		new_source = project_path('frame 010.bmp')
+		destination = project_path('.build', 'intermediates', 'unit.grp')
+		self.hashes[old_source] = 'same-hash'
+		self.hashes[new_source] = 'same-hash'
+		self.hashes[destination] = 'hash2'
+		self.record_build([old_source], [destination])
+		self.assertTrue(self.meta.check_requires_update([new_source], [destination]))
+
+	def test_meta_without_a_recorded_fingerprint_requires_update(self) -> None:
+		source = project_path('source.txt')
+		destination = project_path('.build', 'intermediates', 'source.txt')
+		self.hashes[source] = 'hash1'
+		self.hashes[destination] = 'hash2'
+		# A meta from before input fingerprints were recorded has matching output hashes but no
+		# fingerprint entry for the target
+		self.meta.update_output_metas([destination])
+		self.assertTrue(self.meta.check_requires_update([source], [destination]))
+
 
 class Test_meta_keys(MetaTestCase):
 	def test_entries_are_keyed_relative_to_the_project_root(self) -> None:
-		source = project_path('sub', 'source.txt')
-		self.hashes[source] = 'hash1'
-		self.meta.update_input_metas([source])
-		self.assertEqual(self.meta.meta['inputs'], {'sub/source.txt': 'hash1'})
+		destination = project_path('.build', 'intermediates', 'sub', 'out.bin')
+		self.hashes[destination] = 'hash1'
+		self.meta.update_output_metas([destination])
+		self.assertEqual(self.meta.meta['outputs'], {'.build/intermediates/sub/out.bin': 'hash1'})
 
 	def test_has_output_only_reports_recorded_outputs(self) -> None:
 		destination = project_path('.build', 'intermediates', 'out.bin')
@@ -112,24 +152,23 @@ class Test_save(MetaTestCase):
 		destination = project_path('.build', 'intermediates', 'source.txt')
 		self.hashes[source] = 'hash3'
 		self.hashes[destination] = 'hash4'
-		fresh_meta.update_input_metas([source])
-		fresh_meta.update_output_metas([destination])
+		fresh_meta.update_metas([source], [destination])
 
 		with mock.patch('builtins.open', mock.mock_open()):
 			self.assertTrue(fresh_meta.save(prune=True))
-		self.assertEqual(fresh_meta.meta['inputs'], {'source.txt': 'hash3'})
 		self.assertEqual(fresh_meta.meta['outputs'], {'.build/intermediates/source.txt': 'hash4'})
+		self.assertEqual(list(fresh_meta.meta['inputs']), ['.build/intermediates/source.txt'])
 
 	def test_save_without_prune_keeps_unused_entries(self) -> None:
-		stale_source = project_path('deleted.txt')
-		self.hashes[stale_source] = 'hash1'
-		self.meta.update_input_metas([stale_source])
+		stale_destination = project_path('.build', 'intermediates', 'deleted.txt')
+		self.hashes[stale_destination] = 'hash1'
+		self.meta.update_output_metas([stale_destination])
 
 		fresh_meta = MetaHandler(META_PATH, ROOT_PATH)
 		fresh_meta.meta = self.meta.meta
 		with mock.patch('builtins.open', mock.mock_open()):
 			self.assertTrue(fresh_meta.save())
-		self.assertEqual(fresh_meta.meta['inputs'], {'deleted.txt': 'hash1'})
+		self.assertEqual(fresh_meta.meta['outputs'], {'.build/intermediates/deleted.txt': 'hash1'})
 
 	def test_files_skipped_by_the_incremental_check_survive_pruning(self) -> None:
 		source = project_path('source.txt')
@@ -143,16 +182,17 @@ class Test_save(MetaTestCase):
 		self.assertFalse(fresh_meta.check_requires_update([source], [destination]))
 		with mock.patch('builtins.open', mock.mock_open()):
 			self.assertTrue(fresh_meta.save(prune=True))
-		self.assertEqual(fresh_meta.meta['inputs'], {'source.txt': 'hash1'})
 		self.assertEqual(fresh_meta.meta['outputs'], {'.build/intermediates/source.txt': 'hash2'})
+		self.assertEqual(list(fresh_meta.meta['inputs']), ['.build/intermediates/source.txt'])
 
 
 class Test_load(MetaTestCase):
 	def test_load_accepts_valid_meta(self) -> None:
-		data = '{"inputs": {"source.txt": "hash1"}, "outputs": {}}'
+		data = '{"inputs": {"out.bin": "fingerprint1"}, "outputs": {"out.bin": "hash1"}}'
 		with mock.patch('builtins.open', mock.mock_open(read_data=data)):
 			self.assertTrue(self.meta.load())
-		self.assertEqual(self.meta.meta['inputs'], {'source.txt': 'hash1'})
+		self.assertEqual(self.meta.meta['inputs'], {'out.bin': 'fingerprint1'})
+		self.assertEqual(self.meta.meta['outputs'], {'out.bin': 'hash1'})
 
 	def test_load_rejects_invalid_meta(self) -> None:
 		for data in ('[]', '{"inputs": []}', '{"outputs": 1}', 'not json'):
@@ -164,3 +204,9 @@ class Test_load(MetaTestCase):
 			self.assertTrue(self.meta.load())
 		self.assertEqual(self.meta.meta['inputs'], {})
 		self.assertEqual(self.meta.meta['outputs'], {})
+
+	def test_load_drops_fields_from_older_meta_formats(self) -> None:
+		data = '{"inputs": {}, "outputs": {}, "targets": {"out.bin": "fingerprint1"}}'
+		with mock.patch('builtins.open', mock.mock_open(read_data=data)):
+			self.assertTrue(self.meta.load())
+		self.assertEqual(set(self.meta.meta), {'inputs', 'outputs'})

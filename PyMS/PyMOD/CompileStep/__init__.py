@@ -8,3 +8,4 @@ from .CreateDirectory import CreateDirectory
 from .DetermineSourceFiles import DetermineSourceFiles
 from .LoadMeta import LoadMeta
 from .SaveMeta import SaveMeta
+from .SwapArtifacts import SwapArtifacts

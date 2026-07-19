@@ -56,9 +56,9 @@ class DetermineSourceFiles(BaseCompileStep):
 		# Files inside an MPQ ship inside the packaged archive; everything else is a final deliverable
 		if not inside_mpq:
 			intermediates_folder = _os.path.dirname(self.compile_thread.project.source_path_to_intermediates_path(source_file.path))
-			artifacts_folder = _os.path.dirname(self.compile_thread.project.source_path_to_artifacts_path(source_file.path))
+			staging_folder = _os.path.dirname(self.compile_thread.project.source_path_to_staging_path(source_file.path))
 			for file_name in source_file.output_files():
-				steps.append(CopyArtifact(self.compile_thread, _os.path.join(intermediates_folder, file_name), _os.path.join(artifacts_folder, file_name)))
+				steps.append(CopyArtifact(self.compile_thread, _os.path.join(intermediates_folder, file_name), _os.path.join(staging_folder, file_name)))
 		return steps
 
 	def execute(self) -> list[BaseCompileStep] | None:

@@ -9,8 +9,6 @@ from ...FileFormats.IScriptBIN import IScriptBIN, CodeHandlers
 from ...Utilities import IO
 from ...Utilities import Struct
 
-import os as _os
-
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CompileThread import CompileThread
@@ -26,120 +24,16 @@ class CompileIScript(BaseCompileStep):
 	def data_context(self) -> CodeHandlers.DataContext:
 		from ...FileFormats.TBL import TBL
 		from ...FileFormats.DAT import ImagesDAT, SpritesDAT, FlingyDAT, SoundsDAT, WeaponsDAT
-		images_tbl: TBL | None = None
-		sounds_tbl: TBL | None = None
-		stat_txt_tbl: TBL | None = None
-		images_dat: ImagesDAT | None = None
-		sprites_dat: SpritesDAT | None = None
-		flingy_dat: FlingyDAT | None = None
-		sounds_dat: SoundsDAT | None = None
-		weapons_dat: WeaponsDAT | None = None
-
-		self.log('Attempting to load images.tbl for data context...')
-		images_tbl_path = self.compile_thread.project.intermediates_relative_mpq_path(self.source_file.path, 'arr', 'images.tbl')
-		if images_tbl_path and _os.path.isfile(images_tbl_path):
-			try:
-				tbl = TBL()
-				tbl.load(images_tbl_path)
-				images_tbl = tbl
-				self.log('  images.tbl loaded!')
-			except Exception:
-				self.log("  Couldn't load images.tbl, continuing without it.", tag='warning')
-		else:
-			self.log('  images.tbl not found, continuing without it.')
-
-		self.log('Attempting to load sfxdata.tbl for data context...')
-		sounds_tbl_path = self.compile_thread.project.intermediates_relative_mpq_path(self.source_file.path, 'arr', 'sfxdata.tbl')
-		if sounds_tbl_path and _os.path.isfile(sounds_tbl_path):
-			try:
-				tbl = TBL()
-				tbl.load(sounds_tbl_path)
-				sounds_tbl = tbl
-				self.log('  sfxdata.tbl loaded!')
-			except Exception:
-				self.log("  Couldn't load sfxdata.tbl, continuing without it.", tag='warning')
-		else:
-			self.log('  sfxdata.tbl not found, continuing without it.')
-
-		self.log('Attempting to load stat_txt.tbl for data context...')
-		stat_txt_tbl_path = self.compile_thread.project.intermediates_relative_mpq_path(self.source_file.path, 'rez', 'stat_txt.tbl')
-		if stat_txt_tbl_path and _os.path.isfile(stat_txt_tbl_path):
-			try:
-				tbl = TBL()
-				tbl.load(stat_txt_tbl_path)
-				stat_txt_tbl = tbl
-				self.log('  stat_txt.tbl loaded!')
-			except Exception:
-				self.log("  Couldn't load stat_txt.tbl, continuing without it.", tag='warning')
-		else:
-			self.log('  stat_txt.tbl not found, continuing without it.')
-
-		self.log('Attempting to load images.dat for data context...')
-		images_dat_path = self.compile_thread.project.intermediates_relative_mpq_path(self.source_file.path, 'arr', 'images.dat')
-		if images_dat_path and _os.path.isfile(images_dat_path):
-			try:
-				_images_dat = ImagesDAT()
-				_images_dat.load(images_dat_path)
-				images_dat = _images_dat
-				self.log('  images.dat loaded!')
-			except Exception:
-				self.log("  Couldn't load images.dat, continuing without it.", tag='warning')
-		else:
-			self.log('  images.dat not found, continuing without it.')
-
-		self.log('Attempting to load sprites.dat for data context...')
-		sprites_dat_path = self.compile_thread.project.intermediates_relative_mpq_path(self.source_file.path, 'arr', 'sprites.dat')
-		if sprites_dat_path and _os.path.isfile(sprites_dat_path):
-			try:
-				_sprites_dat = SpritesDAT()
-				_sprites_dat.load(sprites_dat_path)
-				sprites_dat = _sprites_dat
-				self.log('  sprites.dat loaded!')
-			except Exception:
-				self.log("  Couldn't load sprites.dat, continuing without it.", tag='warning')
-		else:
-			self.log('  sprites.dat not found, continuing without it.')
-
-		self.log('Attempting to load flingy.dat for data context...')
-		flingy_dat_path = self.compile_thread.project.intermediates_relative_mpq_path(self.source_file.path, 'arr', 'flingy.dat')
-		if flingy_dat_path and _os.path.isfile(flingy_dat_path):
-			try:
-				_flingy_dat = FlingyDAT()
-				_flingy_dat.load(flingy_dat_path)
-				flingy_dat = _flingy_dat
-				self.log('  flingy.dat loaded!')
-			except Exception:
-				self.log("  Couldn't load flingy.dat, continuing without it.", tag='warning')
-		else:
-			self.log('  flingy.dat not found, continuing without it.')
-
-		self.log('Attempting to load sfxdata.dat for data context...')
-		sounds_dat_path = self.compile_thread.project.intermediates_relative_mpq_path(self.source_file.path, 'arr', 'sfxdata.dat')
-		if sounds_dat_path and _os.path.isfile(sounds_dat_path):
-			try:
-				_sounds_dat = SoundsDAT()
-				_sounds_dat.load(sounds_dat_path)
-				sounds_dat = _sounds_dat
-				self.log('  sfxdata.dat loaded!')
-			except Exception:
-				self.log("  Couldn't load sfxdata.dat, continuing without it.", tag='warning')
-		else:
-			self.log('  sfxdata.dat not found, continuing without it.')
-
-		self.log('Attempting to load weapons.dat for data context...')
-		weapons_dat_path = self.compile_thread.project.intermediates_relative_mpq_path(self.source_file.path, 'arr', 'weapons.dat')
-		if weapons_dat_path and _os.path.isfile(weapons_dat_path):
-			try:
-				_weapons_dat = WeaponsDAT()
-				_weapons_dat.load(weapons_dat_path)
-				weapons_dat = _weapons_dat
-				self.log('  weapons.dat loaded!')
-			except Exception:
-				self.log("  Couldn't load weapons.dat, continuing without it.", tag='warning')
-		else:
-			self.log('  weapons.dat not found, continuing without it.')
-
-		return CodeHandlers.DataContext(images_tbl=images_tbl, images_dat=images_dat, sprites_dat=sprites_dat, flingy_dat=flingy_dat, sounds_tbl=sounds_tbl, sounds_dat=sounds_dat, stat_txt_tbl=stat_txt_tbl, weapons_dat=weapons_dat)
+		return CodeHandlers.DataContext(
+			images_tbl = self.load_data_context_file(TBL, self.source_file, 'arr', 'images.tbl'),
+			sounds_tbl = self.load_data_context_file(TBL, self.source_file, 'arr', 'sfxdata.tbl'),
+			stat_txt_tbl = self.load_data_context_file(TBL, self.source_file, 'rez', 'stat_txt.tbl'),
+			images_dat = self.load_data_context_file(ImagesDAT, self.source_file, 'arr', 'images.dat'),
+			sprites_dat = self.load_data_context_file(SpritesDAT, self.source_file, 'arr', 'sprites.dat'),
+			flingy_dat = self.load_data_context_file(FlingyDAT, self.source_file, 'arr', 'flingy.dat'),
+			sounds_dat = self.load_data_context_file(SoundsDAT, self.source_file, 'arr', 'sfxdata.dat'),
+			weapons_dat = self.load_data_context_file(WeaponsDAT, self.source_file, 'arr', 'weapons.dat'),
+		)
 
 	def load_base_iscript_bin(self) -> IScriptBIN.IScriptBIN:
 		iscript_bin = IScriptBIN.IScriptBIN()
@@ -203,6 +97,5 @@ class CompileIScript(BaseCompileStep):
 			raise CompileError("Couldn't compile iscript.bin", internal_exception=e) from e
 
 		self.log('  iscript.bin compiled!')
-		self.compile_thread.meta.update_input_metas(inputs)
-		self.compile_thread.meta.update_output_metas(output_paths)
+		self.compile_thread.meta.update_metas(inputs, output_paths)
 		return None

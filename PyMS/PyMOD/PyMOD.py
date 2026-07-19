@@ -1,7 +1,7 @@
 
 from .Config import PyMODConfig
 from . import Source
-from .CompileThread import CompileThread
+from .CompileThread import CompileThread, CompileResult
 from .ExtractDialog import ExtractDialog
 from .SettingsUI.SettingsDialog import SettingsDialog
 from .Project import Project
@@ -42,6 +42,7 @@ class PyMOD(UI.MainWindow):
 
 		self.project: Project | None = None
 		self.compile_thread: CompileThread | None = None
+		self.compile_result: CompileResult | None = None
 
 		self.mpqhandler = MPQHandler(self.config_.settings.mpqs)
 
@@ -198,9 +199,11 @@ class PyMOD(UI.MainWindow):
 			return
 		self.refresh_files()
 		if not self.project.source_graph:
+			self.status.set('No source files to compile.')
 			return
 		self.notebook.display(TabID.logs)
 		self.logs_textview.delete('1.0', UI.END)
+		self.compile_result = None
 		self.compile_thread = CompileThread(self.project)
 		self.compile_thread.start()
 		self.status.set('Compiling...')
@@ -244,10 +247,18 @@ class PyMOD(UI.MainWindow):
 			if isinstance(message, CompileThread.OutputMessage.Log):
 				self.logs_textview.insert(UI.END, message.text + '\n', message.tag)
 				self.logs_textview.textview.see(UI.END)
+			elif isinstance(message, CompileThread.OutputMessage.Done):
+				self.compile_result = message.result
 			self.compile_thread.output_queue.task_done()
 		if not was_alive:
 			self.compile_thread = None
-			self.status.set('Compile finished.')
+			match self.compile_result:
+				case CompileResult.failure:
+					self.status.set('Compile failed.')
+				case CompileResult.aborted:
+					self.status.set('Compile aborted.')
+				case _:
+					self.status.set('Compile finished.')
 			self.update_states()
 			return
 		self.after(200, self.watch_compile)

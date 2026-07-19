@@ -72,10 +72,10 @@ class Test_path_mapping(unittest.TestCase):
 			project_path('.build', 'intermediates', 'sub', 'file.txt')
 		)
 
-	def test_source_path_maps_into_artifacts(self) -> None:
+	def test_source_path_maps_into_staging(self) -> None:
 		self.assertEqual(
-			self.project.source_path_to_artifacts_path(project_path('mod.mpq')),
-			project_path('.build', 'artifacts', 'mod.mpq')
+			self.project.source_path_to_staging_path(project_path('mod.mpq')),
+			project_path('.build', 'staging', 'mod.mpq')
 		)
 
 	def test_base_name_replaces_the_file_name(self) -> None:
@@ -182,3 +182,11 @@ class Test_update_source_graph(unittest.TestCase):
 		assert root is not None
 		self.assertIsInstance(self.child(root, 'unit.grp'), Source.GRP)
 		self.assertNotIn(project_path('unit.grp', 'nested'), visited)
+
+	def test_children_are_ordered_by_name_regardless_of_filesystem_order(self) -> None:
+		root, _ = self.make_graph(folder(
+			dirs={'zeta': folder(), 'alpha': folder()},
+			files=['b.txt', 'a.txt'],
+		))
+		# Files are added when their folder is visited, subfolders when they themselves are visited
+		self.assertEqual(self.child_names(root), ['a.txt', 'b.txt', 'alpha', 'zeta'])

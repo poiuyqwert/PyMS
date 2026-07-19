@@ -46,14 +46,16 @@ class PackageMPQ(BaseCompileStep):
 				}
 			)
 
+	# A source's `config.json` usually holds its compile settings (frames_mode, expanded, etc.), so
+	# `compression` must be optional for those configs to decode here without complaint
 	@dataclass
 	class FileConfig(JSON.Decodable):
-		compression: str
+		compression: str | None
 
 		@classmethod
 		def from_json(cls, json: JSON.Object) -> Self:
 			return cls(
-				compression = JSON.get(json, 'compression', str)
+				compression = JSON.get_available(json, 'compression', str)
 			)
 
 	# An embedded (nested) MPQ is packaged into a hidden file in the intermediates (dot-names can
@@ -72,7 +74,7 @@ class PackageMPQ(BaseCompileStep):
 	def archive_path(self) -> str:
 		if self.embedded:
 			return PackageMPQ.embedded_archive_path(self.compile_thread.project, self.source_folder)
-		return self.compile_thread.project.source_path_to_artifacts_path(self.source_folder.path).rstrip(os.sep)
+		return self.compile_thread.project.source_path_to_staging_path(self.source_folder.path).rstrip(os.sep)
 
 	@staticmethod
 	def embedded_archive_path(project: 'Project', source_mpq: Source.MPQ) -> str:
@@ -112,8 +114,14 @@ class PackageMPQ(BaseCompileStep):
 		compression_source = 'autocompression settings'
 		compression = CompressionSetting.find(file_name, self.config.autocompression)
 		self.log(f'    Checking `config.json` for `{source_item.display_name()}`...')
-		if file_config := self.load_config(PackageMPQ.FileConfig, source_item, optional=True, log=False):
-			compression = CompressionSetting.parse_value(file_config.compression)
+		file_config = self.load_config(PackageMPQ.FileConfig, source_item, optional=True, log=False)
+		if file_config and file_config.compression is not None:
+			# An explicitly configured compression that can't be honored fails the build rather
+			# than silently packaging with a different setting
+			try:
+				compression = CompressionSetting.parse_value(file_config.compression)
+			except PyMSError as e:
+				raise CompileError(f'Invalid `compression` in `config.json` for `{source_item.display_name()}`', internal_exception=e) from e
 			compression_source = f'`config.json` for `{source_item.display_name()}`'
 		self.log(f'    Using `{compression}` compression based on {compression_source}.')
 		mpq.add_file(file_path, mpq_file_name, compression=compression.type.compression_type(), compression_level=compression.compression_level())

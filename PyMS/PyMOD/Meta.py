@@ -3,13 +3,15 @@ import os as _os
 import hashlib as _hashlib
 import json as _json
 
-from typing import TypedDict, Literal, cast
+from typing import TypedDict, Literal
 
 class Field:
 	inputs: Literal['inputs'] = 'inputs'
 	outputs: Literal['outputs'] = 'outputs'
 
 class Meta(TypedDict):
+	# A fingerprint of the full input set each target (keyed by its primary output) was built from,
+	# so any changed, added, removed, or renamed input triggers a rebuild
 	inputs: dict[str, str]
 	outputs: dict[str, str]
 
@@ -21,13 +23,27 @@ class MetaHandler:
 			'inputs': {},
 			'outputs': {}
 		}
-		self.used_inputs: set[str] = set()
 		self.used_outputs: set[str] = set()
 		# Whether the in-memory meta reflects what is on disk (so saving won't discard prior build info)
 		self.ready = False
 
 	def _key(self, file_path: str) -> str:
 		return _os.path.relpath(file_path, self.root_path).replace(_os.sep, '/')
+
+	# The fingerprint covers both the input paths and their contents — a renamed input can change
+	# the output even with identical contents (e.g. GRP frame order comes from the file names)
+	def _input_fingerprint(self, input_file_paths: list[str]) -> str | None:
+		try:
+			entries = sorted((self._key(file_path), compute_file_hash(file_path)) for file_path in input_file_paths)
+		except Exception:
+			return None
+		digest = _hashlib.sha256()
+		for key, file_hash in entries:
+			digest.update(key.encode('utf-8'))
+			digest.update(b'\x00')
+			digest.update(file_hash.encode('utf-8'))
+			digest.update(b'\x00')
+		return digest.hexdigest()
 
 	def exists(self) -> bool:
 		return _os.path.isfile(self.file_path)
@@ -40,22 +56,23 @@ class MetaHandler:
 			return False
 		if not isinstance(meta, dict):
 			return False
-		if not Field.inputs in meta:
-			meta[Field.inputs] = {}
-		elif not isinstance(meta[Field.inputs], dict):
+		inputs = meta.get(Field.inputs, {})
+		if not isinstance(inputs, dict):
 			return False
-		if not Field.outputs in meta:
-			meta[Field.outputs] = {}
-		elif not isinstance(meta[Field.outputs], dict):
+		outputs = meta.get(Field.outputs, {})
+		if not isinstance(outputs, dict):
 			return False
-		self.meta = cast(Meta, meta)
+		# Unknown fields (e.g. from older meta formats) are dropped
+		self.meta = {
+			'inputs': inputs,
+			'outputs': outputs
+		}
 		return True
 
 	def save(self, prune: bool = False) -> bool:
 		if prune:
-			used_input_keys = set(self._key(file_path) for file_path in self.used_inputs)
 			used_output_keys = set(self._key(file_path) for file_path in self.used_outputs)
-			self.meta[Field.inputs] = dict((key, file_hash) for key, file_hash in self.meta[Field.inputs].items() if key in used_input_keys)
+			self.meta[Field.inputs] = dict((key, fingerprint) for key, fingerprint in self.meta[Field.inputs].items() if key in used_output_keys)
 			self.meta[Field.outputs] = dict((key, file_hash) for key, file_hash in self.meta[Field.outputs].items() if key in used_output_keys)
 		try:
 			with open(self.file_path, 'w', encoding='utf-8') as meta_file:
@@ -64,27 +81,31 @@ class MetaHandler:
 			return False
 		return True
 
-	def _update_meta_hashes(self, field: Literal['inputs', 'outputs'], file_paths: list[str], file_hashes: list[str] | None = None) -> bool:
-		if not file_hashes:
-			try:
-				file_hashes = list(compute_file_hash(file_path) for file_path in file_paths)
-			except Exception:
-				pass
-		if not file_hashes:
-			return False
-		if not field in self.meta or not isinstance(self.meta[field], dict):
-			self.meta[field] = {}
-		for file_path,file_hash in zip(file_paths, file_hashes):
-			self.meta[field][self._key(file_path)] = file_hash
-		return True
-
-	def update_input_metas(self, file_paths: list[str]) -> bool:
-		self.used_inputs.update(file_paths)
-		return self._update_meta_hashes(Field.inputs, file_paths)
-
 	def update_output_metas(self, file_paths: list[str]) -> bool:
 		self.used_outputs.update(file_paths)
-		return self._update_meta_hashes(Field.outputs, file_paths)
+		try:
+			file_hashes = list(compute_file_hash(file_path) for file_path in file_paths)
+		except Exception:
+			return False
+		if not Field.outputs in self.meta or not isinstance(self.meta[Field.outputs], dict):
+			self.meta[Field.outputs] = {}
+		for file_path, file_hash in zip(file_paths, file_hashes):
+			self.meta[Field.outputs][self._key(file_path)] = file_hash
+		return True
+
+	# Record a completed build of a target: its output hashes and a fingerprint of its full input set
+	def update_metas(self, input_file_paths: list[str], output_file_paths: list[str]) -> bool:
+		updated_outputs = self.update_output_metas(output_file_paths)
+		if not Field.inputs in self.meta or not isinstance(self.meta[Field.inputs], dict):
+			self.meta[Field.inputs] = {}
+		target_key = self._key(output_file_paths[0])
+		fingerprint = self._input_fingerprint(input_file_paths)
+		if fingerprint is None:
+			# Without a fingerprint this build can't be trusted as up to date by the next compile
+			self.meta[Field.inputs].pop(target_key, None)
+			return False
+		self.meta[Field.inputs][target_key] = fingerprint
+		return updated_outputs
 
 	def has_output(self, file_path: str) -> bool:
 		if not Field.outputs in self.meta or not isinstance(self.meta[Field.outputs], dict):
@@ -92,11 +113,13 @@ class MetaHandler:
 		return self._key(file_path) in self.meta[Field.outputs]
 
 	def check_requires_update(self, input_file_paths: list[str], output_file_paths: list[str]) -> bool:
-		self.used_inputs.update(input_file_paths)
 		self.used_outputs.update(output_file_paths)
 		if not Field.inputs in self.meta or not isinstance(self.meta[Field.inputs], dict):
 			return True
 		if not Field.outputs in self.meta or not isinstance(self.meta[Field.outputs], dict):
+			return True
+		recorded_fingerprint = self.meta[Field.inputs].get(self._key(output_file_paths[0]))
+		if recorded_fingerprint is None:
 			return True
 		for output_file_path in output_file_paths:
 			if not self._key(output_file_path) in self.meta[Field.outputs]:
@@ -105,12 +128,7 @@ class MetaHandler:
 				return True
 			if compute_file_hash(output_file_path) != self.meta[Field.outputs][self._key(output_file_path)]:
 				return True
-		for input_file_path in input_file_paths:
-			if not self._key(input_file_path) in self.meta[Field.inputs]:
-				return True
-			if compute_file_hash(input_file_path) != self.meta[Field.inputs][self._key(input_file_path)]:
-				return True
-		return False
+		return self._input_fingerprint(input_file_paths) != recorded_fingerprint
 
 def compute_file_hash(file_path: str) -> str:
 	with open(file_path, 'rb') as file:

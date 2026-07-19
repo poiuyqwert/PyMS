@@ -122,7 +122,7 @@ By default the compile starts from an empty file containing only your scripts. T
 Any other folder is treated as a plain folder: it is recreated in the output and its contents are processed individually. Any other file is copied into the mod as-is (inside an MPQ its compression can be configured with a `<name>.config.json`, see [MPQ packages](#mpq-packages-mpq)). Files and folders starting with `.` are ignored, as are `config.json`/`*.config.json` configuration files.
 
 ## Building
-`Compile` runs the build: sources are compiled into `.build/intermediates/` inside your project, and the final MPQ artifacts (if any) are written to `.build/artifacts/`. Hashes of inputs and outputs are stored in `.build/meta.json` so unchanged sources are skipped on the next compile. `Clean` deletes the intermediates folder to force a full rebuild. `Extract` lets you browse the files in the MPQs configured in the settings (Manage Settings → MPQ Settings).
+`Compile` runs the build: sources are compiled into `.build/intermediates/` inside your project, and the final MPQ artifacts (if any) are written to `.build/artifacts/`. Artifacts are built to a staging folder and only replace the previous artifacts once the whole build succeeds, so a failed compile never leaves you without your last good build. Hashes of inputs and outputs are stored in `.build/meta.json` so unchanged sources are skipped on the next compile. `Clean` deletes the intermediates folder to force a full rebuild. `Extract` lets you browse the files in the MPQs configured in the settings (Manage Settings → MPQ Settings).
 
 ## Command line
 Running `PyMOD.pyw` with a project path compiles it headlessly, printing the build log to the console:

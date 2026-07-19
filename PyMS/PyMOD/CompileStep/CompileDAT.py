@@ -103,6 +103,5 @@ class CompileDAT(BaseCompileStep):
 		except Exception as e:
 			raise CompileError("Couldn't save DAT", internal_exception=e) from e
 		self.log('  DAT compiled!')
-		self.compile_thread.meta.update_input_metas(inputs)
-		self.compile_thread.meta.update_output_metas([destination_path])
+		self.compile_thread.meta.update_metas(inputs, [destination_path])
 		return None

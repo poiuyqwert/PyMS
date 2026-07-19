@@ -55,7 +55,7 @@ class CompileGRP(BaseCompileStep):
 		self.log(f'Determining GRP input files for `{self.source_file.display_name()}`...')
 		frame_paths = self.source_file.frame_paths()
 		if not frame_paths:
-			raise CompileError(f'No input files found for `{self.source_file.display_name()}')
+			raise CompileError(f'No input files found for `{self.source_file.display_name()}`')
 		self.log(f'  {len(frame_paths)} input files found.')
 		inputs = list(frame_paths)
 
@@ -89,7 +89,7 @@ class CompileGRP(BaseCompileStep):
 		bmp = BMP()
 		if config.frames_mode == FramesMode.separate_bmps:
 			size = None
-			for frame_path in sorted(frame_paths):
+			for frame_path in frame_paths:
 				try:
 					bmp.load(frame_path, issize=size)
 				except Exception as e:
@@ -110,6 +110,5 @@ class CompileGRP(BaseCompileStep):
 			raise CompileError("Couldn't save GRP", internal_exception=e) from e
 		self.log('  GRP compiled!')
 
-		self.compile_thread.meta.update_input_metas(inputs)
-		self.compile_thread.meta.update_output_metas([destination_path])
+		self.compile_thread.meta.update_metas(inputs, [destination_path])
 		return None

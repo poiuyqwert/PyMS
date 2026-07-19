@@ -36,6 +36,5 @@ class CompileTBL(BaseCompileStep):
 		except Exception as e:
 			raise CompileError("Couldn't save TBL", internal_exception=e) from e
 		self.log('  TBL compiled!')
-		self.compile_thread.meta.update_input_metas([source_path])
-		self.compile_thread.meta.update_output_metas([destination_path])
+		self.compile_thread.meta.update_metas([source_path], [destination_path])
 		return None

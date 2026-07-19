@@ -8,8 +8,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CompileThread import CompileThread
 
-# Copies a compiled file from the intermediates into the artifacts. The artifacts folder is wiped
-# at the start of every compile, so the copy is unconditional and needs no meta bookkeeping.
+# Copies a compiled file from the intermediates into the artifacts staging folder (swapped into
+# the artifacts folder once the whole build succeeds). Staging starts empty every compile, so the
+# copy is unconditional and needs no meta bookkeeping.
 class CopyArtifact(BaseCompileStep):
 	def __init__(self, compile_thread: 'CompileThread', source_path: str, destination_path: str) -> None:
 		BaseCompileStep.__init__(self, compile_thread)

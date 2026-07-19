@@ -1,5 +1,5 @@
 
-from .CompileThread import CompileThread
+from .CompileThread import CompileThread, CompileResult
 from .Project import Project
 
 from ..Utilities.PyMSError import PyMSError
@@ -23,7 +23,7 @@ def compile_project(project_path: str) -> bool:
 		return False
 	compile_thread = CompileThread(project)
 	compile_thread.start()
-	success = True
+	result: CompileResult | None = None
 	while True:
 		alive = compile_thread.is_alive()
 		while True:
@@ -33,10 +33,10 @@ def compile_project(project_path: str) -> bool:
 				break
 			if isinstance(message, CompileThread.OutputMessage.Log):
 				print(message.text)
-				if message.tag == 'error':
-					success = False
+			elif isinstance(message, CompileThread.OutputMessage.Done):
+				result = message.result
 			compile_thread.output_queue.task_done()
 		if not alive:
 			break
 		compile_thread.join(0.1)
-	return success
+	return result == CompileResult.success
