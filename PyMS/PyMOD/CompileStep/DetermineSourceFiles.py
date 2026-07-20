@@ -7,6 +7,7 @@ from .CompileAIScript import CompileAIScript
 from .CompileIScript import CompileIScript
 from .CompileTBL import CompileTBL
 from .CompileDAT import CompileDAT
+from .CompileLO import CompileLO
 from .CopyFile import CopyFile
 from .CopyArtifact import CopyArtifact
 from .. import Source
@@ -50,6 +51,8 @@ class DetermineSourceFiles(BaseCompileStep):
 			steps.append(CompileTBL(self.compile_thread, source_file))
 		elif isinstance(source_file, Source.DAT):
 			steps.append(CompileDAT(self.compile_thread, source_file))
+		elif isinstance(source_file, Source.LO):
+			steps.append(CompileLO(self.compile_thread, source_file))
 		else:
 			destination_path = _os.path.join(_os.path.split(self.compile_thread.project.source_path_to_intermediates_path(source_file.path))[0], source_file.name)
 			steps.append(CopyFile(self.compile_thread, source_file.path, destination_path))

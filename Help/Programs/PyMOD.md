@@ -49,6 +49,7 @@ Source types are detected by folder name:
 | `units.dat`, `weapons.dat`, etc. | [DAT file](#dat-files-unitsdat-weaponsdat-etc) | `.txt` entry files (and optionally a base `.dat`), compiled into the DAT file |
 | `*.grp` | [GRP graphic](#grp-graphics-grp) | `.bmp` frame files, compiled into a [.grp](/Help/Files/GRP.md) |
 | `*.tbl` | [TBL strings](#tbl-strings-tbl) | A `.txt` file of the same base name, compiled into a [.tbl](/Help/Files/TBL.md) |
+| `*.loa`, `*.lob`, etc. | [LO overlays](#lo-overlays-loa-lob-etc) | A `.txt` file of the same base name, compiled into a [.lo?](/Help/Files/LO.md) overlay file |
 | `aiscript.bin` | [AI scripts](#ai-scripts-aiscriptbin) | `.txt` AI script sources (and `*def.txt` extdefs, and optionally base `.bin` files), compiled into `aiscript.bin` (and `bwscript.bin` when scripts require it) |
 | `iscript.bin` | [Iscripts](#iscripts-iscriptbin) | `.txt` iscript sources (and optionally a base `.bin` file), compiled into `iscript.bin` |
 
@@ -99,6 +100,9 @@ The folder contains `.bmp` frame files, compiled into a [.grp](/Help/Files/GRP.m
 
 ### TBL strings (`*.tbl`)
 The folder contains a `.txt` file with the same base name as the folder (e.g. `stat_txt.tbl/stat_txt.txt`), compiled into a [.tbl](/Help/Files/TBL.md) of the folder's name. There is no configuration for TBL sources.
+
+### LO overlays (`*.loa`, `*.lob`, etc.)
+The folder contains a `.txt` file with the same base name as the folder (e.g. `marine.loa/marine.txt`) in the text format exported by PyLO, compiled into a [.lo?](/Help/Files/LO.md) overlay file of the folder's name. All overlay extensions are supported: `.loa`, `.lob`, `.lod`, `.lof`, `.log`, `.lol`, `.loo`, `.los`, `.lou`, and `.lox`. There is no configuration for LO sources.
 
 ### AI scripts (`aiscript.bin`)
 The folder contains `.txt` AI script sources, along with optional `*def.txt` external definition files which are loaded first. All scripts are compiled together into `aiscript.bin` — and `bwscript.bin` when any script requires it (`bwscript.bin` is only produced in that case, so vanilla Brood War AI is not wiped out by a stub file).

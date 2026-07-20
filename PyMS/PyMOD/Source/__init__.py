@@ -8,6 +8,7 @@ from .AIScript import AIScript
 from .IScript import IScript
 from .TBL import TBL
 from .DAT import DAT
+from .LO import LO
 
 from typing import Type as _Type
 
@@ -18,4 +19,5 @@ ITEM_TYPES: list[_Type[Item]] = [
 	IScript,
 	TBL,
 	DAT,
+	LO,
 ]

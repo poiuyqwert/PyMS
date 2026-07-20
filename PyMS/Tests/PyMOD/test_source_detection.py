@@ -34,6 +34,14 @@ class Test_source_detection(unittest.TestCase):
 		self.assertEqual(Source.DAT.matches('units.dat.bak'), 0)
 		self.assertEqual(Source.DAT.matches('.dat'), 0)
 
+	def test_lo_requires_a_named_lo_extension(self) -> None:
+		for extension in ('loa', 'lob', 'lod', 'lof', 'log', 'lol', 'loo', 'los', 'lou', 'lox'):
+			self.assertEqual(Source.LO.matches(f'marine.{extension}'), 1, f'`marine.{extension}` should match')
+		self.assertEqual(Source.LO.matches('.loa'), 0)
+		self.assertEqual(Source.LO.matches('marine.loa.bak'), 0)
+		self.assertEqual(Source.LO.matches('marine.lo'), 0)
+		self.assertEqual(Source.LO.matches('marine.lot'), 0)
+
 	def test_mpq_matches_the_extension(self) -> None:
 		self.assertEqual(Source.MPQ.matches('mod.mpq'), 1)
 		self.assertEqual(Source.MPQ.matches('mod.mpq.bak'), 0)
