@@ -42,6 +42,11 @@ class Test_source_detection(unittest.TestCase):
 		self.assertEqual(Source.LO.matches('marine.lo'), 0)
 		self.assertEqual(Source.LO.matches('marine.lot'), 0)
 
+	def test_pcx_requires_a_named_pcx_extension(self) -> None:
+		self.assertEqual(Source.PCX.matches('tfontgam.pcx'), 1)
+		self.assertEqual(Source.PCX.matches('.pcx'), 0)
+		self.assertEqual(Source.PCX.matches('tfontgam.pcx.bak'), 0)
+
 	def test_mpq_matches_the_extension(self) -> None:
 		self.assertEqual(Source.MPQ.matches('mod.mpq'), 1)
 		self.assertEqual(Source.MPQ.matches('mod.mpq.bak'), 0)
