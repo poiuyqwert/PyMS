@@ -51,6 +51,7 @@ Source types are detected by folder name:
 | `*.tbl` | [TBL strings](#tbl-strings-tbl) | A `.txt` file of the same base name, compiled into a [.tbl](/Help/Files/TBL.md) |
 | `*.loa`, `*.lob`, etc. | [LO overlays](#lo-overlays-loa-lob-etc) | A `.txt` file of the same base name, compiled into a [.lo?](/Help/Files/LO.md) overlay file |
 | `*.pcx` | [PCX image](#pcx-images-pcx) | A `.bmp` file of the same base name, compiled into a [.pcx](/Help/Files/PCX.md) image |
+| `*.spk` | [SPK parallax](#spk-parallax-backgrounds-spk) | A `.bmp` file of the same base name, compiled into a [.spk](/Help/Files/SPK.md) parallax background |
 | `aiscript.bin` | [AI scripts](#ai-scripts-aiscriptbin) | `.txt` AI script sources (and `*def.txt` extdefs, and optionally base `.bin` files), compiled into `aiscript.bin` (and `bwscript.bin` when scripts require it) |
 | `iscript.bin` | [Iscripts](#iscripts-iscriptbin) | `.txt` iscript sources (and optionally a base `.bin` file), compiled into `iscript.bin` |
 
@@ -107,6 +108,13 @@ The folder contains a `.txt` file with the same base name as the folder (e.g. `m
 
 ### PCX images (`*.pcx`)
 The folder contains a `.bmp` file with the same base name as the folder (e.g. `tfontgam.pcx/tfontgam.bmp`), compiled into a [.pcx](/Help/Files/PCX.md) image of the folder's name. There is no configuration for PCX sources.
+
+### SPK parallax backgrounds (`*.spk`)
+The folder contains a `.bmp` file with the same base name as the folder (e.g. `star.spk/star.bmp`), compiled into a [.spk](/Help/Files/SPK.md) parallax background of the folder's name. The image is divided vertically into `layer_count` equal bands, one per parallax layer (the top band is the furthest layer); stars are detected as connected groups of non-transparent (palette index 0) pixels within each band — the same format exported by PySPK.
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `layer_count` | `5` | Number of parallax layers the BMP is divided into (1-5) |
 
 ### AI scripts (`aiscript.bin`)
 The folder contains `.txt` AI script sources, along with optional `*def.txt` external definition files which are loaded first. All scripts are compiled together into `aiscript.bin` — and `bwscript.bin` when any script requires it (`bwscript.bin` is only produced in that case, so vanilla Brood War AI is not wiped out by a stub file).

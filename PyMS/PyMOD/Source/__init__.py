@@ -10,6 +10,7 @@ from .TBL import TBL
 from .DAT import DAT
 from .LO import LO
 from .PCX import PCX
+from .SPK import SPK
 
 from typing import Type as _Type
 
@@ -22,4 +23,5 @@ ITEM_TYPES: list[_Type[Item]] = [
 	DAT,
 	LO,
 	PCX,
+	SPK,
 ]

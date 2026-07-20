@@ -9,6 +9,7 @@ from .CompileTBL import CompileTBL
 from .CompileDAT import CompileDAT
 from .CompileLO import CompileLO
 from .CompilePCX import CompilePCX
+from .CompileSPK import CompileSPK
 from .CopyFile import CopyFile
 from .CopyArtifact import CopyArtifact
 from .. import Source
@@ -56,6 +57,8 @@ class DetermineSourceFiles(BaseCompileStep):
 			steps.append(CompileLO(self.compile_thread, source_file))
 		elif isinstance(source_file, Source.PCX):
 			steps.append(CompilePCX(self.compile_thread, source_file))
+		elif isinstance(source_file, Source.SPK):
+			steps.append(CompileSPK(self.compile_thread, source_file))
 		else:
 			destination_path = _os.path.join(_os.path.split(self.compile_thread.project.source_path_to_intermediates_path(source_file.path))[0], source_file.name)
 			steps.append(CopyFile(self.compile_thread, source_file.path, destination_path))
