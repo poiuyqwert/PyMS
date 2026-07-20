@@ -613,6 +613,15 @@ class BINSMK:
 	def remove_widget(self, widget: BINWidget) -> None:
 		self.widgets.remove(widget)
 
+# Legacy (pre-Remastered) BINs store strings in the Windows ANSI code page,
+# Remastered BINs store UTF-8. UTF-8 is tried first since valid UTF-8 is
+# almost never valid meaningful ANSI, but not vice versa.
+def _decode_string(raw: bytes) -> str:
+	try:
+		return raw.decode('utf-8')
+	except UnicodeDecodeError:
+		return raw.decode('cp1252')
+
 def flags(value: int | str, length: int) -> int | str:
 	if isinstance(value, str):
 		if len(value) != length or value.replace('0','').replace('1',''):
@@ -653,7 +662,7 @@ class DialogBIN:
 			smk_info = list(struct.unpack('<LH3LHHLL',data[offset:offset+BINSMK.BYTE_SIZE]))
 			filename_offset = smk_info[3]
 			end_offset = data.find(b'\0', filename_offset)
-			smk_info[3] = data[filename_offset:end_offset].decode('utf-8')
+			smk_info[3] = _decode_string(data[filename_offset:end_offset])
 			smk = BINSMK()
 			smk_map[offset] = smk
 			smks.append(smk)
@@ -691,7 +700,7 @@ class DialogBIN:
 
 			if string_offset:
 				end_offset = data.find(b'\0', string_offset)
-				widget.string = data[string_offset:end_offset].decode('utf-8')
+				widget.string = _decode_string(data[string_offset:end_offset])
 
 			if widget.type == BINWidget.TYPE_DIALOG:
 				next_widget = smk_offset
@@ -743,9 +752,13 @@ class DialogBIN:
 			if not string:
 				return 0
 			if not string in string_offsets:
+				try:
+					encoded = string.encode('utf-8' if remastered else 'cp1252')
+				except UnicodeEncodeError as exc:
+					raise PyMSError('Save', f"String '{string}' contains characters that can't be encoded in a legacy Dialog BIN file (only remastered files support them)") from exc
 				string_offsets[string] = offsets[2]
-				offsets[2] += len(string) + 1
-				results[2] += string.encode('utf-8') + b'\0'
+				offsets[2] += len(encoded) + 1
+				results[2] += encoded + b'\0'
 			return string_offsets[string]
 		def save_smk(smk: BINSMK) -> tuple[int, bytes]:
 			data = b''

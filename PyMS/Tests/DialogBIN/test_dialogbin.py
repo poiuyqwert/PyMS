@@ -8,11 +8,18 @@ import io
 import unittest
 
 SAMPLE_BIN = 'gamemenu.bin'
+ANSI_SAMPLE_BIN = 'titledlg.bin'
 
 
 def _load_sample() -> DialogBIN:
 	dialog = DialogBIN()
 	dialog.load(resource_path(SAMPLE_BIN, __file__))
+	return dialog
+
+
+def _load_ansi_sample() -> DialogBIN:
+	dialog = DialogBIN()
+	dialog.load(resource_path(ANSI_SAMPLE_BIN, __file__))
 	return dialog
 
 
@@ -134,6 +141,34 @@ class Test_load(unittest.TestCase):
 			DialogBIN().load(b'\x00' * 4)
 		self.assertIn('Unsupported Dialog BIN file, could possibly be corrupt', str(cm.exception))
 
+	def test_loads_legacy_file_with_ansi_strings(self) -> None:
+		# Legacy (pre-Remastered) BINs store strings in the Windows ANSI code
+		# page; bytes like 0xA9 (copyright sign) are not valid UTF-8 but must
+		# still decode instead of aborting the legacy parse.
+		dialog = _load_ansi_sample()
+		self.assertFalse(dialog.remastered)
+		self.assertEqual(len(dialog.widgets), 6)
+		strings = [widget.string for widget in dialog.widgets]
+		self.assertIn('Copyright © 1998 Blizzard Entertainment. All rights reserved.', strings)
+		identifiers = [widget.identifier for widget in dialog.widgets]
+		self.assertIn(65525, identifiers)
+		self.assertIn(65526, identifiers)
+
+	def test_loads_legacy_file_with_utf8_strings(self) -> None:
+		# Legacy-layout files whose strings happen to be valid UTF-8 (e.g.
+		# previously saved by PyBIN) must keep decoding as UTF-8.
+		source = DialogBIN()
+		label = BINWidget(BINWidget.TYPE_LABEL_LEFT_ALIGN)
+		label.string = 'Xc'
+		source.widgets.append(label)
+		data = IO.output_to_bytes(lambda f: source.save(f, remastered=False))
+		# Patch in a same-length UTF-8 encoding of a non-ASCII string so the
+		# offsets stay valid.
+		data = data.replace(b'Xc\x00', '©'.encode('utf-8') + b'\x00')
+		loaded = DialogBIN()
+		loaded.load(data)
+		self.assertEqual(loaded.widgets[1].string, '©')
+
 
 class Test_save(unittest.TestCase):
 	def test_real_file_binary_round_trip(self) -> None:
@@ -141,6 +176,36 @@ class Test_save(unittest.TestCase):
 		reloaded = DialogBIN()
 		reloaded.load(original)
 		self.assertEqual(IO.output_to_bytes(reloaded.save), original)
+
+	def test_ansi_file_binary_round_trip(self) -> None:
+		# Legacy files must save their strings back in the ANSI code page
+		# (readable by legacy StarCraft), and the result must round-trip.
+		original = IO.output_to_bytes(_load_ansi_sample().save)
+		self.assertIn('Copyright © 1998'.encode('cp1252'), original)
+		reloaded = DialogBIN()
+		reloaded.load(original)
+		self.assertFalse(reloaded.remastered)
+		self.assertEqual(IO.output_to_bytes(reloaded.save), original)
+
+	def test_legacy_save_rejects_non_ansi_strings(self) -> None:
+		dialog = DialogBIN()
+		label = BINWidget(BINWidget.TYPE_LABEL_LEFT_ALIGN)
+		label.string = '你'
+		dialog.widgets.append(label)
+		with self.assertRaises(PyMSError) as cm:
+			IO.output_to_bytes(lambda f: dialog.save(f, remastered=False))
+		self.assertIn("can't be encoded in a legacy Dialog BIN", str(cm.exception))
+
+	def test_remastered_save_round_trips_non_ansi_strings(self) -> None:
+		source = DialogBIN()
+		label = BINWidget(BINWidget.TYPE_LABEL_LEFT_ALIGN)
+		label.string = '你好'
+		source.widgets.append(label)
+		data = IO.output_to_bytes(lambda f: source.save(f, remastered=True))
+		loaded = DialogBIN()
+		loaded.load(data)
+		self.assertEqual(loaded.widgets[1].string, '你好')
+		self.assertEqual(IO.output_to_bytes(lambda f: loaded.save(f, remastered=True)), data)
 
 	def test_crafted_round_trip_preserves_widgets(self) -> None:
 		source = DialogBIN()
