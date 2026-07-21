@@ -1,0 +1,380 @@
+
+THEME_ASSETS_MAIN_MENU = 0x00
+THEME_ASSETS_CAMPAIGN = 0x01
+THEME_ASSETS_TERRAN_BRIEFING = 0x02
+THEME_ASSETS_ZERG_BRIEFING = 0x03
+THEME_ASSETS_PROTOSS_BRIEFING = 0x04
+THEME_ASSETS_PROTOSS_DEFEAT = 0x05
+THEME_ASSETS_PROTOSS_VICTORY = 0x06
+THEME_ASSETS_ZERG_DEFEAT = 0x07
+THEME_ASSETS_ZERG_VICTORY = 0x08
+THEME_ASSETS_TERRAN_DEFEAT = 0x09
+THEME_ASSETS_TERRAN_VICTORY = 0x0A
+THEME_ASSETS_GENERAL = 0x0B
+THEME_ASSETS_NONE = 0x0C
+THEME_ASSETS_INFO = {
+	THEME_ASSETS_MAIN_MENU: {
+		"path":"glue\\palmm\\",
+		"name":"Main Menu"
+	},
+	THEME_ASSETS_CAMPAIGN: {
+		"path":"glue\\palcs\\",
+		"name":"Campaign"
+	},
+	THEME_ASSETS_TERRAN_BRIEFING: {
+		"path":"glue\\palrt\\",
+		"name":"Terran Mission Briefing"
+	},
+	THEME_ASSETS_ZERG_BRIEFING: {
+		"path":"glue\\palrz\\",
+		"name":"Zerg Mission Briefing"
+	},
+	THEME_ASSETS_PROTOSS_BRIEFING: {
+		"path":"glue\\palrp\\",
+		"name":"Protoss Mission Briefing"
+	},
+	THEME_ASSETS_PROTOSS_DEFEAT: {
+		"path":"glue\\palpd\\",
+		"name":"Protoss Defeat"
+	},
+	THEME_ASSETS_PROTOSS_VICTORY: {
+		"path":"glue\\palpv\\",
+		"name":"Protoss Victory"
+	},
+	THEME_ASSETS_ZERG_DEFEAT: {
+		"path":"glue\\palzd\\",
+		"name":"Zerg Defeat"
+	},
+	THEME_ASSETS_ZERG_VICTORY: {
+		"path":"glue\\palzv\\",
+		"name":"Zerg Victory"
+	},
+	THEME_ASSETS_TERRAN_DEFEAT: {
+		"path":"glue\\paltd\\",
+		"name":"Terran Defeat"
+	},
+	THEME_ASSETS_TERRAN_VICTORY: {
+		"path":"glue\\paltv\\",
+		"name":"Terran Victory"
+	},
+	THEME_ASSETS_GENERAL: {
+		"path":"glue\\palnl\\",
+		"name":"General"
+	}
+}
+SCREEN_MAIN_MENU = 0x00
+SCREEN_SIMULATE = 0x01
+SCREEN_SELCONN = 0x02
+SCREEN_CHATROOM = 0x03
+SCREEN_BATTLENET = 0x04
+SCREEN_LOGIN = 0x05
+SCREEN_CAMPAIGN = 0x06
+SCREEN_TERRAN_BRIEFING = 0x07
+SCREEN_ZERG_BRIEFING = 0x08
+SCREEN_PROTOSS_BRIEFING = 0x09
+SCREEN_GAMESEL = 0x0A
+SCREEN_CREATE = 0x0B
+SCREEN_CREATE_2 = 0x0C
+SCREEN_LOAD = 0x0D
+SCREEN_ZERG_SCORE_DEFEAT = 0x0E
+SCREEN_ZERG_SCORE_VICTORY = 0x0F
+SCREEN_TERRAN_SCORE_DEFEAT = 0x10
+SCREEN_TERRAN_SCORE_VICTORY = 0x11
+SCREEN_PROTOSS_SCORE_DEFEAT = 0x12
+SCREEN_PROTOSS_SCORE_VICTORY = 0x13
+SCREEN_MODEM = 0x14
+SCREEN_DIRECT = 0x15
+SCREEN_CAMPAIGN_BW = 0x16
+SCREEN_GAMEMODE = 0x17
+SCREEN_GAMEMODE_2 = 0x18
+SCREEN_INFO = {
+	SCREEN_MAIN_MENU:{
+		# "assets_path":"glue\\mainmenu\\",
+		"dialog_bin":"glumain.bin",
+		"theme_id":THEME_ASSETS_MAIN_MENU,
+		"name":"Main Menu"
+	},
+	# SCREEN_SIMULATE:{
+	# 	# "assets_path":"glue\\simulate",
+	# 	"dialog_bin":"",
+	# 	"theme_id":THEME_ASSETS_GENERAL,
+	# 	"name":""
+	# },
+	SCREEN_SELCONN:{
+		# "assets_path":"glue\\selconn\\",
+		"dialog_bin":"gluconn.bin",
+		"theme_id":THEME_ASSETS_GENERAL,
+		"name":"Multiplay Connection Selection"
+	},
+	SCREEN_CHATROOM:{
+		# "assets_path":"glue\\chatroom\\",
+		"dialog_bin":"gluchat.bin",
+		"theme_id":THEME_ASSETS_GENERAL,
+		"name":"Game Lobby"
+	},
+	# SCREEN_BATTLENET:{
+	# 	# "assets_path":"glue\\battle.net\\",
+	# 	"dialog_bin":"",
+	# 	"theme_id":THEME_ASSETS_NONE,
+	# 	"name":""
+	# },
+	SCREEN_LOGIN:{
+		# "assets_path":"glue\\login\\",
+		"dialog_bin":"glulogin.bin",
+		"theme_id":THEME_ASSETS_GENERAL,
+		"name":"Username Selection"
+	},
+	SCREEN_CAMPAIGN:{
+		# "assets_path":"glue\\campaign\\",
+		"dialog_bin":"glucmpgn.bin",
+		"theme_id":THEME_ASSETS_CAMPAIGN,
+		"name":"Campaign Selection"
+	},
+	SCREEN_TERRAN_BRIEFING:{
+		# "assets_path":"glue\\ReadyT\\",
+		"dialog_bin":"glurdyt.bin",
+		"theme_id":THEME_ASSETS_TERRAN_BRIEFING,
+		"name":"Terran Mission Briefing"
+	},
+	SCREEN_ZERG_BRIEFING:{
+		# "assets_path":"glue\\ReadyZ\\",
+		"dialog_bin":"glurdyz.bin",
+		"theme_id":THEME_ASSETS_ZERG_BRIEFING,
+		"name":"Zerg Mission Briefing"
+	},
+	SCREEN_PROTOSS_BRIEFING:{
+		# "assets_path":"glue\\ReadyP\\",
+		"dialog_bin":"glurdyp.bin",
+		"theme_id":THEME_ASSETS_PROTOSS_BRIEFING,
+		"name":"Protoss Mission Briefing"
+	},
+	SCREEN_GAMESEL:{
+		# "assets_path":"glue\\gamesel\\",
+		"dialog_bin":"glujoin.bin",
+		"theme_id":THEME_ASSETS_GENERAL,
+		"name":"Games List"
+	},
+	SCREEN_CREATE:{
+		# "assets_path":"glue\\create\\",
+		"dialog_bin":"glucreat.bin",
+		"theme_id":THEME_ASSETS_GENERAL,
+		"name":"Create Game (Multiplayer)"
+	},
+	SCREEN_CREATE_2:{
+		# "assets_path":"glue\\create\\",
+		"dialog_bin":"glucustm.bin",
+		"theme_id":THEME_ASSETS_GENERAL,
+		"name":"Create Game (Singleplayer)"
+	},
+	SCREEN_LOAD:{
+		# "assets_path":"glue\\load\\",
+		"dialog_bin":"gluload.bin",
+		"theme_id":THEME_ASSETS_GENERAL,
+		"name":"Save Games"
+	},
+	SCREEN_ZERG_SCORE_DEFEAT:{
+		# "assets_path":"glue\\score\\",
+		"dialog_bin":"gluscore.bin",
+		"theme_id":THEME_ASSETS_ZERG_DEFEAT,
+		"name":"Zerg Score Screen (Defeat)"
+	},
+	SCREEN_ZERG_SCORE_VICTORY:{
+		# "assets_path":"glue\\score\\",
+		"dialog_bin":"gluscore.bin",
+		"theme_id":THEME_ASSETS_ZERG_VICTORY,
+		"name":"Zerg Score Screen (Victory)"
+	},
+	SCREEN_TERRAN_SCORE_DEFEAT:{
+		# "assets_path":"glue\\score\\",
+		"dialog_bin":"gluscore.bin",
+		"theme_id":THEME_ASSETS_TERRAN_DEFEAT,
+		"name":"Terran Score Screen (Defeat)"
+	},
+	SCREEN_TERRAN_SCORE_VICTORY:{
+		# "assets_path":"glue\\score\\",
+		"dialog_bin":"gluscore.bin",
+		"theme_id":THEME_ASSETS_TERRAN_VICTORY,
+		"name":"Terran Score Screen (Victory)"
+	},
+	SCREEN_PROTOSS_SCORE_DEFEAT:{
+		# "assets_path":"glue\\score\\",
+		"dialog_bin":"gluscore.bin",
+		"theme_id":THEME_ASSETS_PROTOSS_DEFEAT,
+		"name":"Protoss Score Screen (Defeat)"
+	},
+	SCREEN_PROTOSS_SCORE_VICTORY:{
+		# "assets_path":"glue\\score\\",
+		"dialog_bin":"gluscore.bin",
+		"theme_id":THEME_ASSETS_PROTOSS_VICTORY,
+		"name":"Protoss Score Screen (Victory)"
+	},
+	SCREEN_MODEM:{
+		# "assets_path":"glue\\modem\\",
+		"dialog_bin":"glumodem.bin",
+		"theme_id":THEME_ASSETS_GENERAL,
+		"name":"Modem Connection"
+	},
+	# SCREEN_DIRECT:{
+	# 	# "assets_path":"glue\\direct\\",
+	# 	"dialog_bin":"",
+	# 	"theme_id":THEME_ASSETS_GENERAL,
+	# 	"name":""
+	# },
+	SCREEN_CAMPAIGN_BW:{
+		# "assets_path":"glue\\campaign\\",
+		"dialog_bin":"gluexpcmpgn.bin",
+		"theme_id":THEME_ASSETS_CAMPAIGN,
+		"name":"Campaign Selection (BroodWar)"
+	},
+	# SCREEN_GAMEMODE:{
+	# 	# "assets_path":"glue\\gamemode\\",
+	# 	"dialog_bin":"",
+	# 	"theme_id":THEME_ASSETS_GENERAL,
+	# 	"name":""
+	# },
+	# SCREEN_GAMEMODE_2:{
+	# 	# "assets_path":"glue\\gamemode\\",
+	# 	"dialog_bin":"",
+	# 	"theme_id":THEME_ASSETS_GENERAL,
+	# 	"name":""
+	# },
+}
+
+# DIALOG_ASSET's are frame indexes into dlg.grp
+DIALOG_ASSET_BLANK_HUDBTN_DISABLED = 0
+DIALOG_ASSET_BLANK_HUDBTN = 1
+DIALOG_ASSET_BLANK_HUDBTN_PRESSED = 2
+
+DIALOG_ASSET_TERRAIN_HUDBTN_DISABLED = 3
+DIALOG_ASSET_TERRAIN_HUDBTN = 4
+DIALOG_ASSET_TERRAIN_HUDBTN_PRESSED = 5
+
+DIALOG_ASSET_RADIO_DISABLED = 6
+DIALOG_ASSET_RADIO_UNSELECTED = 7
+DIALOG_ASSET_RADIO_UNSELECTED_PRESSED = 8
+DIALOG_ASSET_RADIO_SELECTED = 9
+DIALOG_ASSET_RADIO_SELECTED_PRESSED = 10
+
+DIALOG_ASSET_CHECK_DISABLED = 11
+DIALOG_ASSET_CHECK_UNSELECTED = 12
+DIALOG_ASSET_CHECK_UNSELECTED_PRESSED = 13
+DIALOG_ASSET_CHECK_SELECTED = 14
+DIALOG_ASSET_CHECK_SELECTED_PRESSED = 15
+
+DIALOG_ASSET_SCROLL_UP_DISABLED = 16
+DIALOG_ASSET_SCROLL_UP = 17
+DIALOG_ASSET_SCROLL_UP_PRESSED = 18
+DIALOG_ASSET_SCROLL_DOWN_DISABLED = 19
+DIALOG_ASSET_SCROLL_DOWN = 20
+DIALOG_ASSET_SCROLL_DOWN_PRESSED = 21
+DIALOG_ASSET_SCROLL_LEFT_DISABLED = 22
+DIALOG_ASSET_SCROLL_LEFT = 23
+DIALOG_ASSET_SCROLL_LEFT_PRESSED = 24
+DIALOG_ASSET_SCROLL_RIGHT_DISABLED = 25
+DIALOG_ASSET_SCROLL_RIGHT = 26
+DIALOG_ASSET_SCROLL_RIGHT_PRESSED = 27
+
+DIALOG_ASSET_SCROLL_BAR = 28
+
+DIALOG_ASSET_SCROLL_VERTICAL_TOP = 29
+DIALOG_ASSET_SCROLL_VERTICAL_MIDDLE = 30
+DIALOG_ASSET_SCROLL_VERTICAL_BOTTOM = 31
+DIALOG_ASSET_SCROLL_HORIZONTAL_LEFT = 32
+DIALOG_ASSET_SCROLL_HORIZONTAL_MIDDLE = 33
+DIALOG_ASSET_SCROLL_HORIZONTAL_RIGHT = 34
+
+DIALOG_ASSET_COMBOBOX_DROP_TL = 35
+DIALOG_ASSET_COMBOBOX_DROP_T = 36
+DIALOG_ASSET_COMBOBOX_DROP_TR = 37
+DIALOG_ASSET_COMBOBOX_DROP_L = 38
+DIALOG_ASSET_COMBOBOX_DROP_M = 39
+DIALOG_ASSET_COMBOBOX_DROP_R = 40
+DIALOG_ASSET_COMBOBOX_DROP_BL = 41
+DIALOG_ASSET_COMBOBOX_DROP_B = 42
+DIALOG_ASSET_COMBOBOX_DROP_BR = 43
+DIALOG_ASSET_COMBOBOX_LEFT_DROPPED_UP = 44
+DIALOG_ASSET_COMBOBOX_MIDDLE_DROPPED_UP = 45
+DIALOG_ASSET_COMBOBOX_RIGHT_DROPPED_UP = 46
+DIALOG_ASSET_COMBOBOX_LEFT_DROPPED_DOWN = 47
+DIALOG_ASSET_COMBOBOX_MIDDLE_DROPPED_DOWN = 48
+DIALOG_ASSET_COMBOBOX_RIGHT_DROPPED_DOWN = 49
+
+DIALOG_ASSET_COMBOBOX_ARROW = 50
+DIALOG_ASSET_COMBOBOX_ARROW_HOVER = 51
+DIALOG_ASSET_COMBOBOX_ARROW_DISABLED = 52
+
+DIALOG_ASSET_COMBOBOX_LEFT = 53
+DIALOG_ASSET_COMBOBOX_MIDDLE = 54
+DIALOG_ASSET_COMBOBOX_RIGHT = 55
+DIALOG_ASSET_COMBOBOX_LEFT_HOVER = 56
+DIALOG_ASSET_COMBOBOX_MIDDLE_HOVER = 57
+DIALOG_ASSET_COMBOBOX_RIGHT_HOVER = 58
+
+# 59 - 82 seem like various different combobox themes
+
+DIALOG_ASSET_ALLIANCES_HUDBTN_DISABLED = 83
+DIALOG_ASSET_ALLIANCES_HUDBTN = 84
+DIALOG_ASSET_ALLIANCES_HUDBTN_PRESSED = 85
+
+# 86 - 90 some icons with unknown purpose
+
+DIALOG_ASSET_SLIDER_LEFT_DISABLED = 91
+DIALOG_ASSET_SLIDER_MIDDLE_DISABLED = 92
+DIALOG_ASSET_SLIDER_RIGHT_DISABLED = 93
+DIALOG_ASSET_SLIDER_LEFT = 94
+DIALOG_ASSET_SLIDER_MIDDLE = 95
+DIALOG_ASSET_SLIDER_RIGHT = 96
+DIALOG_ASSET_SLIDER_SPOT_DISABLED = 97
+DIALOG_ASSET_SLIDER_SPOT = 98
+DIALOG_ASSET_SLIDER_DOT_DISABLED = 99
+DIALOG_ASSET_SLIDER_DOT_YELLOW = 100
+DIALOG_ASSET_SLIDER_DOT_GREEN = 101
+DIALOG_ASSET_SLIDER_DOT_RED = 102
+
+DIALOG_ASSET_BUTTON_LEFT_DISABLED_LEFT = 103
+DIALOG_ASSET_BUTTON_LEFT_DISABLED_MIDDLE = 104
+DIALOG_ASSET_BUTTON_LEFT_DISABLED_RIGHT = 105
+DIALOG_ASSET_BUTTON_LEFT_LEFT = 106
+DIALOG_ASSET_BUTTON_LEFT_MIDDLE = 107
+DIALOG_ASSET_BUTTON_LEFT_RIGHT = 108
+DIALOG_ASSET_BUTTON_LEFT_PRESSED_LEFT = 109
+DIALOG_ASSET_BUTTON_LEFT_PRESSED_MIDDLE = 110
+DIALOG_ASSET_BUTTON_LEFT_PRESSED_RIGHT = 111
+
+DIALOG_ASSET_BUTTON_MID_DISABLED_LEFT = 112
+DIALOG_ASSET_BUTTON_MID_DISABLED_MIDDLE = 113
+DIALOG_ASSET_BUTTON_MID_DISABLED_RIGHT = 114
+DIALOG_ASSET_BUTTON_MID_LEFT = 115
+DIALOG_ASSET_BUTTON_MID_MIDDLE = 116
+DIALOG_ASSET_BUTTON_MID_RIGHT = 117
+DIALOG_ASSET_BUTTON_MID_PRESSED_LEFT = 118
+DIALOG_ASSET_BUTTON_MID_PRESSED_MIDDLE = 119
+DIALOG_ASSET_BUTTON_MID_PRESSED_RIGHT = 120
+
+DIALOG_ASSET_BUTTON_RIGHT_DISABLED_LEFT = 121
+DIALOG_ASSET_BUTTON_RIGHT_DISABLED_MIDDLE = 122
+DIALOG_ASSET_BUTTON_RIGHT_DISABLED_RIGHT = 123
+DIALOG_ASSET_BUTTON_RIGHT_LEFT = 124
+DIALOG_ASSET_BUTTON_RIGHT_MIDDLE = 125
+DIALOG_ASSET_BUTTON_RIGHT_RIGHT = 126
+DIALOG_ASSET_BUTTON_RIGHT_PRESSED_LEFT = 127
+DIALOG_ASSET_BUTTON_RIGHT_PRESSED_MIDDLE = 128
+DIALOG_ASSET_BUTTON_RIGHT_PRESSED_RIGHT = 129
+
+DIALOG_ASSET_MESSAGING_HUDBTN_DISABLED = 130
+DIALOG_ASSET_MESSAGING_HUDBTN = 131
+DIALOG_ASSET_MESSAGING_HUDBTN_PRESSED = 132
+
+# 133 - 135 is a red horizontal pill frame
+# 136 - 138 is a sold red horizontal pill
+
+# DIALOG_FRAMES's are frame indexes into tile.grp
+DIALOG_FRAME_TL = 0
+DIALOG_FRAME_T = 1
+DIALOG_FRAME_TR = 2
+DIALOG_FRAME_L = 3
+DIALOG_FRAME_M = 4
+DIALOG_FRAME_R = 5
+DIALOG_FRAME_BL = 6
+DIALOG_FRAME_B = 7
+DIALOG_FRAME_BR = 8

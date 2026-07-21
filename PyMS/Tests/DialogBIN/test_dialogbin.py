@@ -1,5 +1,5 @@
 
-from ...FileFormats.DialogBIN import DialogBIN, BINWidget, BINSMK, flags
+from ...FileFormats.DialogBIN import DialogBIN, BINWidget, BINSMK
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import IO
 from ..utils import resource_path
@@ -25,32 +25,14 @@ def _load_ansi_sample() -> DialogBIN:
 
 def _decompile(dialog: DialogBIN) -> str:
 	output = io.StringIO()
-	dialog.decompile_file(output)
+	dialog.decompile(output)
 	return output.getvalue()
 
 
-class Test_flags(unittest.TestCase):
-	def test_int_to_binary_string(self) -> None:
-		self.assertEqual(flags(5, 4), '0101')
-
-	def test_int_to_binary_string_width(self) -> None:
-		self.assertEqual(flags(1, 8), '00000001')
-
-	def test_binary_string_to_int(self) -> None:
-		self.assertEqual(flags('0101', 4), 5)
-
-	def test_round_trip(self) -> None:
-		self.assertEqual(flags(flags(0b101101, 8), 8), 0b101101)
-
-	def test_invalid_length_raises(self) -> None:
-		with self.assertRaises(PyMSError) as cm:
-			flags('010', 4)
-		self.assertIn('Invalid flags', str(cm.exception))
-
-	def test_invalid_characters_raise(self) -> None:
-		with self.assertRaises(PyMSError) as cm:
-			flags('012x', 4)
-		self.assertIn('Invalid flags', str(cm.exception))
+def _interpret(text: str) -> DialogBIN:
+	dialog = DialogBIN()
+	dialog.interpret(io.StringIO(text))
+	return dialog
 
 
 class Test_BINWidget(unittest.TestCase):
@@ -223,20 +205,152 @@ class Test_save(unittest.TestCase):
 
 class Test_text_round_trip(unittest.TestCase):
 	def test_decompile_interpret_is_stable(self) -> None:
-		dialog = _load_sample()
-		text = _decompile(dialog)
-		reinterpreted = DialogBIN()
-		reinterpreted.interpret_file(io.StringIO(text))
-		self.assertEqual(_decompile(reinterpreted), text)
+		for load in (_load_sample, _load_ansi_sample):
+			dialog = load()
+			text = _decompile(dialog)
+			reinterpreted = _interpret(text)
+			self.assertEqual(_decompile(reinterpreted), text)
 
 	def test_interpret_reproduces_binary(self) -> None:
-		dialog = _load_sample()
-		text = _decompile(dialog)
-		reinterpreted = DialogBIN()
-		reinterpreted.interpret_file(io.StringIO(text))
-		self.assertEqual(IO.output_to_bytes(reinterpreted.save), IO.output_to_bytes(dialog.save))
+		for load in (_load_sample, _load_ansi_sample):
+			dialog = load()
+			reinterpreted = _interpret(_decompile(dialog))
+			self.assertEqual(IO.output_to_bytes(reinterpreted.save), IO.output_to_bytes(dialog.save))
 
 	def test_decompile_emits_one_attribute_per_line(self) -> None:
 		text = _decompile(_load_sample())
 		widget_lines = [line.strip() for line in text.split('\n') if line.startswith('\t')]
 		self.assertIn('string GameMenu', [' '.join(line.split()) for line in widget_lines])
+
+	def test_decompile_emits_named_types_and_flags(self) -> None:
+		text = _decompile(_load_sample())
+		self.assertIn('\ttype dialog\n', text)
+		self.assertIn('\ttype button\n', text)
+		self.assertIn('\tflags.visible 1\n', text)
+
+	def test_empty_string_round_trips(self) -> None:
+		dialog = DialogBIN()
+		dialog.widgets[0].string = ''
+		text = _decompile(dialog)
+		self.assertIn('\tstring:\n', text)
+		self.assertEqual(_interpret(text).widgets[0].string, '')
+
+	def test_escaped_strings_round_trip(self) -> None:
+		strings = ('a#b', 'a//b', ' leading', 'trailing ', '\x07hotkey', 'lit<32>eral')
+		dialog = DialogBIN()
+		for string in strings:
+			widget = BINWidget(BINWidget.TYPE_LABEL_LEFT_ALIGN)
+			widget.string = string
+			dialog.add_widget(widget)
+		loaded = _interpret(_decompile(dialog))
+		self.assertEqual(tuple(widget.string for widget in loaded.widgets[1:]), strings)
+
+	def test_widget_flags_are_lossless(self) -> None:
+		dialog = DialogBIN()
+		dialog.widgets[0].flags = 0xFFFFFFFF
+		self.assertEqual(_interpret(_decompile(dialog)).widgets[0].flags, 0xFFFFFFFF)
+
+	def test_smk_flags_are_lossless(self) -> None:
+		dialog = DialogBIN()
+		smk = BINSMK()
+		smk.flags = 0xFFFF
+		dialog.smks.append(smk)
+		self.assertEqual(_interpret(_decompile(dialog)).smks[0].flags, 0xFFFF)
+
+	def test_smk_references_round_trip(self) -> None:
+		dialog = DialogBIN()
+		base = BINSMK()
+		base.filename = 'smk\\base.smk'
+		overlay = BINSMK()
+		overlay.filename = 'smk\\overlay.smk'
+		overlay.overlay_smk = base
+		dialog.smks.extend((base, overlay))
+		image = BINWidget(BINWidget.TYPE_IMAGE)
+		image.smk = overlay
+		dialog.add_widget(image)
+		text = _decompile(dialog)
+		self.assertIn('SMK(0):\n', text)
+		self.assertIn('SMK(1):\n', text)
+		loaded = _interpret(text)
+		self.assertEqual(len(loaded.smks), 2)
+		self.assertIsNone(loaded.smks[0].overlay_smk)
+		self.assertIs(loaded.smks[1].overlay_smk, loaded.smks[0])
+		self.assertIsNone(loaded.widgets[0].smk)
+		self.assertIs(loaded.widgets[1].smk, loaded.smks[1])
+
+	def test_decompile_unlisted_smk_raises(self) -> None:
+		dialog = DialogBIN()
+		image = BINWidget(BINWidget.TYPE_IMAGE)
+		image.smk = BINSMK()
+		dialog.add_widget(image)
+		with self.assertRaises(PyMSError) as cm:
+			_decompile(dialog)
+		self.assertIn("Referenced 'SMK' object has no ID", str(cm.exception))
+
+	def test_remastered_field_presence_round_trips(self) -> None:
+		dialog = DialogBIN()
+		remastered_text = io.StringIO()
+		dialog.decompile(remastered_text, remastered=True)
+		self.assertIn('\tscr_unknown1 0\n', remastered_text.getvalue())
+		self.assertTrue(_interpret(remastered_text.getvalue()).remastered)
+		legacy_text = _decompile(dialog)
+		self.assertNotIn('scr_unknown1', legacy_text)
+		self.assertFalse(_interpret(legacy_text).remastered)
+
+
+class Test_interpret(unittest.TestCase):
+	def test_type_accepts_names_and_ints(self) -> None:
+		dialog = _interpret('Widget:\n\ttype dialog\n\nWidget:\n\ttype 2\n')
+		self.assertEqual(dialog.widgets[0].type, BINWidget.TYPE_DIALOG)
+		self.assertEqual(dialog.widgets[1].type, BINWidget.TYPE_BUTTON)
+
+	def test_invalid_type_name_raises(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			_interpret('Widget:\n\ttype bogus\n')
+		self.assertIn('is not a valid widget type', str(cm.exception))
+
+	def test_dialog_widget_is_moved_to_front(self) -> None:
+		dialog = _interpret('Widget:\n\ttype button\n\nWidget:\n\ttype dialog\n')
+		self.assertEqual(dialog.widgets[0].type, BINWidget.TYPE_DIALOG)
+		self.assertEqual(dialog.widgets[1].type, BINWidget.TYPE_BUTTON)
+
+	def test_no_dialog_raises(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			_interpret('Widget:\n\ttype button\n')
+		self.assertIn('No dialog found.', str(cm.exception))
+
+	def test_missing_smk_reference_raises(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			_interpret('Widget:\n\ttype dialog\n\tsmk 5\n')
+		self.assertIn("'SMK' object with ID '5' is missing", str(cm.exception))
+
+	def test_duplicate_smk_id_raises(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			_interpret('SMK(0):\n\tflags.fade_in 0\n\nSMK(0):\n\tflags.dark 0\n\nWidget:\n\ttype dialog\n')
+		self.assertIn("Duplicate ID '0' for 'SMK' object", str(cm.exception))
+
+	def test_smk_without_id_raises(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			_interpret('SMK:\n\tflags.fade_in 0\n\nWidget:\n\ttype dialog\n')
+		self.assertIn("'SMK' object is missing an ID", str(cm.exception))
+
+	def test_invalid_smk_reference_raises(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			_interpret('Widget:\n\ttype dialog\n\tsmk bogus\n')
+		self.assertIn('Invalid SMK reference', str(cm.exception))
+
+	def test_invalid_field_name_raises(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			_interpret('Widget:\n\tbogus 5\n')
+		self.assertIn('is not a valid field name', str(cm.exception))
+
+	def test_flags_require_named_sub_fields(self) -> None:
+		# The old text format's bare binary flag strings are not valid input
+		with self.assertRaises(PyMSError) as cm:
+			_interpret('Widget:\n\ttype dialog\n\tflags 00000000000000000000000000001000\n')
+		self.assertIn("'flags' needs a sub-field", str(cm.exception))
+
+	def test_empty_text_raises(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			_interpret('')
+		self.assertIn('Nothing to decode.', str(cm.exception))

@@ -299,8 +299,8 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		boundsframe.grid(row=2, column=0, sticky=UI.NSEW, padx=5)
 		themeframe = UI.LabelFrame(self.preview_settings_frame, text='Theme')
 		themes = ['None']
-		for t in range(DialogBIN.THEME_ASSETS_MAIN_MENU,DialogBIN.THEME_ASSETS_NONE):
-			theme = DialogBIN.THEME_ASSETS_INFO[t]
+		for t in range(DialogBIN.Constants.THEME_ASSETS_MAIN_MENU,DialogBIN.Constants.THEME_ASSETS_NONE):
+			theme = DialogBIN.Constants.THEME_ASSETS_INFO[t]
 			themes.append(f'{theme["name"]} ({theme["path"]})')
 		UI.DropDown(themeframe, self.show_theme_index, themes, self.change_theme).grid(row=0, column=0, padx=5, sticky=UI.EW)
 		UI.Checkbutton(themeframe, text='Background', variable=self.show_background, command=lambda: self.toggle_setting(self.config_.preview.show_background,self.show_background)).grid(row=1, column=0, sticky=UI.W)
@@ -522,7 +522,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 
 	def update_background(self) -> None:
 		if self.bin and self.show_theme_index.get() and not self.background:
-			asset = DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'backgnd.pcx'
+			asset = DialogBIN.Constants.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'backgnd.pcx'
 			try:
 				background = PCX.PCX()
 				background.load(self.mpq_handler.load_file('MPQ:' + asset))
@@ -551,7 +551,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		dlggrp = None
 		check = ['glue\\palmm\\dlg.grp']
 		if self.show_theme_index.get():
-			check.insert(0, DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'dlg.grp')
+			check.insert(0, DialogBIN.Constants.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'dlg.grp')
 		for asset in check:
 			try:
 				grp = GRP.GRP()
@@ -568,7 +568,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		tilegrp = None
 		check = ['glue\\palmm\\tile.grp']
 		if self.show_theme_index.get():
-			check.insert(0, DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tile.grp')
+			check.insert(0, DialogBIN.Constants.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tile.grp')
 		for asset in check:
 			try:
 				grp = GRP.GRP()
@@ -585,7 +585,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		tfont = None
 		check = ['glue\\title\\tfont.pcx']
 		if self.show_theme_index.get():
-			check.insert(0, DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tfont.pcx')
+			check.insert(0, DialogBIN.Constants.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tfont.pcx')
 		for asset in check:
 			try:
 				tfont = PCX.PCX()
@@ -1114,7 +1114,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 			return
 		dbin = DialogBIN.DialogBIN()
 		try:
-			dbin.interpret_file(file)
+			dbin.interpret(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
@@ -1167,7 +1167,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		if not file:
 			return
 		try:
-			self.bin.decompile_file(file)
+			self.bin.decompile(file)
 			self.status.set('Export Successful!')
 		except PyMSError as e:
 			ErrorDialog(self, e)

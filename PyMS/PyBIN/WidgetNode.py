@@ -114,11 +114,11 @@ class WidgetNode:
 			x1 += self.widget.text_offset_x
 			y1 += self.widget.text_offset_y
 			if self.widget.type == DialogBIN.BINWidget.TYPE_CHECKBOX:
-				image = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_CHECK_SELECTED)
+				image = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_CHECK_SELECTED)
 				if image:
 					x1 += image.size[0] + 4
 			elif self.widget.type == DialogBIN.BINWidget.TYPE_OPTION_BTN:
-				image = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_RADIO_SELECTED)
+				image = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_RADIO_SELECTED)
 				if image:
 					x1 += image.size[0] + 4
 		return (x1,y1,x2,y2)
@@ -132,18 +132,18 @@ class WidgetNode:
 			y = y1
 			anchor: UI.Anchor = UI.NW
 			if self.widget.type == DialogBIN.BINWidget.TYPE_CHECKBOX:
-				asset_id = DialogBIN.DIALOG_ASSET_CHECK_DISABLED
+				asset_id = DialogBIN.Constants.DIALOG_ASSET_CHECK_DISABLED
 				if self.enabled():
-					asset_id = DialogBIN.DIALOG_ASSET_CHECK_SELECTED
+					asset_id = DialogBIN.Constants.DIALOG_ASSET_CHECK_SELECTED
 				pil = self.delegate.get_dialog_asset(asset_id)
 				if pil:
 					self.dialog_image = UI.ImageTk.PhotoImage(pil)
 					y += (y2 - y1) // 2
 					anchor = UI.W
 			elif self.widget.type == DialogBIN.BINWidget.TYPE_OPTION_BTN:
-				asset_id = DialogBIN.DIALOG_ASSET_RADIO_DISABLED
+				asset_id = DialogBIN.Constants.DIALOG_ASSET_RADIO_DISABLED
 				if self.enabled():
-					asset_id = DialogBIN.DIALOG_ASSET_RADIO_SELECTED
+					asset_id = DialogBIN.Constants.DIALOG_ASSET_RADIO_SELECTED
 				pil = self.delegate.get_dialog_asset(asset_id)
 				if pil:
 					self.dialog_image = UI.ImageTk.PhotoImage(pil)
@@ -151,17 +151,17 @@ class WidgetNode:
 					anchor = UI.W
 			elif self.widget.type == DialogBIN.BINWidget.TYPE_SLIDER:
 				if self.enabled():
-					left = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_LEFT)
-					mid = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_MIDDLE)
-					spot = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_SPOT)
-					right = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_RIGHT)
-					dot = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_DOT_YELLOW)
+					left = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SLIDER_LEFT)
+					mid = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SLIDER_MIDDLE)
+					spot = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SLIDER_SPOT)
+					right = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SLIDER_RIGHT)
+					dot = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SLIDER_DOT_YELLOW)
 				else:
-					left = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_LEFT_DISABLED)
-					mid = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_MIDDLE_DISABLED)
-					spot = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_SPOT_DISABLED)
-					right = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_RIGHT_DISABLED)
-					dot = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_DOT_DISABLED)
+					left = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SLIDER_LEFT_DISABLED)
+					mid = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SLIDER_MIDDLE_DISABLED)
+					spot = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SLIDER_SPOT_DISABLED)
+					right = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SLIDER_RIGHT_DISABLED)
+					dot = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SLIDER_DOT_DISABLED)
 				if left and mid and spot and right:
 					width = x2-x1
 					height = 0
@@ -194,13 +194,13 @@ class WidgetNode:
 					anchor = UI.W
 			elif self.widget.type in (DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_DEFAULT_BTN):
 				if self.enabled():
-					left = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_BUTTON_MID_LEFT)
-					mid = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_BUTTON_MID_MIDDLE)
-					right = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_BUTTON_MID_RIGHT)
+					left = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_BUTTON_MID_LEFT)
+					mid = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_BUTTON_MID_MIDDLE)
+					right = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_BUTTON_MID_RIGHT)
 				else:
-					left = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_BUTTON_MID_DISABLED_LEFT)
-					mid = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_BUTTON_MID_DISABLED_MIDDLE)
-					right = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_BUTTON_MID_DISABLED_RIGHT)
+					left = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_BUTTON_MID_DISABLED_LEFT)
+					mid = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_BUTTON_MID_DISABLED_MIDDLE)
+					right = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_BUTTON_MID_DISABLED_RIGHT)
 				if left and mid and right:
 					width = x2-x1
 					height = 0
@@ -218,16 +218,16 @@ class WidgetNode:
 					y += (y2 - y1) // 2
 					anchor = UI.W
 			elif self.widget.type == DialogBIN.BINWidget.TYPE_LISTBOX:
-				top = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_VERTICAL_TOP)
-				mid = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_VERTICAL_MIDDLE)
-				bot = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_VERTICAL_BOTTOM)
-				bar = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_BAR)
+				top = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SCROLL_VERTICAL_TOP)
+				mid = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SCROLL_VERTICAL_MIDDLE)
+				bot = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SCROLL_VERTICAL_BOTTOM)
+				bar = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SCROLL_BAR)
 				if self.enabled():
-					up = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_UP)
-					down = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_DOWN)
+					up = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SCROLL_UP)
+					down = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SCROLL_DOWN)
 				else:
-					up = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_UP_DISABLED)
-					down = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_DOWN_DISABLED)
+					up = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SCROLL_UP_DISABLED)
+					down = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_SCROLL_DOWN_DISABLED)
 				if top and mid and bot and bar and up and down: # pylint: disable=too-many-boolean-expressions
 					width = 0
 					height = y2-y1
@@ -249,13 +249,13 @@ class WidgetNode:
 					y += (y2 - y1) // 2
 					anchor = UI.E
 			elif self.widget.type == DialogBIN.BINWidget.TYPE_COMBOBOX:
-				left = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_COMBOBOX_LEFT)
-				middle = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_COMBOBOX_MIDDLE)
-				right = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_COMBOBOX_RIGHT)
+				left = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_COMBOBOX_LEFT)
+				middle = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_COMBOBOX_MIDDLE)
+				right = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_COMBOBOX_RIGHT)
 				if self.enabled():
-					arrow = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_COMBOBOX_ARROW)
+					arrow = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_COMBOBOX_ARROW)
 				else:
-					arrow = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_COMBOBOX_ARROW_DISABLED)
+					arrow = self.delegate.get_dialog_asset(DialogBIN.Constants.DIALOG_ASSET_COMBOBOX_ARROW_DISABLED)
 				if left and middle and right and arrow:
 					width = x2-x1
 					height = 0
@@ -274,15 +274,15 @@ class WidgetNode:
 					y += (y2 - y1) // 2
 					anchor = UI.W
 			elif self.widget.type == DialogBIN.BINWidget.TYPE_DIALOG and self.delegate.get_show_dialog():
-				tl = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_TL)
-				t = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_T)
-				tr = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_TR)
-				l = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_L)
-				m = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_M)
-				r = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_R)
-				bl = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_BL)
-				b = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_B)
-				br = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_BR)
+				tl = self.delegate.get_dialog_frame(DialogBIN.Constants.DIALOG_FRAME_TL)
+				t = self.delegate.get_dialog_frame(DialogBIN.Constants.DIALOG_FRAME_T)
+				tr = self.delegate.get_dialog_frame(DialogBIN.Constants.DIALOG_FRAME_TR)
+				l = self.delegate.get_dialog_frame(DialogBIN.Constants.DIALOG_FRAME_L)
+				m = self.delegate.get_dialog_frame(DialogBIN.Constants.DIALOG_FRAME_M)
+				r = self.delegate.get_dialog_frame(DialogBIN.Constants.DIALOG_FRAME_R)
+				bl = self.delegate.get_dialog_frame(DialogBIN.Constants.DIALOG_FRAME_BL)
+				b = self.delegate.get_dialog_frame(DialogBIN.Constants.DIALOG_FRAME_B)
+				br = self.delegate.get_dialog_frame(DialogBIN.Constants.DIALOG_FRAME_BR)
 				if tl and t and tr and l and m and r and bl and b and br: # pylint: disable=too-many-boolean-expressions
 					width = x2-x1
 					height = y2-y1
