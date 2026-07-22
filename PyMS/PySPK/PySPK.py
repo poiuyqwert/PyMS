@@ -576,7 +576,6 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 	def clear(self) -> None:
 		self.spk = None
-		self.file = None
 		self.mark_edited(False)
 
 		self.update_title()
@@ -677,7 +676,6 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.selected_image = self.spk.images[0]
 		self.palette_tab.reload_palette()
 		self.update_stars()
-		self.file = None
 		self.update_title()
 		self.status.set('Import Successful!')
 		self.mark_edited()
@@ -721,6 +719,7 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def close(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
+		self.file = None
 		self.clear()
 		self.status.set('Load or create a Parallax SPK.')
 		self.editstatus['state'] = UI.DISABLED

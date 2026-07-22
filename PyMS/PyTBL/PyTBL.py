@@ -320,7 +320,7 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.stringstatus.set('')
 		self.action_states()
 
-	def _populate_from_tbl(self, tbl: TBL.TBL, file: str, status: str) -> None:
+	def _populate_from_tbl(self, tbl: TBL.TBL, status: str) -> None:
 		self.tbl = tbl
 		self.listbox.delete(0, UI.END)
 		self.text_delete('1.0', UI.END)
@@ -329,10 +329,8 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		if self.listbox.size():
 			self.listbox.select_set(0)
 			self.listbox.see(0)
-		self.file = file
 		self.update_title()
 		self.status.set(status)
-		self.mark_edited(False)
 		self.action_states()
 		self.update_string()
 
@@ -349,7 +347,9 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		self._populate_from_tbl(tbl, file, 'Load Successful!')
+		self.file = file
+		self.mark_edited(False)
+		self._populate_from_tbl(tbl, 'Load Successful!')
 
 	def open_default(self) -> None:
 		self.open(Assets.mpq_file_path('rez','stat_txt.tbl'))
@@ -366,7 +366,8 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		self._populate_from_tbl(tbl, file, 'Import Successful!')
+		self.mark_edited()
+		self._populate_from_tbl(tbl, 'Import Successful!')
 
 	def save(self) -> CheckSaved:
 		return self.saveas(file_path=self.file)

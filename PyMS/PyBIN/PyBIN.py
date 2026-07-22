@@ -1022,7 +1022,6 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 
 	def clear(self) -> None:
 		self.bin = None
-		self.file = None
 		self.edited = False
 		self.dialog = None
 		self.widget_map.clear()
@@ -1134,11 +1133,10 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		self.setup_nodes()
 		self.refresh_nodes()
 		self.refresh_preview()
-		self.file = file
 		self.update_title()
 		self.scr_enabled.set(self.bin.remastered)
 		self.status.set('Import Successful!')
-		self.mark_edited(False)
+		self.mark_edited()
 		self.action_states()
 		self.tick(True)
 
@@ -1180,6 +1178,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 	def close(self, _event: UI.Event | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
+		self.file = None
 		self.clear()
 		self.status.set('Load or create a Dialog BIN.')
 		self.mark_edited(False)
