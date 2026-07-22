@@ -6,6 +6,6 @@ Edited by [PyDAT](/Help/Programs/PyDAT.md)
 ## References
 - Damage [Upgrade](/Help/Files/DAT/upgrades.dat.md)
 - Related [Technology](/Help/Files/DAT/techdata.dat.md) (Note: This is unused, it is now just a hint to the related technology)
-- Name and Targetting Error [Strings](/Help/Files/TBL.md#stattxttbl)
+- Name and Targetting Error [Strings](/Help/Files/TBL.md#stat_txttbl)
 - Graphics [Flingy](/Help/Files/DAT/flingy.dat.md)
 - [Icon](/Help/Files/GRP.md#cmdicongrp)

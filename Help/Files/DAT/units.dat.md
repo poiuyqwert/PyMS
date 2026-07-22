@@ -10,7 +10,7 @@ Edited by [PyDAT](/Help/Programs/PyDAT.md)
 - Graphics [Flingy](/Help/Files/DAT/flingy.dat.md)
 - Construction [Image](/Help/Files/DAT/images.dat.md)
 - [Portraits](/Help/Files/DAT/portdata.dat.md)
-- Rank [Strings](/Help/Files/TBL.md#stattxttbl)
+- Rank [Strings](/Help/Files/TBL.md#stat_txttbl)
 - AI Action [Orders](/Help/Files/DAT/orders.dat.md)
 
-The unit names are not specified in a setting on the unit, they are the first 228 entries in [stat_txt.tbl](/Help/Files/TBL.md#stattxttbl) (expanded entries would get their names from [unitnames.tbl](/Help/Files/TBL.md#unitnamestbl), see [Expanded DAT Files](/Help/Programs/PyDAT.md#expanded-dat-files) for more info).
+The unit names are not specified in a setting on the unit, they are the first 228 entries in [stat_txt.tbl](/Help/Files/TBL.md#stat_txttbl) (expanded entries would get their names from [unitnames.tbl](/Help/Files/TBL.md#unitnamestbl), see [Expanded DAT Files](/Help/Programs/PyDAT.md#expanded-dat-files) for more info).
