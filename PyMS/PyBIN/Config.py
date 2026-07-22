@@ -8,11 +8,17 @@ def _migrate_1_to_2(data: dict) -> None:
 		(('windows', 'edit', 'smk'), ('windows', 'edit', 'smk', 'main'))
 	))
 
+def _migrate_2_to_3(data: dict) -> None:
+	Config.migrate_fields(data, (
+		(('windows', 'edit', 'widget'), ('windows', 'edit', 'widget', 'main')),
+	))
+
 class PyBINConfig(Config.Config):
 	_name = 'PyBIN'
-	_version = 2
+	_version = 3
 	_migrations = {
-		1: _migrate_1_to_2
+		1: _migrate_1_to_2,
+		2: _migrate_2_to_3
 	}
 
 	class Windows(Config.Group):
@@ -23,6 +29,12 @@ class PyBINConfig(Config.Config):
 				super().__init__()
 
 		class Edit(Config.Group):
+			class Widget(Config.Group):
+				def __init__(self) -> None:
+					self.main = Config.WindowGeometry()
+					self.mpq_select = Config.WindowGeometry()
+					super().__init__()
+
 			class SMK(Config.Group):
 				def __init__(self) -> None:
 					self.main = Config.WindowGeometry()
@@ -30,7 +42,7 @@ class PyBINConfig(Config.Config):
 					super().__init__()
 
 			def __init__(self) -> None:
-				self.widget = Config.WindowGeometry()
+				self.widget = PyBINConfig.Windows.Edit.Widget()
 				self.smk = PyBINConfig.Windows.Edit.SMK()
 				super().__init__()
 
@@ -92,6 +104,7 @@ class PyBINConfig(Config.Config):
 		class Widget(Config.Group):
 			def __init__(self) -> None:
 				self.advanced = Config.Boolean(default=False)
+				self.mpq_select_history = Config.List(value_type=str)
 				super().__init__()
 
 		class SMK(Config.Group):

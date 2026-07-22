@@ -495,12 +495,17 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 	def remove_node(self) -> None:
 		if not self.bin or not self.selected_node:
 			return
-		self.selected_node.remove_display()
-		if self.selected_node.widget:
-			self.bin.widgets.remove(self.selected_node.widget)
-			if self.selected_node.widget.type >= DialogBIN.BINWidget.TYPE_HTML and not self.bin.remastered:
-				self.scr_enabled.set(False)
-			self.action_states()
+		# Removing a group removes everything inside it, so the whole subtree's
+		# widgets must leave the file and their canvas items leave the preview.
+		removed_scr_widget = False
+		for node in self.selected_node.flattened_subtree():
+			node.remove_display()
+			if node.widget:
+				self.bin.widgets.remove(node.widget)
+				if node.widget.type >= DialogBIN.BINWidget.TYPE_HTML:
+					removed_scr_widget = True
+		if removed_scr_widget and not self.bin.remastered:
+			self.scr_enabled.set(False)
 		self.selected_node.remove_from_parent()
 		self.selected_node = None
 		self.update_selection_box()

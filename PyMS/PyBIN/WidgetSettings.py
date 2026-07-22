@@ -9,6 +9,7 @@ from ..FileFormats import DialogBIN, TBL
 
 from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
+from ..Utilities.MPQSelect import MPQSelect
 from ..Utilities.utils import pack_flags
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
@@ -42,7 +43,7 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		self.bottom = UI.IntegerVar(val_range=[0,65535])
 		self.height = UI.IntegerVar(val_range=[0,65535])
 		def calc_bottom(_: Any) -> None:
-			self.calculate(self.left, self.right, self.width, -1, fix=1, allow_advanced=False)
+			self.calculate(self.bottom, self.top, self.height, 1, fix=-1, allow_advanced=False)
 		self.top.callback = calc_bottom
 		self.height.callback = calc_bottom
 		self.string = UI.StringVar()
@@ -61,7 +62,7 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		self.responsive_bottom = UI.IntegerVar(val_range=[0,65535])
 		self.responsive_height = UI.IntegerVar(val_range=[0,65535])
 		def calc_responsive_bottom(_: Any) -> None:
-			self.calculate(self.responsive_left, self.responsive_right, self.responsive_width, -1, fix=1, allow_advanced=False)
+			self.calculate(self.responsive_bottom, self.responsive_top, self.responsive_height, 1, fix=-1, allow_advanced=False)
 		self.responsive_top.callback = calc_responsive_bottom
 		self.responsive_height.callback = calc_responsive_bottom
 
@@ -199,7 +200,7 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		self.string_label = UI.Label(textframe, text='Image:' if isimage else 'Text:')
 		self.string_label.grid(row=0,column=0)
 		UI.Entry(textframe, textvariable=self.string, font=UI.Font.fixed()).grid(row=0,column=1, sticky=UI.EW)
-		findimage = UI.Button(textframe, image=Assets.get_image('openmpq'), width=20, height=20)#, command=btn[1], state=btn[3])
+		findimage = UI.Button(textframe, image=Assets.get_image('openmpq'), width=20, height=20, command=self.find_image)
 		findimage.grid(row=0, column=2)
 		textframe.grid_columnconfigure(1, weight=1)
 		textframe.grid(row=0,column=0, columnspan=5, sticky=UI.EW)
@@ -349,12 +350,12 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 	def load_settings(self) -> None:
 		config = self.delegate.get_config()
 		self.show_advanced.set(config.edit.widget.advanced.value)
-		config.windows.edit.widget.load_size(self)
+		config.windows.edit.widget.main.load_size(self)
 
 	def save_settings(self) -> None:
 		config = self.delegate.get_config()
 		config.edit.widget.advanced.value = self.show_advanced.get()
-		config.windows.edit.widget.save_size(self)
+		config.windows.edit.widget.main.save_size(self)
 
 	def load_property_smk(self) -> None:
 		smks = ['None']
@@ -537,6 +538,12 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		self.save_properties()
 		self.delegate.refresh_nodes()
 		self.delegate.refresh_preview()
+
+	def find_image(self) -> None:
+		config = self.delegate.get_config()
+		m = MPQSelect(parent=self, mpqhandler=self.delegate.get_mpqhandler(), name='Image', filetype=UI.FileType.pcx(), history_config=config.edit.widget.mpq_select_history, window_geometry_config=config.windows.edit.widget.mpq_select)
+		if m.file and m.file.startswith('MPQ:'):
+			self.string.set(m.file[4:])
 
 	def edit_smk(self) -> None:
 		if not self.widget.smk:

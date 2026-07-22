@@ -65,6 +65,13 @@ class WidgetNode:
 			return self.get_name()
 		return f'{self.get_name()} [ID: {self.widget.identifier}]'
 
+	def flattened_subtree(self) -> list[WidgetNode]:
+		nodes: list[WidgetNode] = [self]
+		if self.children is not None:
+			for child in self.children:
+				nodes.extend(child.flattened_subtree())
+		return nodes
+
 	def remove_from_parent(self) -> None:
 		if not self.parent or self.parent.children is None:
 			return
