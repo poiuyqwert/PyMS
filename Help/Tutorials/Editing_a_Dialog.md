@@ -40,3 +40,4 @@ To see your edited dialog in the game, use [PyMPQ](/Help/Programs/PyMPQ.md) to a
 - [Widgets](/Help/Programs/PyBIN/Widgets.md)
 - [Widget Editor](/Help/Programs/PyBIN/Widget_Editor.md)
 - [UI BIN](/Help/Files/UI_BIN.md)
+- [Creating a Mod MPQ](/Help/Tutorials/Creating_a_Mod_MPQ.md)

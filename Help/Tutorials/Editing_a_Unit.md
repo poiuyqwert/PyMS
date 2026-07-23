@@ -37,3 +37,4 @@ To use the edited files in the game, they need to be in the MPQ your mod loads, 
 - [Weapons Tab](/Help/Programs/PyDAT/Weapons.md)
 - [units.dat](/Help/Files/DAT/units.dat.md)
 - [MPQ](/Help/Files/MPQ.md)
+- [Creating a Mod MPQ](/Help/Tutorials/Creating_a_Mod_MPQ.md)

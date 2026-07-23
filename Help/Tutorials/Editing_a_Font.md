@@ -38,3 +38,4 @@ To use the edited font in the game it needs to be in the MPQ your mod loads, at 
 - [FNT](/Help/Files/FNT.md)
 - [BMP](/Help/Files/BMP.md)
 - [MPQ](/Help/Files/MPQ.md)
+- [Creating a Mod MPQ](/Help/Tutorials/Creating_a_Mod_MPQ.md)

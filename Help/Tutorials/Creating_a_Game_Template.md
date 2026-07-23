@@ -34,3 +34,4 @@ To use the game type in the game, the files need to be in the MPQ your mod loads
 - [TRG](/Help/Files/TRG.md)
 - [PyTRG](/Help/Programs/PyTRG.md)
 - [MPQ](/Help/Files/MPQ.md)
+- [Creating a Mod MPQ](/Help/Tutorials/Creating_a_Mod_MPQ.md)

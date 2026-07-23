@@ -35,3 +35,4 @@ To use the edited graphics in the game they need to be in the MPQ your mod loads
 - [BMP](/Help/Files/BMP.md)
 - [MPQ](/Help/Files/MPQ.md)
 - [Palettes](/Help/Files/Palettes.md)
+- [Creating a Mod MPQ](/Help/Tutorials/Creating_a_Mod_MPQ.md)

@@ -26,3 +26,4 @@ To use the edited offsets in the game they need to be in the MPQ your mod loads,
 - [LO?](/Help/Files/LO.md)
 - [PyMPQ](/Help/Programs/PyMPQ.md)
 - [MPQ](/Help/Files/MPQ.md)
+- [Creating a Mod MPQ](/Help/Tutorials/Creating_a_Mod_MPQ.md)

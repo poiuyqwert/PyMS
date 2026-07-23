@@ -40,3 +40,4 @@ At the top is the script's header, listing its [animations](/Help/Files/iscript.
 - [Command Reference](/Help/Programs/PyICE/Command_Reference.md)
 - [iscript.bin](/Help/Files/iscript.bin.md)
 - [PyMPQ](/Help/Programs/PyMPQ.md)
+- [Creating a Mod MPQ](/Help/Tutorials/Creating_a_Mod_MPQ.md)
