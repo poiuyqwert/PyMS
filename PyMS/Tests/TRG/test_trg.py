@@ -1,5 +1,6 @@
 
 from ...FileFormats.TRG.TRG import TRG, Format
+from ...FileFormats.TRG.Constants import BriefingActionType
 from ...FileFormats.TRG.UnitProperties import FieldFlag, StateFlag
 from ...Utilities.PyMSError import PyMSError
 
@@ -42,6 +43,20 @@ Trigger(Player 1):
     Always()
   Actions:
     CreateUnitWithProperties(Player 1, 1, 0, Anywhere, Properties 1)
+
+'''
+
+
+# A mission briefing trigger, exercising briefing-only actions and briefing actions
+# that share a name with a normal action but take different parameters. Briefing
+# triggers have no Conditions: or Actions: headers - actions are listed directly.
+BRIEFING_TEXT = '''String(1):
+  Briefing incoming
+
+BriefingTrigger():
+    ShowPortrait(0, Slot 1)
+    DisplayTextMessage(String 1, 3000)
+    Transmission(String 1, Slot 1, No WAV, 2000, Set To, 4000)
 
 '''
 
@@ -104,6 +119,43 @@ class Test_text_round_trip(unittest.TestCase):
 			_compile(PROPERTIES_TEXT.replace('Owner(5)', 'Owner(999)'))
 		self.assertIn('Integer parameter too large', str(cm.exception))
 
+	def test_briefing_compile_populates_model(self) -> None:
+		trg = _compile(BRIEFING_TEXT)
+		self.assertEqual(trg.format, Format.briefing)
+		self.assertEqual(len(trg.triggers), 1)
+		self.assertEqual(trg.strings, {1: 'Briefing incoming'})
+
+	def test_briefing_actions_use_briefing_definitions(self) -> None:
+		# Actions in a BriefingTrigger must resolve against the briefing action set,
+		# including names shared with normal actions (like DisplayTextMessage and
+		# Transmission, which take different parameters in a briefing).
+		trg = _compile(BRIEFING_TEXT)
+		action_types = [action.action_type for action in trg.triggers[0].actions]
+		self.assertEqual(action_types, [BriefingActionType.show_portrait, BriefingActionType.text_message, BriefingActionType.transmission])
+
+	def test_briefing_decompile_matches_source(self) -> None:
+		trg = _compile(BRIEFING_TEXT)
+		output = io.StringIO()
+		trg.decompile(output)
+		self.assertEqual(output.getvalue(), BRIEFING_TEXT)
+
+	def test_briefing_actions_header_raises(self) -> None:
+		# A BriefingTrigger holds only actions, listed directly - an Actions: header
+		# is not part of the briefing syntax.
+		with self.assertRaises(PyMSError) as cm:
+			_compile(BRIEFING_TEXT.replace('BriefingTrigger():\n', 'BriefingTrigger():\n  Actions:\n'))
+		self.assertIn('Expected an action', str(cm.exception))
+
+	def test_briefing_only_action_in_normal_trigger_raises(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			_compile(NORMAL_TEXT.replace('    Victory()\n', '    ShowPortrait(0, Slot 1)\n'))
+		self.assertIn("Unknown action name 'ShowPortrait'", str(cm.exception))
+
+	def test_normal_only_action_in_briefing_raises(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			_compile(BRIEFING_TEXT.replace('    ShowPortrait(0, Slot 1)\n', '    Victory()\n'))
+		self.assertIn("Unknown action name 'Victory'", str(cm.exception))
+
 
 class Test_binary_round_trip(unittest.TestCase):
 	def _save(self, trg: TRG, trg_format: Format | None = None) -> bytes:
@@ -135,6 +187,25 @@ class Test_binary_round_trip(unittest.TestCase):
 		with self.assertRaises(PyMSError) as cm:
 			TRG().load(b'not a valid header at all')
 		self.assertIn('Not a valid .trg file (missing header)', str(cm.exception))
+
+	def test_briefing_load_reproduces_model(self) -> None:
+		original = _compile(BRIEFING_TEXT)
+		loaded = TRG()
+		loaded.load(self._save(original), Format.briefing)
+		self.assertEqual(loaded, original)
+
+	def test_briefing_resave_is_byte_identical(self) -> None:
+		data = self._save(_compile(BRIEFING_TEXT))
+		reloaded = TRG()
+		reloaded.load(data, Format.briefing)
+		self.assertEqual(self._save(reloaded), data)
+
+	def test_briefing_load_decompiles_to_source(self) -> None:
+		loaded = TRG()
+		loaded.load(self._save(_compile(BRIEFING_TEXT)), Format.briefing)
+		output = io.StringIO()
+		loaded.decompile(output)
+		self.assertEqual(output.getvalue(), BRIEFING_TEXT)
 
 	def test_referenced_unit_properties_round_trip(self) -> None:
 		# An action references the properties, so binary save/load must retain them.
