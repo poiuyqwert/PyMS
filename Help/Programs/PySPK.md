@@ -27,7 +27,7 @@ Stars are edited on the canvas using three tools, switched with the buttons on t
 
 - **Select** (`M`): Click a star, or drag a box around stars, to select them. A plain click replaces the selection, while holding `Ctrl` or `Shift` adds to it. Stars on locked [layers](/Help/Programs/PySPK/Layers.md) can not be selected.
 - **Move** (`V`): Drag to move the selected stars.
-- **Draw** (`P`): Click to place the star image chosen on the [Palette Tab](/Help/Programs/PySPK/Palette_Tab.md) onto the active layer, centered on the cursor (a preview of the star follows the cursor). If the active layer is hidden, drawing on it makes it visible again, and if it is locked nothing is drawn.
+- **Draw** (`P`): Click to place the star image chosen on the [Palette Tab](/Help/Programs/PySPK/Palette_Tab.md) onto the active layer, centered on the cursor, or hold `Shift` to place it by its top-left corner instead (a preview of the star follows the cursor either way). If the active layer is hidden, drawing on it makes it visible again, and if it is locked nothing is drawn.
 
 With any tool, the arrow keys nudge the selected stars 1 pixel at a time, and `Delete` or `Backspace` deletes them (after confirming).
 
