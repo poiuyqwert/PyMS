@@ -60,7 +60,7 @@ class PyPAL(UI.MainWindow):
 			return saveas
 		self.toolbar.add_button(Assets.get_image('saveriff'), saveas_callback(Palette.FileType.riff), 'Save as RIFF *.pal', UI.Ctrl.r, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('savejasc'), saveas_callback(Palette.FileType.jasc), 'Save as JASC *.pal', UI.Ctrl.j, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savepal'), saveas_callback(Palette.FileType.sc_pal), 'Save as StarCraft *.pal', UI.Ctrl.p, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('savepal'), saveas_callback(Palette.FileType.sc_pal), 'Save as StarCraft *.pal', UI.Ctrl.Alt.p, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('savewpe'), saveas_callback(Palette.FileType.wpe), 'Save as StarCraft Terrain *.wpe', UI.Ctrl.t, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('saveact'), saveas_callback(Palette.FileType.act), 'Save as Adobe Color Table *.act', UI.Ctrl.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
@@ -77,7 +77,9 @@ class PyPAL(UI.MainWindow):
 
 		self.palmenu = UI.Menu(self, tearoff=0)
 		self.palmenu.add_command(label='Copy', command=self.copy, shortcut=UI.Ctrl.c) # type: ignore[call-arg]
-		self.palmenu.add_command(label='Paste', command=self.paste, shortcut=UI.Ctrl.p, tags='paste') # type: ignore[call-arg]
+		# The 'paste' tag state is only refreshed when the popup opens, so the shortcut is bound directly instead of through the menu item; `paste` guards itself.
+		self.palmenu.add_command(label='Paste', command=self.paste, shortcut=UI.Ctrl.p, tags='paste', bind_shortcut=False) # type: ignore[call-arg]
+		self.bind(UI.Ctrl.p(), self.paste)
 
 		#Canvas
 		self.canvas = UI.Canvas(self, width=273, height=273, background='#000000', coordinate_adjust=UI.Canvas.coordinate_adjust_os, theme_tag='preview') # type: ignore[call-arg, attr-defined]

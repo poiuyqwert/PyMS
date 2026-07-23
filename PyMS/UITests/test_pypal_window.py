@@ -8,6 +8,7 @@ from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities.PyMSError import PyMSError
 
 import io
+import re
 import tkinter
 from unittest import mock
 
@@ -496,6 +497,37 @@ class Test_PyPAL_clipboard(PyPALTestCase):
 			gui.paste()
 		self.assertEqual(gui.palette.palette[2], (0, 0, 0))
 		self.assertFalse(gui.edited)
+
+
+class Test_PyPAL_keyboard_shortcuts(PyPALTestCase):
+	def test_ctrl_p_pastes_clipboard_color(self) -> None:
+		# `Ctrl+P` belongs to the palette menu's Paste command: it applies the
+		# clipboard color to the selected swatch and never opens a save dialog.
+		gui = self.with_new_palette()
+		self.show(gui)
+		gui.selected = 2
+		with mock.patch.object(gui, 'selection_get', return_value='#0A141E'), \
+				mock.patch.object(gui, 'saveas', return_value=CheckSaved.saved) as saveas:
+			self.shortcut(gui, UI.Ctrl.p)
+		assert gui.palette is not None
+		self.assertEqual(gui.palette.palette[2], (10, 20, 30))
+		saveas.assert_not_called()
+
+	def test_ctrl_alt_p_is_bound_to_save_as_starcraft_pal(self) -> None:
+		# Tk on Aqua drops synthesized Option-modified key events, so instead of
+		# generating the keystroke this resolves the callback registered for the
+		# shortcut's bind sequence and drives it directly.
+		gui = self.with_loaded_palette()
+		self.show(gui)
+		script = gui.bind(UI.Ctrl.Alt.p())
+		match = re.search(r'\[(\S+)', script)
+		assert match is not None
+		# Event substitution values: numeric fields need real integers, and %W
+		# must be a real widget path for the Event to reconstruct.
+		args = [str(gui) if field == '%W' else '0' for field in getattr(gui, '_subst_format')]
+		with mock.patch.object(gui, 'saveas', return_value=CheckSaved.saved) as saveas:
+			gui.tk.call(match.group(1), *args)
+		saveas.assert_called_once_with(file_type=Palette.FileType.sc_pal)
 
 
 class Test_PyPAL_popup_menu(PyPALTestCase):
