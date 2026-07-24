@@ -7,10 +7,9 @@ from ..PyMSError import PyMSError
 from ..BytesScanner import BytesScanner
 
 class ByteCodeDecompiler:
-	def _decompile_block(self, address: int, context: DecompileContext) -> tuple[CodeBlock, CodeBlock | None]:
+	def decompile_block(self, address: int, context: DecompileContext) -> CodeBlock:
 		if address in context.block_refs:
-			block = context.block_refs[address]
-			return (block, None)
+			return context.block_refs[address]
 		elif address in context.cmd_refs:
 			block = CodeBlock()
 			context.block_refs[address] = block
@@ -26,7 +25,7 @@ class ByteCodeDecompiler:
 				block.next_block = prev_block.next_block
 				block.next_block.prev_block = block
 			prev_block.next_block = block
-			return (block, prev_block)
+			return block
 		else:
 			scanner = BytesScanner(context.data, address)
 			block = CodeBlock()
@@ -40,22 +39,25 @@ class ByteCodeDecompiler:
 					raise PyMSError('Byte Code', f"Invalid command id '{cmd_id}'")
 				cmd = cmd_def.decompile(scanner, context)
 				cmd.original_location = cmd_address
-				for n,param_type in enumerate(cmd.definition.param_types):
-					if param_type.block_reference:
-						new_block, split_block = self._decompile_block(cmd.params[n], context)
-						cmd.params[n] = new_block
-						if split_block == active_block:
-							active_block = new_block
+				# Register the command before decompiling its block params, so a jump
+				# cycle back to this address splits the block instead of re-scanning
+				# the same bytes into a duplicate command
 				active_block.add_command(cmd)
 				context.cmd_refs[cmd_address] = (active_block, cmd)
+				for n,param_type in enumerate(cmd.definition.param_types):
+					if param_type.block_reference:
+						new_block = self.decompile_block(cmd.params[n], context)
+						cmd.params[n] = new_block
+						# A split (possibly deep in the recursion) may have moved this
+						# command into a new block, so re-resolve which block holds it
+						active_block = context.cmd_refs[cmd_address][0]
+						# `add_command` couldn't capture this ref while the param was
+						# still a raw address, so record it now
+						active_block.ref_blocks.append(new_block)
 				if cmd.definition.ends_flow:
 					break
 				if scanner.address in context.block_refs:
 					active_block.next_block = context.block_refs[scanner.address]
 					active_block.next_block.prev_block = active_block
 					break
-			return (block, None)
-
-	def decompile_block(self, address: int, context: DecompileContext) -> CodeBlock:
-		block, _ = self._decompile_block(address, context)
-		return block
+			return block
