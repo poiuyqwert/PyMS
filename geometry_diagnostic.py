@@ -11,6 +11,9 @@ Instructions:
      `geometry_diagnostic_<date>_<time>.log` next to this script.
      Please send that file back.
 
+Version 2.0 validates the multi-monitor geometry fixes: any ANOMALY or FINDING
+in the log indicates the fixes are not working correctly on this machine.
+
 This script only READS your settings - it never modifies them or any other file
 (other than writing its own log).
 """
@@ -27,7 +30,7 @@ import platform
 import traceback
 import datetime
 
-VERSION = '1.0'
+VERSION = '2.0'
 
 if sys.version_info[0] < 3:
 	print('This diagnostic requires Python 3, but it is running under Python %s.' % sys.version.split()[0])
@@ -124,11 +127,23 @@ except Exception:
 PYMS_IMPORT_ERROR = None
 Config = None
 Utils = None
+UIKit = None
 try:
 	from PyMS.Utilities import Config
+	from PyMS.Utilities import UIKit
 	from PyMS.Utilities.UIKit import Utils
 except Exception:
 	PYMS_IMPORT_ERROR = traceback.format_exc()
+
+# True when this PyMS installation includes the multi-monitor geometry fixes
+# (Rect.clamp clamps to desktop `bounds` instead of shrinking into a single screen)
+CLAMP_IS_FIXED = False
+if Utils is not None:
+	try:
+		import inspect
+		CLAMP_IS_FIXED = 'bounds' in inspect.signature(Utils.Rect.clamp).parameters
+	except Exception:
+		pass
 
 # ---------------------------------------------------------------------------
 # Shared state gathered by early sections
@@ -175,6 +190,10 @@ def section_process():
 		log(PYMS_IMPORT_ERROR)
 	else:
 		log('  PyMS.Utilities.Config and PyMS.Utilities.UIKit.Utils imported OK')
+		if CLAMP_IS_FIXED:
+			log('  This PyMS includes the multi-monitor geometry fixes')
+		else:
+			log('!! This PyMS PREDATES the multi-monitor geometry fixes - update PyMS and re-run to validate them')
 
 
 # ---------------------------------------------------------------------------
@@ -398,91 +417,108 @@ def _fill_case(template, screen_w, screen_h):
 		.replace('{H}', str(screen_h)))
 
 
-def _clamp_issues(geometry, screen_w, screen_h):
+def _bounds_text(bounds):
+	return '%dx%d at %d,%d' % (bounds.size.width, bounds.size.height, bounds.pos.x, bounds.pos.y)
+
+
+def _screen_bounds(screen_w, screen_h):
+	return Utils.Rect(Utils.Point(0, 0), Utils.Size(screen_w, screen_h))
+
+
+def desktop_bounds(window):
+	"""The clamp bounds load_size uses: the virtual desktop unioned with the primary screen."""
+	screen = _screen_bounds(window.winfo_screenwidth(), window.winfo_screenheight())
+	if not CLAMP_IS_FIXED:
+		return screen
+	vroot = Utils.Rect(
+		Utils.Point(window.winfo_vrootx(), window.winfo_vrooty()),
+		Utils.Size(window.winfo_vrootwidth(), window.winfo_vrootheight())
+	)
+	return vroot.union(screen)
+
+
+def _clamp_issues(saved, result, bounds):
+	"""Regression checks for the fixed clamp: sizes must never shrink below the saved size
+	(beyond capping to the desktop) and the window must always overlap the desktop."""
 	issues = []
-	if geometry.size.width < 100:
-		issues.append('very THIN (width=%d)' % geometry.size.width)
-	if geometry.size.height < 100:
-		issues.append('very SHORT (height=%d)' % geometry.size.height)
-	if (geometry.pos.x >= screen_w or geometry.pos.y >= screen_h
-			or geometry.pos.x + geometry.size.width <= 0 or geometry.pos.y + geometry.size.height <= 0):
-		issues.append('entirely OFF the primary screen (pos +%d+%d)' % (geometry.pos.x, geometry.pos.y))
-	elif (geometry.pos.x + geometry.size.width > screen_w or geometry.pos.y + geometry.size.height > screen_h
-			or geometry.pos.x < 0 or geometry.pos.y < 0):
-		issues.append('partially off the primary screen')
+	if result.size.width < min(saved.size.width, bounds.size.width):
+		issues.append('width shrunk to %d (saved %d)' % (result.size.width, saved.size.width))
+	if result.size.height < min(saved.size.height, bounds.size.height):
+		issues.append('height shrunk to %d (saved %d)' % (result.size.height, saved.size.height))
+	if result.pos.x >= bounds.max_x or result.pos.x + result.size.width <= bounds.pos.x:
+		issues.append('no horizontal overlap with the desktop (x=%d)' % result.pos.x)
+	if result.pos.y >= bounds.max_y or result.pos.y + result.size.height <= bounds.pos.y:
+		issues.append('no vertical overlap with the desktop (y=%d)' % result.pos.y)
 	return issues
 
 
-def _run_clamp_case(name, saved, screen_w, screen_h, min_w, min_h, record):
-	geometry = Utils.Geometry.parse(saved)
-	if geometry is None:
-		log('  %-46s %r -> <Geometry.parse REJECTED it>' % (name + ':', saved))
+def _run_clamp_case(name, saved_text, bounds, min_w, min_h, record):
+	saved = Utils.Geometry.parse(saved_text)
+	if saved is None:
+		log('  %-46s %r -> <Geometry.parse REJECTED it>' % (name + ':', saved_text))
 		return
-	geometry.clamp(size=Utils.Size(screen_w, screen_h), min_size=Utils.Size(min_w, min_h))
-	issues = _clamp_issues(geometry, screen_w, screen_h)
-	log('  %-46s %r -> %r%s' % (name + ':', saved, geometry.text, ('  <-- ' + ', '.join(issues)) if issues else ''))
+	result = Utils.Geometry.parse(saved_text)
+	result.clamp(bounds=bounds, min_size=Utils.Size(min_w, min_h))
+	issues = _clamp_issues(saved, result, bounds)
+	log('  %-46s %r -> %r%s' % (name + ':', saved_text, result.text, ('  <-- ' + ', '.join(issues)) if issues else ''))
 	if issues:
-		record('load_size clamp of %r (screen %dx%d, minsize %dx%d) produces %r: %s' % (saved, screen_w, screen_h, min_w, min_h, geometry.text, ', '.join(issues)))
+		record('clamp of %r (bounds %s, minsize %dx%d) produced %r: %s' % (saved_text, _bounds_text(bounds), min_w, min_h, result.text, ', '.join(issues)))
 
 
 def section_clamp_battery():
 	if PYMS_IMPORT_ERROR:
 		log('  Skipped: PyMS could not be imported.')
 		return
+	if not CLAMP_IS_FIXED:
+		anomaly('This PyMS installation predates the multi-monitor geometry fixes - update PyMS and re-run')
+		return
+	log('  Any FINDING in this section indicates a regression in the fixed clamp behavior.')
 
-	screens = [('assumed 1920x1080 screen', 1920, 1080)]
-	if TK_SCREEN and TK_SCREEN != (1920, 1080):
-		screens.append(('this machine\'s Tk-reported primary screen', TK_SCREEN[0], TK_SCREEN[1]))
+	runs = [('assumed single 1920x1080 monitor', 1920, 1080, _screen_bounds(1920, 1080))]
+	if TK_SCREEN:
+		if TK_SCREEN != (1920, 1080):
+			runs.append(("this machine's primary screen only", TK_SCREEN[0], TK_SCREEN[1], _screen_bounds(TK_SCREEN[0], TK_SCREEN[1])))
+		if ROOT is not None:
+			real_bounds = desktop_bounds(ROOT)
+			if real_bounds != _screen_bounds(TK_SCREEN[0], TK_SCREEN[1]):
+				runs.append(("this machine's full virtual desktop (what load_size actually uses)", TK_SCREEN[0], TK_SCREEN[1], real_bounds))
 
-	for screen_label, screen_w, screen_h in screens:
+	for run_label, fill_w, fill_h, bounds in runs:
 		log('')
-		log('  Synthetic scenarios on %s (%dx%d), minsize 1x1 (the default for PyAI\'s code edit window):' % (screen_label, screen_w, screen_h))
+		log('  Scenarios sized against a %dx%d primary, clamped to %s (%s), minsize 1x1:' % (fill_w, fill_h, run_label, _bounds_text(bounds)))
 		for name, template in SYNTHETIC_CASES:
-			_run_clamp_case(name, _fill_case(template, screen_w, screen_h), screen_w, screen_h, 1, 1, finding)
+			_run_clamp_case(name, _fill_case(template, fill_w, fill_h), bounds, 1, 1, finding)
 		log('')
-		log('  Key scenarios repeated with minsize 550x430 (a window that sets a real minimum size):')
+		log('  Key scenarios repeated with minsize 550x430:')
 		for name, template in SYNTHETIC_CASES:
 			if 'second monitor' in name or 'zoomed' in name:
-				_run_clamp_case(name, _fill_case(template, screen_w, screen_h), screen_w, screen_h, 550, 430, finding)
+				_run_clamp_case(name, _fill_case(template, fill_w, fill_h), bounds, 550, 430, finding)
 
 	if not USER_GEOMETRIES:
 		log('')
 		log('  No saved geometries were found in Settings/PyAI.txt to analyze.')
 		return
-	if not TK_SCREEN:
+	if ROOT is None:
 		log('')
-		log('  Tk screen size unavailable - cannot analyze the saved geometries against it.')
+		log('  No Tk root available - cannot analyze the saved geometries.')
 		return
-	screen_w, screen_h = TK_SCREEN
+	bounds = desktop_bounds(ROOT)
 	log('')
-	log('  YOUR saved geometries from Settings/PyAI.txt, analyzed against the Tk primary screen (%dx%d):' % (screen_w, screen_h))
+	log('  YOUR saved geometries from Settings/PyAI.txt, as load_size will restore them (desktop %s):' % _bounds_text(bounds))
 	for geometry_path, geometry_string in USER_GEOMETRIES:
-		geometry = Utils.Geometry.parse(geometry_string)
-		if geometry is None:
-			log('  %s = %r  <-- not a full WxH+X+Y geometry (PyAI would ignore it on load)' % (geometry_path, geometry_string))
+		saved = Utils.Geometry.parse(geometry_string)
+		if saved is None:
+			log('  %s = %r  (position-only or partial value)' % (geometry_path, geometry_string))
 			continue
-		on_primary = (0 <= geometry.pos.x and 0 <= geometry.pos.y
-			and geometry.pos.x + geometry.size.width <= screen_w and geometry.pos.y + geometry.size.height <= screen_h)
-		containing = None
-		for monitor in MONITORS:
-			left, top, right, bottom = monitor['monitor']
-			center_x = geometry.pos.x + geometry.size.width // 2
-			center_y = geometry.pos.y + geometry.size.height // 2
-			if left <= center_x < right and top <= center_y < bottom:
-				containing = monitor
-				break
-		monitor_note = ''
-		if containing is not None:
-			monitor_note = ' [center is on %r%s]' % (containing['device'], ' PRIMARY' if containing['primary'] else ' NON-PRIMARY')
-		elif MONITORS:
-			monitor_note = ' [center is not on ANY current monitor]'
-		log('  %s = %r  fully-on-Tk-primary: %s%s' % (geometry_path, geometry_string, on_primary, monitor_note))
-		if not on_primary:
-			clamped = Utils.Geometry.parse(geometry_string)
-			clamped.clamp(size=Utils.Size(screen_w, screen_h), min_size=Utils.Size(1, 1))
-			issues = _clamp_issues(clamped, screen_w, screen_h)
-			anomaly('Saved geometry %s = %r is NOT fully on the Tk primary screen; on load PyAI will clamp it to %r%s' % (
-				geometry_path, geometry_string, clamped.text, (' (%s)' % ', '.join(issues)) if issues else ''))
+		result = Utils.Geometry.parse(geometry_string)
+		result.clamp(bounds=bounds, min_size=Utils.Size(1, 1))
+		if result.text == saved.text:
+			log('  %s = %r  -> restored exactly' % (geometry_path, geometry_string))
+		else:
+			log('  %s = %r  -> adjusted to %r' % (geometry_path, geometry_string, result.text))
+		issues = _clamp_issues(saved, result, bounds)
+		if issues:
+			anomaly('Saved geometry %s = %r would restore badly as %r: %s' % (geometry_path, geometry_string, result.text, ', '.join(issues)))
 
 
 # ---------------------------------------------------------------------------
@@ -490,7 +526,12 @@ def section_clamp_battery():
 # ---------------------------------------------------------------------------
 
 def make_top(title):
-	top = tkinter.Toplevel(ROOT)
+	# Real PyMS windows are UIKit.Toplevel (WindowExtensions) - the fixed maximize
+	# detection only engages for those, so plain tkinter.Toplevel would not be representative
+	if UIKit is not None:
+		top = UIKit.Toplevel(ROOT)
+	else:
+		top = tkinter.Toplevel(ROOT)
 	top.title(title)
 	try:
 		top.attributes('-alpha', 0.0)
@@ -587,9 +628,12 @@ def live_load_battery():
 				log('  %-46s decode() REJECTED %r (stored %r)' % (name + ':', saved, geometry_config.encode()))
 				continue
 			min_size = top.minsize()
-			# predict what load_size's clamp should request
-			predicted = Utils.Geometry.parse(saved)
-			predicted.clamp(size=Utils.Size(screen_w, screen_h), min_size=Utils.Size(min_size[0], min_size[1]))
+			bounds = desktop_bounds(top)
+			predicted = None
+			if CLAMP_IS_FIXED:
+				# predict what load_size's clamp should request
+				predicted = Utils.Geometry.parse(saved)
+				predicted.clamp(bounds=bounds, min_size=Utils.Size(min_size[0], min_size[1]))
 			try:
 				geometry_config.load_size(top)
 			except Exception as exception:
@@ -601,24 +645,42 @@ def live_load_battery():
 			actual = top.geometry()
 			state = top.wm_state()
 			log('  %-46s saved %r (window minsize %r)' % (name + ':', saved, min_size))
-			log('    load_size should request: %r' % predicted.text)
+			if predicted is not None:
+				log('    load_size should request: %r' % predicted.text)
 			log('    actual window ended at:   %r (wm_state=%r)' % (actual, state))
-			actual_tuple = parse_geometry_tuple(actual)
-			if actual_tuple is not None:
-				issues = []
-				if actual_tuple[0] < 100:
-					issues.append('very THIN (width=%d)' % actual_tuple[0])
-				if actual_tuple[1] < 100:
-					issues.append('very SHORT (height=%d)' % actual_tuple[1])
-				if actual_tuple[2] >= screen_w or actual_tuple[3] >= screen_h:
-					issues.append('positioned off the primary screen')
-				if issues and state == 'normal':
+			saved_geometry = Utils.Geometry.parse(saved)
+			actual_geometry = Utils.Geometry.parse(actual)
+			if state == 'normal' and saved_geometry is not None and actual_geometry is not None:
+				issues = _clamp_issues(saved_geometry, actual_geometry, bounds)
+				if saved_geometry.size.width > bounds.size.width or saved_geometry.size.height > bounds.size.height:
+					# oversized windows may additionally be constrained by the window manager
+					issues = [issue for issue in issues if 'shrunk' not in issue]
+				if issues:
 					finding('live load_size of %r produced %r: %s' % (saved, actual, ', '.join(issues)))
 		finally:
 			try:
 				top.destroy()
 			except Exception:
 				pass
+
+	# The position-only format saved by non-resizable windows must decode and restore
+	top = make_top('PyMS diagnostic - position only')
+	try:
+		settle(top)
+		geometry_config = Config.WindowGeometry()
+		geometry_config.decode('+250+260')
+		if geometry_config.encode() != '+250+260':
+			log('  position-only save "+250+260": decode() REJECTED it')
+			finding('decode() rejected the position-only format saved by non-resizable windows')
+		else:
+			geometry_config.load_size(top)
+			settle(top)
+			log('  position-only save "+250+260" restored window at: %r' % top.geometry())
+	finally:
+		try:
+			top.destroy()
+		except Exception:
+			pass
 
 
 def _round_trip(label, initial_geometry):
@@ -681,6 +743,7 @@ def live_zoomed():
 		return
 	top = make_top('PyMS diagnostic - zoomed')
 	geometry_config = Config.WindowGeometry()
+	was_zoomed = False
 	try:
 		settle(top)
 		top.geometry('640x480+150+120')
@@ -691,16 +754,19 @@ def live_zoomed():
 			log('  wm_state("zoomed") raised %r - maximize testing is not possible on this platform.' % exception)
 			return
 		settle(top)
+		was_zoomed = (top.wm_state() == 'zoomed')
 		log('  wm_state after zoom request: %r' % top.wm_state())
-		zoomed_raw = top.geometry()
-		log('  raw geometry() while zoomed: %r' % zoomed_raw)
+		log('  raw geometry() while zoomed: %r' % top.geometry())
 		zoomed_geometry = Utils.Geometry.of(top)
 		log('  Geometry.of(window).maximized = %r' % zoomed_geometry.maximized)
-		if top.wm_state() == 'zoomed' and not zoomed_geometry.maximized:
-			finding('Tk geometry() for a zoomed window is %r with no "^" marker - PyMS save_size cannot detect the maximized state, so closing a maximized window saves the zoomed pixel rect as if it were a normal window position/size' % zoomed_raw)
+		if was_zoomed and not zoomed_geometry.maximized:
+			finding('Geometry.of does not report a zoomed window as maximized - the maximized state will not be saved')
 		geometry_config.save_size(top)
-		log('  save_size on the zoomed window encoded: %r' % geometry_config.encode())
+		encoded = geometry_config.encode()
+		log('  save_size on the zoomed window encoded: %r' % encoded)
 		log('  wm_state after save_size: %r' % top.wm_state())
+		if was_zoomed and (encoded is None or not encoded.endswith('^')):
+			finding('save_size on a maximized window encoded %r without the "^" maximized flag - the window will not re-maximize on next open' % encoded)
 	finally:
 		try:
 			top.destroy()
@@ -713,6 +779,8 @@ def live_zoomed():
 			geometry_config.load_size(top)
 			settle(top)
 			log('  load_size of that saved value -> wm_state=%r geometry=%r' % (top.wm_state(), top.geometry()))
+			if was_zoomed and top.wm_state() != 'zoomed':
+				finding('a maximized save did not restore as maximized (wm_state=%r)' % top.wm_state())
 		except Exception as exception:
 			log('  load_size of that saved value RAISED: %r' % exception)
 			finding('load_size of the zoomed-save value %r raised %r' % (geometry_config.encode(), exception))
@@ -777,15 +845,10 @@ def live_code_edit_flow():
 		settle(top)
 		final = top.geometry()
 		log('  step 4 - after load_size: geometry=%r wm_state=%r' % (final, top.wm_state()))
-		final_tuple = parse_geometry_tuple(final)
-		if final_tuple is not None and TK_SCREEN:
-			issues = []
-			if final_tuple[0] < 100:
-				issues.append('very THIN (width=%d)' % final_tuple[0])
-			if final_tuple[1] < 100:
-				issues.append('very SHORT (height=%d)' % final_tuple[1])
-			if final_tuple[2] >= TK_SCREEN[0] or final_tuple[3] >= TK_SCREEN[1]:
-				issues.append('positioned off the primary screen')
+		saved_geometry = Utils.Geometry.parse(saved)
+		final_geometry = Utils.Geometry.parse(final)
+		if top.wm_state() == 'normal' and saved_geometry is not None and final_geometry is not None:
+			issues = _clamp_issues(saved_geometry, final_geometry, desktop_bounds(top))
 			if issues:
 				anomaly('Simulated code edit window open with YOUR saved geometry %r ends at %r: %s' % (saved, final, ', '.join(issues)))
 			else:
