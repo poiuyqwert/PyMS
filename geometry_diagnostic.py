@@ -226,7 +226,7 @@ def section_tk_env():
 		TK_SCREEN = (screen_w, screen_h)
 	if vroot_w and vroot_h and screen_w and screen_h:
 		if (vroot_w, vroot_h) != (screen_w, screen_h) or vroot_x or vroot_y:
-			anomaly('Tk virtual root (%dx%d at %d,%d) differs from Tk screen size (%dx%d)' % (vroot_w, vroot_h, vroot_x or 0, vroot_y or 0, screen_w, screen_h))
+			log('  NOTE: virtual desktop (%dx%d at %d,%d) extends beyond the primary screen (%dx%d) - multiple monitors' % (vroot_w, vroot_h, vroot_x or 0, vroot_y or 0, screen_w, screen_h))
 
 
 # ---------------------------------------------------------------------------
