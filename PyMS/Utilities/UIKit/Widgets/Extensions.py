@@ -112,6 +112,23 @@ class WindowExtensions(MiscExtensions, _Tk.Wm):
 			is_maximized = (cur_max_width >= initial_max_width and cur_max_height >= initial_max_height)
 		return is_maximized
 
+	def conceal(self) -> None:
+		"""Make the window fully transparent — while staying mapped, so measurement,
+		geometry and grabs behave normally — until `reveal()`, so it doesn't flash at
+		the OS-chosen position/size before its config geometry is applied."""
+		try:
+			self.wm_attributes('-alpha', 0.0)
+		except Exception:
+			return # `-alpha` unsupported; window just shows normally
+		self._concealed = True # pylint: disable=attribute-defined-outside-init
+
+	def reveal(self) -> None:
+		if not getattr(self, '_concealed', False):
+			return
+		self._concealed = False # pylint: disable=attribute-defined-outside-init
+		self.update_idletasks() # settle any pending geometry change before becoming visible
+		self.wm_attributes('-alpha', 1.0)
+
 	def grab_wait(self) -> None:
 		self.grab_set()
 		self.wait_window(self)

@@ -67,6 +67,9 @@ class UITestCase(unittest.TestCase):
 		except TclError as e:
 			raise unittest.SkipTest(f'No display available for Tk: {e}')
 		self.addCleanup(self._destroy, window)
+		# Windows stay concealed until `startup()`, which tests don't call; reveal
+		# so tests interact with a visible window (keyboard focus needs one).
+		window.reveal()
 		self.pump(window)
 		return window
 

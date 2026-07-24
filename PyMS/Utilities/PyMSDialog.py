@@ -4,21 +4,25 @@ from . import UIKit as UI
 class PyMSDialog(UI.Toplevel):
 	def __init__(self, parent: UI.Misc, title: str, *, center: bool = True, grabwait: bool = True, escape: bool = False, resizable: tuple[bool, bool] = (True,True), set_min_size: tuple[bool, bool] = (False,False)) -> None:
 		UI.Toplevel.__init__(self, parent)
+		self.conceal()
 		self.title(title)
 		self.protocol('WM_DELETE_WINDOW', self.cancel)
 		if escape:
 			self.bind(UI.Shortcut.Close(), self.cancel)
 		self.parent = parent
-		focus: UI.Misc | None = self.widgetize()
-		self.update_idletasks()
-		required_size = UI.Size(self.winfo_reqwidth(), self.winfo_reqheight())
-		if set_min_size[0] or set_min_size[1]:
-			self.minsize(required_size.width if set_min_size[0] else 0, required_size.height if set_min_size[1] else 0)
-		screen_size = UI.Size(self.winfo_screenwidth(), self.winfo_screenheight())
-		if center:
-			self.geometry(UI.GeometryAdjust(pos=required_size.centered_in(screen_size)).text)
-		self.resizable(*resizable)
-		self.setup_complete()
+		try:
+			focus: UI.Misc | None = self.widgetize()
+			self.update_idletasks()
+			required_size = UI.Size(self.winfo_reqwidth(), self.winfo_reqheight())
+			if set_min_size[0] or set_min_size[1]:
+				self.minsize(required_size.width if set_min_size[0] else 0, required_size.height if set_min_size[1] else 0)
+			screen_size = UI.Size(self.winfo_screenwidth(), self.winfo_screenheight())
+			if center:
+				self.geometry(UI.GeometryAdjust(pos=required_size.centered_in(screen_size)).text)
+			self.resizable(*resizable)
+			self.setup_complete()
+		finally:
+			self.reveal()
 		if not focus:
 			focus = self
 		focus.focus_set()

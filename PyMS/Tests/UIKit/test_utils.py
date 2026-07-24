@@ -93,33 +93,71 @@ class Test_Rect(unittest.TestCase):
 	def test_not_equal(self) -> None:
 		self.assertNotEqual(Rect(Point(1, 2), Size(3, 4)), (1, 2, 3, 5))
 
-	def test_clamp_shrinks_to_fit(self) -> None:
-		rect = Rect(Point(10, 10), Size(200, 200))
-		rect.clamp(size=Size(100, 100))
-		self.assertEqual(rect.pos, Point(10, 10))
-		self.assertEqual(rect.size, Size(90, 90))
+	def test_union_of_overlapping_rects(self) -> None:
+		primary = Rect(Point(0, 0), Size(1366, 768))
+		secondary = Rect(Point(-1920, 0), Size(1920, 1080))
+		self.assertEqual(primary.union(secondary), Rect(Point(-1920, 0), Size(3286, 1080)))
 
-	def test_clamp_repositions_negative_origin(self) -> None:
-		rect = Rect(Point(-5, -5), Size(50, 50))
-		rect.clamp(size=Size(100, 100))
-		self.assertEqual(rect.pos, Point(0, 0))
-		self.assertEqual(rect.size, Size(50, 50))
+	def test_union_of_contained_rect(self) -> None:
+		container = Rect(Point(-100, -100), Size(1000, 1000))
+		contained = Rect(Point(0, 0), Size(100, 100))
+		self.assertEqual(container.union(contained), container)
 
-	def test_clamp_enforces_min_size(self) -> None:
+	def test_clamp_inside_bounds_unchanged(self) -> None:
+		rect = Rect(Point(-1900, 50), Size(800, 600))
+		rect.clamp(bounds=Rect(Point(-1920, 0), Size(3286, 1080)))
+		self.assertEqual(rect, Rect(Point(-1900, 50), Size(800, 600)))
+
+	def test_clamp_size_capped_to_bounds(self) -> None:
+		rect = Rect(Point(0, 0), Size(4000, 2000))
+		rect.clamp(bounds=Rect(Point(-1920, 0), Size(3286, 1080)))
+		self.assertEqual(rect.size, Size(3286, 1080))
+
+	def test_clamp_size_not_derived_from_position(self) -> None:
+		rect = Rect(Point(150, 120), Size(1366, 709))
+		rect.clamp(bounds=Rect(Point(0, 0), Size(1366, 768)))
+		self.assertEqual(rect.size, Size(1366, 709))
+
+	def test_clamp_overflow_right_and_bottom_keeps_size(self) -> None:
+		rect = Rect(Point(1300, 700), Size(400, 300))
+		rect.clamp(bounds=Rect(Point(0, 0), Size(1366, 768)))
+		self.assertEqual(rect.size, Size(400, 300))
+		self.assertEqual(rect.pos, Point(1266, 668))
+
+	def test_clamp_min_size_floor(self) -> None:
 		rect = Rect(Point(0, 0), Size(50, 50))
-		rect.clamp(size=Size(100, 100), min_size=Size(60, 60))
+		rect.clamp(bounds=Rect(Point(0, 0), Size(1000, 1000)), min_size=Size(60, 60))
 		self.assertEqual(rect.size, Size(60, 60))
 
-	def test_clamp_enforces_max_size(self) -> None:
-		rect = Rect(Point(0, 0), Size(80, 80))
-		rect.clamp(size=Size(100, 100), max_size=Size(70, 70))
-		self.assertEqual(rect.size, Size(70, 70))
+	def test_clamp_no_overlap_left_brought_fully_inside(self) -> None:
+		rect = Rect(Point(-5000, 50), Size(800, 600))
+		rect.clamp(bounds=Rect(Point(-1920, 0), Size(3286, 1080)))
+		self.assertEqual(rect.pos, Point(-1920, 50))
 
-	def test_clamp_with_offset_origin(self) -> None:
-		rect = Rect(Point(0, 0), Size(200, 200))
-		rect.clamp(size=Size(100, 100), pos=Point(50, 50))
-		self.assertEqual(rect.pos, Point(50, 50))
-		self.assertEqual(rect.size, Size(100, 100))
+	def test_clamp_no_overlap_right_brought_fully_inside(self) -> None:
+		rect = Rect(Point(5000, 50), Size(800, 600))
+		rect.clamp(bounds=Rect(Point(0, 0), Size(1366, 768)))
+		self.assertEqual(rect.pos, Point(1366 - 800, 50))
+
+	def test_clamp_no_overlap_below_brought_fully_inside(self) -> None:
+		rect = Rect(Point(100, 5000), Size(800, 600))
+		rect.clamp(bounds=Rect(Point(0, 0), Size(1366, 768)))
+		self.assertEqual(rect.pos, Point(100, 768 - 600))
+
+	def test_clamp_above_top_pinned_to_top(self) -> None:
+		rect = Rect(Point(100, -500), Size(800, 600))
+		rect.clamp(bounds=Rect(Point(0, 0), Size(1366, 768)))
+		self.assertEqual(rect.pos, Point(100, 0))
+
+	def test_clamp_partial_overlap_preserved(self) -> None:
+		rect = Rect(Point(1200, 100), Size(400, 300))
+		rect.clamp(bounds=Rect(Point(0, 0), Size(1366, 768)))
+		self.assertEqual(rect.pos, Point(1200, 100))
+
+	def test_clamp_window_narrower_than_margin_stays_reachable(self) -> None:
+		rect = Rect(Point(1350, 50), Size(40, 600))
+		rect.clamp(bounds=Rect(Point(0, 0), Size(1366, 768)))
+		self.assertEqual(rect.pos, Point(1366 - 40, 50))
 
 
 class Test_Geometry_parse(unittest.TestCase):
