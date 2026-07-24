@@ -1,5 +1,5 @@
 # PyPAL
-PyPAL is a tool used for editing color [palette](/Help/Files/Palettes.md) files in various formats. PyPAL provides an editor to modify the 256 colors of a palette, as well as a way to convert between the different supported palette formats. If you are new to palette editing, start with the [Editing a Terrain Palette](/Help/Tutorials/Editing_a_Terrain_Palette.md) tutorial.
+PyPAL is a tool used for editing color [palette](/Help/Files/Palettes.md) files in various formats. PyPAL provides an editor to modify the 256 colors of a palette, as well as a way to convert between the different supported palette formats. If you are new to palette editing, start with the [Editing a Palette](/Help/Tutorials/Editing_a_Palette.md) tutorial.
 
 **Supported Palette Formats:**
 - [RIFF .pal](/Help/Files/Palettes.md#riff-pal)
@@ -72,7 +72,7 @@ If `out` is left off, the converted palette is saved next to the input file with
 - `--gui`: Opens a file with the GUI.
 
 ## See Also
-- [Editing a Terrain Palette](/Help/Tutorials/Editing_a_Terrain_Palette.md)
+- [Editing a Palette](/Help/Tutorials/Editing_a_Palette.md)
 - [Palettes](/Help/Files/Palettes.md)
 - [PCX](/Help/Files/PCX.md)
 - [BMP](/Help/Files/BMP.md)

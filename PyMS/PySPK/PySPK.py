@@ -515,7 +515,7 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.move_stars((dx,dy))
 			self.last_pos = (event.x,event.y)
 
-	def draw_event(self, event: UI.Event, mouse_event: MouseEvent, click_modifier: ClickModifier) -> None: # pylint: disable=unused-argument
+	def draw_event(self, event: UI.Event, mouse_event: MouseEvent, click_modifier: ClickModifier) -> None:
 		if not self.spk:
 			return
 		if mouse_event != MouseEvent.up \
@@ -526,8 +526,12 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			return
 		star = SPK.SPKStar()
 		star.image = self.selected_image
-		star.x = max(0,event.x - star.image.width//2)
-		star.y = max(0,event.y - star.image.height//2)
+		if click_modifier == ClickModifier.shift:
+			star.x = max(0,event.x)
+			star.y = max(0,event.y)
+		else:
+			star.x = max(0,event.x - star.image.width//2)
+			star.y = max(0,event.y - star.image.height//2)
 		self.spk.layers[self.layer.get()].stars.append(star)
 		self.update_star(star, self.layer.get())
 		self.update_zorder()

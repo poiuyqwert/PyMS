@@ -119,3 +119,4 @@ class Test_decompile(unittest.TestCase):
 		text = self._decompile(trigger)
 		self.assertTrue(text.startswith('BriefingTrigger():'))
 		self.assertNotIn('Conditions:', text)
+		self.assertNotIn('Actions:', text)

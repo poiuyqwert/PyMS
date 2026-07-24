@@ -1,5 +1,5 @@
 
-from ...FileFormats.TRG import Conditions, Actions
+from ...FileFormats.TRG import Conditions, Actions, BriefingActions
 from ...FileFormats.TRG.Condition import Condition
 from ...FileFormats.TRG.Action import Action
 from ...FileFormats.TRG.Constants import ConditionType, ActionType, PlayerGroup, Mask, Matches
@@ -160,3 +160,25 @@ class Test_description_placeholders(unittest.TestCase):
 
 	def test_actions(self) -> None:
 		self._check(Actions.definitions_registry)
+
+	def test_briefing_actions(self) -> None:
+		self._check(BriefingActions.definitions_registry)
+
+
+class Test_help_placeholders(unittest.TestCase):
+	# help() substitutes a `{n}` placeholder for each parameter index, so a
+	# literal placeholder left in the output means a description references a
+	# parameter that doesn't exist.
+	def _check(self, registry: list) -> None:
+		for definition in registry:
+			with self.subTest(definition=definition.name):
+				self.assertNotRegex(definition.help(), r'\{\d+\}')
+
+	def test_conditions(self) -> None:
+		self._check(Conditions.definitions_registry)
+
+	def test_actions(self) -> None:
+		self._check(Actions.definitions_registry)
+
+	def test_briefing_actions(self) -> None:
+		self._check(BriefingActions.definitions_registry)
