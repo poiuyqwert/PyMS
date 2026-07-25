@@ -289,7 +289,25 @@ class RenameEncoder(Encoder[V,D]):
 	def apply(self, value: D, current: V) -> V:
 		return self.encoder.apply(value, current)
 
-AnyEncoder = Encoder | GroupEncoder | SplitEncoder | JoinEncoder
+class ReferenceEncoder:
+	"""References another object in the same encode/decode by the ID in its header (the referenced object must use `IDMode.header`)"""
+	def __init__(self, definition_name: str) -> None:
+		self.definition_name = definition_name
+
+	def decode(self, value: JSON.Value) -> (int | None):
+		if isinstance(value, str):
+			if value == 'None':
+				return None
+			if value.isdigit():
+				return int(value)
+		elif isinstance(value, int) and not isinstance(value, bool):
+			return value
+		raise PyMSError('Decode', f"Invalid {self.definition_name} reference '{value}', expected an integer or 'None'")
+
+# Maps `id(obj)` of each object being encoded to its object ID
+References = dict[int, int]
+
+AnyEncoder = Encoder | GroupEncoder | SplitEncoder | JoinEncoder | ReferenceEncoder
 SubStructure = dict[str, AnyEncoder]
 Structure = dict[str, AnyEncoder | SubStructure]
 
@@ -304,7 +322,7 @@ class Definition:
 		self.id_mode = id_mode
 		self.structure = structure
 
-def _encode_json(obj: object, structure: Structure | SubStructure, fields: Fields | SubFields | None) -> OrderedDict[str, JSON.Value]:
+def _encode_json(obj: object, structure: Structure | SubStructure, fields: Fields | SubFields | None, references: References | None = None) -> OrderedDict[str, JSON.Value]:
 	if fields is not None and len(fields) == 0:
 		raise PyMSError('Internal', 'No fields to encode')
 	json: OrderedDict[str, JSON.Value] = OrderedDict()
@@ -338,14 +356,19 @@ def _encode_json(obj: object, structure: Structure | SubStructure, fields: Field
 		elif isinstance(encoder, dict):
 			if not isinstance(field, dict):
 				field = None
-			value = _encode_json(value, encoder, field)
+			value = _encode_json(value, encoder, field, references)
+		elif isinstance(encoder, ReferenceEncoder):
+			if value is not None:
+				if references is None or id(value) not in references:
+					raise PyMSError('Encode', f"Referenced '{encoder.definition_name}' object has no ID")
+				value = references[id(value)]
 		else:
 			value = encoder.encode(value)
 		json[key] = value
 	return json
 
-def encode_json(obj: object, obj_id: int | None, definition: Definition, fields: Fields | None = None) -> OrderedDict[str, JSON.Value]:
-	json = _encode_json(obj, definition.structure, fields)
+def encode_json(obj: object, obj_id: int | None, definition: Definition, fields: Fields | None = None, references: References | None = None) -> OrderedDict[str, JSON.Value]:
+	json = _encode_json(obj, definition.structure, fields, references)
 	if obj_id is not None:
 		json['_id'] = obj_id
 		json.move_to_end('_id', last=False)
@@ -356,15 +379,16 @@ def encode_json(obj: object, obj_id: int | None, definition: Definition, fields:
 	return json
 
 def encode_jsons(objs: Sequence[tuple[object, int]], get_definition: Callable[[object], Definition | None], fields: Fields | None = None) -> list[OrderedDict[str, JSON.Value]]:
+	references: References = {id(obj): obj_id for obj,obj_id in objs}
 	json: list[OrderedDict[str, JSON.Value]] = []
 	for obj,obj_id in objs:
 		definition = get_definition(obj)
 		if not definition:
 			raise PyMSError('Internal', f"Object type '{obj.__class__.__name__}' has no definition")
-		json.append(encode_json(obj, obj_id, definition, fields))
+		json.append(encode_json(obj, obj_id, definition, fields, references))
 	return json
 
-def encode_text(obj: object, obj_id: int | None, definition: Definition, fields: Fields | None = None) -> str:
+def encode_text(obj: object, obj_id: int | None, definition: Definition, fields: Fields | None = None, references: References | None = None) -> str:
 	def flatten(json: dict[str, JSON.Value], prefix: str | None = None) -> str:
 		result = ''
 		for key,value in json.items():
@@ -374,9 +398,12 @@ def encode_text(obj: object, obj_id: int | None, definition: Definition, fields:
 				key = f'{prefix}.{key}'
 			if isinstance(value, dict):
 				result += flatten(value, key)
-			elif isinstance(value, str) and '\n' in value:
-				value = value.replace('\n', '\n\t\t')
-				result += f'\t{key}:\n\t\t{value}\n'
+			elif isinstance(value, str) and ('\n' in value or not value):
+				if value:
+					value = value.replace('\n', '\n\t\t')
+					result += f'\t{key}:\n\t\t{value}\n'
+				else:
+					result += f'\t{key}:\n'
 			else:
 				if isinstance(value, bool):
 					value = 1 if value else 0
@@ -397,10 +424,11 @@ def encode_text(obj: object, obj_id: int | None, definition: Definition, fields:
 		raise PyMSError('Internal', f"Missing ID for '{definition.name}' object")
 	else:
 		result = f'{definition.name}:\n'
-	json = encode_json(obj, obj_id, definition, fields)
+	json = encode_json(obj, obj_id, definition, fields, references)
 	return result + flatten(json)
 
 def encode_texts(objs: Sequence[tuple[object, int]], get_definition: Callable[[object], Definition | None], fields: Fields | None = None) -> str:
+	references: References = {id(obj): obj_id for obj,obj_id in objs}
 	result = ''
 	for obj, obj_id in objs:
 		definition = get_definition(obj)
@@ -408,7 +436,7 @@ def encode_texts(objs: Sequence[tuple[object, int]], get_definition: Callable[[o
 			raise PyMSError('Internal', f"Object type '{obj.__class__.__name__}' has no definition")
 		if result:
 			result += '\n'
-		result += encode_text(obj, obj_id, definition, fields)
+		result += encode_text(obj, obj_id, definition, fields, references)
 	return result
 
 class LineScanner:
@@ -491,7 +519,7 @@ def _decode_text_to_json(text: str, definitions: Sequence[Definition]) -> list[O
 					raise PyMSError('Decode', f"'{key}' can't have sub-fields")
 				json[key] = decoder.decode(value)
 	def _add_json(json: OrderedDict, definition: Definition, result: list[OrderedDict]) -> None:
-		if len(json) == 0:
+		if not any(not key.startswith('_') for key in json):
 			raise PyMSError('Decode', f"'{definition.name}' object is empty")
 		json['_type'] = definition.name
 		json.move_to_end('_type', last=False)
@@ -514,6 +542,8 @@ def _decode_text_to_json(text: str, definitions: Sequence[Definition]) -> list[O
 				assert definition is not None
 				_add_json(working, definition, result)
 			working = OrderedDict()
+			if match.group(2) is not None:
+				working['_id'] = int(match.group(2))
 			definition = new_definition
 			continue
 		match = _RE_FIELD_FLAT.match(line)
@@ -570,6 +600,7 @@ def repeater_repeat_last(decode_count: int, obj_n: int, _obj_count: int) -> (int
 
 O = TypeVar('O')
 def decode_text(text: str, definitions: Sequence[Definition], builder: Callable[[int, Definition], O], objs: int | None = None, repeater: Repeater = repeater_ignore) -> list[O]:
+	referenced_objects: dict[tuple[str, int], object] = {}
 	def _apply(json: dict[str, Any], obj: object, structure: Structure | SubStructure) -> None:
 		for key,value in json.items():
 			if key in ('_type', '_id'):
@@ -587,6 +618,15 @@ def decode_text(text: str, definitions: Sequence[Definition], builder: Callable[
 					sub_value = sub_decoder.apply(value[sub_key], current)
 					setattr(obj, attr, sub_value)
 					continue
+			elif isinstance(decoder, ReferenceEncoder):
+				if not hasattr(obj, key):
+					raise PyMSError('Decode', f"'{key}' is not a valid field name")
+				resolved: object | None = None
+				if value is not None:
+					resolved = referenced_objects.get((decoder.definition_name, value))
+					if resolved is None:
+						raise PyMSError('Decode', f"'{decoder.definition_name}' object with ID '{value}' is missing")
+				setattr(obj, key, resolved)
 			else:
 				attr = key
 				if isinstance(decoder, SplitEncoder):
@@ -604,9 +644,21 @@ def decode_text(text: str, definitions: Sequence[Definition], builder: Callable[
 					value = decoder.apply(value, current)
 					setattr(obj, attr, value)
 	jsons = _decode_text_to_json(text, definitions)
+	seen_ids: set[tuple[str, int]] = set()
+	for json in jsons:
+		json_id = json.get('_id')
+		if json_id is None:
+			continue
+		id_key = (json['_type'], json_id)
+		if id_key in seen_ids:
+			raise PyMSError('Decode', f"Duplicate ID '{json_id}' for '{json['_type']}' object")
+		seen_ids.add(id_key)
 	decode_count = len(jsons)
 	definition_map = {definition.name: definition for definition in definitions}
 	result: list[O] = []
+	# All objects are built (and their IDs registered) before any fields are
+	# applied, so references can resolve to objects from later in the text.
+	applies: list[tuple[OrderedDict, O, Definition]] = []
 	count: int
 	if objs is not None:
 		count = objs
@@ -626,7 +678,16 @@ def decode_text(text: str, definitions: Sequence[Definition], builder: Callable[
 		definition = definition_map.get(json_type)
 		if definition is None:
 			raise PyMSError('Decode', f"Unrecognized object type '{json_type}'")
+		json_id = json.get('_id')
+		if definition.id_mode == IDMode.header and json_id is None:
+			raise PyMSError('Decode', f"'{definition.name}' object is missing an ID")
 		obj = builder(raw_n, definition)
-		_apply(json, obj, definition.structure)
+		if json_id is not None:
+			id_key = (definition.name, json_id)
+			if id_key not in referenced_objects:
+				referenced_objects[id_key] = obj
+		applies.append((json, obj, definition))
 		result.append(obj)
+	for json, obj, definition in applies:
+		_apply(json, obj, definition.structure)
 	return result

@@ -411,11 +411,10 @@ class PyGOT(UI.MainWindow):
 			ErrorDialog(self, e)
 			return
 		self.got = got
-		self.file = None
 		self.update_title()
 		self.load_values()
 		self.status.set('Import Successful!')
-		self.mark_edited(False)
+		self.mark_edited()
 		self.action_states()
 
 	def save(self) -> CheckSaved:

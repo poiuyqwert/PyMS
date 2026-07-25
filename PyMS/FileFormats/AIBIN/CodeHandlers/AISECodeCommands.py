@@ -90,6 +90,7 @@ all_commands = [
 	Ping,
 	RevealArea,
 	TechAvailability,
+	RemoveCreep,
 	SaveBank,
 	LoadBank,
 	BankDataOld,

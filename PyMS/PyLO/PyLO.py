@@ -566,13 +566,13 @@ class PyLO(UI.MainWindow, UI.CodeTextDelegate):
 			ErrorDialog(self, PyMSError('Import', f"Couldn't import file '{file}'"))
 			return
 		self.lo = lo
-		self.file = file
 		self.update_title()
 		self.status.set('Import Successful!')
 		self.overlayframe = 0
 		self.reset_preview_state()
 		self.action_states()
 		self.text.load(text.rstrip('\n'))
+		self.text.edit_modified(True)
 
 	def save(self) -> CheckSaved:
 		return self.saveas(file_path=self.file)

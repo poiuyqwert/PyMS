@@ -1,5 +1,5 @@
 
-from ...Utilities.Serialize import IntEncoder, StrEncoder, IntFlagEncoder, Definition, IDMode, encode_json, encode_jsons, encode_text, encode_texts
+from ...Utilities.Serialize import IntEncoder, StrEncoder, IntFlagEncoder, ReferenceEncoder, Definition, IDMode, encode_json, encode_jsons, encode_text, encode_texts
 from ...Utilities.PyMSError import PyMSError
 
 import unittest
@@ -10,6 +10,7 @@ class Sample:
 		self.count = count
 		self.label = label
 		self.enabled = enabled
+		self.ref: 'Sample | None' = None
 
 
 def sample_definition(id_mode: IDMode = IDMode.comment) -> Definition:
@@ -125,10 +126,41 @@ class Test_encode_text(unittest.TestCase):
 		text = encode_text(Sample(label='one\ntwo'), None, sample_definition(IDMode.none))
 		self.assertIn('\tlabel:\n\t\tone\n\t\ttwo\n', text)
 
+	def test_empty_string_is_block_form(self) -> None:
+		# An empty value on a flat `key value` line can't be parsed back, so
+		# empty strings use the multi-line block form with no lines.
+		text = encode_text(Sample(count=5, label=''), None, sample_definition(IDMode.none))
+		self.assertIn('\tlabel:\n', text)
+		self.assertNotIn('\tlabel \n', text)
+
 	def test_header_mode_without_id_raises(self) -> None:
 		with self.assertRaises(PyMSError) as cm:
 			encode_text(Sample(), None, sample_definition(IDMode.header))
 		self.assertIn('Missing ID', str(cm.exception))
+
+
+class Test_encode_references(unittest.TestCase):
+	def ref_definition(self) -> Definition:
+		return Definition('Sample', IDMode.header, {
+			'count': IntEncoder(),
+			'ref': ReferenceEncoder('Sample'),
+		})
+
+	def test_reference_encodes_as_target_id(self) -> None:
+		definition = self.ref_definition()
+		target = Sample(count=1)
+		referencer = Sample(count=2)
+		referencer.ref = target
+		text = encode_texts([(target, 7), (referencer, 8)], lambda _: definition)
+		self.assertIn('\tref None\n', text)
+		self.assertIn('\tref 7\n', text)
+
+	def test_unencoded_reference_target_raises(self) -> None:
+		referencer = Sample()
+		referencer.ref = Sample()
+		with self.assertRaises(PyMSError) as cm:
+			encode_texts([(referencer, 0)], lambda _: self.ref_definition())
+		self.assertIn("Referenced 'Sample' object has no ID", str(cm.exception))
 
 
 class Test_encode_texts(unittest.TestCase):

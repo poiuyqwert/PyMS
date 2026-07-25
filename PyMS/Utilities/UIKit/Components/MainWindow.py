@@ -2,11 +2,20 @@
 from ..Widgets import Tk
 from ..Widgets.Extensions import WindowExtensions
 
+from typing import Any
+
 class MainWindow(Tk, WindowExtensions):
+	def __init__(self, *args: Any, **kwargs: Any) -> None:
+		Tk.__init__(self, *args, **kwargs)
+		# Stay invisible until `startup()` so the window doesn't flash at the
+		# OS-chosen position/size before its config geometry is loaded.
+		self.conceal()
+
 	def initialize(self) -> None:
 		pass
 
 	def startup(self) -> None:
+		self.reveal()
 		self.lift()
 		self.call('wm', 'attributes', '.', '-topmost', True)
 		self.after_idle(self.call, 'wm', 'attributes', '.', '-topmost', False)

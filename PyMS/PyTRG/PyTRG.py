@@ -408,11 +408,11 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 			ErrorDialog(self, PyMSError('Import', f'Could not open file "{file}"'))
 			return
 		self.trg = TRG.TRG(self.tbl, self.aibin)
-		self.file = file
 		self.update_title()
 		self.status.set('Import Successful!')
 		self.action_states()
 		self.text.load(text.rstrip('\n'))
+		self.text.edit_modified(True)
 
 	def save(self) -> CheckSaved:
 		return self.saveas(file_path=self.file)

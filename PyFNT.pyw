@@ -61,7 +61,7 @@ def main(): # type: () -> None
 					p.error('You must supply the -s option when using the -c option')
 				t = opt.specifics.split(',')
 				try:
-					lowi,letters = int(t),int(t)
+					lowi,letters = [int(v) for v in t]
 				except Exception:
 					print('Invalid compiling specifics (must be lowest ASCII index followed by amount of letters, seperated by a comma)')
 				else:

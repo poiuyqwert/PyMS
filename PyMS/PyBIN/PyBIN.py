@@ -299,8 +299,8 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		boundsframe.grid(row=2, column=0, sticky=UI.NSEW, padx=5)
 		themeframe = UI.LabelFrame(self.preview_settings_frame, text='Theme')
 		themes = ['None']
-		for t in range(DialogBIN.THEME_ASSETS_MAIN_MENU,DialogBIN.THEME_ASSETS_NONE):
-			theme = DialogBIN.THEME_ASSETS_INFO[t]
+		for t in range(DialogBIN.Constants.THEME_ASSETS_MAIN_MENU,DialogBIN.Constants.THEME_ASSETS_NONE):
+			theme = DialogBIN.Constants.THEME_ASSETS_INFO[t]
 			themes.append(f'{theme["name"]} ({theme["path"]})')
 		UI.DropDown(themeframe, self.show_theme_index, themes, self.change_theme).grid(row=0, column=0, padx=5, sticky=UI.EW)
 		UI.Checkbutton(themeframe, text='Background', variable=self.show_background, command=lambda: self.toggle_setting(self.config_.preview.show_background,self.show_background)).grid(row=1, column=0, sticky=UI.W)
@@ -495,12 +495,17 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 	def remove_node(self) -> None:
 		if not self.bin or not self.selected_node:
 			return
-		self.selected_node.remove_display()
-		if self.selected_node.widget:
-			self.bin.widgets.remove(self.selected_node.widget)
-			if self.selected_node.widget.type >= DialogBIN.BINWidget.TYPE_HTML and not self.bin.remastered:
-				self.scr_enabled.set(False)
-			self.action_states()
+		# Removing a group removes everything inside it, so the whole subtree's
+		# widgets must leave the file and their canvas items leave the preview.
+		removed_scr_widget = False
+		for node in self.selected_node.flattened_subtree():
+			node.remove_display()
+			if node.widget:
+				self.bin.widgets.remove(node.widget)
+				if node.widget.type >= DialogBIN.BINWidget.TYPE_HTML:
+					removed_scr_widget = True
+		if removed_scr_widget and not self.bin.remastered:
+			self.scr_enabled.set(False)
 		self.selected_node.remove_from_parent()
 		self.selected_node = None
 		self.update_selection_box()
@@ -522,7 +527,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 
 	def update_background(self) -> None:
 		if self.bin and self.show_theme_index.get() and not self.background:
-			asset = DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'backgnd.pcx'
+			asset = DialogBIN.Constants.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'backgnd.pcx'
 			try:
 				background = PCX.PCX()
 				background.load(self.mpq_handler.load_file('MPQ:' + asset))
@@ -551,7 +556,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		dlggrp = None
 		check = ['glue\\palmm\\dlg.grp']
 		if self.show_theme_index.get():
-			check.insert(0, DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'dlg.grp')
+			check.insert(0, DialogBIN.Constants.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'dlg.grp')
 		for asset in check:
 			try:
 				grp = GRP.GRP()
@@ -568,7 +573,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		tilegrp = None
 		check = ['glue\\palmm\\tile.grp']
 		if self.show_theme_index.get():
-			check.insert(0, DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tile.grp')
+			check.insert(0, DialogBIN.Constants.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tile.grp')
 		for asset in check:
 			try:
 				grp = GRP.GRP()
@@ -585,7 +590,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		tfont = None
 		check = ['glue\\title\\tfont.pcx']
 		if self.show_theme_index.get():
-			check.insert(0, DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tfont.pcx')
+			check.insert(0, DialogBIN.Constants.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tfont.pcx')
 		for asset in check:
 			try:
 				tfont = PCX.PCX()
@@ -1017,7 +1022,6 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 
 	def clear(self) -> None:
 		self.bin = None
-		self.file = None
 		self.edited = False
 		self.dialog = None
 		self.widget_map.clear()
@@ -1114,7 +1118,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 			return
 		dbin = DialogBIN.DialogBIN()
 		try:
-			dbin.interpret_file(file)
+			dbin.interpret(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
@@ -1129,11 +1133,10 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		self.setup_nodes()
 		self.refresh_nodes()
 		self.refresh_preview()
-		self.file = file
 		self.update_title()
 		self.scr_enabled.set(self.bin.remastered)
 		self.status.set('Import Successful!')
-		self.mark_edited(False)
+		self.mark_edited()
 		self.action_states()
 		self.tick(True)
 
@@ -1167,7 +1170,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		if not file:
 			return
 		try:
-			self.bin.decompile_file(file)
+			self.bin.decompile(file)
 			self.status.set('Export Successful!')
 		except PyMSError as e:
 			ErrorDialog(self, e)
@@ -1175,6 +1178,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 	def close(self, _event: UI.Event | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
+		self.file = None
 		self.clear()
 		self.status.set('Load or create a Dialog BIN.')
 		self.mark_edited(False)

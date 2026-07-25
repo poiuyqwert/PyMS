@@ -2,26 +2,18 @@
 from __future__ import annotations
 
 from ..Widgets import Button as BaseButton, Frame, Misc
-from ..Images import PhotoImage
 from ... import Assets
 
 from typing import Any, Callable
 
 class CollapseView(Frame):
 	class Button(BaseButton):
-		ARROW_DOWN: PhotoImage | None = None
-		ARROW_UP: PhotoImage | None = None
-
 		def __init__(self, parent: Misc):
 			self.collapse_view: CollapseView | None = None
-			if CollapseView.Button.ARROW_DOWN is None:
-				CollapseView.Button.ARROW_DOWN = Assets.get_image('arrow')
-			if CollapseView.Button.ARROW_UP is None:
-				CollapseView.Button.ARROW_UP = Assets.get_image('arrowup')
-			BaseButton.__init__(self, parent, image=CollapseView.Button.ARROW_DOWN, command=self.toggle)
+			BaseButton.__init__(self, parent, image=Assets.get_image('arrow'), command=self.toggle)
 
 		def _update_state(self, collapsed: bool) -> None:
-			self['image'] = CollapseView.Button.ARROW_UP if collapsed else CollapseView.Button.ARROW_DOWN
+			self['image'] = Assets.get_image('arrowup') if collapsed else Assets.get_image('arrow')
 
 		def toggle(self) -> None:
 			if not self.collapse_view:

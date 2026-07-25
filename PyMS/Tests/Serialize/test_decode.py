@@ -1,5 +1,5 @@
 
-from ...Utilities.Serialize import IntEncoder, StrEncoder, IntFlagEncoder, Definition, IDMode, encode_text, decode_text, LineScanner, repeater_ignore, repeater_loop, repeater_repeat_last
+from ...Utilities.Serialize import IntEncoder, StrEncoder, IntFlagEncoder, ReferenceEncoder, Definition, IDMode, encode_text, decode_text, LineScanner, repeater_ignore, repeater_loop, repeater_repeat_last
 from ...Utilities.PyMSError import PyMSError
 
 import unittest
@@ -10,6 +10,7 @@ class Sample:
 		self.count = count
 		self.label = label
 		self.flags = flags
+		self.ref: 'Sample | None' = None
 
 
 def sample_definition() -> Definition:
@@ -106,6 +107,12 @@ class Test_decode_text(unittest.TestCase):
 		result = decode_text(text, [definition], build_sample)
 		self.assertEqual(result[0].label, 'one\ntwo')
 
+	def test_round_trip_empty_string(self) -> None:
+		definition = sample_definition()
+		text = encode_text(Sample(count=1, label=''), 0, definition)
+		result = decode_text(text, [definition], build_sample)
+		self.assertEqual(result[0].label, '')
+
 	def test_blank_line_within_multiline_value_is_skipped(self) -> None:
 		definition = sample_definition()
 		text = 'Sample:\n\tlabel:\n\t\tone\n\n\t\ttwo\n'
@@ -149,6 +156,55 @@ class Test_decode_text(unittest.TestCase):
 		text = encode_text(Sample(count=10), 0, definition) + '\n' + encode_text(Sample(count=20), 1, definition)
 		result = decode_text(text, [definition], build_sample, objs=4, repeater=repeater_repeat_last)
 		self.assertEqual([s.count for s in result], [10, 20, 20, 20])
+
+
+def ref_definition() -> Definition:
+	return Definition('Sample', IDMode.header, {
+		'count': IntEncoder(),
+		'ref': ReferenceEncoder('Sample'),
+	})
+
+
+class Test_decode_references(unittest.TestCase):
+	def test_reference_resolves_to_decoded_object(self) -> None:
+		text = 'Sample(0):\n\tcount 1\n\nSample(1):\n\tcount 2\n\tref 0\n'
+		result = decode_text(text, [ref_definition()], build_sample)
+		self.assertIsNone(result[0].ref)
+		self.assertIs(result[1].ref, result[0])
+
+	def test_forward_reference_resolves(self) -> None:
+		text = 'Sample(0):\n\tcount 1\n\tref 1\n\nSample(1):\n\tcount 2\n'
+		result = decode_text(text, [ref_definition()], build_sample)
+		self.assertIs(result[0].ref, result[1])
+
+	def test_none_reference_decodes_to_none(self) -> None:
+		text = 'Sample(0):\n\tcount 1\n\tref None\n'
+		result = decode_text(text, [ref_definition()], build_sample)
+		self.assertIsNone(result[0].ref)
+
+	def test_missing_reference_raises(self) -> None:
+		text = 'Sample(0):\n\tcount 1\n\tref 4\n'
+		with self.assertRaises(PyMSError) as cm:
+			decode_text(text, [ref_definition()], build_sample)
+		self.assertIn("'Sample' object with ID '4' is missing", str(cm.exception))
+
+	def test_invalid_reference_value_raises(self) -> None:
+		text = 'Sample(0):\n\tcount 1\n\tref bogus\n'
+		with self.assertRaises(PyMSError) as cm:
+			decode_text(text, [ref_definition()], build_sample)
+		self.assertIn('Invalid Sample reference', str(cm.exception))
+
+	def test_duplicate_id_raises(self) -> None:
+		text = 'Sample(0):\n\tcount 1\n\nSample(0):\n\tcount 2\n'
+		with self.assertRaises(PyMSError) as cm:
+			decode_text(text, [ref_definition()], build_sample)
+		self.assertIn("Duplicate ID '0' for 'Sample' object", str(cm.exception))
+
+	def test_header_id_mode_without_id_raises(self) -> None:
+		text = 'Sample:\n\tcount 1\n'
+		with self.assertRaises(PyMSError) as cm:
+			decode_text(text, [ref_definition()], build_sample)
+		self.assertIn("'Sample' object is missing an ID", str(cm.exception))
 
 
 class Test_decode_text_errors(unittest.TestCase):

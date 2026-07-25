@@ -94,23 +94,33 @@ class Rect:
 	def max_y(self) -> int:
 		return self.pos.y + self.size.height
 
-	def clamp(self, *, size: Size, pos: Point | None = None, min_size: Size | None = None, max_size: Size | None = None) -> None:
-		if pos is None:
-			pos = Point(0,0)
-		self.pos.x = max(self.pos.x, pos.x)
-		self.pos.y = max(self.pos.y, pos.y)
-		if self.max_x > pos.x + size.width:
-			self.size.width = size.width - (self.pos.x - pos.x)
-		if self.max_y > pos.y + size.height:
-			self.size.height = size.height - (self.pos.y - pos.y)
+	def union(self, other: Rect) -> Rect:
+		x = min(self.pos.x, other.pos.x)
+		y = min(self.pos.y, other.pos.y)
+		return Rect(Point(x, y), Size(max(self.max_x, other.max_x) - x, max(self.max_y, other.max_y) - y))
+
+	def clamp(self, *, bounds: Rect, min_size: Size | None = None, visibility_margin: int = 100) -> None:
+		self.size.width = min(self.size.width, bounds.size.width)
+		self.size.height = min(self.size.height, bounds.size.height)
 		if min_size:
 			self.size.width = max(min_size.width, self.size.width)
-		if max_size:
-			self.size.width = min(max_size.width, self.size.width)
-		if min_size:
 			self.size.height = max(min_size.height, self.size.height)
-		if max_size:
-			self.size.height = min(max_size.height, self.size.height)
+		if self.max_x <= bounds.pos.x or self.pos.x >= bounds.max_x:
+			# No horizontal overlap with `bounds` (e.g. saved on a monitor that is no longer
+			# attached): bring fully inside
+			self.pos.x = min(max(self.pos.x, bounds.pos.x), bounds.max_x - self.size.width)
+		else:
+			# Partially visible: only pull back far enough to keep a grabbable margin inside
+			# `bounds`, preserving positions anywhere on a multi-monitor desktop (including negative)
+			margin_x = min(visibility_margin, self.size.width)
+			self.pos.x = max(self.pos.x, bounds.pos.x - self.size.width + margin_x)
+			self.pos.x = min(self.pos.x, bounds.max_x - margin_x)
+		if self.max_y <= bounds.pos.y or self.pos.y >= bounds.max_y:
+			self.pos.y = min(max(self.pos.y, bounds.pos.y), bounds.max_y - self.size.height)
+		else:
+			self.pos.y = min(self.pos.y, bounds.max_y - min(visibility_margin, self.size.height))
+		# The title bar is at the top, so the top edge can never be above `bounds`
+		self.pos.y = max(self.pos.y, bounds.pos.y)
 
 	def __eq__(self, other: object) -> bool:
 		if isinstance(other, Sequence):
@@ -128,11 +138,14 @@ class Geometry(Rect):
 
 	@staticmethod
 	def of(widget: _Tk.Misc | _Tk.Wm) -> Geometry:
+		from .Widgets.Extensions import WindowExtensions # local import as Extensions imports from this module
 		if isinstance(widget, _Tk.Wm):
 			geometry = Geometry.parse(widget.geometry())
 		else:
 			geometry = Geometry.parse(widget.winfo_geometry())
 		assert geometry is not None
+		if isinstance(widget, WindowExtensions):
+			geometry.maximized = widget.is_maximized()
 		return geometry
 
 	_RE = _re.compile(r'(\d+)x(\d+)\+(-?\d+)\+(-?\d+)(\^)?')

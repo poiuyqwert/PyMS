@@ -150,11 +150,16 @@ class AIBIN:
 
 	@staticmethod
 	def _save(header_type: Type[H], scripts: Iterable[AIScript], output: IO.AnyOutputBytes, expanded: bool) -> None:
+		scripts = list(scripts)
 		headers = bytearray()
 		builder = AIByteCodeCompiler()
 		builder.add_data(Struct.l_u32.pack(0)) # Pack 0 for offset to headers array, to be updated later
 		if expanded:
-			builder.aise_context.determine_long_jumps(scripts, builder)
+			# Only the scripts whose code is compiled into this file get long jumps,
+			# otherwise both files get trampolines (and through them the code) of
+			# every script in either file
+			code_scripts = [script for script in scripts if script.in_bwscript == (header_type is _BWScriptHeader)]
+			builder.aise_context.determine_long_jumps(code_scripts, builder)
 		for script in scripts:
 			if not script.in_bwscript and header_type == _BWScriptHeader:
 				continue

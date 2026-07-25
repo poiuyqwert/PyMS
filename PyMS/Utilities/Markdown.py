@@ -161,7 +161,8 @@ class ThematicBreak(LeafBlock):
 
 class ATXHeading(ContentBlock):
 	RE_MARKER = re.compile(r'( {0,3})(#{1,6})(?:( +).+?( +#+ *)?)?$')
-	RE_ANCHOR_CLEAN = re.compile(r'[^a-zA-Z ]')
+	# Matches GitHub's anchor slugger: keep letters, digits, underscores, hyphens, and spaces; drop everything else
+	RE_ANCHOR_CLEAN = re.compile(r'[^\w\- ]')
 
 	def __init__(self, level: int) -> None:
 		ContentBlock.__init__(self)
@@ -185,14 +186,15 @@ class ATXHeading(ContentBlock):
 
 	def anchor(self) -> str:
 		def collapse(items: Sequence[Span | str]) -> str:
-			anchor = ''
+			text = ''
 			for item in items:
 				if isinstance(item, Span):
-					anchor += collapse(item.contents)
+					text += collapse(item.contents)
 				elif isinstance(item, str):
-					anchor += ATXHeading.RE_ANCHOR_CLEAN.sub('', item).lower().replace(' ', '-')
-			return anchor
-		return collapse(self.spans)
+					text += item
+			return text
+		text = collapse(self.spans).strip().lower()
+		return ATXHeading.RE_ANCHOR_CLEAN.sub('', text).replace(' ', '-')
 
 class IndentedCodeBlock(ContentBlock):
 	RE_MARKER = re.compile(r' {4}.+')

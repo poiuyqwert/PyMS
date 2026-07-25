@@ -26,9 +26,6 @@ if TYPE_CHECKING:
 
 ET = TypeVar('ET', bound=AbstractDATEntry)
 class DATTab(UI.NotebookTab, DATTabConveniences, Generic[ET]):
-	ARROWS_LOADED = False
-	ARROW_DOWN: UI.PhotoImage
-	ARROW_UP: UI.PhotoImage
 	DAT_ID: DATID
 
 	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
@@ -91,21 +88,17 @@ class DATTab(UI.NotebookTab, DATTabConveniences, Generic[ET]):
 		assert self.used_by_collapse_button is not None
 		if not visible:
 			self.used_by_listbox.pack_forget()
-			self.used_by_collapse_button['image'] = DATTab.ARROW_UP
+			self.used_by_collapse_button['image'] = Assets.get_image('arrowup')
 		else:
 			self.used_by_listbox.pack(side=UI.BOTTOM, fill=UI.X, padx=2, pady=2)
-			self.used_by_collapse_button['image'] = DATTab.ARROW_DOWN
+			self.used_by_collapse_button['image'] = Assets.get_image('arrow')
 
 	def setup_used_by(self, references: tuple[DATRefs, ...]) -> None:
 		self.used_by_references = references
 
 		f = UI.Frame(self)
 		h  = UI.Frame(f)
-		if not DATTab.ARROWS_LOADED:
-			DATTab.ARROW_DOWN = Assets.get_image('arrow')
-			DATTab.ARROW_UP = Assets.get_image('arrowup')
-			DATTab.ARROWS_LOADED = True
-		self.used_by_collapse_button = UI.Button(h, image=DATTab.ARROW_DOWN,  command=self.toggle_used_by)
+		self.used_by_collapse_button = UI.Button(h, image=Assets.get_image('arrow'), command=self.toggle_used_by)
 		self.used_by_collapse_button.pack(side=UI.LEFT, padx=(0, 5))
 		self.used_by_header = UI.StringVar()
 		UI.Label(h, textvariable=self.used_by_header).pack(side=UI.LEFT)

@@ -248,7 +248,6 @@ class PyPCX(UI.MainWindow):
 			return
 		if not self.pcx:
 			self.pcx = PCX()
-			self.file = None
 			self.update_title()
 		self.pcx.load_pixels(b.image,b.palette)
 		self.mark_edited()

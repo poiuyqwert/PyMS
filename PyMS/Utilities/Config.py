@@ -288,12 +288,18 @@ class WindowGeometry(ConfigObject):
 			# 	geometry_adjust.pos = position
 			resizable_w,resizable_h = UI.parse_resizable(window.resizable())
 			can_maximize = (resizable_w and resizable_h)
+			maximized = geometry_adjust.maximized
+			# `^` is a PyMS extension to the geometry format, so can't be passed to Tk
+			geometry_adjust.maximized = False
 			if (resizable_w or resizable_h) and (geometry := geometry_adjust.geometry):
 				cur_geometry = UI.Geometry.of(window)
 				min_size = UI.Size.of(window.minsize())
-				# max_w,max_h = window.maxsize()
-				screen_size = UI.Size(window.winfo_screenwidth(), window.winfo_screenheight())
-				geometry.clamp(size=screen_size, min_size=min_size)
+				screen_bounds = UI.Rect(UI.Point(0, 0), UI.Size(window.winfo_screenwidth(), window.winfo_screenheight()))
+				desktop_bounds = UI.Rect(
+					UI.Point(window.winfo_vrootx(), window.winfo_vrooty()),
+					UI.Size(window.winfo_vrootwidth(), window.winfo_vrootheight())
+				).union(screen_bounds)
+				geometry.clamp(bounds=desktop_bounds, min_size=min_size)
 				if not resizable_w:
 					geometry.size.width = cur_geometry.size.width
 				if not resizable_h:
@@ -304,7 +310,7 @@ class WindowGeometry(ConfigObject):
 					geometry_adjust.size = None
 				window.geometry(geometry_adjust.text)
 			window.update_idletasks()
-			if geometry_adjust.maximized and can_maximize:
+			if maximized and can_maximize:
 				try:
 					window.wm_state('zoomed')
 				except Exception:
@@ -325,7 +331,7 @@ class WindowGeometry(ConfigObject):
 		return self._geometry
 
 	def decode(self, geometry: JSON.Value) -> None:
-		if not isinstance(geometry, str) or UI.Geometry.parse(geometry) is None:
+		if not isinstance(geometry, str) or UI.GeometryAdjust.parse(geometry) is None:
 			return
 		self._geometry = geometry
 

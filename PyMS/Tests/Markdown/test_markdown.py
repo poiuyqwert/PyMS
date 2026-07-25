@@ -116,6 +116,31 @@ class Test_ATXHeading_anchor(unittest.TestCase):
 		heading.add_span('Hello, World!')
 		self.assertEqual(heading.anchor(), 'hello-world')
 
+	def test_keeps_underscores(self) -> None:
+		heading = Markdown.ATXHeading(1)
+		heading.add_span('wait_build')
+		self.assertEqual(heading.anchor(), 'wait_build')
+
+	def test_keeps_digits(self) -> None:
+		heading = Markdown.ATXHeading(1)
+		heading.add_span('Top 10 Maps')
+		self.assertEqual(heading.anchor(), 'top-10-maps')
+
+	def test_keeps_hyphens(self) -> None:
+		heading = Markdown.ATXHeading(1)
+		heading.add_span('Foo-Bar')
+		self.assertEqual(heading.anchor(), 'foo-bar')
+
+	def test_trims_surrounding_whitespace(self) -> None:
+		heading = Markdown.ATXHeading(1)
+		heading.add_span('Trailing Space ')
+		self.assertEqual(heading.anchor(), 'trailing-space')
+
+	def test_code_span_content_included(self) -> None:
+		heading = Markdown.Document.parse('## `base_layout_old`').children[0]
+		assert isinstance(heading, Markdown.ATXHeading)
+		self.assertEqual(heading.anchor(), 'base_layout_old')
+
 
 class Test_ThematicBreak_start(unittest.TestCase):
 	def test_dashes(self) -> None:
