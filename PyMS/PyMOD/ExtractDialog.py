@@ -15,7 +15,7 @@ class ExtractDialog(PyMSDialog):
 		self.mpqhandler = mpqhandler
 		self.search = UI.StringVar()
 		self.search.set('*')
-		self.search.trace('w', self.updatesearch)
+		self.search.trace_add('write', self.updatesearch)
 		self.config_ = config
 		self.search_history = UI.InputHistory(config=config.extract.history)
 		self.regex = UI.IntVar()
