@@ -6,8 +6,8 @@ The Python package lives in the `PyMS/` subdirectory. Internal imports are absol
 - `PyMS/<Program>/` — GUI code for each program. `<Program>.py` holds the main window class; sibling files are dialogs, config, and program-specific logic.
 - `PyMS/FileFormats/` — the heart of the project: readers/writers/encoders for every BroodWar binary format (`AIBIN`, `DAT`, `GRP`, `MPQ`, `TBL`, `Tileset`, `CHK`, `TRG`, `IScriptBIN`, ...). Editing-program logic should call into these, not reimplement parsing.
 - `PyMS/Utilities/` — shared infrastructure: `UIKit/` (Tkinter widget wrappers, theming, syntax highlighting), `CodeHandlers/` (generic lexer/parser/compiler framework reused by AI/IScript script languages), `Config.py`/`PyMSConfig.py` (settings), `Assets.py` (resource paths), `IO.py`, `Struct.py` (binary struct helpers), `analytics.py`.
-- `PyMS/Tests/` — `unittest` suite mirroring the format/utility modules.
-- `PyMS/UITests/` — in-process Tkinter UI automation tests (a separate top-level package, sibling of `Tests/`, so the main test discovery never imports them). `UITests/harness.py` provides `UITestCase`.
+- `PyMS/Tests/` — `unittest` suite mirroring the format/utility modules. One folder per subject named after the source module (`Tests/CHK/`, `Tests/UIKit/`, `Tests/PyDAT/`), each an empty-`__init__.py` package; `Tests/Utilities/` is the catch-all for loose `Utilities/*.py` modules that don't warrant their own folder. Folder-local fixture helpers go in an unprefixed `utils.py` (skipped by `test_*.py` discovery); `Tests/utils.py` holds the suite-wide `resource_path`/`data_to_hex`.
+- `PyMS/UITests/` — in-process Tkinter UI automation tests (a separate top-level package, sibling of `Tests/`, so the main test discovery never imports them). `UITests/harness.py` provides `UITestCase`. Organized the same way as `Tests/`: one folder per program (`UITests/PyPAL/`, `UITests/PySPK/`, ...) plus `UITests/UIKit/` and `UITests/Utilities/` for the shared widgets and dialogs, with tests split by concern inside each. A folder's `utils.py` holds its `Py<PROG>TestCase` subclass (the `make_*`/`open_*`/`with_*` window builders), its uppercase patch-target constants, and its fixture builders — hoist something there only once a second module in the folder needs it, otherwise leave it in the module that uses it.
 - `PyMS/MPQ/`, `PyMS/Data/`, `PyMS/Images/`, `Palettes/`, `Help/` — bundled game data, assets, and Markdown help docs.
 - `Settings/` — per-program runtime settings (`.txt`, JSON-ish). User-editable; not code.
 
@@ -114,6 +114,7 @@ Run from this directory (the one containing the `.pyw` launchers and the `PyMS/`
 - Full suite: `pyenv exec python -m unittest discover -t . -s PyMS/Tests -p 'test_*.py'` — the `-t .` matters; without it discovery imports tests as `Tests.*` and their relative imports fail.
 - Single module: `pyenv exec python -m unittest PyMS.Tests.<Sub>.<test_module>`
 - UI automation tests: `pyenv exec python -m unittest discover -t . -s PyMS/UITests -p 'test_*.py'`
+- Single UI module: `pyenv exec python -m unittest PyMS.UITests.<Sub>.<test_module>` (e.g. `PyMS.UITests.PyPAL.test_clipboard`)
 
 Note: SFmpq tests are expected to fail on macOS at this time
 
