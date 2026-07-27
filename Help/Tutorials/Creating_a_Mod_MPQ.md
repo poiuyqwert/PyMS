@@ -1,6 +1,7 @@
 # Creating a Mod MPQ
 This tutorial walks through packaging the files of a mod into an [MPQ](/Help/Files/MPQ.md) with [PyMPQ](/Help/Programs/PyMPQ.md), so the game will load them. It assumes you have some edited files ready to go — for example a `units.dat` from the [Editing a Unit](/Help/Tutorials/Editing_a_Unit.md) tutorial, or a `marine.grp` from the [Editing a GRP](/Help/Tutorials/Editing_a_GRP.md) tutorial.
 The key idea: the game finds files by their paths inside the MPQs, so every file in your MPQ must be at the same path as the original file it replaces (for example `arr\units.dat` or `unit\terran\marine.grp`).
+If you would rather not repackage by hand every time your mod changes, [PyMOD](/Help/Programs/PyMOD.md) can compile and package a whole mod from its source files with one button — see [Building a Mod Project](/Help/Tutorials/Building_a_Mod_Project.md).
 
 ## Creating the Archive
 1. Open PyMPQ and press **New** (`Ctrl+N`).
@@ -30,6 +31,8 @@ The game loads its MPQs in a defined order, and a mod works by inserting its MPQ
 ## See Also
 - [PyMPQ](/Help/Programs/PyMPQ.md)
 - [MPQ](/Help/Files/MPQ.md)
+- [Building a Mod Project](/Help/Tutorials/Building_a_Mod_Project.md)
+- [PyMOD](/Help/Programs/PyMOD.md)
 - [Editing a Unit](/Help/Tutorials/Editing_a_Unit.md)
 - [Editing a GRP](/Help/Tutorials/Editing_a_GRP.md)
 - [Creating a Game Template](/Help/Tutorials/Creating_a_Game_Template.md)

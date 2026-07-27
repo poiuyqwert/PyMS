@@ -12,6 +12,14 @@ def _scanner(line: str) -> _Scanner:
 	return scanner
 
 
+# The body of a fenced code block, one string per source line. Code block spans are never
+# inline parsed, so any non-`str` content would itself be a failure of that invariant.
+def _fenced_body(document: Markdown.Document) -> list[str]:
+	fenced = document.children[0]
+	assert isinstance(fenced, Markdown.FencedCodeBlock)
+	return [''.join(content for content in span.contents if isinstance(content, str)) for span in fenced.spans]
+
+
 class Test_Scanner(unittest.TestCase):
 	def test_set_line_initializes(self) -> None:
 		scanner = _scanner('hello')
@@ -398,3 +406,35 @@ class Test_Document_parse(unittest.TestCase):
 		fenced = document.children[0]
 		assert isinstance(fenced, Markdown.FencedCodeBlock)
 		self.assertEqual([span.contents for span in fenced.spans], [['code line']])
+
+	# Inside an open fence no other block type may be considered. A block started there can
+	# never be attached to the document, so its line is silently lost from the output.
+	def test_fenced_code_block_preserves_lines_matching_other_block_syntax(self) -> None:
+		for line in ('    four space indent', '        eight space indent', '\ttab indent', '  one to three space indent', '# hash comment', '- bullet', '1. numbered', '---', '***', '> quote'):
+			with self.subTest(line=line):
+				document = Markdown.Document.parse(f'```\n{line}\n```')
+				self.assertEqual([type(child).__name__ for child in document.children], ['FencedCodeBlock'])
+				self.assertEqual(_fenced_body(document), [line])
+
+	def test_fenced_code_block_preserves_shorter_inner_fence(self) -> None:
+		document = Markdown.Document.parse('````\n```\ninner\n```\n````')
+		self.assertEqual([type(child).__name__ for child in document.children], ['FencedCodeBlock'])
+		self.assertEqual(_fenced_body(document), ['```', 'inner', '```'])
+
+	def test_fenced_code_block_preserves_blank_lines(self) -> None:
+		document = Markdown.Document.parse('```\nbefore\n\nafter\n```')
+		self.assertEqual([type(child).__name__ for child in document.children], ['FencedCodeBlock'])
+		self.assertEqual(_fenced_body(document), ['before', '', 'after'])
+
+	def test_fenced_code_block_preserves_whitespace_only_lines(self) -> None:
+		document = Markdown.Document.parse('```\nbefore\n   \nafter\n```')
+		self.assertEqual([type(child).__name__ for child in document.children], ['FencedCodeBlock'])
+		self.assertEqual(_fenced_body(document), ['before', '   ', 'after'])
+
+	def test_fenced_code_block_content_is_not_inline_parsed(self) -> None:
+		document = Markdown.Document.parse('```\na **bold** [link](/Help/Programs/PyAI.md)\n```')
+		self.assertEqual(_fenced_body(document), ['a **bold** [link](/Help/Programs/PyAI.md)'])
+
+	def test_indented_code_block_still_starts_outside_a_fence(self) -> None:
+		document = Markdown.Document.parse('```\ncode\n```\n    indented')
+		self.assertEqual([type(child).__name__ for child in document.children], ['FencedCodeBlock', 'IndentedCodeBlock'])

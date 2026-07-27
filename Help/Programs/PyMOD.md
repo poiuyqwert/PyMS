@@ -1,5 +1,46 @@
 # PyMOD
-PyMOD is a tool for building complete mod projects. It walks your project folder, detects source types by folder naming conventions, compiles each source into a game file, and can package the results into [.mpq](/Help/Files/MPQ.md) archives ready to load into the game. Builds are incremental: files are hashed so only sources that changed since the last compile are rebuilt.
+PyMOD is a tool for building complete mod projects. It walks your project folder, detects source types by folder naming conventions, compiles each source into a game file, and can package the results into [.mpq](/Help/Files/MPQ.md) archives ready to load into the game. Builds are incremental: files are hashed so only sources that changed since the last compile are rebuilt. If you are new to PyMOD, start with the [Building a Mod Project](/Help/Tutorials/Building_a_Mod_Project.md) tutorial.
+Each kind of source has its own folder convention and settings, described on its own page:
+
+- [MPQ Packages](/Help/Programs/PyMOD/MPQ_Packages.md) ([.mpq](/Help/Files/MPQ.md))
+- [DAT Sources](/Help/Programs/PyMOD/DAT_Sources.md) ([units.dat](/Help/Files/DAT/units.dat.md) and the other `.dat` files)
+- [GRP Sources](/Help/Programs/PyMOD/GRP_Sources.md) ([.grp](/Help/Files/GRP.md))
+- [TBL Sources](/Help/Programs/PyMOD/TBL_Sources.md) ([.tbl](/Help/Files/TBL.md))
+- [LO Sources](/Help/Programs/PyMOD/LO_Sources.md) ([.lo?](/Help/Files/LO.md))
+- [PCX Sources](/Help/Programs/PyMOD/PCX_Sources.md) ([.pcx](/Help/Files/PCX.md))
+- [SPK Sources](/Help/Programs/PyMOD/SPK_Sources.md) ([.spk](/Help/Files/SPK.md))
+- [AI Script Sources](/Help/Programs/PyMOD/AI_Script_Sources.md) ([aiscript.bin](/Help/Files/aiscript.bin.md))
+- [IScript Sources](/Help/Programs/PyMOD/IScript_Sources.md) ([iscript.bin](/Help/Files/iscript.bin.md))
+- [Other Sources](/Help/Programs/PyMOD/Other_Sources.md) (plain folders and copied files)
+
+The [Building](/Help/Programs/PyMOD/Building.md) page describes what a compile actually does, step by step.
+
+## Main Window
+PyMOD has no menu bar — everything is on the toolbar and the button row under the tabs. The window has two tabs:
+
+- **Files**: A tree of every source PyMOD found in your project. Folders can be expanded, and each source is shown by the name of the file it produces (an `aiscript.bin` folder is listed as `aiscript.bin/bwscript.bin`, since it can produce both). The **Refresh** button below the tree re-scans the project, which is useful after adding or renaming files outside of PyMOD. The tree is also refreshed automatically whenever you open a project or start a compile.
+- **Logs**: The read-only compile log. PyMOD switches to this tab automatically when you compile or clean. Errors, warnings, and the final success message are colored, so you can pick problems out of a long build (the exact colors come from your [theme](/Help/Programs/Themes.md)).
+
+The buttons under the tabs act on the open project:
+
+- **Extract**: Opens the [Extract](#extract) dialog.
+- **Compile**: [Builds](#building) the project.
+- **Clean**: Deletes the intermediates folder, forcing the next compile to rebuild everything.
+- **Cancel**: Stops a running compile.
+
+**Extract**, **Compile**, and **Clean** are only enabled while a project is open and no compile is running; **Cancel** is only enabled while a compile is running. During a compile the toolbar is disabled too, so you can not open or close a project out from under the build.
+The status bar shows what PyMOD is doing or the result of the last action, and the title bar shows the path of the open project.
+
+## Managing Projects
+Only one project is open at a time, and opening a project closes the previous one.
+
+- **New** (`Ctrl+N`): Creates a new project. First choose the folder to create it in, then enter a name in the **Project Name** dialog. The name can not be empty and can not contain a path separator, and PyMOD will not overwrite an existing folder.
+- **Open** (`Ctrl+O`): Opens an existing project folder. If the folder is not a PyMOD project yet, PyMOD asks whether to initialize it as one — answering yes just adds the marker file, leaving everything already in the folder alone, so you can turn a folder of files you already have into a project.
+- **Close** (`Ctrl+W`): Closes the open project. Nothing is deleted; PyMOD has no unsaved state of its own, since your sources are ordinary files you edit with other tools.
+- **Manage Settings** (`Ctrl+M`): Opens the [settings](#settings) dialog.
+- **Help** (`F1`): Opens this help.
+- **About PyMOD**: Shows the version and credits.
+- **Exit**: Closes PyMOD. If a compile is running you are asked whether to cancel it and exit.
 
 ## Projects
 A project is just a folder containing your mod's sources, marked as a PyMOD project by a hidden `.pymod_project.json` file. Use `New` to create a project (the marker is created for you), or `Open` on an existing folder (you will be offered to initialize it as a project if it isn't one yet).
@@ -11,140 +52,94 @@ The layout of the folder determines what gets built. Everything you want package
 ├── .pymod_project.json
 └─┬ MyMod.mpq/
   ├── config.json
-  ├─┬ arr/
-  │ └─┬ units.dat/
-  │   ├── config.json
-  │   ├── units.dat
-  │   ├── Race1.txt
-  │   └── Race2.txt
-  ├─┬ rez/
-  │ └─┬ stat_txt.tbl/
-  │   └── stat_txt.txt
-  ├─┬ scripts/
-  │ └─┬ aiscript.bin/
-  │   ├── unitdef.txt
-  │   ├── Ter3.txt
-  │   ├── PB1A.txt
-  │   └── ...
-  └─┬ unit/
-    ├─┬ terran/
-    │ └─┬ marine.grp/
-    │   ├── frame 000.bmp
-    │   ├── frame 001.bmp
-    │   └── ...
-    └─┬ protoss/
-      └─┬ dragoon.grp/
-        ├── config.json
-        └── frames.bmp
+  ├─┬ arr/units.dat/
+  │ ├── config.json
+  │ ├── units.dat
+  │ ├── Race1.txt
+  │ └── Race2.txt
+  ├─┬ rez/stat_txt.tbl/
+  │ └── stat_txt.txt
+  ├─┬ scripts/aiscript.bin/
+  │ ├── unitdef.txt
+  │ ├── Ter3.txt
+  │ ├── PB1A.txt
+  │ └── ...
+  ├─┬ unit/terran/marine.grp/
+  │ ├── frame 000.bmp
+  │ ├── frame 001.bmp
+  │ └── ...
+  ├─┬ unit/protoss/dragoon.grp/
+  │ ├── config.json
+  │ └── frames.bmp
+  └── sound/zerg/advisor/zadupd00.wav
 ```
 
-An MPQ is not required, though. Sources outside of any `*.mpq` folder are compiled all the same, and their compiled files are kept in `.build/intermediates/` mirroring your project layout — so you can simply compile your game files and do whatever you want with them (package them yourself, load them with a launcher that supports loose files, copy them into another project, etc.).
+Folder chains are collapsed in that diagram to keep it narrow, so `arr/units.dat/` means a `units.dat` folder inside an `arr` folder. The last entry is an ordinary file that is simply copied into the archive at that path.
+An MPQ is not required, though. Sources outside of any `*.mpq` folder are compiled all the same, and their compiled files are published as loose files in `.build/artifacts/`, mirroring your project layout — so you can simply compile your game files and do whatever you want with them (load them with a launcher that supports loose files, package them yourself, copy them into another project, etc.).
+Everything PyMOD generates lives in a `.build` folder inside your project, which you never need to edit by hand:
+
+- `.build/intermediates/`: Every compiled game file, in a copy of your project's folder layout. This is where the incremental build keeps its work between compiles.
+- `.build/artifacts/`: The finished output of your last successful compile — the packaged `.mpq` archives, plus every compiled file that is not inside an MPQ folder.
+- `.build/staging/`: Where artifacts are assembled during a compile, before being published.
+- `.build/artifacts.old`: Your previous artifacts, held onto briefly while the new ones are published so they can be restored if that fails.
+- `.build/meta.json`: The hashes that make builds incremental.
 
 ## Source types
-Source types are detected by folder name:
+Source types are detected by **folder** name, not by file name. A folder named `marine.grp` is a GRP source, and the `.bmp` files inside it are its input frames; a folder named `units.dat` is a DAT source, and the `.txt` files inside it are the entries to import. This is why a source's own name ends in the extension of the file it produces.
+Folders are matched against every source type and the best match wins, falling back to a plain folder when nothing matches. See the pages listed at the [top of this page](#pymod) for each type's conventions.
+A few rules apply to the whole project:
 
-| Folder name | Source type | Contents |
-|-------------|-------------|----------|
-| `*.mpq` | [MPQ package](#mpq-packages-mpq) | Everything inside is packaged into an MPQ artifact of the same name |
-| `units.dat`, `weapons.dat`, etc. | [DAT file](#dat-files-unitsdat-weaponsdat-etc) | `.txt` entry files (and optionally a base `.dat`), compiled into the DAT file |
-| `*.grp` | [GRP graphic](#grp-graphics-grp) | `.bmp` frame files, compiled into a [.grp](/Help/Files/GRP.md) |
-| `*.tbl` | [TBL strings](#tbl-strings-tbl) | A `.txt` file of the same base name, compiled into a [.tbl](/Help/Files/TBL.md) |
-| `*.loa`, `*.lob`, etc. | [LO overlays](#lo-overlays-loa-lob-etc) | A `.txt` file of the same base name, compiled into a [.lo?](/Help/Files/LO.md) overlay file |
-| `*.pcx` | [PCX image](#pcx-images-pcx) | A `.bmp` file of the same base name, compiled into a [.pcx](/Help/Files/PCX.md) image |
-| `*.spk` | [SPK parallax](#spk-parallax-backgrounds-spk) | A `.bmp` file of the same base name, compiled into a [.spk](/Help/Files/SPK.md) parallax background |
-| `aiscript.bin` | [AI scripts](#ai-scripts-aiscriptbin) | `.txt` AI script sources (and `*def.txt` extdefs, and optionally base `.bin` files), compiled into `aiscript.bin` (and `bwscript.bin` when scripts require it) |
-| `iscript.bin` | [Iscripts](#iscripts-iscriptbin) | `.txt` iscript sources (and optionally a base `.bin` file), compiled into `iscript.bin` |
+- Source folders that produce a file own everything inside them. PyMOD does not look for further sources inside a `marine.grp` or `aiscript.bin` folder, so you can put whatever supporting files you like in there.
+- Folders and files whose names start with `.` are ignored entirely, which is how `.pymod_project.json` and `.build` stay out of your mod.
+- `config.json` and `*.config.json` files are configuration, so they are never treated as sources or copied into your mod. Changing one still triggers a rebuild of the source it configures.
+- Folders and files are always processed in sorted order, so the order of your compiled output does not depend on the order your filesystem happens to list things in.
 
-Anything else is handled as described in [Other folders and files](#other-folders-and-files).
-
-Sources can be configured with a `config.json` file inside their folder. Changing a `config.json` triggers a rebuild of that source on the next compile.
-
-### MPQ packages (`*.mpq`)
-Everything inside the folder is packaged into an MPQ artifact of the same name. MPQ folders can be nested inside other MPQ folders: the nested MPQ is packaged first, then embedded as a file inside the MPQ containing it (uncompressed by default, per the `autocompression` settings).
-
-The archive can be configured with a `config.json` inside the folder:
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `max_files` | `1024` | Maximum file capacity of the archive |
-| `block_size` | `3` | Sector size shift of the archive |
-| `autocompression` | Standard, with `.smk`/`.mpq` uncompressed and `.wav` audio compression | Maps file extensions (or `"Default"`) to the compression used for files added to the archive |
-
-The compression of an individual file can be overridden with a sibling `<name>.config.json` file:
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `compression` | From `autocompression` | Compression to use for this specific file (`NoCompression`, `Standard`, `Deflate`, `Audio` levels, etc.) |
-
-### DAT files (`units.dat`, `weapons.dat`, etc.)
-A folder named exactly like one of the game's DAT files is compiled into that DAT file: [units.dat](/Help/Files/DAT/units.dat.md), [weapons.dat](/Help/Files/DAT/weapons.dat.md), [flingy.dat](/Help/Files/DAT/flingy.dat.md), [sprites.dat](/Help/Files/DAT/sprites.dat.md), [images.dat](/Help/Files/DAT/images.dat.md), [upgrades.dat](/Help/Files/DAT/upgrades.dat.md), [techdata.dat](/Help/Files/DAT/techdata.dat.md), [sfxdata.dat](/Help/Files/DAT/sfxdata.dat.md), [portdata.dat](/Help/Files/DAT/portdata.dat.md), [mapdata.dat](/Help/Files/DAT/mapdata.dat.md), or [orders.dat](/Help/Files/DAT/orders.dat.md).
-
-The folder contains any number of `.txt` files in the text format exported by PyDAT. Each file can hold any selection of entries (and any selection of properties within an entry), so you can organize your changes however you like — for example a `units.dat/` folder with one `.txt` per race. The files are imported in alphabetical order, so if two files set the same property of the same entry, the later one wins.
-
-The entries are imported on top of a base file. By default this is the unmodified game DAT bundled with PyMS, so your `.txt` files only need to contain what you actually change. To build on top of a different DAT instead, place it in the folder named the same as the folder itself (e.g. `units.dat/units.dat`).
-
-The DAT can be expanded beyond the game's normal entry count with a `config.json` inside the folder:
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `entry_count` | | Expand the DAT to this total entry count (may be rounded up to satisfy the format's constraints). Not required if the base file is already expanded |
-
-If the compiled DAT is expanded — whether through `entry_count` or an already-expanded base file — a warning is output to the compile log as a reminder that the game requires a plugin to use expanded DAT files.
-
-### GRP graphics (`*.grp`)
-The folder contains `.bmp` frame files, compiled into a [.grp](/Help/Files/GRP.md) of the same name. By default each `.bmp` is one frame, added in alphabetical order; the single-BMP modes instead take one `.bmp` containing every frame.
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `frames_mode` | `separate_bmps` | `separate_bmps` (one BMP per frame), `single_vertical` (one BMP, frames stacked vertically), or `single_framesets` (one BMP of framesets) |
-| `frame_count` | | Number of frames — required for the single-BMP modes |
-| `uncompressed` | `false` | Save the GRP uncompressed |
-
-### TBL strings (`*.tbl`)
-The folder contains a `.txt` file with the same base name as the folder (e.g. `stat_txt.tbl/stat_txt.txt`), compiled into a [.tbl](/Help/Files/TBL.md) of the folder's name. There is no configuration for TBL sources.
-
-### LO overlays (`*.loa`, `*.lob`, etc.)
-The folder contains a `.txt` file with the same base name as the folder (e.g. `marine.loa/marine.txt`) in the text format exported by PyLO, compiled into a [.lo?](/Help/Files/LO.md) overlay file of the folder's name. All overlay extensions are supported: `.loa`, `.lob`, `.lod`, `.lof`, `.log`, `.lol`, `.loo`, `.los`, `.lou`, and `.lox`. There is no configuration for LO sources.
-
-### PCX images (`*.pcx`)
-The folder contains a `.bmp` file with the same base name as the folder (e.g. `tfontgam.pcx/tfontgam.bmp`), compiled into a [.pcx](/Help/Files/PCX.md) image of the folder's name. There is no configuration for PCX sources.
-
-### SPK parallax backgrounds (`*.spk`)
-The folder contains a `.bmp` file with the same base name as the folder (e.g. `star.spk/star.bmp`), compiled into a [.spk](/Help/Files/SPK.md) parallax background of the folder's name. The image is divided vertically into `layer_count` equal bands, one per parallax layer (the top band is the furthest layer); stars are detected as connected groups of non-transparent (palette index 0) pixels within each band — the same format exported by PySPK.
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `layer_count` | `5` | Number of parallax layers the BMP is divided into (1-5) |
-
-### AI scripts (`aiscript.bin`)
-The folder contains `.txt` AI script sources, along with optional `*def.txt` external definition files which are loaded first. All scripts are compiled together into `aiscript.bin` — and `bwscript.bin` when any script requires it (`bwscript.bin` is only produced in that case, so vanilla Brood War AI is not wiped out by a stub file).
-
-By default the compile starts from empty files containing only your scripts. To build on top of existing files instead, place a base `aiscript.bin` in the folder named the same as the folder itself (e.g. `aiscript.bin/aiscript.bin`), optionally with a base `bwscript.bin` beside it. Your scripts are added on top of the base scripts, replacing any base script with the same ID. A base `bwscript.bin` can only be used together with a base `aiscript.bin`, since it can't be interpreted without the `aiscript.bin` that references its scripts.
-
-The files can be expanded beyond the format's normal size limit with a `config.json` inside the folder:
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `expanded` | `false` | Compile expanded files, raising the maximum file size. Not required if the base files are already expanded |
-
-If the compiled files are expanded — whether through `expanded` or already-expanded base files — a warning is output to the compile log as a reminder that the game requires a plugin to use expanded AI script files.
-
-### Iscripts (`iscript.bin`)
-The folder contains `.txt` iscript sources in the text format exported by PyICE. All scripts are compiled together into [iscript.bin](/Help/Files/iscript.bin.md).
-
-By default the compile starts from an empty file containing only your scripts. To build on top of an existing file instead, place a base `iscript.bin` in the folder named the same as the folder itself (e.g. `iscript.bin/iscript.bin`). Your scripts are added on top of the base scripts, replacing any base script with the same ID. There is no configuration for iscript sources.
-
-### Other folders and files
-Any other folder is treated as a plain folder: it is recreated in the output and its contents are processed individually. Any other file is copied into the mod as-is (inside an MPQ its compression can be configured with a `<name>.config.json`, see [MPQ packages](#mpq-packages-mpq)). Files and folders starting with `.` are ignored, as are `config.json`/`*.config.json` configuration files.
+Sources are configured with a `config.json` file inside their folder. Every setting has a default, so a `config.json` is only needed when you want to change something, and it only needs to contain the settings you are changing. A `config.json` that can not be read fails the build rather than quietly falling back to the defaults.
 
 ## Building
-`Compile` runs the build: sources are compiled into `.build/intermediates/` inside your project, and the final MPQ artifacts (if any) are written to `.build/artifacts/`. Artifacts are built to a staging folder and only replace the previous artifacts once the whole build succeeds, so a failed compile never leaves you without your last good build. Hashes of inputs and outputs are stored in `.build/meta.json` so unchanged sources are skipped on the next compile. `Clean` deletes the intermediates folder to force a full rebuild. `Extract` lets you browse the files in the MPQs configured in the settings (Manage Settings → MPQ Settings).
+**Compile** builds the project. Sources are compiled into `.build/intermediates/`, and the finished artifacts are written to `.build/artifacts/`. Artifacts are assembled in a staging folder and only replace the previous artifacts once the whole build succeeds, so a failed compile never leaves you without your last good build.
+Hashes of every input and output are stored in `.build/meta.json`, so a source whose inputs have not changed is skipped with a `No changes required` message on the next compile. Adding, removing, or renaming an input counts as a change, as does editing the source's `config.json`.
+Progress is written to the **Logs** tab as the build runs, ending in either a green completion message or a red error. The first error stops the build. **Cancel** aborts a running compile at the next step boundary; both an abort and an error keep the hash bookkeeping from the steps that already finished, so a later compile can pick up where it left off.
+**Clean** deletes `.build/intermediates`, which forces the next compile to rebuild every source from scratch. It leaves `.build/artifacts` and `.build/meta.json` alone, so your last build's output is still there. You rarely need it — a normal compile already removes intermediates it no longer uses.
+See [Building](/Help/Programs/PyMOD/Building.md) for the full pipeline, including the order steps run in and how the artifact swap works.
+
+## Extract
+**Extract** opens a browser for the files in the MPQs configured in the [settings](#settings), together with the game files bundled with PyMS. Use it to find the path of a file you want to override in your mod — for example to learn that the marine's graphics live at `unit\terran\marine.grp`, which is the folder layout your source would need.
+Type in the box below the list to filter it. **Wildcard** matches with `?` and `*`, and **Regex** matches with a regular expression (the box turns red while an incomplete or invalid expression is typed). **Done** closes the dialog.
+Extracting the selected file is not implemented yet, so for now the dialog is only useful for browsing and searching. To actually pull files out of an MPQ, use [PyMPQ](/Help/Programs/PyMPQ.md).
+
+## Settings
+**Manage Settings** (`Ctrl+M`) opens the settings dialog:
+
+- **MPQ Settings**: Manages the list of MPQs used by the [Extract](#extract) dialog. Files are read from the highest priority MPQ that contains them, and the higher an MPQ is in the list the higher its priority.
+- **Theme**: Changes the PyMS window [theme](/Help/Programs/Themes.md). The theme also sets the colors of the compile log.
+
+There are no settings for how your project is built — that is all configured per source with `config.json` files inside the project itself, so a project builds the same way for everyone who has it.
 
 ## Command line
-Running `PyMOD.pyw` with a project path compiles it headlessly, printing the build log to the console:
+Running PyMOD with a project path compiles it without opening the GUI, printing the build log to the console:
 
 ```
-PyMOD <project_path>
+PyMOD [options] <project_path>
 ```
 
-Use `--gui <project_path>` to open a project in the GUI instead.
+The path must already be a PyMOD project; the command line will not initialize one for you. The exit code is `0` if the compile succeeded and `1` if it failed, so PyMOD can be used as a build step in a script.
+
+- `--gui`: Opens a project with the GUI instead of compiling it.
+
+## See Also
+- [MPQ Packages](/Help/Programs/PyMOD/MPQ_Packages.md)
+- [DAT Sources](/Help/Programs/PyMOD/DAT_Sources.md)
+- [GRP Sources](/Help/Programs/PyMOD/GRP_Sources.md)
+- [TBL Sources](/Help/Programs/PyMOD/TBL_Sources.md)
+- [LO Sources](/Help/Programs/PyMOD/LO_Sources.md)
+- [PCX Sources](/Help/Programs/PyMOD/PCX_Sources.md)
+- [SPK Sources](/Help/Programs/PyMOD/SPK_Sources.md)
+- [AI Script Sources](/Help/Programs/PyMOD/AI_Script_Sources.md)
+- [IScript Sources](/Help/Programs/PyMOD/IScript_Sources.md)
+- [Other Sources](/Help/Programs/PyMOD/Other_Sources.md)
+- [Building](/Help/Programs/PyMOD/Building.md)
+- [Building a Mod Project](/Help/Tutorials/Building_a_Mod_Project.md)
+- [MPQ](/Help/Files/MPQ.md)
+- [PyMPQ](/Help/Programs/PyMPQ.md)
+- [Themes](/Help/Programs/Themes.md)

@@ -235,6 +235,9 @@ class FencedCodeBlock(ContentBlock):
 
 	def is_continued(self, scanner: _Scanner) -> bool:
 		if not scanner.match(self._re_closing):
+			# Own the line (without consuming it) so no other block type is considered inside
+			# the fence, while the text is still recorded as a span verbatim
+			scanner.own()
 			return True
 		scanner.end()
 		self.close()
@@ -539,7 +542,11 @@ class Document(ContainerBlock):
 					if isinstance(open_block, ContainerBlock):
 						open_block.add_child(content_block)
 			elif scanner.is_blank() and isinstance(open_block, ContentBlock):
-				open_block.close()
+				if isinstance(open_block, FencedCodeBlock):
+					# Only the closing fence ends a fenced code block, so keep the blank line as an empty span
+					open_block.add_span(scanner.remainder())
+				else:
+					open_block.close()
 		# print('\r\n' + repr(document))
 		# Phase 2. Parse inline structure
 		def parse_spans(block: Block) -> None:

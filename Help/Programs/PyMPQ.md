@@ -63,5 +63,7 @@ To change the locale of files already in the archive, select them and choose **C
 
 ## See Also
 - [MPQ](/Help/Files/MPQ.md)
+- [PyMOD](/Help/Programs/PyMOD.md)
 - [Creating a Mod MPQ](/Help/Tutorials/Creating_a_Mod_MPQ.md)
+- [Building a Mod Project](/Help/Tutorials/Building_a_Mod_Project.md)
 - [Themes](/Help/Programs/Themes.md)

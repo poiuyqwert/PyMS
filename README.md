@@ -1,5 +1,5 @@
 # PyMS
-PyMS is a cross platform BroodWar modding suite written using [Python](http://www.python.org). PyMS contains 15 programs to edit most of the file types you will encounter while modding.
+PyMS is a cross platform BroodWar modding suite written using [Python](http://www.python.org). PyMS contains 16 programs to edit most of the file types you will encounter while modding.
 
 ## Table of Contents
 1. [Installation](https://github.com/poiuyqwert/PyMS#installation)
@@ -14,6 +14,7 @@ PyMS is a cross platform BroodWar modding suite written using [Python](http://ww
    * [PyGRP](https://github.com/poiuyqwert/PyMS#PyGRP)
    * [PyICE](https://github.com/poiuyqwert/PyMS#PyICE)
    * [PyLO](https://github.com/poiuyqwert/PyMS#PyLO)
+   * [PyMOD](https://github.com/poiuyqwert/PyMS#PyMOD)
    * [PyMPQ](https://github.com/poiuyqwert/PyMS#PyMPQ)
    * [PyPAL](https://github.com/poiuyqwert/PyMS#PyPAL)
    * [PyPCX](https://github.com/poiuyqwert/PyMS#PyPCX)
@@ -97,6 +98,9 @@ PyMS contains 16 programs to edit most of the file types you will encounter whil
 ### PyLO
 [PyLO](/Help/Programs/PyLO.md) is used for editing the various offset [.lo?](/Help/Files/LO.md) files.
 
+### PyMOD
+[PyMOD](/Help/Programs/PyMOD.md) is used for building complete mod projects, compiling your source files into game files and packaging them into [.mpq](/Help/Files/MPQ.md) files.
+
 ### PyMPQ
 [PyMPQ](/Help/Programs/PyMPQ.md) is used for editing [.mpq](/Help/Files/MPQ.md) files.
 
@@ -104,7 +108,7 @@ PyMS contains 16 programs to edit most of the file types you will encounter whil
 [PyPAL](/Help/Programs/PyPAL.md) is used for editing the various image [palette](/Help/Files/Palettes.md) files (.pal, .wpe, etc.)
 
 ### PyPCX
-[PyPAL](/Help/Programs/PyPAL.md) is used for converting [.pcx](/Help/Files/PCX.md) files to and from [.bmp](/Help/Files/BMP.md) files.
+[PyPCX](/Help/Programs/PyPCX.md) is used for converting [.pcx](/Help/Files/PCX.md) files to and from [.bmp](/Help/Files/BMP.md) files.
 
 ### PySPK
 [PySPK](/Help/Programs/PySPK.md) is used for editing the space paralax [.spk](/Help/Files/SPK.md) files.
