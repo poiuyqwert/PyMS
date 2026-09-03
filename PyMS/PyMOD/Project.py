@@ -69,6 +69,21 @@ class Project:
 	def source_path_to_staging_path(self, source_path: str, base_name: str | None = None) -> str:
 		return self._map_path(source_path, self.staging_path, base_name)
 
+	def mpq_folders(self) -> list[Source.MPQ]:
+		source_graph = self.source_graph
+		if source_graph is None:
+			source_graph = self.update_source_graph()
+		mpq_folders: list[Source.MPQ] = []
+		def collect(item: Source.Item) -> None:
+			if isinstance(item, Source.MPQ):
+				mpq_folders.append(item)
+			if isinstance(item, Source.Folder):
+				for child in item.children:
+					collect(child)
+		if source_graph:
+			collect(source_graph)
+		return mpq_folders
+
 	def update_source_graph(self) -> Source.Item | None:
 		root: Source.Item | None = None
 		parent_folders: dict[str, Source.Folder] = {}

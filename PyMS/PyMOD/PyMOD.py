@@ -190,7 +190,9 @@ class PyMOD(UI.MainWindow):
 		self.update_states()
 
 	def extract(self) -> None:
-		ExtractDialog(self, self.mpqhandler, self.config_)
+		if self.project is None:
+			return
+		ExtractDialog(self, delegate=self, mpqhandler=self.mpqhandler, project=self.project, config=self.config_)
 
 	def compile(self) -> None:
 		if self.project is None:

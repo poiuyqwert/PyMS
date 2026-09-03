@@ -53,6 +53,7 @@ So a GRP that should be stored uncompressed uses one `config.json` for both jobs
 ```
 
 The compile log names the compression used for every file it adds, and whether it came from the `autocompression` settings or from a `config.json`, so you can check what you actually got.
+You do not have to write the `config.json` by hand for a file you are extracting — the [Extract](/Help/Programs/PyMOD.md#extract) dialog's **MPQ Config** section writes the `compression` setting as part of the extract.
 
 ## Nested MPQs
 An `.mpq` folder can contain another `.mpq` folder. The inner archive is packaged first and then added to the outer archive as a single file, which is how a mod ships an MPQ inside its own MPQ. By default nested archives are stored uncompressed (they are already compressed), which is what the `.mpq` entry in the default `autocompression` settings does.

@@ -15,6 +15,11 @@ class PyMODConfig(Config.Config):
 	}
 
 	class Windows(Config.Group):
+		class Extractors(Config.Group):
+			def __init__(self) -> None:
+				self.default = Config.WindowGeometry()
+				super().__init__()
+
 		class Settings(Config.Group):
 			def __init__(self) -> None:
 				self.main = Config.WindowGeometry(default_size=UI.Size(550,380))
@@ -26,6 +31,7 @@ class PyMODConfig(Config.Config):
 			self.help = Config.WindowGeometry()
 			self.settings = PyMODConfig.Windows.Settings()
 			self.extract = Config.WindowGeometry()
+			self.extractors = PyMODConfig.Windows.Extractors()
 			self.name = Config.WindowGeometry()
 			super().__init__()
 

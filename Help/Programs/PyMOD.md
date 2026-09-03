@@ -106,7 +106,12 @@ See [Building](/Help/Programs/PyMOD/Building.md) for the full pipeline, includin
 ## Extract
 **Extract** opens a browser for the files in the MPQs configured in the [settings](#settings), together with the game files bundled with PyMS. Use it to find the path of a file you want to override in your mod — for example to learn that the marine's graphics live at `unit\terran\marine.grp`, which is the folder layout your source would need.
 Type in the box below the list to filter it. **Wildcard** matches with `?` and `*`, and **Regex** matches with a regular expression (the box turns red while an incomplete or invalid expression is typed). **Done** closes the dialog.
-Extracting the selected file is not implemented yet, so for now the dialog is only useful for browsing and searching. To actually pull files out of an MPQ, use [PyMPQ](/Help/Programs/PyMPQ.md).
+**Extract** pulls the selected file into your project. Which options you get depends on the file — a file PyMOD knows how to turn into an editable source offers the settings for that, and anything else is copied out as it is — but every file offers the same two sections:
+
+- **Destination**: The folder in your project to extract into and the path inside it. **Folder** lists the [MPQ folders](/Help/Programs/PyMOD/MPQ_Packages.md) in your project, plus the project root as a fallback, and **Path** is pre-filled from the path inside the archive, so `unit\terran\marine.grp` becomes `unit/terran/marine.grp` — the layout the packager turns back into that same archive path. Both are editable, and the full path is shown underneath. You are asked before an existing file is overwritten.
+- **MPQ Config**: The [compression](/Help/Programs/PyMOD/MPQ_Packages.md#compression) the file is packaged with. Leave **Override compression** off and the file uses the containing MPQ's `autocompression` settings; turn it on and the type and level you choose are written to the source's `config.json` for you.
+
+The **Files** tab refreshes when you close the dialog, so anything you extracted is there. To pull files out of an MPQ without a project, use [PyMPQ](/Help/Programs/PyMPQ.md).
 
 ## Settings
 **Manage Settings** (`Ctrl+M`) opens the settings dialog:

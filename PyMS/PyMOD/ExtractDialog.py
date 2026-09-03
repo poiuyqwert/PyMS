@@ -1,5 +1,7 @@
 
 from .Config import PyMODConfig
+from .Project import Project
+from . import Extractor
 
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import UIKit as UI
@@ -10,9 +12,18 @@ from ..Utilities.ErrorDialog import ErrorDialog
 
 import os, re
 
+from typing import Protocol
+
+class ExtractDialogDelegate(Protocol):
+	def refresh_files(self) -> None:
+		...
+
 class ExtractDialog(PyMSDialog):
-	def __init__(self, parent: UI.Misc, mpqhandler: MPQHandler, config: PyMODConfig) -> None:
+	def __init__(self, parent: UI.Misc, *, delegate: ExtractDialogDelegate, mpqhandler: MPQHandler, project: Project, config: PyMODConfig) -> None:
+		self.delegate = delegate
 		self.mpqhandler = mpqhandler
+		self.project = project
+		self.extracted_any = False
 		self.search = UI.StringVar()
 		self.search.set('*')
 		self.search.trace_add('write', self.updatesearch)
@@ -113,9 +124,25 @@ class ExtractDialog(PyMSDialog):
 			self.after_cancel(self.searchtimer)
 		self.searchtimer = self.after(200, self.updatelist)
 
+	def selected_file(self) -> str | None:
+		selection = self.listbox.curselection()
+		if not selection:
+			return None
+		return self.listbox.get(int(selection[0]))
+
 	def extract(self) -> None:
-		pass
+		mpq_file_name = self.selected_file()
+		if not mpq_file_name:
+			return
+		extractor_type = Extractor.find_extractor(mpq_file_name)
+		extractor = extractor_type(self, mpqhandler=self.mpqhandler, project=self.project, config=self.config_, mpq_file_name=mpq_file_name)
+		if extractor.extracted:
+			self.extracted_any = True
 
 	def dismiss(self) -> None:
 		self.config_.windows.extract.save_size(self)
+		# Refreshing on dismiss rather than after each extract keeps the source graph from being
+		# rebuilt once per file while a bunch of files are pulled out in a row
+		if self.extracted_any:
+			self.delegate.refresh_files()
 		PyMSDialog.dismiss(self)

@@ -1,4 +1,4 @@
-from .Item import Item
+from .Item import Item, config_path_for
 from .Folder import Folder
 from .File import File
 

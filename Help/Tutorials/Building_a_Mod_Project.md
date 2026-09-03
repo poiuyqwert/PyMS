@@ -16,6 +16,7 @@ Anything you want packaged into an MPQ goes inside a folder whose name ends with
 2. Inside `MyMod.mpq`, create the folders the game expects: `arr`, `rez`, and `unit/terran`.
 
 If you are not sure where a file you want to override lives, press **Extract** and search for it. Finding `unit\terran\marine.grp` in the list tells you that a `marine.grp` source belongs in a `unit/terran` folder.
+Extract can also pull the file straight into your project, pre-filling that folder layout for you — see [Extract](/Help/Programs/PyMOD.md#extract).
 
 ## Adding a Text Source
 Start with something small — the game's unit names, which live in `stat_txt.tbl`.

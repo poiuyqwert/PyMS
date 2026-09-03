@@ -1,8 +1,9 @@
 
-from .utils import PyMODTestCase
+from .utils import PyMODTestCase, PROJECT_PATH
 
 from ...PyMOD.PyMOD import PyMOD
 from ...PyMOD.ExtractDialog import ExtractDialog
+from ...PyMOD.Project import Project
 from ...Utilities import UIKit as UI
 from ...Utilities import Assets
 from ...Utilities.UIKit.Widgets.Extensions import MiscExtensions
@@ -38,7 +39,7 @@ class Test_PyMOD_extract(PyMODTestCase):
 				mock.patch('PyMS.PyMOD.ExtractDialog.os.walk', side_effect=fake_walk), \
 				mock.patch.object(MiscExtensions, 'after_background', autospec=True, side_effect=list_inline), \
 				mock.patch.object(UI.WindowExtensions, 'grab_wait', lambda self: None):
-			dialog = ExtractDialog(gui, gui.mpqhandler, gui.config_)
+			dialog = ExtractDialog(gui, delegate=gui, mpqhandler=gui.mpqhandler, project=Project(PROJECT_PATH), config=gui.config_)
 		self.addCleanup(self._destroy, dialog)
 		self.pump(dialog)
 		return dialog
