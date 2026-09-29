@@ -6,7 +6,7 @@ The Code Editor is where you write and edit AI script code (see [AI Language](/H
 - **Test Code** (`Ctrl+T`): Compiles the code without applying it. Errors and warnings are highlighted in the code, or you are told the code compiles cleanly.
 - **Export Code** (`Ctrl+E`) and **Export As...** (`Ctrl+Alt+A`): Saves the code in the editor to a text file.
 - **Import Code** (`Ctrl+I`): Replaces the code in the editor with the contents of a text file.
-- **Find/Replace** (`Ctrl+F`): Opens the Find/Replace dialog. `F3` repeats the last find.
+- **Find/Replace** (`Ctrl+F`): Opens the Find/Replace dialog. Each match is selected in the code as it is found. `F3` repeats the last find, and `Esc` closes the dialog.
 - **Color Settings** (`Ctrl+Alt+C`): Customizes the syntax highlighting styles.
 - **Insert String ID** (`Ctrl+Alt+I`): Chooses a string from `stat_txt.tbl` and inserts its index at the cursor, with the string text as a trailing comment. Used on a `name_string` line it replaces the existing index. Only available when a `stat_txt.tbl` is loaded (see [Data Files](/Help/Programs/PyAI.md#data-files)).
 - **Transpile to PyAI code** (`Ctrl+Alt+P`): Converts code written for old versions of PyAI, or for ASC3 (`script_name`/`script_id` headers), into the current `script` header syntax. The old formats don't contain all of the header information, so check the generated headers afterwards (the transpiler inserts a note where it had to guess).

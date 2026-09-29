@@ -32,7 +32,7 @@ Frame:
 **Test Code** (`Ctrl+T`) compiles the source code without saving it. If there is a problem the editor scrolls to and highlights the offending line (along with any warning lines), otherwise you are told the code compiles cleanly.
 
 ## Find and Replace
-**Find/Replace** (`Ctrl+F`) opens the Find/Replace dialog to search (and optionally replace) text in the code. `F3` repeats the last find.
+**Find/Replace** (`Ctrl+F`) opens the Find/Replace dialog to search (and optionally replace) text in the code. Each match is selected in the code as it is found. `F3` repeats the last find, and `Esc` closes the dialog.
 
 ## See Also
 - [PyLO](/Help/Programs/PyLO.md)

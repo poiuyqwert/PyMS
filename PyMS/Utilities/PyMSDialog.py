@@ -9,6 +9,10 @@ class PyMSDialog(UI.Toplevel):
 		self.protocol('WM_DELETE_WINDOW', self.cancel)
 		if escape:
 			self.bind(UI.Shortcut.Close(), self.cancel)
+			# `Shortcut.Close` is the platform close shortcut (`Cmd+W` on Mac), so `Escape` is
+			# bound separately to dismiss the dialog consistently across platforms
+			if UI.Shortcut.Close is not UI.Key.Escape:
+				self.bind(UI.Key.Escape(), self.cancel)
 		self.parent = parent
 		try:
 			focus: UI.Misc | None = self.widgetize()

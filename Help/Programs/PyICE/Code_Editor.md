@@ -6,7 +6,7 @@ The IScript Editor is where you write and edit IScript code (see [IScript Langua
 - **Test Code** (`Ctrl+T`): Compiles the code without applying it. Errors and warnings are highlighted in the code, or you are told the code compiles cleanly.
 - **Export Code** (`Ctrl+E`) and **Export As...** (`Ctrl+Alt+A`): Saves the code in the editor to a text file.
 - **Import Code** (`Ctrl+I`): Replaces the code in the editor with the contents of a text file.
-- **Find/Replace** (`Ctrl+F`): Opens the Find/Replace dialog. `F3` repeats the last find.
+- **Find/Replace** (`Ctrl+F`): Opens the Find/Replace dialog. Each match is selected in the code as it is found. `F3` repeats the last find, and `Esc` closes the dialog.
 - **Color Settings** (`Ctrl+Alt+C`): Customizes the syntax highlighting styles.
 - **Generate Code** (`Ctrl+G`): Opens the [Code Generator](/Help/Programs/PyICE/Code_Generator.md), for generating repetitive code from a template.
 - **Insert/Preview Window** (`Ctrl+W`): Opens the [Graphics Previewer](/Help/Programs/PyICE/Previewers.md#graphics-previewer), for previewing GRP frames and images/sprites/flingys and inserting their IDs or commands. If the cursor is on a command that takes a frame, image, sprite, or flingy parameter, the previewer opens with that entry selected.

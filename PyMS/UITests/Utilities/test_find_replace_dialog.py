@@ -123,3 +123,12 @@ class Test_FindReplaceDialog(UITestCase):
 		self.pump(window)
 		self.assertEqual(dialog.title(), 'Find')
 		self.assertFalse(hasattr(dialog, 'replaceentry'))
+
+	def test_escape_withdraws_for_reuse(self) -> None:
+		window, dialog = self.make_dialog('alpha\n')
+		self.show(dialog)
+		self.shortcut(dialog, UI.Key.Escape)
+		self.assertEqual(dialog.state(), 'withdrawn')
+		dialog.show()
+		self.pump(window)
+		self.assertEqual(dialog.state(), 'normal')

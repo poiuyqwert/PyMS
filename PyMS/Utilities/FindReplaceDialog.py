@@ -19,7 +19,7 @@ class FindReplaceDialog(ReusablePyMSDialog):
 		self.find_history = find_history if find_history is not None else UI.InputHistory()
 		self.replace_history = replace_history if replace_history is not None else UI.InputHistory()
 		self.resettimer: str | None = None
-		ReusablePyMSDialog.__init__(self, parent, 'Find/Replace' if can_replace else 'Find', resizable=(True, False))
+		ReusablePyMSDialog.__init__(self, parent, 'Find/Replace' if can_replace else 'Find', escape=True, resizable=(True, False))
 
 	def widgetize(self) -> UI.Misc | None:
 		self.find = UI.StringVar()
