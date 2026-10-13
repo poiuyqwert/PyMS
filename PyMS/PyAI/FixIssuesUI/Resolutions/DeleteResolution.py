@@ -29,7 +29,7 @@ class DeleteResolution(Resolution):
 		simulated = AIScript(script.id, script.flags, script.string_id, issue.entry_point, False)
 		ai_size, _ = ai.can_add_scripts([simulated])
 		if ai_size is not None:
-			return f"There is not enough room in aiscript.bin for this script (would be {ai_size}B out of the max {ai.max_size()}B)"
+			return f"There is not enough room in aiscript.bin for this script (would be {ai_size}B out of the max {ai.max_sizes().aiscript}B)"
 		return None
 
 	def resolve(self, ai: AIBIN, issue: LoadIssue) -> None:

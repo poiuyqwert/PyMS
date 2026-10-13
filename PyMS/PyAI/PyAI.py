@@ -559,12 +559,12 @@ class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, Errorab
 		prospective = AIBIN.AIScript('\x00\x00\x00\x00', 0, 0, AIBIN.AIScript.blank_entry_point(), False)
 		ai_over, _ = self.ai.can_add_scripts([prospective])
 		if ai_over is not None:
-			if self.ai.expanded:
+			if self.ai.ai_expanded:
 				ErrorDialog(self, PyMSError('Adding', "There is not enough room in your aiscript.bin to add a new script"))
 				return
 			if UI.MessageBox.askyesno(parent=self, title='Expand', message="There is not enough room in your aiscript.bin to add a new script, would you like to expand your aiscript.bin? If you don't know what this is you should google 'AISE Plugin' before saying Yes") == UI.NO:
 				return
-			self.ai.expand()
+			self.ai.expand_aiscript()
 		dialog = EditScriptDialog(self, delegate=self, config=self.config_.windows.script_edit, title='Adding New AI Script')
 		script_id = dialog.script_id.get()
 		if not script_id:
@@ -757,22 +757,23 @@ class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, Errorab
 		try:
 			scripts = AIBIN.AIBIN.compile(parse_context)
 			new_ai_size, new_bw_size = self.ai.can_add_scripts(scripts)
+			max_sizes = self.ai.max_sizes()
 			if new_ai_size is not None:
 				ai_size, _ = self.ai.calculate_sizes()
-				if self.ai.expanded:
-					raise PyMSError('Parse', f"There is not enough room in your aiscript.bin to compile these changes. The current file is {ai_size}B out of the max {self.ai.max_size()}B, these changes would make the file {new_ai_size}B.")
+				if self.ai.ai_expanded:
+					raise PyMSError('Parse', f"There is not enough room in your aiscript.bin to compile these changes. The current file is {ai_size}B out of the max {max_sizes.aiscript}B, these changes would make the file {new_ai_size}B.")
 				else:
 					if UI.MessageBox.askyesno(parent=parent, title='Expand', message="There is not enough room in your aiscript.bin to compile these changes, would you like to expand your aiscript.bin? If you don't know what this is you should google 'AISE Plugin' before saying Yes") == UI.NO:
 						return False
-					self.ai.expand()
-			if new_bw_size is not None and new_bw_size > self.ai.max_size(): # Check against max_size again for the case where the file just got expanded above because of aiscript.bin
+					self.ai.expand_aiscript()
+			if new_bw_size is not None:
 				_, bw_size = self.ai.calculate_sizes()
-				if self.ai.expanded:
-					raise PyMSError('Parse', f"There is not enough room in your bwscript.bin to compile these changes. The current file is {bw_size}B out of the max {self.ai.max_size()}B, these changes would make the file {new_bw_size}B.")
+				if self.ai.bw_expanded:
+					raise PyMSError('Parse', f"There is not enough room in your bwscript.bin to compile these changes. The current file is {bw_size}B out of the max {max_sizes.bwscript}B, these changes would make the file {new_bw_size}B.")
 				else:
 					if UI.MessageBox.askyesno(parent=parent, title='Expand', message="There is not enough room in your bwscript.bin to compile these changes, would you like to expand your bwscript.bin? If you don't know what this is you should google 'AISE Plugin' before saying Yes") == UI.NO:
 						return False
-					self.ai.expand()
+					self.ai.expand_bwscript()
 		except PyMSError as e:
 			ErrorDialog(parent, e)
 			return False

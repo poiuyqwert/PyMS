@@ -25,7 +25,7 @@ Changes to the script list (adding, removing, and editing scripts) can be undone
 - **Close** (`Ctrl+W`): Closes the loaded files.
 - **Set as default .bin editor** (Windows Only): Associates `.bin` files with PyAI, so they open in PyAI when double clicked.
 
-`aiscript.bin` has a maximum file size of 65535 bytes (the reason `bwscript.bin` exists). If your scripts don't fit, PyAI will offer to "expand" the file, which raises the limit but makes the file require the AISE plugin to work in the game (see [Plugins](#plugins)).
+`aiscript.bin` has a maximum file size of 65535 bytes (the reason `bwscript.bin` exists). If your scripts don't fit, PyAI will offer to "expand" the file, which raises the limit but makes the file require the AISE plugin to work in the game (see [Plugins](#plugins)). `aiscript.bin` and `bwscript.bin` are expanded independently, so expanding one doesn't change the format of the other. An expanded file is only saved in the expanded format while it is larger than 65535 bytes; otherwise it is saved in the normal format. PyAI can also open files that use the expanded format's long jump table even if they are smaller than 65535 bytes.
 
 ## Data Files
 PyAI uses some of the games data files to display script names, to let you use unit/upgrade/technology names in code, and to validate your scripts:

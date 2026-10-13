@@ -2,7 +2,7 @@
 from . import utils
 
 from ...FileFormats.AIBIN import AIBIN
-from ...FileFormats.AIBIN.CodeHandlers import CodeCommands
+from ...FileFormats.AIBIN.CodeHandlers import AISE, CodeCommands
 from ...FileFormats.AIBIN.CodeHandlers.AISourceCodeHandlers import AIDefsSourceCodeHandler
 from ...Utilities.CodeHandlers.DefinitionsHandler import DefinitionsHandler
 from ...Utilities import IO
@@ -11,6 +11,7 @@ from ..utils import resource_path
 
 import io
 import unittest
+from unittest import mock
 
 def _load_bins(ai_name: str, bw_name: str) -> AIBIN.AIBIN:
 	ai_bin = AIBIN.AIBIN()
@@ -32,6 +33,9 @@ def _decompile_all(ai_bin: AIBIN.AIBIN) -> str:
 	output, serialize_context = utils.serialize_context()
 	ai_bin.decompile(serialize_context)
 	return output.getvalue()
+
+def _headers_offset(data: bytes) -> int:
+	return int.from_bytes(data[:4], 'little')
 
 def _read_fixture(name: str) -> bytes:
 	with open(resource_path(name, __file__), 'rb') as f:
@@ -143,7 +147,8 @@ class Test_Resave(unittest.TestCase):
 class Test_Expanded_Round_Trip(unittest.TestCase):
 	def test_expanded_fixture_reloads_as_expanded(self) -> None:
 		ai_bin = _load_bins('expanded_aiscript.bin', 'expanded_bwscript.bin')
-		self.assertTrue(ai_bin.expanded)
+		self.assertTrue(ai_bin.ai_expanded)
+		self.assertTrue(ai_bin.bw_expanded)
 
 	def test_expanded_resave_is_byte_identical(self) -> None:
 		# The expanded fixtures are the fixpoint of load -> save, so resaving
@@ -201,13 +206,25 @@ goto BBBB_entry
 			offset += 5
 		return count
 
-	def test_expanded_save_only_emits_own_scripts_per_file(self) -> None:
+	@staticmethod
+	def _small_scripts() -> list[AIBIN.AIScript]:
 		parse_context = utils.parse_context(Test_Expanded_Round_Trip.SMALL_EXPANDED_SOURCE)
-		scripts = AIBIN.AIBIN.compile(parse_context)
+		return AIBIN.AIBIN.compile(parse_context)
+
+	@staticmethod
+	def _small_expanded_bin() -> AIBIN.AIBIN:
 		ai_bin = AIBIN.AIBIN()
-		ai_bin.expand()
-		ai_bin.add_scripts(scripts)
-		ai_data, bw_data = _save_bins(ai_bin)
+		ai_bin.expand_aiscript()
+		ai_bin.expand_bwscript()
+		ai_bin.add_scripts(Test_Expanded_Round_Trip._small_scripts())
+		return ai_bin
+
+	def test_expanded_save_only_emits_own_scripts_per_file(self) -> None:
+		ai_bin = self._small_expanded_bin()
+		# Force the expanded layout despite the small size, this is about which
+		# long jumps each file gets
+		with mock.patch.object(AISE, 'expanded_headers_offset', 0):
+			ai_data, bw_data = _save_bins(ai_bin)
 
 		# Each file gets a long jump for its own script's short block reference only
 		self.assertEqual(self._count_long_jumps(ai_data), 1)
@@ -220,3 +237,55 @@ goto BBBB_entry
 		self.assertNotIn(aaaa_wait, bw_data)
 		self.assertIn(bbbb_wait, bw_data)
 		self.assertNotIn(bbbb_wait, ai_data)
+
+	def test_expanded_state_is_tracked_per_file(self) -> None:
+		ai_bin = _load_bins('expanded_aiscript.bin', 'expanded_bwscript.bin')
+		for script in ai_bin.list_scripts():
+			if script.in_bwscript:
+				ai_bin.remove_script(script.id)
+		ai_bin.add_scripts(script for script in self._small_scripts() if script.in_bwscript)
+		original_code = _decompile_all(ai_bin)
+
+		ai_data, bw_data = _save_bins(ai_bin)
+
+		self.assertGreaterEqual(_headers_offset(ai_data), AISE.expanded_headers_offset)
+		self.assertLess(_headers_offset(bw_data), AISE.expanded_headers_offset)
+		self.assertEqual(self._count_long_jumps(bw_data), 0)
+		reloaded = _reload_bins(ai_data, bw_data)
+		self.assertTrue(reloaded.ai_expanded)
+		self.assertFalse(reloaded.bw_expanded)
+		self.assertEqual(original_code, _decompile_all(reloaded))
+
+	def test_files_under_expanded_size_save_in_standard_layout(self) -> None:
+		ai_bin = self._small_expanded_bin()
+		original_code = _decompile_all(ai_bin)
+
+		ai_data, bw_data = _save_bins(ai_bin)
+
+		for data in (ai_data, bw_data):
+			self.assertLess(_headers_offset(data), AISE.expanded_headers_offset)
+			self.assertEqual(self._count_long_jumps(data), 0)
+		reloaded = _reload_bins(ai_data, bw_data)
+		self.assertFalse(reloaded.ai_expanded)
+		self.assertFalse(reloaded.bw_expanded)
+		self.assertEqual(original_code, _decompile_all(reloaded))
+
+	def test_files_under_expanded_size_with_long_jump_tables_load_as_expanded(self) -> None:
+		ai_bin = self._small_expanded_bin()
+		original_code = _decompile_all(ai_bin)
+		with mock.patch.object(AISE, 'expanded_headers_offset', 0):
+			ai_data, bw_data = _save_bins(ai_bin)
+		for data in (ai_data, bw_data):
+			self.assertLess(_headers_offset(data), 0x10000)
+			self.assertEqual(self._count_long_jumps(data), 1)
+
+		reloaded = _reload_bins(ai_data, bw_data)
+
+		self.assertTrue(reloaded.ai_expanded)
+		self.assertTrue(reloaded.bw_expanded)
+		self.assertEqual(original_code, _decompile_all(reloaded))
+		# Resaving writes the standard layout, which is then a fixpoint
+		resaved_ai, resaved_bw = _save_bins(reloaded)
+		self.assertEqual(self._count_long_jumps(resaved_ai), 0)
+		self.assertEqual(self._count_long_jumps(resaved_bw), 0)
+		self.assertEqual(_save_bins(_reload_bins(resaved_ai, resaved_bw)), (resaved_ai, resaved_bw))
