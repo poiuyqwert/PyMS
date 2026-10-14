@@ -429,7 +429,7 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 				AISEIdleOrder.BasicFlags(0))
 			)),
 			(b'\x00\x04\x0A\x05\x02\x07\x00\x0A\x0C\x00\x00\x40\x01\x20\x02\x40\x03\x01\x00\x00\x00\x00\x08\x32\x00\x3C\x00\x00\x09\x0A\x32\x00\x06\x00\x0D\x01\x06\x40\x40\x00\x00\x20\x00', AISEIdleOrder.OptionSet((
-				AISEIdleOrder.SelfOptions((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12), AISEIdleOrder.BasicFlags(flags=0))),
+				AISEIdleOrder.SelfOptions((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targeting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12), AISEIdleOrder.BasicFlags(flags=0))),
 				AISEIdleOrder.SpellEffects(flags=64),
 				AISEIdleOrder.WithoutSpellEffects(flags=32),
 				AISEIdleOrder.UnitProps(field=4, comparison=0, amount=1),
@@ -460,7 +460,7 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 				AISEIdleOrder.BasicFlags(0))
 			), b'\x00\x04\x02\x01\x00\x0A\x04\x20\x00\x00\x00'),
 			(AISEIdleOrder.OptionSet((
-				AISEIdleOrder.SelfOptions((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12), AISEIdleOrder.BasicFlags(flags=0))),
+				AISEIdleOrder.SelfOptions((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targeting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12), AISEIdleOrder.BasicFlags(flags=0))),
 				AISEIdleOrder.SpellEffects(flags=64),
 				AISEIdleOrder.WithoutSpellEffects(flags=32),
 				AISEIdleOrder.UnitProps(field=4, comparison=0, amount=1),
@@ -492,8 +492,8 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 			('Self(SpellEffects(Plague) | TileFlags(Creep) | InCombat),', AISEIdleOrder.OptionSet((
 				AISEIdleOrder.SelfOptions((AISEIdleOrder.SpellEffects(0x02), AISEIdleOrder.TileFlags(False, 0x04), AISEIdleOrder.BasicFlags(0x20))),
 			))),
-			('Self(Order(AttackUnit) | Targetting(Enemy) | TileFlags(Creep | Ramp)) | SpellEffects(Matrix) | WithoutSpellEffects(Blind) | Hangar(LessThan, 1) | RandomRate(50, 60) | Count(Exactly, 50, 6, 13) | WithoutUnitFlags(Hero | Robotic) | InCombat,', AISEIdleOrder.OptionSet((
-				AISEIdleOrder.SelfOptions((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12))),
+			('Self(Order(AttackUnit) | Targeting(Enemy) | TileFlags(Creep | Ramp)) | SpellEffects(Matrix) | WithoutSpellEffects(Blind) | Hangar(LessThan, 1) | RandomRate(50, 60) | Count(Exactly, 50, 6, 13) | WithoutUnitFlags(Hero | Robotic) | InCombat,', AISEIdleOrder.OptionSet((
+				AISEIdleOrder.SelfOptions((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targeting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12))),
 				AISEIdleOrder.SpellEffects(flags=64),
 				AISEIdleOrder.WithoutSpellEffects(flags=32),
 				AISEIdleOrder.UnitProps(field=4, comparison=0, amount=1),
@@ -501,6 +501,9 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 				AISEIdleOrder.UnitCount(comparison=10, amount=50, radius=6, players=13),
 				AISEIdleOrder.UnitFlags(without=True, flags=16448),
 				AISEIdleOrder.BasicFlags(flags=32)
+			))),
+			('Self(Targeting(Ally | Own)),', AISEIdleOrder.OptionSet((
+				AISEIdleOrder.SelfOptions((AISEIdleOrder.Targeting(flags=0xC),)),
 			))),
 		)
 		code_type = AISECodeTypes.IdleOrderFlagsCodeType()
@@ -543,7 +546,7 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 				AISEIdleOrder.BasicFlags(0))
 			), 'Self(SpellEffects(Plague) | TileFlags(Creep) | InCombat)'),
 			(AISEIdleOrder.OptionSet((
-				AISEIdleOrder.SelfOptions((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12), AISEIdleOrder.BasicFlags(flags=0))),
+				AISEIdleOrder.SelfOptions((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targeting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12), AISEIdleOrder.BasicFlags(flags=0))),
 				AISEIdleOrder.SpellEffects(flags=64),
 				AISEIdleOrder.WithoutSpellEffects(flags=32),
 				AISEIdleOrder.UnitProps(field=4, comparison=0, amount=1),
@@ -551,7 +554,7 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 				AISEIdleOrder.UnitCount(comparison=10, amount=50, radius=6, players=13),
 				AISEIdleOrder.UnitFlags(without=True, flags=16448),
 				AISEIdleOrder.BasicFlags(flags=32)
-			)), 'Self(Order(AttackUnit) | Targetting(Enemy) | TileFlags(Creep | Ramp)) | SpellEffects(Matrix) | WithoutSpellEffects(Blind) | Hangar(LessThan, 1) | RandomRate(50, 60) | Count(Exactly, 50, 6, 13) | WithoutUnitFlags(Hero | Robotic) | InCombat'),
+			)), 'Self(Order(AttackUnit) | Targeting(Enemy) | TileFlags(Creep | Ramp)) | SpellEffects(Matrix) | WithoutSpellEffects(Blind) | Hangar(LessThan, 1) | RandomRate(50, 60) | Count(Exactly, 50, 6, 13) | WithoutUnitFlags(Hero | Robotic) | InCombat'),
 		)
 		code_type = AISECodeTypes.IdleOrderFlagsCodeType()
 		for value, expected in cases:

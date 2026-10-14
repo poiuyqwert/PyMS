@@ -32,7 +32,7 @@ UnitAirMax=Max number of times unit hits its target per Air attack. This value i
 
 UnitScoreBuild=Amount of points given for training/building the unit, counted to the total score after the end of a game.
 
-UnitScoreDestroy=Amount of points given for destroying the unit, counted to the total score after the end of a game. It is also used by the AI for targetting purposes. Units with a higher destroy score will be targeted first.
+UnitScoreDestroy=Amount of points given for destroying the unit, counted to the total score after the end of a game. It is also used by the AI for targeting purposes. Units with a higher destroy score will be targeted first.
 
 UnitSpaceProv=Amout of loading space the unit has. Used with dropships. This IS NOT the number of units the transporting unit may carry as different unit may take up different amount of loading space.
 

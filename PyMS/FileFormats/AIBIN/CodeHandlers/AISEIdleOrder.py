@@ -614,7 +614,7 @@ class UnitFlags(Option):
 		return ('UnitFlags', 'WithoutUnitFlags') + tuple(UnitFlags.Flag.NAMES.values())
 
 @dataclass
-class Targetting(Option):
+class Targeting(Option):
 	TYPE_ID = 7
 
 	class Flag:
@@ -640,10 +640,10 @@ class Targetting(Option):
 		return cls(value)
 
 	def serialize(self) -> str:
-		return f'Targetting({CodeType.FlagsCodeType.serialize_flags(self.flags, Targetting.Flag.NAMES, Struct.l_u32)})'
+		return f'Targeting({CodeType.FlagsCodeType.serialize_flags(self.flags, Targeting.Flag.NAMES, Struct.l_u32)})'
 
 	def merge(self, other: Option) -> bool:
-		if not isinstance(other, Targetting):
+		if not isinstance(other, Targeting):
 			return False
 		self.flags |= other.flags
 		return True
@@ -651,13 +651,13 @@ class Targetting(Option):
 	@classmethod
 	def parse(cls, parse_context: ParseContext) -> Self | None:
 		token = parse_context.lexer.next_token(peek=True)
-		if not token.raw_value == 'Targetting':
+		if not token.raw_value == 'Targeting':
 			return None
 		_ = parse_context.lexer.next_token()
 		token = parse_context.lexer.next_token()
 		if not token.raw_value == '(':
 			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `(` after `{cls.__name__}` to start flags)')
-		flags = CodeType.FlagsCodeType.lex_flags(parse_context=parse_context, names_to_flags=Targetting.Flag.VALUES, type_name='Targetting', bytecode_type=Struct.l_u8, case_sensitive=False)
+		flags = CodeType.FlagsCodeType.lex_flags(parse_context=parse_context, names_to_flags=Targeting.Flag.VALUES, type_name='Targeting', bytecode_type=Struct.l_u8, case_sensitive=False)
 		invalid_flags = (flags & OptionSet.TYPE_MASK)
 		if invalid_flags:
 			raise parse_context.error('Parse', f'Invalid flags `0x{invalid_flags:X}` for `{cls.__name__}`')
@@ -667,11 +667,11 @@ class Targetting(Option):
 		return cls(flags)
 
 	def compile(self, context: ByteCodeBuilderType) -> None:
-		context.add_data(Struct.l_u16.pack(build_command_word(Targetting.TYPE_ID, self.flags)))
+		context.add_data(Struct.l_u16.pack(build_command_word(Targeting.TYPE_ID, self.flags)))
 
 	@classmethod
 	def keywords(cls) -> Sequence[str]:
-		return ('Targetting',) + tuple(Targetting.Flag.NAMES.values())
+		return ('Targeting',) + tuple(Targeting.Flag.NAMES.values())
 
 @dataclass
 class RandomRate(Option):
@@ -901,7 +901,7 @@ _OPTION_TYPES: list[Type[Option]] = [
 	SelfOptions,
 	Order,
 	UnitFlags,
-	Targetting,
+	Targeting,
 	RandomRate,
 	UnitCount,
 	TileFlags,
