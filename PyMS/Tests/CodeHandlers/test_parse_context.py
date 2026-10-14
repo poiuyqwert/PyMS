@@ -29,6 +29,16 @@ class Test_Error(unittest.TestCase):
 		self.assertEqual(error.line, 1)
 		self.assertEqual(error.code, 'line0')
 
+	def test_default_line_is_line_ended_by_consumed_newline(self) -> None:
+		# An error raised right after a line's newline was read belongs to that
+		# line, not the one the lexer has moved on to.
+		ctx = make_parse_context(THREE_LINES, with_block=False)
+		ctx.lexer.next_token()  # line0
+		ctx.lexer.next_token()  # newline
+		error = ctx.error('Parse', 'boom')
+		self.assertEqual(error.line, 1)
+		self.assertEqual(error.code, 'line0')
+
 
 class Test_AttributeError(unittest.TestCase):
 	def test_fills_missing_line_and_code(self) -> None:
@@ -37,6 +47,17 @@ class Test_AttributeError(unittest.TestCase):
 		ctx.attribute_error(error)
 		self.assertEqual(error.line, 1)
 		self.assertEqual(error.code, 'line0')
+
+	def test_fills_line_ended_by_consumed_newline(self) -> None:
+		ctx = make_parse_context(THREE_LINES, with_block=False)
+		ctx.lexer.next_token()  # line0
+		ctx.lexer.next_token()  # newline
+		ctx.lexer.next_token()  # line1
+		ctx.lexer.next_token()  # newline
+		error = PyMSError('Parse', 'boom')
+		ctx.attribute_error(error)
+		self.assertEqual(error.line, 2)
+		self.assertEqual(error.code, 'line1')
 
 	def test_preserves_existing_line_and_code(self) -> None:
 		ctx = make_parse_context(THREE_LINES, with_block=False)
@@ -110,6 +131,14 @@ class Test_Blocks(unittest.TestCase):
 		with self.assertRaises(PyMSError) as cm:
 			ctx.define_block('foo', 2)
 		self.assertIn("A block named 'foo' is already defined", str(cm.exception))
+
+	def test_redefining_a_block_reports_displayed_line_number(self) -> None:
+		# Definition lines are stored 0-based but shown to users 1-based.
+		ctx = make_parse_context('', with_block=False)
+		ctx.define_block('foo', 1)
+		with self.assertRaises(PyMSError) as cm:
+			ctx.define_block('foo', 2)
+		self.assertIn('already defined on line 2', str(cm.exception))
 
 
 class Test_AddBlockUse(unittest.TestCase):

@@ -88,6 +88,13 @@ class Test_text_round_trip(unittest.TestCase):
 		trg.decompile(output)
 		self.assertEqual(output.getvalue(), MEMORY_TEXT)
 
+	def test_compile_reads_multi_line_string_verbatim(self) -> None:
+		# Delimiters, comment characters, and non-ASCII text inside a string
+		# body are part of the string, and every indented line is joined.
+		text = NORMAL_TEXT.replace('  Hello World\n', '  Line one! (with parens), commas; and #hash\n  Line two: 100% sure? é "quote \'apos\n  Line three)\n')
+		trg = _compile(text)
+		self.assertEqual(trg.strings[1], 'Line one! (with parens), commas; and #hash\nLine two: 100% sure? é "quote \'apos\nLine three)')
+
 	def test_no_triggers_raises(self) -> None:
 		with self.assertRaises(PyMSError) as cm:
 			_compile('String(1):\n  orphan\n\n')

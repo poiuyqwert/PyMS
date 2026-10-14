@@ -13,7 +13,6 @@ from ....Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ....Utilities.CodeHandlers.ParseContext import ParseContext
 from ....Utilities.CodeHandlers.DecompileContext import DecompileContext
 from ....Utilities.BytesScanner import BytesScanner
-from ....Utilities.CodeHandlers import Lexer
 from ....Utilities.CodeHandlers import Tokens
 
 from ....Utilities import Struct
@@ -118,7 +117,7 @@ class UnitCodeType(CodeType.IntCodeType):
 			if token:
 				unit_name = CodeType.StrCodeType.parse_string(token.raw_value)
 			elif parse_context.command_in_parens:
-				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value in (',', ')') else Lexer.Stop.proceed)
+				token = parse_context.lexer.read_open_string(CodeType.StrCodeType.open_string_stop)
 				unit_name = token.raw_value
 			if unit_name is not None:
 				unit_id = parse_context.data_context.unit_id(unit_name)
@@ -383,7 +382,7 @@ class UpgradeCodeType(CodeType.IntCodeType):
 			if token:
 				upgrade_name = CodeType.StrCodeType.parse_string(token.raw_value)
 			elif parse_context.command_in_parens:
-				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value in (',', ')') else Lexer.Stop.proceed)
+				token = parse_context.lexer.read_open_string(CodeType.StrCodeType.open_string_stop)
 				upgrade_name = token.raw_value
 			if upgrade_name is not None:
 				upgrade_id = parse_context.data_context.upgrade_id(upgrade_name)
@@ -436,7 +435,7 @@ class TechnologyCodeType(CodeType.IntCodeType):
 			if token:
 				technology_name = CodeType.StrCodeType.parse_string(token.raw_value)
 			elif parse_context.command_in_parens:
-				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value in (',', ')') else Lexer.Stop.proceed)
+				token = parse_context.lexer.read_open_string(CodeType.StrCodeType.open_string_stop)
 				technology_name = token.raw_value
 			if technology_name is not None:
 				technology_id = parse_context.data_context.technology_id(technology_name)

@@ -3,6 +3,7 @@ from ._helpers import HelperLexer
 
 from ...Utilities.CodeHandlers.Lexer import Lexer, Stop
 from ...Utilities.CodeHandlers import Tokens
+from ...Utilities.CodeHandlers.CodeType import StrCodeType
 
 import unittest
 
@@ -37,6 +38,12 @@ class Test_NextToken(unittest.TestCase):
 		lexer = Lexer('$$$')
 		token = lexer.next_token()
 		self.assertIsInstance(token, Tokens.UnknownToken)
+
+	def test_unknown_token_is_a_single_character(self) -> None:
+		# An unmatched character must not absorb the registered tokens after
+		# it, like a closing parenthesis or comma.
+		lexer = HelperLexer('!),é,')
+		self.assertEqual([lexer.next_token().raw_value for _ in range(5)], ['!', ')', ',', 'é', ','])
 
 
 class Test_Peek(unittest.TestCase):
@@ -125,6 +132,24 @@ class Test_ReadOpenString(unittest.TestCase):
 		token = lexer.read_open_string(lambda t: Stop.include if t.raw_value == ';' else Stop.proceed)
 		self.assertEqual(token.raw_value, 'hello;')
 
+	def test_open_string_stop_ends_at_closing_paren_after_unmatched_character(self) -> None:
+		lexer = HelperLexer('Hello world!)\nnext')
+		token = lexer.read_open_string(StrCodeType.open_string_stop)
+		self.assertEqual(token.raw_value, 'Hello world!')
+		self.assertEqual(lexer.next_token().raw_value, ')')
+
+	def test_open_string_stop_ends_at_newline(self) -> None:
+		lexer = HelperLexer('Hello world\nnext)')
+		token = lexer.read_open_string(StrCodeType.open_string_stop)
+		self.assertEqual(token.raw_value, 'Hello world')
+		self.assertIsInstance(lexer.next_token(), Tokens.NewlineToken)
+
+	def test_open_string_stop_excludes_trailing_comment(self) -> None:
+		lexer = HelperLexer('Hello ; comment)\nnext')
+		token = lexer.read_open_string(StrCodeType.open_string_stop)
+		self.assertEqual(token.raw_value, 'Hello')
+		self.assertIsInstance(lexer.next_token(), Tokens.NewlineToken)
+
 
 class Test_Rollback(unittest.TestCase):
 	def test_rollback_restores_position(self) -> None:
@@ -162,6 +187,49 @@ class Test_LineTracking(unittest.TestCase):
 		lexer.next_token()  # b
 		lexer.next_token()  # newline
 		self.assertEqual(lexer.state.line, 2)
+
+	def test_token_line_is_start_line_of_last_token(self) -> None:
+		lexer = HelperLexer('a\nb\n\nc')
+		lexer.next_token()  # a
+		self.assertEqual(lexer.state.token_line, 0)
+		lexer.next_token()  # newline ending line 0
+		self.assertEqual(lexer.state.line, 1)
+		self.assertEqual(lexer.state.token_line, 0)
+		lexer.next_token()  # b
+		self.assertEqual(lexer.state.token_line, 1)
+		lexer.next_token()  # newlines ending line 1
+		self.assertEqual(lexer.state.token_line, 1)
+		lexer.next_token()  # c
+		self.assertEqual(lexer.state.token_line, 3)
+
+	def test_token_line_is_current_line_at_eof(self) -> None:
+		lexer = HelperLexer('a\n')
+		lexer.next_token()  # a
+		lexer.next_token()  # newline
+		self.assertIsInstance(lexer.next_token(), Tokens.EOFToken)
+		self.assertEqual(lexer.state.token_line, 1)
+
+	def test_token_line_is_set_by_get_token_and_check_token(self) -> None:
+		lexer = HelperLexer('a\n5\n6')
+		lexer.next_token()  # a
+		lexer.next_token()  # newline
+		self.assertIsNotNone(lexer.get_token(Tokens.IntegerToken))
+		self.assertEqual(lexer.state.token_line, 1)
+		lexer.next_token()  # newline
+		self.assertIsInstance(lexer.check_token(Tokens.IntegerToken), Tokens.IntegerToken)
+		self.assertEqual(lexer.state.token_line, 2)
+
+	def test_peek_and_rollback_restore_token_line(self) -> None:
+		lexer = HelperLexer('a\nb')
+		lexer.next_token()  # a
+		lexer.next_token(peek=True)  # newline
+		self.assertEqual(lexer.state.token_line, 0)
+		state = lexer.get_rollback()
+		lexer.next_token()  # newline
+		lexer.next_token()  # b
+		self.assertEqual(lexer.state.token_line, 1)
+		lexer.rollback(state)
+		self.assertEqual(lexer.state.token_line, 0)
 
 
 class Test_GetLineOfCode(unittest.TestCase):

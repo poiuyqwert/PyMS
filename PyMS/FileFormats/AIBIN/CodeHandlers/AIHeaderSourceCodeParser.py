@@ -26,11 +26,11 @@ class AIHeaderSourceCodeParser(CommandSourceCodeParser):
 		token = parse_context.lexer.check_token(AILexer.ScriptIDToken)
 		if not isinstance(token, AILexer.ScriptIDToken):
 			raise parse_context.error('Parse', f"Expected script ID, got '{token.raw_value}' instead")
-		line = parse_context.lexer.state.line
+		script_line = parse_context.lexer.state.line
 		script_id = token.raw_value
 		if script_id in parse_context.scripts:
 			_,existing_line = parse_context.scripts[script_id]
-			raise parse_context.error('Parse', f"A script with id '{script_id}' is already defined on line {existing_line}")
+			raise parse_context.error('Parse', f"A script with id '{script_id}' is already defined on line {existing_line + 1}")
 
 		string_id: int | None = None
 		in_bwscript: bool | None = None
@@ -87,5 +87,5 @@ class AIHeaderSourceCodeParser(CommandSourceCodeParser):
 
 		script = AIScript(script_id, AIFlag.flags(requires_location, staredit_hidden, broodwar_only), string_id, entry_point, in_bwscript)
 		parse_context.add_block_owner(entry_point, script)
-		parse_context.scripts[script_id] = (script, line)
+		parse_context.scripts[script_id] = (script, script_line)
 		return True

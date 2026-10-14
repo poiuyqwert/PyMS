@@ -24,6 +24,8 @@ class Stop(Enum):
 class State:
 	offset: int = 0
 	line: int = 0
+	# The line the last consumed token started on (`line` has already moved past a consumed newline)
+	token_line: int = 0
 
 T = TypeVar('T', bound=Token)
 class Lexer:
@@ -83,6 +85,7 @@ class Lexer:
 		token: Token | None = None
 		while not token:
 			if self.is_at_end():
+				self.state.token_line = self.state.line
 				return EOFToken()
 			for token_type in self.token_types:
 				token = token_type.match(self.code, self.state.offset)
@@ -93,10 +96,13 @@ class Lexer:
 				if not token:
 					raise PyMSError('Parse', 'Could not match token')
 			if token:
+				token_line = self.state.line
 				self.state.offset += len(token.raw_value)
 				self._check_token(token)
 				if type(token) in self.skip_tokens:
 					token = None
+				else:
+					self.state.token_line = token_line
 		return token
 
 	def get_token(self, token_type: Type[T]) -> T | None:
@@ -106,6 +112,7 @@ class Lexer:
 		token = token_type.match(self.code, self.state.offset)
 		if not token:
 			return None
+		self.state.token_line = self.state.line
 		self._check_token(token)
 		self.state.offset += len(token.raw_value)
 		return token
@@ -113,9 +120,11 @@ class Lexer:
 	def check_token(self, token_type: Type[T]) -> Token:
 		self._skip(dont_skip=token_type)
 		if self.is_at_end():
+			self.state.token_line = self.state.line
 			return EOFToken()
 		token: Token | None = token_type.match(self.code, self.state.offset)
 		if token:
+			self.state.token_line = self.state.line
 			self._check_token(token)
 			self.state.offset += len(token.raw_value)
 		else:

@@ -91,7 +91,8 @@ class CommentToken(RegexToken):
 	_regexp = re.compile(r'(?:#|;)[^\r\n]*')
 
 class UnknownToken(RegexToken):
-	_regexp = re.compile(r'\s+|\S+')
+	# A single character, so an unmatched character can't absorb registered tokens after it (like `)` or `,`)
+	_regexp = re.compile(r'\s|\S')
 
 class BooleanToken(RegexToken):
 	# The trailing word boundary stops a longer identifier (e.g. `truebox`) from

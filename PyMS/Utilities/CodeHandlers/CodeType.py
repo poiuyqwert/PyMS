@@ -170,6 +170,13 @@ class StrCodeType(CodeType[str, str]):
 		CodeType.__init__(self, name, help_text, Struct.l_str(0), False) # TODO: We don't actually use the Struct field
 
 	@staticmethod
+	def open_string_stop(token: Tokens.Token) -> Lexer.Stop:
+		# Unquoted strings in a parenthesized command end at the next parameter, the end of parameters, or the end of the line
+		if isinstance(token, Tokens.NewlineToken) or token.raw_value in (',', ')'):
+			return Lexer.Stop.exclude
+		return Lexer.Stop.proceed
+
+	@staticmethod
 	def serialize_string(string: str) -> str:
 		# TODO: Better serialize?
 		result = repr(string)
@@ -202,7 +209,7 @@ class StrCodeType(CodeType[str, str]):
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, Tokens.StringToken) and parse_context.command_in_parens:
 			parse_context.lexer.rollback(start)
-			token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value in (',', ')') else Lexer.Stop.proceed)
+			token = parse_context.lexer.read_open_string(StrCodeType.open_string_stop)
 		if isinstance(token, Tokens.StringToken):
 			try:
 				return StrCodeType.parse_string(token.raw_value)

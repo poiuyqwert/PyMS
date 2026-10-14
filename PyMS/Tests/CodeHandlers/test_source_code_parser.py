@@ -139,7 +139,7 @@ class Test_SourceCodeHandler(unittest.TestCase):
 		context = make_parse_context('%%%\n', LANGUAGE, with_block=False)
 		with self.assertRaises(PyMSError) as cm:
 			self.make_handler().parse(context)
-		self.assertIn("Unexpected token '%%%'", str(cm.exception))
+		self.assertIn("Unexpected token '%'", str(cm.exception))
 
 	def test_no_registered_parsers_raises_pyms_error(self) -> None:
 		# With no parsers registered, unparseable input reports a parse error

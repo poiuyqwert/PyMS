@@ -79,7 +79,7 @@ class ParseContext(Generic[S]):
 	def define_block(self, name: str, line: int) -> CodeBlock:
 		metadata = self.lookup_block_metadata_by_name(name)
 		if metadata is not None and metadata.definition_line is not None:
-			raise self.error('Parse', f"A block named '{name}' is already defined on line {metadata.definition_line}")
+			raise self.error('Parse', f"A block named '{name}' is already defined on line {metadata.definition_line + 1}")
 		block = self.get_block(name)
 		self.block_metadata[block].definition_line = line
 		if name in self.missing_blocks:
@@ -144,23 +144,23 @@ class ParseContext(Generic[S]):
 
 	def error(self, err_type: str, error: str, line: int | None = None, level: int = 1) -> PyMSError:
 		if line is None:
-			line = self.lexer.state.line
+			line = self.lexer.state.token_line
 		return PyMSError(err_type, error, line=line, code=self.lexer.get_line_of_code(line), level=level)
 
 	def attribute_error(self, error: PyMSError) -> None:
 		if error.line is None:
-			error.line = self.lexer.state.line + 1
+			error.line = self.lexer.state.token_line + 1
 		if error.code is None:
 			error.code = self.lexer.get_line_of_code(error.line - 1)
 
 	def warning(self, *, warn_type: str, warning: str, line: int | None = None, level: int = 0, warn_id: str | None = None) -> PyMSWarning:
 		if line is None:
-			line = self.lexer.state.line
+			line = self.lexer.state.token_line
 		return PyMSWarning(warn_type=warn_type, warning=warning, line=line, code=self.lexer.get_line_of_code(line), level=level, warn_id=warn_id)
 
 	def attribute_warning(self, warning: PyMSWarning) -> None:
 		if warning.line is None:
-			warning.line = self.lexer.state.line + 1
+			warning.line = self.lexer.state.token_line + 1
 		if warning.code is None:
 			warning.code = self.lexer.get_line_of_code(warning.line - 1)
 

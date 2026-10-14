@@ -75,6 +75,9 @@ class CodeCommandDefinition:
 				param_repeat = 1
 		if parse_context.command_in_parens:
 			token = parse_context.lexer.next_token()
+			if isinstance(token, (Tokens.NewlineToken, Tokens.EOFToken)):
+				end = 'end of line' if isinstance(token, Tokens.NewlineToken) else 'end of file'
+				raise parse_context.error('Parse', f"Unexpected {end} (expected `)` to end parameters; `#` and `;` start a comment, so text containing them must be quoted or use `<35>` and `<59>`)")
 			if not isinstance(token, Tokens.SymbolToken) or token.raw_value != ')':
 				raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `)` to end parameters)")
 		token = parse_context.lexer.next_token()
