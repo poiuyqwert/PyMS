@@ -278,10 +278,8 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def dispatch(self, cmd: str, *args: str) -> Any:
 		try:
 			r = self.tk.call((self.text_orig, cmd) + args)
-		except UI.TclError:
-			raise
 		except Exception:
-			r = ''
+			return ''
 		if self.tbl and self.listbox.size() and cmd in ['insert','delete']:
 			if not self.edited:
 				self.edited = True
