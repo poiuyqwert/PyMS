@@ -15,15 +15,15 @@ This tutorial walks through creating a custom game mode with [PyGOT](/Help/Progr
 
 ## Saving the Variations
 1. Press **Save** (`Ctrl+S`) and save the file as `mineral rush(1).got` in a working folder. The games own templates are named like this — for example `greed(1).got` through `greed(4).got` are the variations of `Greed`.
-2. To add more variations, change the variation **Display** and the victory condition value to the next target (for example `10000`), set the variation **ID** to `1`, and **Save As** (`Ctrl+Alt+A`) `mineral rush(2).got`.
+2. To add more variations, change the variation **Display** and the victory condition value to the next target (for example `10000`), set the variation **ID** to `1`, and **Save As...** (`Ctrl+Alt+A`) `mineral rush(2).got`.
 3. Repeat for as many variations as you want (variation IDs run from 0 to 7).
 
 ## Game Triggers
 Game modes are initialized by [TRG](/Help/Files/TRG.md) trigger files stored in a special "GOT compatible" format — for example the `Greed` variations use trigger files like `greed5000.trg`. To make one for your game type:
 
 1. Create your triggers with [PyTRG](/Help/Programs/PyTRG.md) and save the `.trg` file.
-2. In PyGOT, press **Convert `*.trg` to GOT compatible** (`Ctrl+T`), pick your `.trg` file, then choose where to save the converted file.
-3. If you need to edit a converted file later, **Revert GOT compatible `*.trg`** (`Ctrl+Alt+T`) converts it back to the normal format PyTRG edits.
+2. In PyGOT, choose **TRG > Convert TRG to GOT Compatible...** (`Ctrl+T`), pick your `.trg` file, then choose where to save the converted file.
+3. If you need to edit a converted file later, **TRG > Revert GOT Compatible TRG...** (`Ctrl+Alt+T`) converts it back to the normal format PyTRG edits.
 
 ## Using It In the Game
 To use the game type in the game, the files need to be in the MPQ your mod loads: the templates at their `templates\` paths (for example `templates\mineral rush(1).got`) and the trigger files at their `triggers\` paths. Use [PyMPQ](/Help/Programs/PyMPQ.md) to add them to your mods MPQ. The next game you play with your mod, `Mineral Rush` will be listed with the standard game types when creating a multiplayer game.

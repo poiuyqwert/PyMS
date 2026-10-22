@@ -1,9 +1,8 @@
 
 from unittest import mock
 
-from ..harness import UITestCase
+from .utils import PyAITestCase
 
-from ...PyAI.PyAI import PyAI
 from ...Utilities.CheckSaved import CheckSaved
 
 # These tests drive PyAI through its public command methods, asserting on both
@@ -19,11 +18,6 @@ from ...Utilities.CheckSaved import CheckSaved
 SELECT_SAVE = 'PyMS.Utilities.Config.SelectFile.select_save'
 ALLOW_OVERWRITE = 'PyMS.PyAI.PyAI.check_allow_overwrite_internal_file'
 AIBIN_SAVE = 'PyMS.FileFormats.AIBIN.AIBIN.AIBIN.save'
-
-
-class PyAITestCase(UITestCase):
-	def make_pyai(self) -> PyAI:
-		return self.make_window(PyAI)
 
 
 class Test_PyAI_save(PyAITestCase):

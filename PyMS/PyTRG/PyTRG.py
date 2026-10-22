@@ -59,37 +59,89 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 
 		self.update_title()
 
-		#Toolbar
-		self.toolbar = UI.Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
-		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import TRG', UI.Ctrl.i)
-		self.toolbar.add_gap()
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
 		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savegottrg'), self.savegottrg, 'Save *.got Compatable *.trg', UI.Ctrl.g, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export TRG', UI.Ctrl.e, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', UI.Ctrl.t, enabled=False, tags='file_open')
+
+		#Menu
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File')
+		file_menu.add_command('New', self.new, UI.Ctrl.n)
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_separator()
+		file_menu.add_command('Save', save, UI.Ctrl.s, enabled=False, tags='file_open')
+		file_menu.add_command('Save As...', saveas, UI.Ctrl.Alt.a, enabled=False, tags='file_open', underline='As')
+		file_menu.add_command('Save GOT Compatible TRG...', self.savegottrg, UI.Ctrl.g, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Import Text...', self.iimport, UI.Ctrl.i)
+		file_menu.add_command('Export Text...', self.export, UI.Ctrl.e, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		# The code editor's text widget already handles the clipboard/undo keys itself (`Ctrl+A` in
+		# `CodeText`, the rest are Tk built-ins), so these items only show their accelerators.
+		# Binding them on the window too would run each action twice.
+		edit_menu = self.menu.add_cascade('Edit')
+		edit_menu.config(postcommand=self.update_edit_menu)
+		edit_menu.add_command('Undo', self.undo, UI.Ctrl.z, tags='can_undo', bind_shortcut=False)
+		edit_menu.add_command('Redo', self.redo, UI.Ctrl.y, tags='can_redo', bind_shortcut=False)
+		edit_menu.add_separator()
+		edit_menu.add_command('Cut', self.cut, UI.Ctrl.x, tags='has_selection', bind_shortcut=False)
+		edit_menu.add_command('Copy', self.copy, UI.Ctrl.c, tags='has_selection', bind_shortcut=False)
+		edit_menu.add_command('Paste', self.paste, UI.Ctrl.v, tags='can_paste', bind_shortcut=False)
+		edit_menu.add_separator()
+		edit_menu.add_command('Select All', self.select_all, UI.Ctrl.a, bind_shortcut=False)
+		edit_menu.add_separator()
+		edit_menu.add_command('Find/Replace...', self.find, UI.Ctrl.f, enabled=False, tags='file_open')
+		edit_menu.add_command('Find Next', self.find_next, UI.Key.F3, enabled=False, tags='file_open', underline='Next')
+		edit_menu.add_separator()
+		edit_menu.add_command('Test Code', self.test, UI.Ctrl.t, enabled=False, tags='file_open')
+
+		settings_menu = self.menu.add_cascade('Settings')
+		settings_menu.add_command('Manage Settings...', self.settings, UI.Ctrl.m)
+		settings_menu.add_command('Syntax Highlighting...', self.colors, UI.Ctrl.Alt.c, underline='Syntax')
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.trg Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='Default')
+
+		help_menu = self.menu.add_cascade('Help')
+		help_menu.add_command('View Help', self.help, UI.Key.F1, underline='Help')
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor, underline='Donate')
+		help_menu.add_command('About PyTRG', self.about, underline='About')
+
+		#Toolbar
+		# Shortcuts are bound by the menubar items above
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
-		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', UI.Ctrl.f, enabled=False, tags='file_open')
-		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', UI.Ctrl.Alt.c)
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('savegottrg'), self.savegottrg, 'Save GOT Compatible TRG', UI.Ctrl.g, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage stat_txt.tbl and aiscript.bin files', UI.Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Text', UI.Ctrl.i, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Text', UI.Ctrl.e, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.trg editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
+		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', UI.Ctrl.f, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', UI.Ctrl.t, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Syntax Highlighting', UI.Ctrl.Alt.c, bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.trg Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyTRG')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
 		functions: set[str] = set()
@@ -336,7 +388,9 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 		return not not self.trg
 
 	def action_states(self) -> None:
-		self.toolbar.tag_enabled('file_open', self.is_file_open())
+		is_file_open = self.is_file_open()
+		self.toolbar.tag_enabled('file_open', is_file_open)
+		self.menu.tag_enabled('file_open', is_file_open)
 		self.text['state'] = UI.NORMAL if self.is_file_open() else UI.DISABLED
 
 	def statusupdate(self, _event: UI.Event | None = None) -> None:
@@ -507,9 +561,43 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 	def find(self) -> None:
 		if not self.findwindow:
 			self.findwindow = FindReplaceDialog(self, self.text, self.config_.windows.find_replace)
-			self.bind(UI.Key.F3(), self.findwindow.findnext)
 		else:
 			self.findwindow.show()
+
+	def find_next(self) -> None:
+		# Without a search term there is nothing to find yet, so open the dialog to enter one
+		if not self.findwindow or not self.findwindow.find.get():
+			self.find()
+			return
+		self.findwindow.findnext(from_parent=True)
+
+	def update_edit_menu(self) -> None:
+		self.menu.tag_enabled('can_undo', bool(self.text.edit_canundo()))
+		self.menu.tag_enabled('can_redo', bool(self.text.edit_canredo()))
+		self.menu.tag_enabled('has_selection', self.text.has_selection())
+		self.menu.tag_enabled('can_paste', self.text.clipboard_not_empty())
+
+	def undo(self) -> None:
+		if self.text.edit_canundo():
+			self.text.edit_undo()
+
+	def redo(self) -> None:
+		if self.text.edit_canredo():
+			self.text.edit_redo()
+
+	def cut(self) -> None:
+		if self.text.has_selection():
+			self.text.copy(cut=True)
+
+	def copy(self) -> None:
+		if self.text.has_selection():
+			self.text.copy()
+
+	def paste(self) -> None:
+		self.text.paste()
+
+	def select_all(self) -> None:
+		self.text.selectall()
 
 	def colors(self) -> None:
 		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())

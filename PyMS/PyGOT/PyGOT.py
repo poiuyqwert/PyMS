@@ -43,34 +43,72 @@ class PyGOT(UI.MainWindow):
 
 		self.update_title()
 
-		#Toolbar
-		self.toolbar = UI.Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
-		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Game Template', UI.Ctrl.i)
-		self.toolbar.add_gap()
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
 		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Game Template', UI.Ctrl.e, enabled=False, tags='file_open')
+		def convert_trg() -> None:
+			self.trg(TRG.Format.got)
+		def revert_trg() -> None:
+			self.trg(TRG.Format.normal)
+
+		#Menu
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File') # type: ignore[func-returns-value, arg-type]
+		file_menu.add_command('New', self.new, UI.Ctrl.n)
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_separator()
+		file_menu.add_command('Save', save, UI.Ctrl.s, enabled=False, tags='file_open')
+		file_menu.add_command('Save As...', saveas, UI.Ctrl.Alt.a, enabled=False, tags='file_open', underline='As')
+		file_menu.add_separator()
+		file_menu.add_command('Import Game Template...', self.iimport, UI.Ctrl.i)
+		file_menu.add_command('Export Game Template...', self.export, UI.Ctrl.e, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		trg_menu = self.menu.add_cascade('TRG') # type: ignore[func-returns-value, arg-type]
+		trg_menu.add_command('Convert TRG to GOT Compatible...', convert_trg, UI.Ctrl.t)
+		trg_menu.add_command('Revert GOT Compatible TRG...', revert_trg, UI.Ctrl.Alt.t)
+
+		settings_menu = self.menu.add_cascade('Settings') # type: ignore[func-returns-value, arg-type]
+		settings_menu.add_command('Manage Settings...', self.sets, UI.Ctrl.m)
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.got Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='D')
+
+		help_menu = self.menu.add_cascade('Help') # type: ignore[func-returns-value, arg-type]
+		help_menu.add_command('View Help', self.help, UI.Key.F1, underline='H')
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor, underline='D')
+		help_menu.add_command('About PyGOT', self.about, underline='A')
+
+		#Toolbar
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Game Template', UI.Ctrl.i, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Game Template', UI.Ctrl.e, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('codeedit'), lambda: self.trg(TRG.Format.got), 'Convert *.trg to GOT compatible', UI.Ctrl.t)
-		self.toolbar.add_button(Assets.get_image('insert'), lambda: self.trg(TRG.Format.normal), 'Revert GOT compatible *.trg', UI.Ctrl.Alt.t)
+		self.toolbar.add_button(Assets.get_image('codeedit'), convert_trg, 'Convert TRG to GOT Compatible', UI.Ctrl.t, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('insert'), revert_trg, 'Revert GOT Compatible TRG', UI.Ctrl.Alt.t, bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", UI.Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.got editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.got Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyGOT')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
 		def edited(*_: Any) -> None:
@@ -236,6 +274,7 @@ class PyGOT(UI.MainWindow):
 
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
+		self.menu.tag_enabled('file_open', self.is_file_open())
 		fields: tuple[UI.Misc, ...] = (
 			self.name_entry,
 			self.gametype_id_entry,

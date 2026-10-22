@@ -4,7 +4,7 @@ This tutorial walks through editing a unit with [PyDAT](/Help/Programs/PyDAT.md)
 ## Setting Up PyDAT
 PyDAT loads the default `.dat` files, entry names, icons, and graphics from the games files in your [MPQs](/Help/Files/MPQ.md), so the first step is to point it at them:
 
-1. Open PyDAT and press **Manage MPQ and TBL files** (`Ctrl+M`). This dialog also opens by itself on startup if any files failed to load.
+1. Open PyDAT and choose **Manage Settings** (`Ctrl+M`) from the **Settings** menu. This dialog also opens by itself on startup if any files failed to load.
 2. In the **MPQ Settings** tab, add your StarCraft MPQs (for example `StarDat.mpq`, `BrooDat.mpq`, and `patch_rt.mpq` from your StarCraft folder), plus your mods MPQ if you have one.
 3. The other tabs choose the [TBL, icon, iscript, and palette files](/Help/Programs/PyDAT.md#data-files) used to display names and previews. The defaults load from the MPQs you just added, so you shouldn't need to change anything.
 4. Press **Ok**. Every tab now shows the games default data, ready to edit.

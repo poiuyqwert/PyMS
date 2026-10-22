@@ -70,35 +70,77 @@ class PyICE(UI.MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDi
 
 		self.imports: list[str] = []
 
-		#Toolbar
-		self.toolbar = UI.Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default Scripts', UI.Ctrl.d)
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
 		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
-		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Entries', UI.Ctrl.Alt.e, enabled=False, tags='entries_selected')
-		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Entries', UI.Ctrl.Alt.i, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('listimport'), self.listimport, 'Import a List of Files', UI.Ctrl.l, enabled=False, tags='file_open')
+
+		#Menu
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File')
+		file_menu.add_command('New', self.new, UI.Ctrl.n)
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_command('Open Default Scripts', self.open_default, UI.Ctrl.d)
+		file_menu.add_separator()
+		file_menu.add_command('Save', save, UI.Ctrl.s, enabled=False, tags='file_open')
+		file_menu.add_command('Save As...', saveas, UI.Ctrl.Alt.a, enabled=False, tags='file_open', underline='As')
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open', underline='c')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		edit_menu = self.menu.add_cascade('Edit')
+		edit_menu.add_command('Select All', self.select_all, UI.Ctrl.a)
+		edit_menu.add_separator()
+		edit_menu.add_command('Find Entries...', self.find, UI.Ctrl.f, enabled=False, tags='file_open')
+
+		entries_menu = self.menu.add_cascade('Entries')
+		entries_menu.add_command('Edit IScript Entries...', self.codeedit, UI.Ctrl.e, enabled=False, tags='file_open')
+		entries_menu.add_separator()
+		entries_menu.add_command('Import Entries...', self.iimport, UI.Ctrl.Alt.i, enabled=False, tags='file_open')
+		entries_menu.add_command('Import a List of Files...', self.listimport, UI.Ctrl.l, enabled=False, tags='file_open')
+		entries_menu.add_command('Export Entries...', self.export, UI.Ctrl.Alt.e, enabled=False, tags='entries_selected')
+
+		settings_menu = self.menu.add_cascade('Settings')
+		settings_menu.add_command('Manage Settings...', self.tblbin, UI.Ctrl.m)
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.bin Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='D')
+
+		help_menu = self.menu.add_cascade('Help')
+		help_menu.add_command('View Help', self.help, UI.Key.F1, underline='H')
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor, underline='D')
+		help_menu.add_command('About PyICE', self.about, underline='A')
+
+		#Toolbar
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default Scripts', UI.Ctrl.d, bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find Entries', UI.Ctrl.f, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('codeedit'), self.codeedit, 'Edit IScript entries', UI.Ctrl.e, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.tblbin, 'Manage TBL and DAT files', UI.Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find Entries', UI.Ctrl.f, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
+		self.toolbar.add_button(Assets.get_image('codeedit'), self.codeedit, 'Edit IScript Entries', UI.Ctrl.e, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Entries', UI.Ctrl.Alt.i, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('listimport'), self.listimport, 'Import a List of Files', UI.Ctrl.l, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Entries', UI.Ctrl.Alt.e, enabled=False, tags='entries_selected', bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.tblbin, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.bin Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyICE')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
 		#listbox,etc.
@@ -120,8 +162,6 @@ class PyICE(UI.MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDi
 		self.flingylist = listbox_colum("Flingy's")
 		self.unitlist = listbox_colum('Units')
 		listframes.pack(fill=UI.BOTH, pady=2, expand=1)
-
-		self.bind(UI.Ctrl.a(), lambda *e: self.select_all())
 
 		#Statusbar
 		self.status = UI.StringVar()
@@ -292,9 +332,11 @@ class PyICE(UI.MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDi
 		for listbox in [self.imageslist,self.spriteslist,self.flingylist,self.unitlist]:
 			listbox.listbox['state'] = UI.NORMAL if is_file_open else UI.DISABLED
 		self.toolbar.tag_enabled('file_open', is_file_open)
+		self.menu.tag_enabled('file_open', is_file_open)
 
 		entries_selected = not not self.selected_iscript_ids()
 		self.toolbar.tag_enabled('entries_selected', entries_selected)
+		self.menu.tag_enabled('entries_selected', entries_selected)
 
 	def check_saved(self) -> CheckSaved:
 		if not self.ibin or not self.edited:

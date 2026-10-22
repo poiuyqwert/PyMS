@@ -13,14 +13,14 @@ PyBIN renders its preview using the games own art and fonts, loaded from your [M
 The games dialogs live in the `rez` folder of its MPQs, so you need to extract one to edit it:
 
 1. Use [PyMPQ](/Help/Programs/PyMPQ.md) to open one of your MPQs (`glumain.bin` is in `StarDat.mpq`) and extract `rez\glumain.bin` to a working folder.
-2. In PyBIN, press **Open** (`Ctrl+O`) and open the extracted file. The widget tree fills with the Main Menus widgets, and the canvas shows a preview.
+2. In PyBIN, press **Open** (`Ctrl+O`, or **File > Open...**) and open the extracted file. The widget tree fills with the Main Menus widgets, and the canvas shows a preview.
 
 You could instead start a brand new dialog with **New** (`Ctrl+N`), but editing an existing one is an easier introduction.
 
 ## Previewing It Properly
 The canvas probably looks sparse at first — most menu art comes from theme assets and SMK animations that are not all shown by default:
 
-1. Open the **Preview Settings** panel under the widget tree (the arrow button on the widgets toolbar toggles it).
+1. Open the **Preview Settings** panel under the widget tree (the arrow button on the widgets toolbar toggles it, as does **View > Preview Settings Panel**).
 2. In the **Theme** dropdown pick `Main Menu (glue\palmm\)`, and check **Background** to draw the menus background art. When editing a different file, pick the theme matching its screen (see the file list in [UI BIN](/Help/Files/UI_BIN.md#dialog-files)).
 3. In the **SMKs** group check **Animated** to play the menus video animations, and **Hovers** to also show the ones that normally only appear on mouse hover.
 4. Try the **Bounds** checkboxes — the colored outline boxes make it much easier to find widgets with no visible art.

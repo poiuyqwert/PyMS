@@ -1,5 +1,5 @@
 # Code Editor
-The Code Editor is where you write and edit AI script code (see [AI Language](/Help/Programs/PyAI/AI_Language.md)). It is opened with **Edit AI Script** (`Ctrl+E`) or by double clicking a script in the main window — the selected scripts are decompiled into the editor. Opening it with no scripts selected gives you an empty editor to write new scripts in.
+The Code Editor is where you write and edit AI script code (see [AI Language](/Help/Programs/PyAI/AI_Language.md)). It is opened with **Edit AI Script...** (`Ctrl+E`, in the main window's Scripts menu) or by double clicking a script in the main window — the selected scripts are decompiled into the editor. Opening it with no scripts selected gives you an empty editor to write new scripts in.
 
 ## Toolbar
 - **Save** (`Ctrl+S`): Compiles the code and applies it to the loaded files. Compile errors are shown (and highlighted in the code), and nothing is applied until the code compiles.

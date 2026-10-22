@@ -1,13 +1,11 @@
 
-from .utils import PyPALTestCase, make_event
+from .utils import PyPALTestCase, make_event, ASKCOLOR
 
 from ...PyPAL.PyPAL import PyPAL
 from ...Utilities import UIKit as UI
 
 import tkinter
 from unittest import mock
-
-ASKCOLOR = 'tkinter.colorchooser.askcolor'
 
 
 class Test_PyPAL_selection_and_status(PyPALTestCase):

@@ -2,35 +2,14 @@
 import os
 from unittest import mock
 
-from ..harness import UITestCase
+from .utils import PyMPQTestCase
 
-from ...PyMPQ.PyMPQ import PyMPQ
-
-# These tests drive PyMPQ through its public command methods. The harness
-# neutralizes settings I/O, analytics, the update check, and the tracer; the
-# archive, file dialogs, and file I/O are mocked so no files are read or
-# written.
-#
 # Extract targets are derived paths (chosen directory + the archive's internal
 # file paths), so no dialog ever checks them — `extract` itself must run the
 # internal-file overwrite check on every output path.
 
 SELECT_DIRECTORY = 'PyMS.Utilities.Config.SelectDirectory.select_open'
 ALLOW_OVERWRITE = 'PyMS.PyMPQ.PyMPQ.check_allow_overwrite_internal_file'
-
-
-class PyMPQTestCase(UITestCase):
-	def make_pympq(self) -> PyMPQ:
-		return self.make_window(PyMPQ)
-
-	def seed_mpq(self, gui: PyMPQ, file_names: list[bytes]) -> mock.MagicMock:
-		# Stand in for an opened archive: `extract` only opens it as a context
-		# manager and calls `read_file`, taking entries from `display_files`.
-		mpq = mock.MagicMock()
-		mpq.read_file.return_value = b'data'
-		gui.mpq = mpq
-		gui.display_files = [mock.Mock(file_name=file_name, locale=0) for file_name in file_names]
-		return mpq
 
 
 class Test_PyMPQ_extract(PyMPQTestCase):

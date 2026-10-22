@@ -12,7 +12,8 @@ from typing import Callable, Any, assert_never
 
 class TilePaletteView(UI.Frame):
 	# sub_select currently only supported by TileType.group when multiselect=False
-	def __init__(self, *, parent: UI.Misc, delegate: TilePaletteViewDelegate, tiletype: TileType = TileType.group, select: int | list[int] | None = None, multiselect: bool = True, sub_select: bool = False) -> None:
+	# bind_page_keys=False leaves Page Up/Page Down unbound so the owner can bind them (e.g. through menu items calling `scroll_page`)
+	def __init__(self, *, parent: UI.Misc, delegate: TilePaletteViewDelegate, tiletype: TileType = TileType.group, select: int | list[int] | None = None, multiselect: bool = True, sub_select: bool = False, bind_page_keys: bool = True) -> None:
 		UI.Frame.__init__(self, parent)
 		self.tiletype = tiletype
 		self.selected: list[int] = []
@@ -49,8 +50,9 @@ class TilePaletteView(UI.Frame):
 		if self.delegate.tile_palette_bind_updown():
 			binding_widget.bind(UI.Key.Down(), lambda e: self.canvas.yview('scroll', 1,'units'))
 			binding_widget.bind(UI.Key.Up(), lambda e: self.canvas.yview('scroll', -1,'units'))
-		binding_widget.bind(UI.Key.Next(), lambda e: self.canvas.yview('scroll', 1,'page'))
-		binding_widget.bind(UI.Key.Prior(), lambda e: self.canvas.yview('scroll', -1,'page'))
+		if bind_page_keys:
+			binding_widget.bind(UI.Key.Next(), lambda e: self.scroll_page(1))
+			binding_widget.bind(UI.Key.Prior(), lambda e: self.scroll_page(-1))
 		def yscrollcommand(scrollbar: UI.Scrollbar) -> Callable[[float, float], None]:
 			def update_scrollbar(l: float, h: float) -> None:
 				scrollbar.set(l,h)
@@ -66,6 +68,9 @@ class TilePaletteView(UI.Frame):
 			self.canvas.remove_bind(UI.WidgetEvent.Configure(), self.initial_scroll_bind)
 			self.initial_scroll_bind = None
 		self.initial_scroll_bind = self.canvas.bind(UI.WidgetEvent.Configure(), initial_scroll, add=True)
+
+	def scroll_page(self, pages: int) -> None:
+		self.canvas.yview('scroll', pages, 'page')
 
 	def get_tile_size(self, tiletype: TileType | None = None, group: bool = False) -> tuple[int, int]:
 		tiletype = self.tiletype if tiletype is None else tiletype

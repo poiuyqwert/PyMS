@@ -70,30 +70,99 @@ class PyMPQ(UI.MainWindow):
 
 		self.update_title()
 
+		self.encvar = UI.BooleanVar()
+		self.compvar = UI.StringVar()
+
+		self.locale_menu_choice = UI.IntVar()
+		self.locale_menu_choice.trace_add('write', self.locale_changed)
+
+		#Menubar
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File', underline=0)
+		file_menu.add_command('New...', self.new, UI.Ctrl.n, underline='n')
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o, underline='o')
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, underline='c')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		files_menu = self.menu.add_cascade('Files', underline=1)
+		files_menu.add_command('Add Files...', self.add, UI.Ctrl.i, enabled=False, tags='mpq_open', underline='a')
+		files_menu.add_command('Add Directory...', self.adddir, UI.Ctrl.d, enabled=False, tags='mpq_open', underline='d')
+		files_menu.add_command('Delete Files', self.remove, UI.Key.Delete, enabled=False, tags='file_selected', underline='l')
+		files_menu.add_separator()
+		files_menu.add_command('Open File', self.openfile, enabled=False, tags='file_selected', underline='o')
+		files_menu.add_command('Rename File', self.rename, UI.Ctrl.r, enabled=False, tags='file_selected', underline='r')
+		files_menu.add_command('Change Locale...', self.changelocale, enabled=False, tags='file_selected', underline='g')
+		files_menu.add_separator()
+		files_menu.add_command('Extract Files...', self.extract, UI.Ctrl.e, enabled=False, tags='file_selected', underline='e')
+		files_menu.add_separator()
+		files_menu.add_command('Compact Archive', self.compact, UI.Ctrl.p, enabled=False, tags='can_compact', underline='p')
+
+		settings_menu = self.menu.add_cascade('Settings', underline=0)
+		settings_menu.add_command('Manage Settings...', self.mansets, UI.Ctrl.m, underline='m')
+		compression_menu = settings_menu.add_cascade('Compression', underline=0)
+		compression_menu.add_radiobutton('Auto-Select', self.compvar, str(CompressionOption.Auto.setting()), UI.Key.F4, underline=0)
+		compression_menu.add_separator()
+		compression_menu.add_radiobutton('None', self.compvar, str(CompressionOption.NoCompression.setting()), UI.Key.F2, underline=0)
+		compression_menu.add_radiobutton('Standard', self.compvar, str(CompressionOption.Standard.setting()), UI.Key.F3, underline=0)
+		deflate_menu = compression_menu.add_cascade('Deflate', underline=0)
+		for level in range(0,CompressionOption.Deflate.level_count()):
+			compression = CompressionOption.Deflate.setting(level)
+			deflate_menu.add_radiobutton(compression.level_name(), self.compvar, str(compression), UI.Key.F9 if level == 0 else None, underline=0)
+		audio_menu = compression_menu.add_cascade('Audio', underline=0)
+		audio_compression = (
+			(CompressionOption.Audio.setting(level=0), UI.Key.F6),
+			(CompressionOption.Audio.setting(level=1), UI.Key.F7),
+			(CompressionOption.Audio.setting(level=2), UI.Key.F8),
+		)
+		for compression,shortcut in audio_compression:
+			audio_menu.add_radiobutton(compression.level_name(), self.compvar, str(compression), shortcut, underline=0)
+		settings_menu.add_checkbutton('Encrypt', self.encvar, onvalue=1, offvalue=0, shortcut=UI.Key.F5, underline=0)
+		locale_menu = settings_menu.add_cascade('Locale', underline=0)
+		for index,(locale_name,locale) in enumerate(LOCALE_CHOICES):
+			command = lambda: None # pylint: disable=unnecessary-lambda-assignment
+			if locale is not None:
+				locale_name += f' [{locale}]'
+			else:
+				locale_name += '...'
+				command = self.choose_other_locale
+			locale_menu.add_radiobutton(locale_name, self.locale_menu_choice, index, command=command)
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.mpq Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='t')
+
+		help_menu = self.menu.add_cascade('Help', underline=0)
+		help_menu.add_command('View Help', self.help, UI.Key.F1, underline='h')
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor, underline='d')
+		help_menu.add_command('About PyMPQ', self.about, underline='a')
+
 		#Toolbar
 		self.toolbar = UI.Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w)
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add Files', UI.Ctrl.i, enabled=False, tags='mpq_open')
-		self.toolbar.add_button(Assets.get_image('openfolder'), self.adddir, 'Add Directory', UI.Ctrl.d, enabled=False, tags='mpq_open')
-		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Delete Files', UI.Key.Delete, enabled=False, tags='file_selected')
-		self.toolbar.add_button(Assets.get_image('export'), self.extract, 'Extract Files', UI.Ctrl.e, enabled=False, tags='file_selected')
+		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add Files', UI.Ctrl.i, enabled=False, tags='mpq_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('openfolder'), self.adddir, 'Add Directory', UI.Ctrl.d, enabled=False, tags='mpq_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Delete Files', UI.Key.Delete, enabled=False, tags='file_selected', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('export'), self.extract, 'Extract Files', UI.Ctrl.e, enabled=False, tags='file_selected', bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('edit'), self.rename, 'Rename File', UI.Ctrl.r, enabled=False, tags='file_selected')
-		self.toolbar.add_button(Assets.get_image('debug'), self.compact, 'Compact Archive', UI.Ctrl.p, enabled=False, tags='can_compact')
+		self.toolbar.add_button(Assets.get_image('edit'), self.rename, 'Rename File', UI.Ctrl.r, enabled=False, tags='file_selected', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('debug'), self.compact, 'Compact Archive', UI.Ctrl.p, enabled=False, tags='can_compact', bind_shortcut=False)
 		# self.toolbar.add_button(Assets.get_image('insert'), self.editlistfile, 'Edit Internal Listfile', Ctrl.l, enabled=False, tags='mpq_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mansets, 'Manage Settings', UI.Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mansets, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.mpq editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.mpq Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyMPQ')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
 		self.regex = UI.IntVar()
@@ -114,58 +183,13 @@ class PyMPQ(UI.MainWindow):
 		UI.Radiobutton(filter_frame, text='Wildcard', variable=self.regex, value=0).pack(side=UI.RIGHT)
 		filter_frame.pack(side=UI.TOP, fill=UI.X)
 
-		self.encvar = UI.BooleanVar()
-		self.compvar = UI.StringVar()
-
-		self.locale_menu_choice = UI.IntVar()
-		self.locale_menu_choice.trace_add('write', self.locale_changed)
-
-		self.setmenu = UI.Menu(self, tearoff=0)
-		self.compmenu = UI.Menu(self.setmenu, tearoff=0)
-		self.locale_menu = UI.Menu(self.setmenu, tearoff=0)
-
-		self.deflatemenu = UI.Menu(self.compmenu, tearoff=0)
-		for level in range(0,CompressionOption.Deflate.level_count()):
-			compression = CompressionOption.Deflate.setting(level)
-			self.deflatemenu.add_radiobutton(label=compression.level_name(), underline=0, variable=self.compvar, value=str(compression), shortcut=UI.Key.F9 if level == 0 else None, shortcut_widget=self) # type: ignore
-
-		self.audiomenu = UI.Menu(self.compmenu, tearoff=0)
-		audio_compression = (
-			(CompressionOption.Audio.setting(level=0), UI.Key.F6),
-			(CompressionOption.Audio.setting(level=1), UI.Key.F7),
-			(CompressionOption.Audio.setting(level=2), UI.Key.F8),
-		)
-		for compression,shortcut in audio_compression:
-			self.audiomenu.add_radiobutton(label=compression.level_name(), underline=0, variable=self.compvar, value=str(compression), shortcut=shortcut, shortcut_widget=self) # type: ignore
-
-		self.compmenu.add_radiobutton(label='Auto-Select', underline=0, variable=self.compvar, value=str(CompressionOption.Auto.setting()), shortcut=UI.Key.F4, shortcut_widget=self) # type: ignore
-		self.compmenu.add_separator()
-		self.compmenu.add_radiobutton(label='None', underline=0, variable=self.compvar, value=str(CompressionOption.NoCompression.setting()), shortcut=UI.Key.F2, shortcut_widget=self) # type: ignore
-		self.compmenu.add_radiobutton(label='Standard', underline=0, variable=self.compvar, value=str(CompressionOption.Standard.setting()), shortcut=UI.Key.F3, shortcut_widget=self) # type: ignore
-		self.compmenu.add_cascade(label='Deflate', menu=self.deflatemenu, underline=0)
-		self.compmenu.add_cascade(label='Audio', menu=self.audiomenu, underline=0)
-
-		for index,(locale_name,locale) in enumerate(LOCALE_CHOICES):
-			command = lambda: None # pylint: disable=unnecessary-lambda-assignment
-			if locale is not None:
-				locale_name += f' [{locale}]'
-			else:
-				command = self.choose_other_locale
-			self.locale_menu.add_radiobutton(label=locale_name, variable=self.locale_menu_choice, value=index, command=command)
-
-		self.setmenu.add_command(label='Settings Dialog', command=lambda: self.mansets(1), underline=0, shortcut=UI.Ctrl.m, shortcut_widget=self) # type: ignore
-		self.setmenu.add_separator()
-		self.setmenu.add_cascade(label='Compression', menu=self.compmenu, underline=0)
-		self.setmenu.add_checkbutton(label='Encrypt', underline=0, onvalue=1, offvalue=0, variable=self.encvar, shortcut=UI.Key.F5, shortcut_widget=self) # type: ignore
-		self.setmenu.add_cascade(label='Locale', menu=self.locale_menu, underline=0)
-
 		self.listmenu = UI.Menu(self, tearoff=0)
-		self.listmenu.add_command(label='Open', command=self.openfile, underline=0)
+		self.listmenu.add_command('Open File', self.openfile, underline='o')
 		self.listmenu.add_separator()
-		self.listmenu.add_command(label='Extract', command=self.extract, underline=0)
-		self.listmenu.add_command(label='Delete', command=self.remove, underline=0)
-		self.listmenu.add_command(label='Rename', command=self.rename, underline=0)
-		self.listmenu.add_command(label='Change Locale', command=self.changelocale, underline=0)
+		self.listmenu.add_command('Extract Files...', self.extract, UI.Ctrl.e, bind_shortcut=False, underline='e')
+		self.listmenu.add_command('Delete Files', self.remove, UI.Key.Delete, bind_shortcut=False, underline='d')
+		self.listmenu.add_command('Rename File', self.rename, UI.Ctrl.r, bind_shortcut=False, underline='r')
+		self.listmenu.add_command('Change Locale...', self.changelocale, underline='c')
 
 		self.listbox = UI.ReportList(self, ['Name','Size','Ratio','Packed','Locale','Attributes',None], UI.EXTENDED, scmd=self.select, rcmd=self.do_rename, pcmd=self.popup, dcmd=self.openfile, min_widths=[50]*6)
 		self.listbox_ascending_arrow = Assets.get_image('arrow.gif')
@@ -288,8 +312,11 @@ class PyMPQ(UI.MainWindow):
 	def action_states(self) -> None:
 		is_mpq_chosen = self.is_mpq_chosen()
 		self.toolbar.tag_enabled('mpq_open', is_mpq_chosen)
+		self.menu.tag_enabled('mpq_open', is_mpq_chosen)
 		self.find_button['state'] = UI.NORMAL if is_mpq_chosen else UI.DISABLED
-		self.toolbar.tag_enabled('file_selected', self.is_file_selected())
+		is_file_selected = self.is_file_selected()
+		self.toolbar.tag_enabled('file_selected', is_file_selected)
+		self.menu.tag_enabled('file_selected', is_file_selected)
 
 	def dofilter(self, _event: UI.Event | None = None) -> None:
 		if not self.is_mpq_chosen():
@@ -398,6 +425,7 @@ class PyMPQ(UI.MainWindow):
 		self.info.set(f'Total {len(self.all_files)}/{block_count} files, {format_byte_size(self.totalsize)}')
 		can_compact = block_count > len(self.all_files)
 		self.toolbar.tag_enabled('can_compact', can_compact)
+		self.menu.tag_enabled('can_compact', can_compact)
 
 	def do_rename(self, index: int, new_filename: str) -> bool:
 		if not self.is_mpq_chosen():
@@ -689,12 +717,9 @@ class PyMPQ(UI.MainWindow):
 				with open(output_path,'wb') as f:
 					f.write(data)
 
-	def mansets(self, event: UI.Event | None = None) -> None:
-		if event:
-			SettingsDialog(self, self.config_)
-			self._update_listfiles()
-		else:
-			self.setmenu.post(*self.winfo_pointerxy())
+	def mansets(self, _event: UI.Event | None = None) -> None:
+		SettingsDialog(self, self.config_)
+		self._update_listfiles()
 
 	def compact(self, _event: UI.Event | None = None) -> None:
 		if not self.is_mpq_chosen():

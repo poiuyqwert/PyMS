@@ -17,41 +17,46 @@ The window shows the palette as a 16x16 grid of its 256 colors:
 - Clicking a color selects it, shown by a white outline, ready for [copying and pasting](#copying-and-pasting-colors).
 - Double clicking a color opens a color picker to [change it](#editing-colors).
 
+Every command is in the menubar (**File**, **Edit**, **Settings** and **Help**), and the toolbar under it has a button for each file, settings and help command, in the same order as the menus.
 The status bar also shows an indicator for unsaved changes.
-On Windows, the **Set as default `*.pal` and `*.wpe` editor** button associates those files with PyPAL, so they open in PyPAL when double clicked.
+On Windows, **Settings > Set as Default `*.pal` and `*.wpe` Editor (Windows Only)** associates those files with PyPAL, so they open in PyPAL when double clicked.
 
 ## Managing Files
+These commands are in the **File** menu:
+
 - **New** (`Ctrl+N`): Creates a new palette with every color set to black.
-- **Open** (`Ctrl+O`): Opens a palette file in any of the supported formats — the format is detected automatically.
-- **Save** (`Ctrl+S`): Saves the palette back to its file in the same format.
+- **Open...** (`Ctrl+O`): Opens a palette file in any of the supported formats — the format is detected automatically.
+- **Save** (`Ctrl+S`): Saves the palette back to its file in the same format. A new palette has no format yet, so it must be saved with one of the save as commands first.
+- **Save As...**: Saves the palette to a new file, keeping its current format (a new palette is saved as a StarCraft `.pal`). To change the format, see [Converting Between Formats](#converting-between-formats).
 - **Close** (`Ctrl+W`): Closes the palette.
+- **Exit**: Closes PyPAL.
 
 Creating, opening, or closing a palette (or exiting PyPAL) asks to save any unsaved changes first.
 
 ## Editing Colors
-Double click a color in the grid to open the color picker and choose its new color. The palette updates as soon as the picker is accepted, and the change is written to the file when you save.
+Double click a color in the grid (or select it and use **Edit > Edit Color...**) to open the color picker and choose its new color. The palette updates as soon as the picker is accepted, and the change is written to the file when you save.
 
 ## Copying and Pasting Colors
-Right clicking a color selects it and opens a menu to move colors around as hex values (like `#FF00FF`):
+Colors are moved around as hex values (like `#FF00FF`) with the **Edit** menu, which acts on the selected color. Right clicking a color also selects it and opens a menu with the same two commands:
 
 - **Copy** (`Ctrl+C`): Copies the color to the clipboard as a hex value.
-- **Paste** (`Ctrl+P`): Sets the color to the hex value on the clipboard — only enabled while the clipboard holds a valid hex color.
+- **Paste** (`Ctrl+P`): Sets the color to the hex value on the clipboard. Nothing happens if the clipboard doesn't hold a valid hex color (the right click menu disables it in that case).
 
 Since the colors travel as plain hex values, they can be exchanged with any other program that understands them, like an image editor.
 
 ## Converting Between Formats
-A palette is converted by opening it and saving it in a different format with the **Save As** buttons:
+A palette is converted by opening it and saving it in a different format with the save as commands in the **File** menu (each also has a toolbar button):
 
-- **Save as RIFF `*.pal`** (`Ctrl+R`)
-- **Save as JASC `*.pal`** (`Ctrl+J`)
-- **Save as StarCraft `*.pal`** (`Ctrl+Alt+P`)
-- **Save as StarCraft Terrain `*.wpe`** (`Ctrl+T`)
-- **Save as Adobe Color Table `*.act`** (`Ctrl+A`)
+- **Save as RIFF `*.pal`...** (`Ctrl+R`)
+- **Save as JASC `*.pal`...** (`Ctrl+J`)
+- **Save as StarCraft `*.pal`...** (`Ctrl+Alt+P`)
+- **Save as StarCraft Terrain `*.wpe`...** (`Ctrl+T`)
+- **Save as Adobe Color Table `*.act`...** (`Ctrl+A`)
 
 [.pcx](/Help/Files/PCX.md) and [.bmp](/Help/Files/BMP.md) images can be opened to extract the palette they were made with, but cannot be saved to — save the extracted palette in one of the formats above instead.
 
 ## Settings
-**Manage Settings** (`Ctrl+M`) opens the settings dialog:
+**Settings > Manage Settings...** (`Ctrl+M`) opens the settings dialog:
 
 - **Theme**: Changes the PyMS window [theme](/Help/Programs/Themes.md).
 

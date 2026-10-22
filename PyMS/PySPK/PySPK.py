@@ -101,31 +101,31 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 		#Toolbar
 		self.toolbar = UI.Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
-		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('importc'), self.iimport, 'Import from BMP', UI.Ctrl.i)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
 		self.toolbar.add_gap()
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
 		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('exportc'), self.export, 'Export to BMP', UI.Ctrl.e, enabled=False, tags=('file_open', 'has_layers'))
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('importc'), self.iimport, 'Import from BMP', UI.Ctrl.i, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('exportc'), self.export, 'Export to BMP', UI.Ctrl.e, enabled=False, tags=('file_open', 'has_layers'), bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('fwp'), self.preview, 'Preview', UI.Ctrl.l, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('fwp'), self.preview, 'Preview', UI.Ctrl.l, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', UI.Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.spk editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.spk Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PySPK')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
 		frame = UI.Frame(self)
@@ -142,23 +142,24 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		listbox.pack(side=UI.TOP, padx=5, fill=UI.X, expand=1)
 
 		self.edit_toolbar = UI.Toolbar(f)
-		self.edit_toolbar.add_button(Assets.get_image('add'), self.add_layer, 'Add Layer', UI.Key.Insert, enabled=False, tags=('file_open', 'can_add_layers'))
-		self.edit_toolbar.add_button(Assets.get_image('remove'), self.remove_layer, 'Remove Layer', UI.Key.Delete, enabled=False, tags='layer_selected')
+		self.edit_toolbar.add_button(Assets.get_image('add'), self.add_layer, 'Add Layer', UI.Key.Insert, enabled=False, tags=('file_open', 'can_add_layers'), bind_shortcut=False)
+		# `Delete` deletes the selected stars (see the Stars menu), so Remove Layer has no shortcut
+		self.edit_toolbar.add_button(Assets.get_image('remove'), self.remove_layer, 'Remove Layer', enabled=False, tags='layer_selected')
 		self.edit_toolbar.add_spacer(2, flexible=True)
 		self.edit_toolbar.add_button(Assets.get_image('up'), lambda: self.move_layer(-1), 'Move Layer Up', enabled=False, tags='can_move_up')
 		self.edit_toolbar.add_button(Assets.get_image('down'), lambda: self.move_layer(1), 'Move Layer Down', enabled=False, tags='can_move_down')
 		self.edit_toolbar.add_gap()
-		self.edit_toolbar.add_checkbutton(Assets.get_image('lock'), self.autolock, 'Auto-lock', enabled=False, tags='file_open')
-		self.edit_toolbar.add_checkbutton(Assets.get_image('eye'), self.autovis, 'Auto-visibility', enabled=False, tags='file_open')
+		self.edit_toolbar.add_checkbutton(Assets.get_image('lock'), self.autolock, 'Auto-Lock', enabled=False, tags='file_open')
+		self.edit_toolbar.add_checkbutton(Assets.get_image('eye'), self.autovis, 'Auto-Visibility', enabled=False, tags='file_open')
 		self.edit_toolbar.pack(side=UI.TOP, fill=UI.X, padx=2)
 
 		f.pack(padx=2, pady=2, expand=1, fill=UI.BOTH)
 		layersframe.grid(row=0,column=0, sticky=UI.NSEW, padx=(2,0))
 
 		notebook = UI.Notebook(leftframe)
-		self.palette_tab = PaletteTab(notebook, self, self)
+		self.palette_tab = PaletteTab(notebook, self)
 		notebook.add_tab(self.palette_tab, 'Palette')
-		self.stars_tab = StarsTab(notebook, self, self)
+		self.stars_tab = StarsTab(notebook, self)
 		notebook.add_tab(self.stars_tab, 'Stars')
 		notebook.grid(row=1,column=0, stick=UI.NSEW, padx=(2,0), pady=(4,0))
 
@@ -174,12 +175,6 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.skyCanvas.bind(UI.Mouse.Motion(), lambda e: self.mouse_move(e,ClickModifier.none))
 		self.skyCanvas.bind(UI.Shift.Motion(), lambda e: self.mouse_move(e,ClickModifier.shift))
 		self.skyCanvas.bind(UI.Cursor.Leave(), self.mouse_leave)
-		self.bind(UI.Key.Up(), lambda _: self.move_stars((0, -1)))
-		self.bind(UI.Key.Down(), lambda _: self.move_stars((0, 1)))
-		self.bind(UI.Key.Left(), lambda _: self.move_stars((-1, 0)))
-		self.bind(UI.Key.Right(), lambda _: self.move_stars((1, 0)))
-		self.bind(UI.Key.Delete(), lambda _: self.delete_stars())
-		self.bind(UI.Key.Backspace(), lambda _: self.delete_stars())
 		rightframe.grid(row=0, column=1, padx=2, pady=2, sticky=UI.NSEW)
 		frame.pack(fill=UI.X)
 
@@ -215,7 +210,82 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		statusbar.add_label(self.edit_status, weight=1)
 		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
+		self.setup_menu()
+
 		self.mpq_handler = MPQHandler(self.config_.settings.mpqs)
+
+	def setup_menu(self) -> None:
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File')
+		file_menu.add_command('New', self.new, UI.Ctrl.n)
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_separator()
+		def save() -> None:
+			self.save()
+		file_menu.add_command('Save', save, UI.Ctrl.s, enabled=False, tags='file_open')
+		def saveas() -> None:
+			self.saveas()
+		file_menu.add_command('Save As...', saveas, UI.Ctrl.Alt.a, enabled=False, tags='file_open', underline='As')
+		file_menu.add_separator()
+		file_menu.add_command('Import from BMP...', self.iimport, UI.Ctrl.i)
+		file_menu.add_command('Export to BMP...', self.export, UI.Ctrl.e, enabled=False, tags=('file_open', 'has_layers'))
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		view_menu = self.menu.add_cascade('View')
+		view_menu.add_command('Preview...', self.preview, UI.Ctrl.l, enabled=False, tags='file_open')
+
+		layer_menu = self.menu.add_cascade('Layer')
+		layer_menu.add_command('Add Layer', self.add_layer, UI.Key.Insert, enabled=False, tags=('file_open', 'can_add_layers'), underline='A')
+		# `Delete` deletes the selected stars (see the Stars menu), so Remove Layer has no shortcut
+		layer_menu.add_command('Remove Layer', self.remove_layer, enabled=False, tags='layer_selected', underline='R')
+		layer_menu.add_separator()
+		layer_menu.add_command('Move Layer Up', lambda: self.move_layer(-1), enabled=False, tags='can_move_up', underline='U')
+		layer_menu.add_command('Move Layer Down', lambda: self.move_layer(1), enabled=False, tags='can_move_down', underline='D')
+		layer_menu.add_separator()
+		layer_menu.add_checkbutton('Auto-Lock', self.autolock, enabled=False, tags='file_open', underline='L')
+		layer_menu.add_checkbutton('Auto-Visibility', self.autovis, enabled=False, tags='file_open', underline='V')
+
+		palette_menu = self.menu.add_cascade('Palette')
+		palette_menu.add_command('Import Star...', self.palette_tab.import_image, enabled=False, tags='file_open', underline='I')
+		palette_menu.add_command('Export Star...', self.palette_tab.export_image, enabled=False, tags='image_selected', underline='E')
+
+		stars_menu = self.menu.add_cascade('Stars')
+		delete_item = stars_menu.add_command('Delete Selected Stars...', self.delete_stars, UI.Key.Delete, enabled=False, tags='stars_selected', underline='D')
+		# A menu item takes one shortcut, so `Backspace` is bound here with the same enabled state as the item
+		def backspace_delete(_event: UI.Event) -> None:
+			if delete_item['state'] == UI.DISABLED:
+				return
+			self.delete_stars()
+		self.bind(UI.Key.Backspace(), backspace_delete)
+		stars_menu.add_separator()
+		stars_menu.add_command('Move Stars Up (in List Order)', lambda: self.stars_tab.move_stars(-1), enabled=False, tags='stars_selected', underline='U')
+		stars_menu.add_command('Move Stars Down (in List Order)', lambda: self.stars_tab.move_stars(1), enabled=False, tags='stars_selected', underline='o')
+		nudge_menu = stars_menu.add_cascade('Nudge Stars', underline=0)
+		nudge_menu.add_command('Up', lambda: self.move_stars((0, -1)), UI.Key.Up, enabled=False, tags='stars_selected', underline='U')
+		nudge_menu.add_command('Down', lambda: self.move_stars((0, 1)), UI.Key.Down, enabled=False, tags='stars_selected', underline='D')
+		nudge_menu.add_command('Left', lambda: self.move_stars((-1, 0)), UI.Key.Left, enabled=False, tags='stars_selected', underline='L')
+		nudge_menu.add_command('Right', lambda: self.move_stars((1, 0)), UI.Key.Right, enabled=False, tags='stars_selected', underline='R')
+		stars_menu.add_separator()
+		# The tool radios are on both the Palette and Stars tabs, and one of them is always shown, so the tool shortcuts only need a file open
+		stars_menu.add_radiobutton('Select Tool', self.tool, Tool.select.value, UI.Key.m, enabled=False, tags='file_open')
+		stars_menu.add_radiobutton('Move Tool', self.tool, Tool.move.value, UI.Key.v, enabled=False, tags='file_open')
+		stars_menu.add_radiobutton('Draw Tool', self.tool, Tool.draw.value, UI.Key.p, enabled=False, tags='file_open')
+
+		settings_menu = self.menu.add_cascade('Settings')
+		settings_menu.add_command('Manage Settings...', self.mpqsettings, UI.Ctrl.m)
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.spk Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='D')
+
+		help_menu = self.menu.add_cascade('Help')
+		help_menu.add_command('View Help', self.help, UI.Key.F1, underline='H')
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor, underline='D')
+		help_menu.add_command('About PySPK', self.about, underline='A')
 
 	def initialize(self) -> None:
 		e = self.open_files()
@@ -322,14 +392,30 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		return bool(self.selected_image)
 
 	def action_states(self) -> None:
-		self.toolbar.tag_enabled('file_open', self.is_file_open())
-		self.toolbar.tag_enabled('has_layers', bool(self.spk and len(self.spk.layers) > 0))
+		file_open = self.is_file_open()
+		has_layers = bool(self.spk and len(self.spk.layers) > 0)
+		can_add_layers = bool(self.spk and len(self.spk.layers) < SPK.SPK.MAX_LAYERS)
+		layer_selected = self.is_layer_selected()
+		can_move_up = layer_selected and self.layer.get() > 0
+		can_move_down = bool(layer_selected and self.spk and self.layer.get() < len(self.spk.layers)-1)
 
-		self.edit_toolbar.tag_enabled('file_open', self.is_file_open())
-		self.edit_toolbar.tag_enabled('can_add_layers', bool(self.spk and len(self.spk.layers) < SPK.SPK.MAX_LAYERS))
-		self.edit_toolbar.tag_enabled('layer_selected', self.is_layer_selected())
-		self.edit_toolbar.tag_enabled('can_move_up', self.is_layer_selected() and self.layer.get() > 0)
-		self.edit_toolbar.tag_enabled('can_move_down', bool(self.is_layer_selected() and self.spk and self.layer.get() < len(self.spk.layers)-1))
+		self.toolbar.tag_enabled('file_open', file_open)
+		self.toolbar.tag_enabled('has_layers', has_layers)
+
+		self.edit_toolbar.tag_enabled('file_open', file_open)
+		self.edit_toolbar.tag_enabled('can_add_layers', can_add_layers)
+		self.edit_toolbar.tag_enabled('layer_selected', layer_selected)
+		self.edit_toolbar.tag_enabled('can_move_up', can_move_up)
+		self.edit_toolbar.tag_enabled('can_move_down', can_move_down)
+
+		self.menu.tag_enabled('file_open', file_open)
+		self.menu.tag_enabled('has_layers', has_layers)
+		self.menu.tag_enabled('can_add_layers', can_add_layers)
+		self.menu.tag_enabled('layer_selected', layer_selected)
+		self.menu.tag_enabled('can_move_up', can_move_up)
+		self.menu.tag_enabled('can_move_down', can_move_down)
+		self.menu.tag_enabled('image_selected', self.is_image_selected())
+		self.menu.tag_enabled('stars_selected', self.are_stars_selected())
 
 		self.palette_tab.action_states()
 		self.stars_tab.action_states()

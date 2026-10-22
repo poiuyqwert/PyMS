@@ -26,7 +26,7 @@ class MPQLocale:
 	chinese    = 1028 # 0x404 (Taiwan)
 	czech      = 1029 # 0x405
 	german     = 1031 # 0x407
-	english    = 1032 # 0x409
+	english    = 1033 # 0x409
 	spanish    = 1034 # 0x40A
 	french     = 1036 # 0x40C
 	italian    = 1040 # 0x410
@@ -35,7 +35,7 @@ class MPQLocale:
 	polish     = 1045 # 0x415
 	portuguese = 1046 # 0x416
 	russian    = 1049 # 0x419
-	english_uk = 2056 # 0x808
+	english_uk = 2057 # 0x809
 
 class MPQCompressionFlag:
 	none       = 0

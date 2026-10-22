@@ -27,6 +27,7 @@ PALETTE = [(i, (i * 2) % 256, (i * 3) % 256) for i in range(256)]
 ASKYESNOCANCEL = 'tkinter.messagebox.askyesnocancel'
 SELECT_OPEN = 'PyMS.Utilities.Config.SelectFile.select_open'
 ERROR_DIALOG = 'PyMS.PyPAL.PyPAL.ErrorDialog'
+ASKCOLOR = 'tkinter.colorchooser.askcolor'
 
 
 def raw_rgb_bytes() -> bytes:

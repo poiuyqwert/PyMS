@@ -2,13 +2,13 @@
 This tutorial walks through creating a simple AI script in [PyAI](/Help/Programs/PyAI.md), from opening files to compiling and saving. It focuses on the workflow — for the concepts behind AI scripting, read the [AI Basics](/Help/Tutorials/AI_Basics.md) tutorial, and for the language itself see [AI Language](/Help/Programs/PyAI/AI_Language.md).
 
 ## Setting Up
-When PyAI starts it loads `stat_txt.tbl`, `units.dat`, `upgrades.dat`, and `techdata.dat` (see [Data Files](/Help/Programs/PyAI.md#data-files)). The defaults bundled with PyMS work fine for unmodded StarCraft — if you are making an AI for a mod, use **Manage Settings** (`Ctrl+U`) to point PyAI at your mod's files so your unit names and IDs match.
+When PyAI starts it loads `stat_txt.tbl`, `units.dat`, `upgrades.dat`, and `techdata.dat` (see [Data Files](/Help/Programs/PyAI.md#data-files)). The defaults bundled with PyMS work fine for unmodded StarCraft — if you are making an AI for a mod, use **Manage Settings...** (`Ctrl+U`, in the Settings menu) to point PyAI at your mod's files so your unit names and IDs match.
 
 ## Creating the Script
 Start from the games standard scripts so they stay available alongside your new one:
 
-1. Use **Open Default Scripts** (`Ctrl+D`) to open the default `aiscript.bin` and `bwscript.bin`.
-2. Use **Add Blank Script** (`Insert`) to create a new script.
+1. Use **Open Default Scripts** (`Ctrl+D`, in the File menu) to open the default `aiscript.bin` and `bwscript.bin`.
+2. Use **Add Blank Script...** (`Insert`, in the Scripts menu) to create a new script.
 3. Give it a 4 character AI ID (this tutorial uses `MyAI`), pick a name string with Browse... if you want one, and leave the flags off (see [Script Flags](/Help/Programs/PyAI.md#script-flags) for what they do).
 
 The new script appears in the list, containing just a `stop()` command.
@@ -60,7 +60,7 @@ Notice you can write units by name (`Terran Marine`) — the names come from you
 
 ## Testing and Saving
 Press `Ctrl+T` (**Test Code**) to compile without applying — errors and warnings get highlighted right in the code. When it compiles cleanly, press `Ctrl+S` (**Save**) to compile the code into the loaded files, and close the editor.
-Back in the main window, save the files with **Save As...** (`Ctrl+Alt+A`) to write `aiscript.bin` to disk, or **Save MPQ** (`Ctrl+Alt+M`) to write it straight into an MPQ as `scripts\aiscript.bin`.
+Back in the main window, save the files with **Save As...** (`Ctrl+Alt+A`) to write `aiscript.bin` to disk, or **Save MPQ...** (`Ctrl+Alt+M`) to write it straight into an MPQ as `scripts\aiscript.bin`.
 
 ## Using the Script
 To run in the game, your `aiscript.bin` (and `bwscript.bin` if used) must be loaded by the game — typically by putting them in an MPQ that gets loaded by an MPQ patching tool (like MPQDraft) or by your mod's loader.

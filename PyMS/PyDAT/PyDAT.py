@@ -65,33 +65,75 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 		self.data_context.load_palettes()
 
-		toolbar = UI.Toolbar(self)
-		toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
-		toolbar.add_gap()
-		toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
-		toolbar.add_button(Assets.get_image('openfolder'), self.opendirectory, 'Open Directory', UI.Ctrl.d)
-		toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import from TXT', UI.Ctrl.i)
-		toolbar.add_button(Assets.get_image('openmpq'), self.openmpq, 'Open MPQ', UI.Ctrl.Alt.o, enabled=MPQ.supported())
-		toolbar.add_gap()
-		toolbar.add_button(Assets.get_image('save'), self.save, 'Save', UI.Ctrl.s)
-		toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', UI.Ctrl.Alt.s)
-		toolbar.add_button(Assets.get_image('export'), self.export, 'Export to TXT', UI.Ctrl.e)
-		toolbar.add_button(Assets.get_image('savempq'), self.savempq, 'Save MPQ', UI.Ctrl.Alt.m, enabled=MPQ.supported())
-		toolbar.add_section()
-		toolbar.add_button(Assets.get_image('idsort'), self.override_name, 'Name Overrides', UI.Shift.Ctrl.n)
-		toolbar.add_section()
-		toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage MPQ and TBL files', UI.Ctrl.m)
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File')
+		file_menu.add_command('New', self.new, UI.Ctrl.n)
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_command('Open Directory...', self.opendirectory, UI.Ctrl.d)
+		file_menu.add_command('Open MPQ...', self.openmpq, UI.Ctrl.Alt.o, enabled=MPQ.supported(), underline='m')
+		file_menu.add_separator()
+		file_menu.add_command('Save', self.save, UI.Ctrl.s)
+		file_menu.add_command('Save As...', self.saveas, UI.Ctrl.Alt.s, underline='As')
+		file_menu.add_command('Save MPQ...', self.savempq, UI.Ctrl.Alt.m, enabled=MPQ.supported(), underline='a')
+		file_menu.add_separator()
+		file_menu.add_command('Import from TXT...', self.iimport, UI.Ctrl.i)
+		file_menu.add_command('Export to TXT...', self.export, UI.Ctrl.e)
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		entry_menu = self.menu.add_cascade('Entry')
+		entry_menu.add_command('Add Entry (DatExtend)', self.add_entry, UI.Shift.Ctrl.a, tags='can_expand')
+		entry_menu.add_command('Set Entry Count (DatExtend)...', self.set_entry_count, UI.Shift.Ctrl.s, tags='can_expand')
+		entry_menu.add_separator()
+		entry_menu.add_command('Name Overrides...', self.override_name, UI.Shift.Ctrl.n)
+		# Reload Data Files has no shortcut: it shared `Ctrl+R` with Reload Entry, whose binding always won
+		entry_menu.add_command('Reload Entry', self.reload, UI.Ctrl.r)
+		entry_menu.add_separator()
+		entry_menu.add_command('Copy Entry to Clipboard', self.copy, UI.Shift.Ctrl.c)
+		entry_menu.add_command('Copy Sub-Tab to Clipboard', self.copy_subtab, UI.Ctrl.y, tags='can_copy_sub_tab')
+		entry_menu.add_command('Paste from Clipboard', self.paste, UI.Shift.Ctrl.p)
+
 		def reload_files() -> None:
 			self.open_files()
-		toolbar.add_button(Assets.get_image('debug'), reload_files, 'Reload data files', UI.Ctrl.r)
-		toolbar.add_section()
-		toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.dat editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
-		toolbar.add_button(Assets.get_image('about'), self.about, 'About PyDAT')
-		toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
-		toolbar.add_section()
-		toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
-		toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
+		settings_menu = self.menu.add_cascade('Settings')
+		settings_menu.add_command('Manage Settings...', self.settings, UI.Ctrl.m)
+		settings_menu.add_command('Reload Data Files', reload_files, underline='r')
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.dat Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='D')
+
+		help_menu = self.menu.add_cascade('Help')
+		help_menu.add_command('View Help', self.help, UI.Key.F1, underline='h')
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor, underline='d')
+		help_menu.add_command('About PyDAT', self.about, underline='a')
+
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('openfolder'), self.opendirectory, 'Open Directory', UI.Ctrl.d, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('openmpq'), self.openmpq, 'Open MPQ', UI.Ctrl.Alt.o, enabled=MPQ.supported(), bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', UI.Ctrl.s, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', UI.Ctrl.Alt.s, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('savempq'), self.savempq, 'Save MPQ', UI.Ctrl.Alt.m, enabled=MPQ.supported(), bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import from TXT', UI.Ctrl.i, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export to TXT', UI.Ctrl.e, bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('idsort'), self.override_name, 'Name Overrides', UI.Shift.Ctrl.n, bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('debug'), reload_files, 'Reload Data Files')
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.dat Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyDAT')
+		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
+		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
 		self.hor_pane = UI.PanedWindow(self, orient=UI.HORIZONTAL)
 		left = UI.Frame(self.hor_pane)
@@ -145,16 +187,16 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.hor_pane.add(left, sticky=UI.NSEW, minsize=300)
 
 		self.listmenu = UI.Menu(self, tearoff=0)
-		self.listmenu.add_command(label='Copy Entry to Clipboard', command=self.copy, shortcut=UI.Shift.Ctrl.c) # type: ignore[call-arg]
-		self.listmenu.add_command(label='Copy Sub-Tab to Clipboard', command=self.copy_subtab, shortcut=UI.Ctrl.y, tags='can_copy_sub_tab') # type: ignore[call-arg]
-		self.listmenu.add_command(label='Paste from Clipboard', command=self.paste, shortcut=UI.Shift.Ctrl.p) # type: ignore[call-arg]
+		self.listmenu.add_command(label='Copy Entry to Clipboard', command=self.copy, shortcut=UI.Shift.Ctrl.c, bind_shortcut=False)
+		self.listmenu.add_command(label='Copy Sub-Tab to Clipboard', command=self.copy_subtab, shortcut=UI.Ctrl.y, tags='can_copy_sub_tab', bind_shortcut=False)
+		self.listmenu.add_command(label='Paste from Clipboard', command=self.paste, shortcut=UI.Shift.Ctrl.p, bind_shortcut=False)
 		self.listmenu.add_separator()
-		self.listmenu.add_command(label='Reload Entry', command=self.reload, shortcut=UI.Ctrl.r) # type: ignore[call-arg]
+		self.listmenu.add_command(label='Reload Entry', command=self.reload, shortcut=UI.Ctrl.r, bind_shortcut=False)
 		self.listmenu.add_separator()
-		self.listmenu.add_command(label='Add Entry (DatExtend)', command=self.add_entry, shortcut=UI.Shift.Ctrl.a, tags='can_expand') # type: ignore[call-arg]
-		self.listmenu.add_command(label='Set Entry Count (DatExtend)', command=self.set_entry_count, shortcut=UI.Shift.Ctrl.s, tags='can_expand') # type: ignore[call-arg]
+		self.listmenu.add_command(label='Add Entry (DatExtend)', command=self.add_entry, shortcut=UI.Shift.Ctrl.a, tags='can_expand', bind_shortcut=False)
+		self.listmenu.add_command(label='Set Entry Count (DatExtend)', command=self.set_entry_count, shortcut=UI.Shift.Ctrl.s, tags='can_expand', bind_shortcut=False)
 		self.listmenu.add_separator()
-		self.listmenu.add_command(label='Override Name', command=self.override_name, shortcut=UI.Shift.Ctrl.n) # type: ignore[call-arg]
+		self.listmenu.add_command(label='Name Overrides...', command=self.override_name, shortcut=UI.Shift.Ctrl.n, bind_shortcut=False)
 
 		self.status = UI.StringVar()
 		self.expanded = UI.StringVar()
@@ -194,6 +236,8 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 		self.data_context.config.windows.main.load_size(self)
 		self.data_context.config.list_size.load_size(self.hor_pane)
+
+		self.update_menu_states()
 
 	def initialize(self) -> None:
 		e = self.open_files(dat_files=True)
@@ -272,6 +316,18 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.expanded.set(f'{dat_data.dat_type.FILE_NAME} expanded')
 		else:
 			self.expanded.set('')
+		self.update_menu_states()
+
+	# Entry item states depend on the active tab and its loaded DAT, which change with tab switches,
+	# loads, and expansion (all of which update the status bar), so refresh them alongside it
+	def update_menu_states(self) -> None:
+		tab = self.active_tab()
+		dat = tab.get_dat_data().dat
+		can_expand = dat.can_expand() if dat else False
+		can_copy_sub_tab = isinstance(tab, Tabs.UnitsTab)
+		for menu in (self.menu, self.listmenu):
+			menu.tag_enabled('can_expand', can_expand)
+			menu.tag_enabled('can_copy_sub_tab', can_copy_sub_tab)
 
 	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		for page in self.pages:
@@ -345,20 +401,16 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.changeid(self.jumpid.get())
 
 	def popup(self, event: UI.Event) -> None:
-		can_expand = False
-		dat = self.active_tab().get_dat_data().dat
-		if dat:
-			can_expand = dat.can_expand()
-		self.listmenu.tag_enabled('can_copy_sub_tab', hasattr(self.active_tab(), 'copy_subtab')) # type: ignore[attr-defined]
-		self.listmenu.tag_enabled('can_expand', can_expand) # type: ignore[attr-defined]
+		self.update_menu_states()
 		self.listmenu.post(event.x_root, event.y_root)
 
 	def copy(self) -> None:
 		self.active_tab().copy()
 
 	def copy_subtab(self) -> None:
-		tab = cast(Tabs.UnitsTab, self.dattabs.active)
-		tab.copy_subtab()
+		tab = self.active_tab()
+		if isinstance(tab, Tabs.UnitsTab):
+			tab.copy_subtab()
 
 	def paste(self) -> None:
 		try:

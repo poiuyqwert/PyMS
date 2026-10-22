@@ -11,19 +11,33 @@ The main window shows the list of AI scripts in the loaded files. Each script in
 - The scripts name, which is its string from `stat_txt.tbl` (or `String N` if the string could not be looked up)
 
 Hovering over a script shows a tooltip with its full details. Double clicking a script opens it in the [Code Editor](/Help/Programs/PyAI/Code_Editor.md), and right clicking opens a menu with the common editing actions.
-The View menu (or the sort buttons on the toolbar) controls the order the scripts are listed in: File Order, Sort by ID, Sort by BroodWar, Sort by Flags, or Sort by Strings.
+The View menu (or the sort buttons on the toolbar) controls the order the scripts are listed in: File Order, Sort by ID, Sort by BroodWar, Sort by Flags, or Sort by String.
 The status bar shows the general status, an indicator for unsaved changes, the script count and file size of each `.bin` file, and the [plugins](#plugins) required by the loaded files (if any).
-Changes to the script list (adding, removing, and editing scripts) can be undone with `Ctrl+Z` and redone with `Ctrl+Y`.
+Changes to the script list (adding, removing, and editing scripts) can be undone with **Undo** (`Ctrl+Z`) and redone with **Redo** (`Ctrl+Y`) in the Edit menu. **Select All** (`Ctrl+A`) in the Edit menu selects every script in the list.
+
+## Menus and Toolbar
+The menubar groups the commands by what they act on:
+
+- **File**: New, Open..., Open Default Scripts, Open MPQ..., Save, Save As..., Save MPQ..., Close, and Exit (see [Managing Files](#managing-files)).
+- **Edit**: Undo, Redo, Select All, and Find Scripts... (see [Finding Scripts](#finding-scripts)).
+- **View**: The script list sort order.
+- **Scripts**: Add Blank Script..., Remove Scripts, Edit AI Script..., Edit AI ID, String, and Extra Info..., Edit Flags..., Import Scripts..., Import a List of Files..., and Export Scripts... (see [Editing Scripts](#editing-scripts) and [Exporting and Importing](#exporting-and-importing)).
+- **Settings**: Manage Settings..., Decompiling Format..., Manage External Definition Files..., Open TBL and DAT Settings..., Save TBL and DAT Settings..., and Set as Default `*.bin` Editor (Windows Only).
+- **Help**: View Help (`F1`), Donate..., and About PyAI.
+
+The toolbar has two rows. The first row has the file buttons (in the same order as the File menu), Undo and Redo, the sort buttons, Manage Settings, then Set as Default `*.bin` Editor, View Help, About PyAI, Donate, and Exit. The second row has Add Blank Script, Remove Scripts, and Find Scripts, then the script editing buttons (Edit AI Script; Edit AI ID, String, and Extra Info; Edit Flags), the import and export buttons (Import Scripts, Import a List of Files, Export Scripts), and finally the settings buttons (Decompiling Format, Manage External Definition Files, Open TBL and DAT Settings, Save TBL and DAT Settings). Hovering over a button shows its name and keyboard shortcut.
 
 ## Managing Files
+These commands are in the File menu and on the toolbar:
+
 - **New** (`Ctrl+N`): Creates a new, empty `aiscript.bin` and `bwscript.bin`.
-- **Open** (`Ctrl+O`): Opens an existing `aiscript.bin`, then asks for the matching `bwscript.bin` (press Cancel to open only the `aiscript.bin`).
+- **Open...** (`Ctrl+O`): Opens an existing `aiscript.bin`, then asks for the matching `bwscript.bin` (press Cancel to open only the `aiscript.bin`).
 - **Open Default Scripts** (`Ctrl+D`): Opens the default StarCraft scripts bundled with PyMS.
-- **Open MPQ** (`Ctrl+Alt+O`): Opens `scripts\aiscript.bin` and `scripts\bwscript.bin` directly out of an [MPQ](/Help/Files/MPQ.md).
+- **Open MPQ...** (`Ctrl+Alt+O`): Opens `scripts\aiscript.bin` and `scripts\bwscript.bin` directly out of an [MPQ](/Help/Files/MPQ.md).
 - **Save** (`Ctrl+S`) and **Save As...** (`Ctrl+Alt+A`): Saves the `aiscript.bin`, and asks where to save the `bwscript.bin` if any scripts are stored in it.
-- **Save MPQ** (`Ctrl+Alt+M`): Saves both files into an MPQ as `scripts\aiscript.bin` and `scripts\bwscript.bin`.
+- **Save MPQ...** (`Ctrl+Alt+M`): Saves both files into an MPQ as `scripts\aiscript.bin` and `scripts\bwscript.bin`.
 - **Close** (`Ctrl+W`): Closes the loaded files.
-- **Set as default .bin editor** (Windows Only): Associates `.bin` files with PyAI, so they open in PyAI when double clicked.
+- **Set as Default `*.bin` Editor** (Windows Only, in the Settings menu): Associates `.bin` files with PyAI, so they open in PyAI when double clicked.
 
 `aiscript.bin` has a maximum file size of 65535 bytes (the reason `bwscript.bin` exists). If your scripts don't fit, PyAI will offer to "expand" the file, which raises the limit but makes the file require the AISE plugin to work in the game (see [Plugins](#plugins)). `aiscript.bin` and `bwscript.bin` are expanded independently, so expanding one doesn't change the format of the other. An expanded file is only saved in the expanded format while it is larger than 65535 bytes; otherwise it is saved in the normal format. PyAI can also open files that use the expanded format's long jump table even if they are smaller than 65535 bytes.
 
@@ -35,15 +49,17 @@ PyAI uses some of the games data files to display script names, to let you use u
 - [upgrades.dat](/Help/Files/DAT/upgrades.dat.md): Upgrade data.
 - [techdata.dat](/Help/Files/DAT/techdata.dat.md): Technology data.
 
-**Manage Settings** (`Ctrl+U`) opens the settings dialog where you can choose these files (from disk or from your MPQs), manage the MPQs to load files from, and change the theme. The settings dialog also opens automatically at startup if any of the files fail to load.
-The toolbar also has **Save TBL and DAT Settings** and **Open TBL and DAT Settings** buttons, which save your data file choices to a small settings file and load them back later, so you can quickly switch between sets of data files (for example between two mods).
+**Manage Settings...** (`Ctrl+U`, in the Settings menu) opens the settings dialog where you can choose these files (from disk or from your MPQs), manage the MPQs to load files from, and change the theme. The settings dialog also opens automatically at startup if any of the files fail to load.
+**Save TBL and DAT Settings...** and **Open TBL and DAT Settings...** (in the Settings menu and on the toolbar) save your data file choices to a small settings file and load them back later, so you can quickly switch between sets of data files (for example between two mods).
 
 ## Editing Scripts
-- **Add Blank Script** (`Insert`): Creates a new script containing just a `stop()` command. You choose its AI ID, string, and flags.
+These commands are in the Scripts menu, on the toolbar, and in the script list's right click menu:
+
+- **Add Blank Script...** (`Insert`): Creates a new script containing just a `stop()` command. You choose its AI ID, string, and flags.
 - **Remove Scripts** (`Delete`): Removes the selected scripts.
-- **Edit AI Script** (`Ctrl+E`): Opens the selected scripts in the [Code Editor](/Help/Programs/PyAI/Code_Editor.md) to edit their code.
-- **Edit AI ID, String, and Extra Info.** (`Ctrl+I`): Edits the selected scripts 4 character AI ID and its `stat_txt.tbl` string. The AI ID cannot contain commas, parenthesis, or colons. The string can be chosen from a list with the Browse... button, and the dialog also has a Flags... button.
-- **Edit Flags** (`Ctrl+G`): Edits the selected scripts flags.
+- **Edit AI Script...** (`Ctrl+E`): Opens the selected scripts in the [Code Editor](/Help/Programs/PyAI/Code_Editor.md) to edit their code.
+- **Edit AI ID, String, and Extra Info...** (`Ctrl+I`): Edits the selected scripts 4 character AI ID and its `stat_txt.tbl` string. The AI ID cannot contain commas, parenthesis, or colons. The string can be chosen from a list with the Browse... button, and the dialog also has a Flags... button.
+- **Edit Flags...** (`Ctrl+G`): Edits the selected scripts flags.
 
 ## Script Flags
 Each script has three flags, shown in the script list in binary form:
@@ -53,16 +69,18 @@ Each script has three flags, shown in the script list in binary form:
 - **Requires a Location**: The script must be run on a location (for scripts run by the "Run AI Script at Location" trigger action).
 
 ## Finding Scripts
-**Find Scripts** (`Ctrl+F`) searches the loaded scripts by any combination of AI ID, which file the script is in (`aiscript.bin`, `bwscript.bin`, or either), flags, string ID, and string text. The search terms can be matched Case Sensitive and/or as Regular Expressions (otherwise they are matched as substrings). Selecting results and pressing Select will select those scripts in the main window.
+**Find Scripts...** (`Ctrl+F`, in the Edit menu) searches the loaded scripts by any combination of AI ID, which file the script is in (`aiscript.bin`, `bwscript.bin`, or either), flags, string ID, and string text. The search terms can be matched Case Sensitive and/or as Regular Expressions (otherwise they are matched as substrings). Selecting results and pressing Select will select those scripts in the main window.
 
 ## Exporting and Importing
-- **Export Scripts** (`Ctrl+Alt+E`): Decompiles the selected scripts to a text file. If a script references blocks in other scripts, the referenced scripts are exported as well.
-- **Import Scripts** (`Ctrl+Alt+I`): Compiles a text file into the loaded files. Imported scripts with the same AI ID as an existing script will replace the existing script.
-- **Import a List of Files** (`Ctrl+L`): Manages a list of text files to import from, which is remembered between sessions. You can import individual files from the list, or all of them at once.
-- **Decompiling Format**: Chooses the code styles used when decompiling: Block (`--block--` or `:block`), Command (`wait 1` or `wait(1)`), and Comment (`# comment` or `; comment`). This only affects decompiled output; all styles are always accepted when compiling. See [AI Language](/Help/Programs/PyAI/AI_Language.md) for details on the styles.
+The import and export commands are in the Scripts menu, and Decompiling Format is in the Settings menu:
+
+- **Export Scripts...** (`Ctrl+Alt+E`): Decompiles the selected scripts to a text file. If a script references blocks in other scripts, the referenced scripts are exported as well.
+- **Import Scripts...** (`Ctrl+Alt+I`): Compiles a text file into the loaded files. Imported scripts with the same AI ID as an existing script will replace the existing script.
+- **Import a List of Files...** (`Ctrl+L`): Manages a list of text files to import from, which is remembered between sessions. You can import individual files from the list, or all of them at once.
+- **Decompiling Format...**: Chooses the code styles used when decompiling: Block (`--block--` or `:block`), Command (`wait 1` or `wait(1)`), and Comment (`# comment` or `; comment`). This only affects decompiled output; all styles are always accepted when compiling. See [AI Language](/Help/Programs/PyAI/AI_Language.md) for details on the styles.
 
 ## External Definitions
-**Manage External Definition Files** (`Ctrl+X`) manages a list of external definition files, which is remembered between sessions. External definition files can define variables (to give meaningful names to values in your code) and definition directives, and are applied every time scripts are compiled or decompiled — when decompiling, values are replaced by their variable names. See [External Definitions](/Help/Programs/PyAI/AI_Language.md#external-definitions) for the file format.
+**Manage External Definition Files...** (`Ctrl+X`, in the Settings menu) manages a list of external definition files, which is remembered between sessions. External definition files can define variables (to give meaningful names to values in your code) and definition directives, and are applied every time scripts are compiled or decompiled — when decompiling, values are replaced by their variable names. See [External Definitions](/Help/Programs/PyAI/AI_Language.md#external-definitions) for the file format.
 
 ## Plugins
 The core AI language is the set of commands supported by the unmodded game. Plugins extend the game (and the language) with extra functionality — currently PyAI supports the **AISE** plugin (see [AISE Commands](/Help/Programs/PyAI/AISE_Commands.md)).

@@ -55,6 +55,22 @@ class Test_FindReplaceDialog(UITestCase):
 		showinfo.assert_called_once()
 		self.assertIn("Can't find text", showinfo.call_args.kwargs['message'])
 
+	def test_not_found_message_belongs_to_the_dialog_by_default(self) -> None:
+		_, dialog = self.make_dialog('alpha\n')
+		dialog.find.set('missing')
+		with mock.patch.object(UI.MessageBox, 'showinfo') as showinfo:
+			dialog.findnext()
+		self.assertIs(showinfo.call_args.kwargs['parent'], dialog)
+
+	def test_not_found_message_belongs_to_the_main_window_when_searching_from_it(self) -> None:
+		# Find Next run from the main window's menu or F3 may happen while the dialog is hidden,
+		# so the message has to be shown over the main window instead.
+		window, dialog = self.make_dialog('alpha\n')
+		dialog.find.set('missing')
+		with mock.patch.object(UI.MessageBox, 'showinfo') as showinfo:
+			dialog.findnext(from_parent=True)
+		self.assertIs(showinfo.call_args.kwargs['parent'], window)
+
 	def test_find_up_selects_last_match_before_cursor(self) -> None:
 		window, dialog = self.make_dialog('alpha beta alpha\nbeta\n')
 		window.text.mark_set(UI.INSERT, UI.END)

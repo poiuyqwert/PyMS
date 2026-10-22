@@ -7,7 +7,7 @@ This tutorial walks through editing an animation script with [PyICE](/Help/Progr
 
 ## Finding the Script
 1. You could scroll the IScript Entries list to find the entry named Marine, but you usually know the unit, not the script — so scroll the **Units** list to Terran Marine and select it instead. PyICE resolves the unit through its flingy, sprite, and image to the script that animates it, and the status bar shows the result: `IScript ID's Selected: 78`.
-2. Press **Edit IScript entries** (`Ctrl+E`) to decompile the entry into the [IScript Editor](/Help/Programs/PyICE/Code_Editor.md).
+2. Choose **Entries > Edit IScript Entries...** (`Ctrl+E`) to decompile the entry into the [IScript Editor](/Help/Programs/PyICE/Code_Editor.md).
 
 ## Reading the Code
 At the top is the script's header, listing its [animations](/Help/Files/iscript.bin.md#animations) and the block each one starts at — the ground attack animations are `GndAttkInit` (starting at the block labelled `Marine_GndAttkInit`) and `GndAttkRpt` (the repeated attack, at `Marine_GndAttkRpt`). Find the `Marine_GndAttkRpt:` label in the code; the firing itself happens in these lines:

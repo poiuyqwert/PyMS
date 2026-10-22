@@ -3,7 +3,7 @@ The Stars tab lists every star placed on the visible, unlocked [layers](/Help/Pr
 Selecting rows selects the matching stars on the canvas and vice versa, and multiple rows can be selected at once. This makes the list an easy way to find stars, or to select stars that overlap on the canvas.
 The toolbar at the bottom has the [tool](/Help/Programs/PySPK.md#editing-stars) buttons, plus:
 
-- **Move Stars Up** and **Move Stars Down**: Moves the selected stars up or down in the order they are stored within their layer.
+- **Move Stars Up** and **Move Stars Down** (**Stars > Move Stars Up (in List Order)** and **Move Stars Down (in List Order)**): Moves the selected stars up or down in the order they are stored within their layer. This does not move them on the canvas — use the arrow keys (**Stars > Nudge Stars**) for that.
 
 ## See Also
 - [PySPK](/Help/Programs/PySPK.md)

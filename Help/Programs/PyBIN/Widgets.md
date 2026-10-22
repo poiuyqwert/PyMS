@@ -15,11 +15,11 @@ A dialog is made up of widgets: the root Dialog widget, plus a widget for each c
 - **Group**: Not a real widget — an editor-only folder for organizing widgets in the tree. Moving a group on the canvas moves all the widgets inside it. Groups are not saved into the `.bin` file, so they are lost when the file is closed.
 
 ## Adding and Removing Widgets
-**Add Widget** on the widgets toolbar opens a menu of the types above. The new widget is created in the middle of the selected group (or next to the selected widget), and can then be positioned and edited. Adding an HTML widget enables SC:R mode for the file.
-**Remove Selected** removes the selected widget or group (move any widgets you want to keep out of a group before removing it). The root Dialog can't be removed.
+**Add Widget** on the widgets toolbar opens a menu of the types above (the same types are in the **Widgets > Add Widget** submenu). The new widget is created in the middle of the selected group (or next to the selected widget), and can then be positioned and edited. Adding an HTML widget enables SC:R mode for the file.
+**Remove Widget** (on the widgets toolbar or in the **Widgets** menu) removes the selected widget or group (move any widgets you want to keep out of a group before removing it). The root Dialog can't be removed.
 
 ## Tree Order and Z-Order
-Widgets are drawn in the order they appear in the tree, so widgets lower in the tree are drawn on top of the ones above them. Use **Move Widget Up** and **Move Widget Down** on the widgets toolbar to reorder the selected widget among its siblings.
+Widgets are drawn in the order they appear in the tree, so widgets lower in the tree are drawn on top of the ones above them. Use **Move Widget Up** and **Move Widget Down** on the widgets toolbar (or in the **Widgets** menu) to reorder the selected widget among its siblings.
 You can also drag and drop widgets in the tree: drop a widget onto a group to move it into that group, or drop it between siblings to reorder it. The root Dialog can't be dragged, and a group can't be dropped into itself.
 
 ## Editing on the Canvas

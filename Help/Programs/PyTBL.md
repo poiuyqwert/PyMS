@@ -7,7 +7,17 @@ The top right of the window is the text editor for the selected string. Edits ap
 The bottom right of the window is an always-visible reference listing the [color codes](/Help/Files/TBL.md#color-codes) and other special characters, so you don't need to memorize them.
 The status bar shows the result of the last action, an indicator for unsaved changes, and the index of the selected string along with the total string count.
 
+Every command is in the menubar, and most also have a toolbar button:
+
+- **File**: New, Open, Open Default TBL, Save, Save As, Import Strings, Export Strings, Close, and Exit. The toolbar's first group has the same buttons in the same order.
+- **Edit**: Find Strings, Find Next, and Go To. The toolbar's second group has the Find Strings and Go To buttons.
+- **Strings**: Add String, Insert String, Remove String, Move String Up, Move String Down, and Test String. The toolbar's third group has the same buttons.
+- **Settings**: Manage Settings, and Set as Default `*.tbl` Editor.
+- **Help**: View Help (`F1`), Donate, and About PyTBL.
+
 ## Managing Files
+These are in the **File** menu:
+
 - **New** (`Ctrl+N`): Creates a new, empty TBL.
 - **Open** (`Ctrl+O`): Opens a `.tbl` file.
 - **Open Default TBL** (`Ctrl+D`): Opens the standard `stat_txt.tbl` bundled with PyMS.
@@ -15,30 +25,36 @@ The status bar shows the result of the last action, an indicator for unsaved cha
 - **Save** (`Ctrl+S`) and **Save As** (`Ctrl+Alt+A`): Saves the `.tbl` file.
 - **Export Strings** (`Ctrl+E`): Saves the strings to an editable `.txt` file, one string per line. Exporting, editing the text, and re-importing can be an easy way to make bulk changes.
 - **Close** (`Ctrl+W`): Closes the file.
-- **Set as default `.tbl` editor** (Windows only): Associates `.tbl` files with PyTBL, so they open in PyTBL when double clicked.
 
 Closing PyTBL (or loading another file over unsaved changes) asks to save first.
 
+**Set as Default `*.tbl` Editor** (Windows only), in the **Settings** menu, associates `.tbl` files with PyTBL, so they open in PyTBL when double clicked.
+
 ## Working with Strings
+These are in the **Strings** menu:
+
 - **Add String** (`Insert`): Adds a new empty string to the end of the file.
 - **Insert String** (`Shift+Insert`): Inserts a new empty string before the selected string.
-- **Remove String** (`Delete` in the string list, `Shift+Delete` in the editor): Deletes the selected string.
+- **Remove String** (`Shift+Delete`): Deletes the selected string.
 - **Move String Up** (`Shift+Up`) and **Move String Down** (`Shift+Down`): Swaps the selected string with the one above or below it.
 
-These actions are also available by right clicking the string list. Keep in mind that the game and other files (like the `.dat` files) refer to TBL strings by their index, so inserting, removing, or moving a string changes the index of every string after it.
+The `Insert`, `Shift+Insert`, and `Shift+Delete` shortcuts don't apply while you are typing in the text editor, so they can't add or remove strings by accident. These actions are also available by right clicking the string list. Keep in mind that the game and other files (like the `.dat` files) refer to TBL strings by their index, so inserting, removing, or moving a string changes the index of every string after it.
 
 ## Finding Strings
-- **Find Strings** (`Ctrl+F`): Searches the string list for text. **Case Sensitive** matches the exact casing, **Regular Expression** treats the search text as a regular expression, and **Wrap** continues the search from the other end of the list when it reaches the end. **Direction** chooses whether to search up or down from the selected string. Press **Find Next** (`F3`, or `Enter` in the dialog) to jump to the next match. Your search history is kept for the session.
-- **Go to** (`Ctrl+G`): Jumps straight to a string by its index (hex values are accepted).
+These are in the **Edit** menu:
+
+- **Find Strings** (`Ctrl+F`): Searches the string list for text. **Case Sensitive** matches the exact casing, **Regular Expression** treats the search text as a regular expression, and **Wrap** continues the search from the other end of the list when it reaches the end. **Direction** chooses whether to search up or down from the selected string. Press **Find Next** (`Enter`) in the dialog to jump to the next match. Your search history is kept for the session.
+- **Find Next** (`F3`): Jumps to the next match for the last search, without needing the Find dialog open. If you haven't searched yet, it opens the Find dialog.
+- **Go To** (`Ctrl+G`): Jumps straight to a string by its index (hex values are accepted).
 
 ## Text Previewer
-**Test String** (`Ctrl+T`) opens the Text Previewer, which renders the selected string the way it looks in the game, using the fonts, text colors, and icons from your [settings](#settings):
+**Test String** (`Ctrl+T`), in the **Strings** menu, opens the Text Previewer, which renders the selected string the way it looks in the game, using the fonts, text colors, and icons from your [settings](#settings):
 
 - **Hotkey String**: Treats the string as a command button tooltip — the leading hotkey and [hotkey type](/Help/Files/TBL.md#hotkey-types) characters are read, and example requirements (like mineral and gas costs) are displayed based on the type.
 - **End at Null**: Stops the preview at the first `<0>`, like the game does.
 
 ## Settings
-**Manage Settings** (`Ctrl+M`) opens the settings dialog, which also opens automatically at startup if any of the preview files fail to load:
+**Manage Settings** (`Ctrl+M`), in the **Settings** menu, opens the settings dialog, which also opens automatically at startup if any of the preview files fail to load:
 
 - **MPQ Settings**: Manages the list of MPQs that the preview files are loaded from (usually your StarCraft MPQs and/or your mods MPQ).
 - **Preview Settings**: Chooses the files used by the [Text Previewer](#text-previewer): `tfontgam.pcx` (the text colors), `font8.fnt` and `font10.fnt` (the [fonts](/Help/Files/FNT.md) used for hotkey and normal strings), `icons.grp` (the requirement icons), and the [palette](/Help/Files/Palettes.md) used to display the icons.

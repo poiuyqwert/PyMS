@@ -88,7 +88,7 @@ byte attack_amount = 10
 Once defined, the variable name can be used anywhere a parameter of that type is expected (see the parameter types in the [Command Reference](/Help/Programs/PyAI/Command_Reference.md#parameter-types)). Variables can be defined in your source code, or in external definition files.
 
 ## External Definitions
-External definition files are text files containing variable definitions, managed with **Manage External Definition Files** (`Ctrl+X`) in the main window. They are applied every time scripts are compiled or decompiled: when compiling, the variables are available to your code, and when decompiling, values are replaced by their matching variable names — so you can keep one set of meaningful names across all your work.
+External definition files are text files containing variable definitions, managed with **Manage External Definition Files...** (`Ctrl+X`) in the main window's Settings menu. They are applied every time scripts are compiled or decompiled: when compiling, the variables are available to your code, and when decompiling, values are replaced by their matching variable names — so you can keep one set of meaningful names across all your work.
 External definition files can also contain these directives:
 
 - `@spellcaster(variable)`: Mark the unit variable as a spellcaster, so it can be used with the `defenseuse_xx`/`defensebuild_xx` commands without warning that the unit doesn't have an attack.

@@ -72,31 +72,30 @@ class PyGRP(UI.MainWindow):
 
 		#Toolbar
 		self.toolbar = UI.Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
-		def save() -> None:
-			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
-		def save_as() -> None:
-			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), save_as, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
-		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exportc'), self.exports, 'Export Selected Frames', UI.Ctrl.e, enabled=False, tags='frame_selected')
-		self.toolbar.add_button(Assets.get_image('importc'), self.imports, 'Import Frames', UI.Ctrl.i, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Frames', UI.Key.Delete, enabled=False, tags='frame_selected')
-		self.toolbar.add_button(Assets.get_image('up'), lambda: self.shift(-1), 'Move Frames Up', UI.Ctrl.u, enabled=False, tags='can_move_up')
-		self.toolbar.add_button(Assets.get_image('down'), lambda: self.shift(1), 'Move Frames Down', UI.Ctrl.d, enabled=False, tags='can_move_down')
+		self.toolbar.add_button(Assets.get_image('save'), self.do_save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveas'), self.do_saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, "Manage Settings", UI.Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('importc'), self.imports, 'Import Frames', UI.Ctrl.i, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('exportc'), self.exports, 'Export Selected Frames', UI.Ctrl.e, enabled=False, tags='frame_selected', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('up'), lambda: self.shift(-1), 'Move Frames Up', UI.Ctrl.u, enabled=False, tags='can_move_up', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('down'), lambda: self.shift(1), 'Move Frames Down', UI.Ctrl.d, enabled=False, tags='can_move_down', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Frames', UI.Key.Delete, enabled=False, tags='frame_selected', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.grp editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.grp Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyGRP')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
 		frame = UI.Frame(self)
@@ -113,7 +112,6 @@ class PyGRP(UI.MainWindow):
 		self.listbox = UI.ScrolledListbox(leftframe, scroll_speed=2, selectmode=UI.EXTENDED, width=15, height=17)
 		self.listbox.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X, expand=1)
 		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), self.preview)
-		self.bind(UI.Ctrl.a(), self.selectall)
 
 		#Palette
 		UI.Label(leftframe, text='Palette:', anchor=UI.W).pack(fill=UI.X)
@@ -142,6 +140,8 @@ class PyGRP(UI.MainWindow):
 			s = 0
 		self.pallist.select_set(s)
 		self.pallist.see(s)
+		# Mirrors the palette list's selection for the View > Palette radios
+		self.palette_name = UI.StringVar(value=self.pal)
 
 		rightframe = UI.Frame(frame)
 		#Canvas
@@ -154,17 +154,17 @@ class PyGRP(UI.MainWindow):
 
 		#Frameviewing
 		self.controls = UI.Toolbar(rightframe)
-		self.controls.add_button(Assets.get_image('begin'), lambda: self.frameset(FrameSet.first), 'Jump to first frame', enabled=False, tags='can_preview')
-		self.controls.add_button(Assets.get_image('frw'), lambda: self.frameset(FrameSet.prev_frameset), 'Jump 17 frames Up', enabled=False, tags='can_preview')
-		self.controls.add_button(Assets.get_image('rw'), lambda: self.frameset(FrameSet.prev_frame), 'Jump 1 frame Up', enabled=False, tags='can_preview')
-		self.controls.add_button(Assets.get_image('frwp'), lambda: self.frameset(FrameSet.play_prev_framesets), 'Play every 17th frame going Up', enabled=False, tags='can_preview')
-		self.controls.add_button(Assets.get_image('rwp'), lambda: self.frameset(FrameSet.play_prev_frames), 'Play every frame going Up', enabled=False, tags='can_preview')
-		self.controls.add_button(Assets.get_image('stop'), lambda: self.frameset(FrameSet.stop), 'Stop playing frames', enabled=False, tags=('can_preview', 'is_playing'))
-		self.controls.add_button(Assets.get_image('fwp'), lambda: self.frameset(FrameSet.play_next_frames), 'Play every frame going Down', enabled=False, tags='can_preview')
-		self.controls.add_button(Assets.get_image('ffwp'), lambda: self.frameset(FrameSet.play_next_framesets), 'Play every 17th frame going Down', enabled=False, tags='can_preview')
-		self.controls.add_button(Assets.get_image('fw'), lambda: self.frameset(FrameSet.next_frame), 'Jump 1 frame Down', enabled=False, tags='can_preview')
-		self.controls.add_button(Assets.get_image('ffw'), lambda: self.frameset(FrameSet.next_frameset), 'Jump 17 frames Down', enabled=False, tags='can_preview')
-		self.controls.add_button(Assets.get_image('end'), lambda: self.frameset(FrameSet.last), 'Jump to last frame', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('begin'), lambda: self.frameset(FrameSet.first), 'Jump to First Frame', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('frw'), lambda: self.frameset(FrameSet.prev_frameset), 'Jump 17 Frames Back', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('rw'), lambda: self.frameset(FrameSet.prev_frame), 'Jump 1 Frame Back', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('frwp'), lambda: self.frameset(FrameSet.play_prev_framesets), 'Play Every 17th Frame Backward', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('rwp'), lambda: self.frameset(FrameSet.play_prev_frames), 'Play Every Frame Backward', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('stop'), lambda: self.frameset(FrameSet.stop), 'Stop Playing', enabled=False, tags=('can_preview', 'is_playing'))
+		self.controls.add_button(Assets.get_image('fwp'), lambda: self.frameset(FrameSet.play_next_frames), 'Play Every Frame Forward', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('ffwp'), lambda: self.frameset(FrameSet.play_next_framesets), 'Play Every 17th Frame Forward', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('fw'), lambda: self.frameset(FrameSet.next_frame), 'Jump 1 Frame Forward', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('ffw'), lambda: self.frameset(FrameSet.next_frameset), 'Jump 17 Frames Forward', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('end'), lambda: self.frameset(FrameSet.last), 'Jump to Last Frame', enabled=False, tags='can_preview')
 		self.controls.pack(padx=1, pady=1)
 
 		self.prevspeed = UI.IntegerVar(self.config_.preview.speed.value, [1,5000])
@@ -220,6 +220,8 @@ BMP's must be imported with the same style they were exported as.""")
 		rightframe.pack(side=UI.RIGHT, padx=1, pady=1)
 		frame.pack()
 
+		self.create_menus()
+
 		#Statusbar
 		self.status = UI.StringVar()
 		self.status.set('Load or create a GRP.')
@@ -235,6 +237,94 @@ BMP's must be imported with the same style they were exported as.""")
 			self.open(file=guifile)
 
 		UpdateDialog.check_update(self, 'PyGRP')
+
+	def create_menus(self) -> None:
+		# Every main window shortcut is bound once, by its menubar item
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File')
+		file_menu.add_command('New', self.new, UI.Ctrl.n)
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_separator()
+		file_menu.add_command('Save', self.do_save, UI.Ctrl.s, enabled=False, tags='file_open')
+		file_menu.add_command('Save As...', self.do_saveas, UI.Ctrl.Alt.a, enabled=False, tags='file_open', underline='As')
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		edit_menu = self.menu.add_cascade('Edit')
+		edit_menu.add_command('Select All', self.selectall, UI.Ctrl.a)
+
+		view_menu = self.menu.add_cascade('View')
+		view_menu.add_checkbutton('Hex Frame Numbers', self.hex, command=self.update_list)
+		palette_menu = view_menu.add_cascade('Palette')
+		# `self.palettes` is filled in the same order as the palette list
+		for pal in self.palettes:
+			palette_menu.add_radiobutton(pal, self.palette_name, pal, command=self.select_palette)
+		view_menu.add_separator()
+		view_menu.add_checkbutton('Show Preview', self.showpreview, command=self.showprev)
+		view_menu.add_checkbutton('GRP Outline (Green)', self.grpo, command=self.grpoutline)
+		view_menu.add_checkbutton('Frame Outline (Red)', self.frameo, command=self.frameoutline)
+		view_menu.add_command('Background Color...', self.bgcolor)
+		view_menu.add_separator()
+		playback_menu = view_menu.add_cascade('Playback')
+		playback_menu.add_command('Jump to First Frame', lambda: self.frameset(FrameSet.first), enabled=False, tags='can_preview')
+		playback_menu.add_command('Jump 17 Frames Back', lambda: self.frameset(FrameSet.prev_frameset), enabled=False, tags='can_preview')
+		playback_menu.add_command('Jump 1 Frame Back', lambda: self.frameset(FrameSet.prev_frame), enabled=False, tags='can_preview')
+		playback_menu.add_command('Jump 1 Frame Forward', lambda: self.frameset(FrameSet.next_frame), enabled=False, tags='can_preview')
+		playback_menu.add_command('Jump 17 Frames Forward', lambda: self.frameset(FrameSet.next_frameset), enabled=False, tags='can_preview')
+		playback_menu.add_command('Jump to Last Frame', lambda: self.frameset(FrameSet.last), enabled=False, tags='can_preview')
+		playback_menu.add_separator()
+		playback_menu.add_command('Play Every 17th Frame Backward', lambda: self.frameset(FrameSet.play_prev_framesets), enabled=False, tags='can_preview')
+		playback_menu.add_command('Play Every Frame Backward', lambda: self.frameset(FrameSet.play_prev_frames), enabled=False, tags='can_preview')
+		playback_menu.add_command('Stop Playing', lambda: self.frameset(FrameSet.stop), enabled=False, tags=('can_preview', 'is_playing'))
+		playback_menu.add_command('Play Every Frame Forward', lambda: self.frameset(FrameSet.play_next_frames), enabled=False, tags='can_preview')
+		playback_menu.add_command('Play Every 17th Frame Forward', lambda: self.frameset(FrameSet.play_next_framesets), enabled=False, tags='can_preview')
+		playback_menu.add_separator()
+		playback_menu.add_checkbutton('Loop Preview', self.looppreview)
+
+		frames_menu = self.menu.add_cascade('Frames')
+		frames_menu.add_command('Import Frames...', self.imports, UI.Ctrl.i, enabled=False, tags='file_open')
+		frames_menu.add_command('Export Selected Frames...', self.exports, UI.Ctrl.e, enabled=False, tags='frame_selected')
+		frames_menu.add_separator()
+		frames_menu.add_command('Move Frames Up', lambda: self.shift(-1), UI.Ctrl.u, enabled=False, tags='can_move_up')
+		frames_menu.add_command('Move Frames Down', lambda: self.shift(1), UI.Ctrl.d, enabled=False, tags='can_move_down')
+		frames_menu.add_separator()
+		frames_menu.add_command('Remove Frames', self.remove, UI.Key.Delete, enabled=False, tags='frame_selected')
+
+		settings_menu = self.menu.add_cascade('Settings')
+		settings_menu.add_command('Manage Settings...', self.settings, UI.Ctrl.m)
+		bmp_style_menu = settings_menu.add_cascade('BMP Style')
+		for style in BMPStyle.ALL():
+			bmp_style_menu.add_radiobutton(style.display_name, self.bmp_style, style.index)
+		settings_menu.add_checkbutton('Save Uncompressed', self.uncompressed)
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.grp Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE)
+
+		help_menu = self.menu.add_cascade('Help')
+		help_menu.add_command('View Help', self.help, UI.Key.F1)
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor)
+		help_menu.add_command('About PyGRP', self.about)
+
+	def do_save(self) -> None:
+		self.save()
+
+	def do_saveas(self) -> None:
+		self.saveas()
+
+	def select_palette(self) -> None:
+		# The View > Palette radios select the matching row in the palette list
+		pal = self.palette_name.get()
+		if not pal in self.palettes:
+			return
+		index = list(self.palettes).index(pal)
+		self.pallist.select_clear(0, UI.END)
+		self.pallist.select_set(index)
+		self.pallist.see(index)
+		self.changepalette()
 
 	def check_saved(self) -> CheckSaved:
 		if not self.grp or not self.edited:
@@ -272,13 +362,15 @@ BMP's must be imported with the same style they were exported as.""")
 		self.editstatus['state'] = UI.NORMAL if self.edited else UI.DISABLED
 		self.transent['state'] = UI.NORMAL if self.is_file_open() else UI.DISABLED
 
-		self.toolbar.tag_enabled('file_open', self.is_file_open())
-		self.toolbar.tag_enabled('frame_selected', self.is_frame_selected())
-		self.toolbar.tag_enabled('can_move_up', self.can_move_up())
-		self.toolbar.tag_enabled('can_move_down', self.can_move_down())
+		for manager in (self.toolbar, self.menu):
+			manager.tag_enabled('file_open', self.is_file_open())
+			manager.tag_enabled('frame_selected', self.is_frame_selected())
+			manager.tag_enabled('can_move_up', self.can_move_up())
+			manager.tag_enabled('can_move_down', self.can_move_down())
 
-		self.controls.tag_enabled('can_preview', self.can_preview())
-		self.controls.tag_enabled('is_playing', not not self.play)
+		for manager in (self.controls, self.menu):
+			manager.tag_enabled('can_preview', self.can_preview())
+			manager.tag_enabled('is_playing', not not self.play)
 
 	def get_bmp_style(self) -> BMPStyle:
 		return BMPStyle.from_index(self.bmp_style.get())
@@ -344,6 +436,7 @@ BMP's must be imported with the same style they were exported as.""")
 		if not self.pallist.curselection():
 			return
 		pal = self.pallist.get(self.pallist.curselection()[0])
+		self.palette_name.set(pal)
 		if pal == self.pal:
 			return
 		self.pal = pal

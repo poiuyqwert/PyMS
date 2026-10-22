@@ -15,14 +15,14 @@ In the flag modes, clicking a MiniTile toggles it, dragging paints the same stat
 The corresponding group flags marked with `*` on the [Tile Groups](/Help/Programs/PyTILE/Tile_Groups.md#flags) page get overwritten by StarCraft based on these per-MiniTile flags, so this editor is where those behaviors are really controlled.
 
 ## Apply to Megas
-In the main window, the **Apply to Megas** button (shown in the flag edit modes) copies the selected MegaTiles flags to all the other MegaTiles in the group:
+In the main window, the **Apply to Megas** button (shown in the flag edit modes) copies the selected MegaTiles flags to all the other MegaTiles in the group. Its popup lists the current modes item; the **MegaTile** menu lists all of them in any mode:
 
-- Apply only the current modes flags: `Shift+Ctrl+H` (Height), `Shift+Ctrl+W` (Walkability), `Shift+Ctrl+B` (Blocks View), or `Shift+Ctrl+R` (Ramp).
-- Apply all flags: `Shift+Ctrl+A`.
+- Apply only one kind of flags: **Apply Height Flags to Group** (`Shift+Ctrl+H`), **Apply Walkability Flags to Group** (`Shift+Ctrl+W`), **Apply Blocks View Flags to Group** (`Shift+Ctrl+B`), or **Apply Ramp Flags to Group** (`Shift+Ctrl+R`).
+- Apply all flags: **Apply All Flags to Group** (`Shift+Ctrl+A`).
 - **Exclude Null Tiles** (`Shift+Ctrl+N`): When checked, MegaTile 0 (the null tile) is skipped when applying.
 
 ## Copying MegaTile Flags
-The **Copy MegaTile Flags** panel in the main window copies flags between MegaTiles through the clipboard. Check the flag types you want (**Height**, **Walkable**, **Blocks Sight**, and **Ramp**), then press **Copy** (`Shift+Ctrl+C`) to copy them from the selected MegaTile, and **Paste** (`Shift+Ctrl+V`) to apply them to another selected MegaTile. The clipboard contents are plain text in the same format as [exported MegaTile settings](/Help/Programs/PyTILE/Importing_and_Exporting.md#settings), so you can also edit the text before pasting, or paste between PyTILE windows.
+The **Copy MegaTile Flags** panel in the main window copies flags between MegaTiles through the clipboard. Check the flag types you want (**Height**, **Walkable**, **Blocks Sight**, and **Ramp**), then press **Copy** (`Shift+Ctrl+C`) to copy them from the selected MegaTile, and **Paste** (`Shift+Ctrl+V`) to apply them to another selected MegaTile. The same commands are **Copy MegaTile Flags** and **Paste MegaTile Flags** in the **MegaTile** menu. The clipboard contents are plain text in the same format as [exported MegaTile settings](/Help/Programs/PyTILE/Importing_and_Exporting.md#settings), so you can also edit the text before pasting, or paste between PyTILE windows.
 
 ## MiniTile Editor
 The MiniTile Editor is a pixel editor for the 8x8 MiniTile graphics stored in the [.vr4](/Help/Files/Tilesets/VR4.md) file. It opens from the edit button in **Minitile** mode, or when editing MiniTiles from the [Tile Palette](/Help/Programs/PyTILE/Tile_Palette.md).

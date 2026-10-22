@@ -16,7 +16,7 @@ class PaletteTab(UI.NotebookTab):
 	MAX_SIZE = 150
 	PAD = 10
 
-	def __init__(self, parent: UI.Misc, delegate: MainDelegate, bind_target: UI.Misc):
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate):
 		self.delegate = delegate
 		self.item_palette_box: UI.Canvas.Item | None = None # type: ignore[name-defined]
 		UI.NotebookTab.__init__(self, parent)
@@ -37,13 +37,13 @@ class PaletteTab(UI.NotebookTab):
 		scrollbar.pack(side=UI.LEFT, fill=UI.Y, expand=1)
 		scrollframe.pack(side=UI.TOP, padx=2, fill=UI.Y, expand=1)
 
-		self.toolbar = UI.Toolbar(self, bind_target=bind_target)
-		self.toolbar.add_radiobutton(Assets.get_image('select'), self.delegate.tool, Tool.select, 'Select', UI.Key.m, enabled=False, tags='file_open')
-		self.toolbar.add_radiobutton(Assets.get_image('arrows'), self.delegate.tool, Tool.move, 'Move', UI.Key.v, enabled=False, tags='file_open')
-		self.toolbar.add_radiobutton(Assets.get_image('pencil'), self.delegate.tool, Tool.draw, 'Draw', UI.Key.p, enabled=False, tags='file_open')
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_radiobutton(Assets.get_image('select'), self.delegate.tool, Tool.select.value, 'Select', UI.Key.m, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_radiobutton(Assets.get_image('arrows'), self.delegate.tool, Tool.move.value, 'Move', UI.Key.v, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_radiobutton(Assets.get_image('pencil'), self.delegate.tool, Tool.draw.value, 'Draw', UI.Key.p, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_spacer(2, flexible=True)
-		self.toolbar.add_button(Assets.get_image('exportc'), self.export_image, 'Export Star', enabled=False, tags='image_selected')
 		self.toolbar.add_button(Assets.get_image('importc'), self.import_image, 'Import Star', enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('exportc'), self.export_image, 'Export Star', enabled=False, tags='image_selected')
 		self.toolbar.pack(side=UI.TOP, fill=UI.X, padx=2, pady=(2,0))
 
 	def action_states(self) -> None:

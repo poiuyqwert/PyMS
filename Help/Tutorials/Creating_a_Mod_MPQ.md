@@ -10,12 +10,12 @@ The key idea: the game finds files by their paths inside the MPQs, so every file
 1. Press **Add Files** (`Ctrl+I`) and pick your edited file — for example your `units.dat`.
 2. In the folder prompt, type the folder part of the path the game expects, ending with a `\` — for `units.dat` that is `arr\`, so the file is added as `arr\units.dat`.
 3. Repeat for your other files with their own paths — for example `marine.grp` is added with the prefix `unit\terran\`. If you are not sure of a path, open one of the games own MPQs in PyMPQ and find the original file to see where it lives.
-4. Check the file list to confirm every file ended up at the right path. If a path is wrong, **Rename** (`Ctrl+R`) lets you fix it in place.
+4. Check the file list to confirm every file ended up at the right path. If a path is wrong, **Rename File** (`Ctrl+R`) lets you fix it in place.
 
 If you keep your mods files in folders matching their MPQ paths (an `arr` folder, a `unit\terran` folder, and so on), you can instead add everything in one step with **Add Directory** (`Ctrl+D`) — the folder structure becomes the file paths, and you can leave the prefix prompt empty.
 
 ## Choosing Compression
-The default **Auto-Select** [compression](/Help/Programs/PyMPQ.md#compression-and-encryption) is a good choice for mods: regular files get Standard compression, `.wav` sounds get Audio compression, and already compressed files like `.smk` videos are stored as-is. You can simply leave it alone. If you want a specific file stored differently (for example a sound at a higher quality), pick a compression from the **Manage Settings** menu before adding that file, and switch back after.
+The default **Auto-Select** [compression](/Help/Programs/PyMPQ.md#compression-and-encryption) is a good choice for mods: regular files get Standard compression, `.wav` sounds get Audio compression, and already compressed files like `.smk` videos are stored as-is. You can simply leave it alone. If you want a specific file stored differently (for example a sound at a higher quality), pick a compression from the **Settings** menu's **Compression** submenu before adding that file, and switch back after.
 
 ## Updating Files Later
 As you keep working on your mod, you can update the archive without re-doing the steps above:

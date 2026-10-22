@@ -1,5 +1,5 @@
 # IScript Editor
-The IScript Editor is where you write and edit IScript code (see [IScript Language](/Help/Programs/PyICE/IScript_Language.md)). It is opened with **Edit IScript entries** (`Ctrl+E`) in the [main window](/Help/Programs/PyICE.md#main-window) — the selected entries are decompiled into the editor. Opening it with no entries selected gives you an empty editor to write new entries in.
+The IScript Editor is where you write and edit IScript code (see [IScript Language](/Help/Programs/PyICE/IScript_Language.md)). It is opened with **Entries > Edit IScript Entries...** (`Ctrl+E`) in the [main window](/Help/Programs/PyICE.md#main-window) — the selected entries are decompiled into the editor. Opening it with no entries selected gives you an empty editor to write new entries in.
 
 ## Toolbar
 - **Save** (`Ctrl+S`): Compiles the code and applies it to the loaded file. Compile errors are shown (and highlighted in the code), and nothing is applied until the code compiles. Compiled entries with the same ID as an existing entry replace the existing entry.

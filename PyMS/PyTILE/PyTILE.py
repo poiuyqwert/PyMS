@@ -181,25 +181,27 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 
 		#Toolbar
 		self.toolbar = UI.Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
+		self.toolbar.add_gap()
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
 		def save_as() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), save_as, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), save_as, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('find'), lambda *_: self.choose(TileType.group), 'MegaTile Group Palette', UI.Ctrl.p, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('find'), self.choose_group, 'MegaTile Group Palette', UI.Ctrl.p, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, "Manage Settings", UI.Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.cv5 editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.cv5 Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyTILE')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
 		self.megatilee = UI.IntegerVar(0,[0,4095],callback=lambda id: self.change(TileType.mega, int(id)))
@@ -251,8 +253,54 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 		self.copy_doodadgroup_scr = self.options_copy_doodadgroup.option(lambda g: g.scr)
 		self.copy_doodadgroup_name = self.options_copy_doodadgroup.option(lambda g: g.name)
 
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File')
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_separator()
+		file_menu.add_command('Save', save, UI.Ctrl.s, enabled=False, tags='file_open')
+		file_menu.add_command('Save As...', save_as, UI.Ctrl.Alt.a, enabled=False, tags='file_open', underline='As')
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		view_menu = self.menu.add_cascade('View')
+		view_menu.add_command('MegaTile Group Palette...', self.choose_group, UI.Ctrl.p, enabled=False, tags='file_open')
+		view_menu.add_separator()
+		view_menu.add_command('Scroll Group Palette Up', lambda: self.palette.scroll_page(-1), UI.Key.Prior, enabled=False, tags='file_open', underline='Up')
+		view_menu.add_command('Scroll Group Palette Down', lambda: self.palette.scroll_page(1), UI.Key.Next, enabled=False, tags='file_open', underline='Down')
+
+		group_menu = self.menu.add_cascade('Group')
+		group_menu.add_command('Copy Group Settings', self.copy_group_settings, UI.Ctrl.Alt.c, enabled=False, tags=('file_open', 'can_copy_group'))
+		group_menu.add_command('Paste Group Settings', self.paste_group_settings, UI.Ctrl.Alt.v, enabled=False, tags='file_open')
+
+		megatile_menu = self.menu.add_cascade('MegaTile')
+		megatile_menu.add_command('Copy MegaTile Flags', self.copy_megatile_flags, UI.Shift.Ctrl.c, enabled=False, tags=('file_open', 'can_copy_mega'))
+		megatile_menu.add_command('Paste MegaTile Flags', self.paste_megatile_flags, UI.Shift.Ctrl.v, enabled=False, tags='file_open')
+		megatile_menu.add_separator()
+		megatile_menu.add_command('Apply Height Flags to Group', lambda: self.megatile_apply_all(MegaEditorMode.height), UI.Shift.Ctrl.h, enabled=False, tags='file_open')
+		megatile_menu.add_command('Apply Walkability Flags to Group', lambda: self.megatile_apply_all(MegaEditorMode.walkability), UI.Shift.Ctrl.w, enabled=False, tags='file_open')
+		megatile_menu.add_command('Apply Blocks View Flags to Group', lambda: self.megatile_apply_all(MegaEditorMode.view_blocking), UI.Shift.Ctrl.b, enabled=False, tags='file_open')
+		megatile_menu.add_command('Apply Ramp Flags to Group', lambda: self.megatile_apply_all(MegaEditorMode.ramp), UI.Shift.Ctrl.r, enabled=False, tags='file_open')
+		megatile_menu.add_command('Apply All Flags to Group', lambda: self.megatile_apply_all(None), UI.Shift.Ctrl.a, enabled=False, tags='file_open')
+		megatile_menu.add_separator()
+		megatile_menu.add_checkbutton('Exclude Null Tiles', self.apply_all_exclude_nulls, onvalue=1, offvalue=0, shortcut=UI.Shift.Ctrl.n)
+
+		settings_menu = self.menu.add_cascade('Settings')
+		settings_menu.add_command('Manage Settings...', self.settings, UI.Ctrl.m)
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.cv5 Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='D')
+
+		help_menu = self.menu.add_cascade('Help')
+		help_menu.add_command('View Help', self.help, UI.Key.F1, underline='H')
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor, underline='D')
+		help_menu.add_command('About PyTILE', self.about, underline='A')
+
 		mid = UI.Frame(self)
-		self.palette = TilePaletteView(parent=mid, delegate=self, tiletype=TileType.group, multiselect=False, sub_select=True)
+		self.palette = TilePaletteView(parent=mid, delegate=self, tiletype=TileType.group, multiselect=False, sub_select=True, bind_page_keys=False)
 		self.palette.pack(side=UI.LEFT, fill=UI.Y)
 
 		settings = UI.Frame(mid)
@@ -326,149 +374,33 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 		def megatile_apply_all_pressed() -> None:
 			menu = UI.Menu(self, tearoff=0)
 			mode = self.mega_editor.get_edit_mode()
-			name = ('Height','Walkability','Blocks View','Ramp(?)')[mode.value-2]
+			name = ('Height','Walkability','Blocks View','Ramp')[mode.value-2]
 			shortcut = (UI.Shift.Ctrl.h,UI.Shift.Ctrl.w,UI.Shift.Ctrl.b,UI.Shift.Ctrl.r)[mode.value-2]
-			menu.add_command(label=f"Apply {name} flags to Megatiles in Group ({shortcut.description()})", command=lambda m=mode: self.megatile_apply_all(mode)) # type: ignore[misc]
-			menu.add_command(label=f"Apply all flags to Megatiles in Group ({UI.Shift.Ctrl.a.description()})", command=self.megatile_apply_all)
+			menu.add_command(f'Apply {name} Flags to Group', lambda: self.megatile_apply_all(mode), shortcut, bind_shortcut=False)
+			menu.add_command('Apply All Flags to Group', lambda: self.megatile_apply_all(None), UI.Shift.Ctrl.a, bind_shortcut=False)
 			menu.add_separator()
-			menu.add_checkbutton(label=f"Exclude Null Tiles ({UI.Shift.Ctrl.n.description()})", variable=self.apply_all_exclude_nulls)
+			menu.add_checkbutton('Exclude Null Tiles', self.apply_all_exclude_nulls, onvalue=1, offvalue=0, shortcut=UI.Shift.Ctrl.n, bind_shortcut=False)
 			menu.post(*self.winfo_pointerxy())
 		self.apply_all_btn = UI.Button(megatile_group, text='Apply to Megas', state=UI.DISABLED, command=megatile_apply_all_pressed)
 		megatile_editors.append(self.apply_all_btn)
 		self.apply_all_btn.pack(side=UI.BOTTOM, padx=3, pady=(0,3), fill=UI.X)
-		self.bind(UI.Shift.Ctrl.h(), lambda *_: self.megatile_apply_all(MegaEditorMode.height))
-		self.bind(UI.Shift.Ctrl.w(), lambda *_: self.megatile_apply_all(MegaEditorMode.walkability))
-		self.bind(UI.Shift.Ctrl.b(), lambda *_: self.megatile_apply_all(MegaEditorMode.view_blocking))
-		self.bind(UI.Shift.Ctrl.r(), lambda *_: self.megatile_apply_all(MegaEditorMode.ramp))
-		self.bind(UI.Shift.Ctrl.a(), lambda *_: self.megatile_apply_all(None))
-		self.bind(UI.Shift.Ctrl.n(), lambda *_: self.apply_all_exclude_nulls.set(not self.apply_all_exclude_nulls.get()))
 		self.mega_editor = MegaEditorView(parent=megatile_group, config=self.config_, delegate=self, palette_editable=True)
 		self.mega_editor.set_enabled(False)
 		self.mega_editor.pack(side=UI.TOP, padx=3, pady=(3,0))
 		megatile_editor.widget(megatile_group, megatile_editors).add()
 		self.normal_editors.append(megatile_editor)
 
-		def copy_mega(*_args: Any) -> None:
-			if not self.tileset:
-				return
-			fields: Serialize.Fields = {
-				'megatiles_export_height': self.copy_mega_height.get(),
-				'megatiles_export_walkability': self.copy_mega_walkable.get(),
-				'megatiles_export_block_sight': self.copy_mega_sight.get(),
-				'megatiles_export_ramp': self.copy_mega_ramp.get(),
-			}
-			if not any(fields.values()):
-				return
-			group = self.tileset.cv5.get_group(self.palette.selected[0])
-			mega_id = group.megatile_ids[self.palette.sub_selection]
-			f = io.StringIO()
-			self.tileset.export_megatile_settings(f, [mega_id], fields)
-			self.clipboard_clear()
-			self.clipboard_append(f.getvalue())
-		def paste_mega(*_args: Any) -> None:
-			if not self.tileset:
-				return
-			group = self.tileset.cv5.get_group(self.palette.selected[0])
-			mega_id = group.megatile_ids[self.palette.sub_selection]
-			settings = self.clipboard_get()
-			try:
-				self.tileset.import_megatile_settings(settings, [mega_id])
-			except PyMSError as e:
-				ErrorDialog(self, e)
-				return
-			self.mega_editor.draw()
-			self.mark_edited()
 		copy_mega_editor = EditorGroup(self.flow_view.content_view, 'Copy MegaTile Flags')\
 			.check('Height', 'Copy Height settings for MegaTile', self.copy_mega_height).add()\
 			.check('Walkable', 'Copy Walkable settings for MegaTile', self.copy_mega_walkable).add()\
 			.check('Blocks Sight', 'Copy Blocks Sight settings for MegaTile', self.copy_mega_sight).add()\
 			.check('Ramp', 'Copy Ramp settings for MegaTile', self.copy_mega_ramp).add()
-		copy_mega_btn = copy_mega_editor.button(f'Copy ({UI.Shift.Ctrl.c.description()})', 'Copy chosen settings to clipboard', copy_mega)
+		copy_mega_btn = copy_mega_editor.button(f'Copy ({UI.Shift.Ctrl.c.description()})', 'Copy chosen settings to clipboard', self.copy_megatile_flags)
 		self.copy_mega_btn = copy_mega_btn.widget
 		copy_mega_btn.add()
-		copy_mega_editor.button(f'Paste ({UI.Shift.Ctrl.v.description()})', 'Paste settings from clipboard', paste_mega).add()
+		copy_mega_editor.button(f'Paste ({UI.Shift.Ctrl.v.description()})', 'Paste settings from clipboard', self.paste_megatile_flags).add()
 		self.normal_editors.append(copy_mega_editor)
-		self.bind(UI.Shift.Ctrl.c(), copy_mega)
-		self.bind(UI.Shift.Ctrl.v(), paste_mega)
 
-		def copy_tilegroup(*_args: Any) -> None:
-			if not self.tileset:
-				return
-			group = self.palette.selected[0]
-			fields: Serialize.Fields
-			if self.doodad.get():
-				if not self.options_copy_doodadgroup.any_enabled():
-					return
-				fields = {
-					DoodadGroupField.flags: {
-						DoodadGroupField.Flag.walkable: self.copy_doodadgroup_walkability.get(),
-						DoodadGroupField.Flag.unknown_0002: self.copy_doodadgroup_unknown.get(),
-						DoodadGroupField.Flag.unwalkable: self.copy_doodadgroup_walkability.get(),
-						DoodadGroupField.Flag.unknown_0008: self.copy_doodadgroup_unknown.get(),
-						DoodadGroupField.Flag.has_doodad_cover: self.copy_doodadgroup_misc.get(),
-						DoodadGroupField.Flag.unknown_0020: self.copy_doodadgroup_unknown.get(),
-						DoodadGroupField.Flag.creep: self.copy_doodadgroup_creep.get(),
-						DoodadGroupField.Flag.unbuildable: self.copy_doodadgroup_buildability.get(),
-						DoodadGroupField.Flag.blocks_view: self.copy_doodadgroup_misc.get(),
-						DoodadGroupField.Flag.mid_ground: self.copy_doodadgroup_height.get(),
-						DoodadGroupField.Flag.high_ground: self.copy_doodadgroup_height.get(),
-						DoodadGroupField.Flag.occupied: self.copy_doodadgroup_buildability.get(),
-						DoodadGroupField.Flag.has_overlay_sprite: self.copy_doodadgroup_overlay.get(),
-						DoodadGroupField.Flag.has_overlay_unit: self.copy_doodadgroup_overlay.get(),
-						DoodadGroupField.Flag.overlay_flipped: self.copy_doodadgroup_overlay.get(),
-						DoodadGroupField.Flag.special_placeable: self.copy_doodadgroup_buildability.get()
-					},
-					DoodadGroupField.overlay_id: self.copy_doodadgroup_overlay.get(),
-					DoodadGroupField.scr: self.copy_doodadgroup_scr.get(),
-					DoodadGroupField.string_id: self.copy_doodadgroup_name.get(),
-					DoodadGroupField.unknown4: self.copy_doodadgroup_unknown.get(),
-					DoodadGroupField.dddata_id: self.copy_doodadgroup_doodad.get(),
-					DoodadGroupField.width: self.copy_doodadgroup_doodad.get(),
-					DoodadGroupField.height: self.copy_doodadgroup_doodad.get(),
-					DoodadGroupField.unknown8: self.copy_doodadgroup_unknown.get(),
-				}
-			else:
-				if not self.options_copy_tilegroup.any_enabled():
-					return
-				fields = {
-					TileGroupField.type: self.copy_tilegroup_group_type.get(),
-					TileGroupField.flags: {
-						TileGroupField.Flag.walkable: self.copy_tilegroup_walkability.get(),
-						TileGroupField.Flag.unknown_0002: self.copy_tilegroup_unknown.get(),
-						TileGroupField.Flag.unwalkable: self.copy_tilegroup_walkability.get(),
-						TileGroupField.Flag.unknown_0008: self.copy_tilegroup_unknown.get(),
-						TileGroupField.Flag.has_doodad_cover: self.copy_tilegroup_misc.get(),
-						TileGroupField.Flag.unknown_0020: self.copy_tilegroup_unknown.get(),
-						TileGroupField.Flag.creep: self.copy_tilegroup_creep.get(),
-						TileGroupField.Flag.unbuildable: self.copy_tilegroup_buildability.get(),
-						TileGroupField.Flag.blocks_view: self.copy_tilegroup_misc.get(),
-						TileGroupField.Flag.mid_ground: self.copy_tilegroup_height.get(),
-						TileGroupField.Flag.high_ground: self.copy_tilegroup_height.get(),
-						TileGroupField.Flag.occupied: self.copy_tilegroup_buildability.get(),
-						TileGroupField.Flag.creep_receding: self.copy_tilegroup_creep.get(),
-						TileGroupField.Flag.cliff_edge: self.copy_tilegroup_misc.get(),
-						TileGroupField.Flag.creep_temp: self.copy_tilegroup_creep.get(),
-						TileGroupField.Flag.special_placeable: self.copy_tilegroup_buildability.get()
-					},
-					TileGroupField.edge: self.copy_tilegroup_edge_types.get(),
-					TileGroupField.piece: self.copy_tilegroup_piece_types.get(),
-				}
-			f = io.StringIO()
-			self.tileset.export_group_settings(f, [group], fields)
-			self.clipboard_clear()
-			self.clipboard_append(f.getvalue())
-		def paste_tilegroup(*_args: Any) -> None:
-			if not self.tileset:
-				return
-			group = self.palette.selected[0]
-			settings = self.clipboard_get()
-			try:
-				self.tileset.import_group_settings(settings, [group])
-			except PyMSError as e:
-				ErrorDialog(self, e)
-				return
-			self.megaload()
-			self.mark_edited()
 		copy_tilegroup_settings_editor = EditorGroup(self.flow_view.content_view, 'Copy Group Settings')\
 			.check('Walkability', 'Copy settings from Walkability', self.copy_tilegroup_walkability).add(new_row=False)\
 			.check('Buildability', 'Copy settings from Buildability', self.copy_tilegroup_buildability).add()\
@@ -479,13 +411,11 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 			.check('Edge Types', 'Copy settings from Edge Types', self.copy_tilegroup_edge_types).add(new_row=False)\
 			.check('Piece Types', 'Copy settings from Piece Types', self.copy_tilegroup_piece_types).add()\
 			.check('Group Type', 'Copy Group Type setting', self.copy_tilegroup_group_type).add()
-		copy_tilegroup_btn = copy_tilegroup_settings_editor.button(f'Copy ({UI.Ctrl.Alt.c.description()})', 'Copy chosen settings to clipboard', copy_tilegroup)
+		copy_tilegroup_btn = copy_tilegroup_settings_editor.button(f'Copy ({UI.Ctrl.Alt.c.description()})', 'Copy chosen settings to clipboard', self.copy_group_settings)
 		self.copy_tilegroup_btn = copy_tilegroup_btn.widget
 		copy_tilegroup_btn.add(new_row=False)
-		copy_tilegroup_settings_editor.button(f'Paste ({UI.Ctrl.Alt.v.description()})', 'Paste settings from clipboard', paste_tilegroup).add()
+		copy_tilegroup_settings_editor.button(f'Paste ({UI.Ctrl.Alt.v.description()})', 'Paste settings from clipboard', self.paste_group_settings).add()
 		self.normal_editors.append(copy_tilegroup_settings_editor)
-		self.bind(UI.Ctrl.Alt.c(), copy_tilegroup)
-		self.bind(UI.Ctrl.Alt.v(), paste_tilegroup)
 
 		self.doodad_editors: list[EditorGroup] = []
 		self.doodad_editors.append(
@@ -558,10 +488,10 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 			.check('Unknown', 'Copy settings from Unknown', self.copy_doodadgroup_unknown).add()\
 			.check('SC:R', 'Copy settings from SC:R', self.copy_doodadgroup_scr).add()\
 			.check('Name', 'Copy settings from Name', self.copy_doodadgroup_name).add()
-		copy_doodadgroup_btn = copy_doodadgroup_editor.button(f'Copy ({UI.Ctrl.Alt.c.description()})', 'Copy chosen settings to clipboard', copy_tilegroup)
+		copy_doodadgroup_btn = copy_doodadgroup_editor.button(f'Copy ({UI.Ctrl.Alt.c.description()})', 'Copy chosen settings to clipboard', self.copy_group_settings)
 		self.copy_doodadgroup_btn = copy_doodadgroup_btn.widget
 		copy_doodadgroup_btn.add(new_row=False)
-		copy_doodadgroup_editor.button(f'Paste ({UI.Ctrl.Alt.v.description()})', 'Paste settings from clipboard', paste_tilegroup).add()
+		copy_doodadgroup_editor.button(f'Paste ({UI.Ctrl.Alt.v.description()})', 'Paste settings from clipboard', self.paste_group_settings).add()
 		self.doodad_editors.append(copy_doodadgroup_editor)
 
 		self.update_editor(force=True)
@@ -641,6 +571,7 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 		is_file_open = self.is_file_open()
 
 		self.toolbar.tag_enabled('file_open', is_file_open)
+		self.menu.tag_enabled('file_open', is_file_open)
 		for editor in self.normal_editors + self.doodad_editors:
 			editor.enabled(is_file_open)
 		self.mega_editor.set_enabled(is_file_open)
@@ -658,6 +589,15 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 
 		can_copy_doodadgroup = is_file_open and self.options_copy_doodadgroup.any_enabled()
 		self.copy_doodadgroup_btn['state'] = UI.NORMAL if can_copy_doodadgroup else UI.DISABLED
+
+		self.copy_menu_states()
+
+	# The Copy menu items mirror the Copy buttons. The Group item copies from the doodad panel or the
+	# normal panel depending on the current group, so it follows whichever panel's options apply.
+	def copy_menu_states(self) -> None:
+		self.menu.tag_enabled('can_copy_mega', self.options_copy_mega.any_enabled())
+		group_options = self.options_copy_doodadgroup if self.doodad.get() else self.options_copy_tilegroup
+		self.menu.tag_enabled('can_copy_group', group_options.any_enabled())
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
@@ -700,6 +640,118 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 					edited = True
 		if edited:
 			self.mark_edited()
+
+	def copy_megatile_flags(self) -> None:
+		if not self.tileset:
+			return
+		fields: Serialize.Fields = {
+			'megatiles_export_height': self.copy_mega_height.get(),
+			'megatiles_export_walkability': self.copy_mega_walkable.get(),
+			'megatiles_export_block_sight': self.copy_mega_sight.get(),
+			'megatiles_export_ramp': self.copy_mega_ramp.get(),
+		}
+		if not any(fields.values()):
+			return
+		group = self.tileset.cv5.get_group(self.palette.selected[0])
+		mega_id = group.megatile_ids[self.palette.sub_selection]
+		f = io.StringIO()
+		self.tileset.export_megatile_settings(f, [mega_id], fields)
+		self.clipboard_clear()
+		self.clipboard_append(f.getvalue())
+
+	def paste_megatile_flags(self) -> None:
+		if not self.tileset:
+			return
+		group = self.tileset.cv5.get_group(self.palette.selected[0])
+		mega_id = group.megatile_ids[self.palette.sub_selection]
+		settings = self.clipboard_get()
+		try:
+			self.tileset.import_megatile_settings(settings, [mega_id])
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		self.mega_editor.draw()
+		self.mark_edited()
+
+	def copy_group_settings(self) -> None:
+		if not self.tileset:
+			return
+		group = self.palette.selected[0]
+		fields: Serialize.Fields
+		if self.doodad.get():
+			if not self.options_copy_doodadgroup.any_enabled():
+				return
+			fields = {
+				DoodadGroupField.flags: {
+					DoodadGroupField.Flag.walkable: self.copy_doodadgroup_walkability.get(),
+					DoodadGroupField.Flag.unknown_0002: self.copy_doodadgroup_unknown.get(),
+					DoodadGroupField.Flag.unwalkable: self.copy_doodadgroup_walkability.get(),
+					DoodadGroupField.Flag.unknown_0008: self.copy_doodadgroup_unknown.get(),
+					DoodadGroupField.Flag.has_doodad_cover: self.copy_doodadgroup_misc.get(),
+					DoodadGroupField.Flag.unknown_0020: self.copy_doodadgroup_unknown.get(),
+					DoodadGroupField.Flag.creep: self.copy_doodadgroup_creep.get(),
+					DoodadGroupField.Flag.unbuildable: self.copy_doodadgroup_buildability.get(),
+					DoodadGroupField.Flag.blocks_view: self.copy_doodadgroup_misc.get(),
+					DoodadGroupField.Flag.mid_ground: self.copy_doodadgroup_height.get(),
+					DoodadGroupField.Flag.high_ground: self.copy_doodadgroup_height.get(),
+					DoodadGroupField.Flag.occupied: self.copy_doodadgroup_buildability.get(),
+					DoodadGroupField.Flag.has_overlay_sprite: self.copy_doodadgroup_overlay.get(),
+					DoodadGroupField.Flag.has_overlay_unit: self.copy_doodadgroup_overlay.get(),
+					DoodadGroupField.Flag.overlay_flipped: self.copy_doodadgroup_overlay.get(),
+					DoodadGroupField.Flag.special_placeable: self.copy_doodadgroup_buildability.get()
+				},
+				DoodadGroupField.overlay_id: self.copy_doodadgroup_overlay.get(),
+				DoodadGroupField.scr: self.copy_doodadgroup_scr.get(),
+				DoodadGroupField.string_id: self.copy_doodadgroup_name.get(),
+				DoodadGroupField.unknown4: self.copy_doodadgroup_unknown.get(),
+				DoodadGroupField.dddata_id: self.copy_doodadgroup_doodad.get(),
+				DoodadGroupField.width: self.copy_doodadgroup_doodad.get(),
+				DoodadGroupField.height: self.copy_doodadgroup_doodad.get(),
+				DoodadGroupField.unknown8: self.copy_doodadgroup_unknown.get(),
+			}
+		else:
+			if not self.options_copy_tilegroup.any_enabled():
+				return
+			fields = {
+				TileGroupField.type: self.copy_tilegroup_group_type.get(),
+				TileGroupField.flags: {
+					TileGroupField.Flag.walkable: self.copy_tilegroup_walkability.get(),
+					TileGroupField.Flag.unknown_0002: self.copy_tilegroup_unknown.get(),
+					TileGroupField.Flag.unwalkable: self.copy_tilegroup_walkability.get(),
+					TileGroupField.Flag.unknown_0008: self.copy_tilegroup_unknown.get(),
+					TileGroupField.Flag.has_doodad_cover: self.copy_tilegroup_misc.get(),
+					TileGroupField.Flag.unknown_0020: self.copy_tilegroup_unknown.get(),
+					TileGroupField.Flag.creep: self.copy_tilegroup_creep.get(),
+					TileGroupField.Flag.unbuildable: self.copy_tilegroup_buildability.get(),
+					TileGroupField.Flag.blocks_view: self.copy_tilegroup_misc.get(),
+					TileGroupField.Flag.mid_ground: self.copy_tilegroup_height.get(),
+					TileGroupField.Flag.high_ground: self.copy_tilegroup_height.get(),
+					TileGroupField.Flag.occupied: self.copy_tilegroup_buildability.get(),
+					TileGroupField.Flag.creep_receding: self.copy_tilegroup_creep.get(),
+					TileGroupField.Flag.cliff_edge: self.copy_tilegroup_misc.get(),
+					TileGroupField.Flag.creep_temp: self.copy_tilegroup_creep.get(),
+					TileGroupField.Flag.special_placeable: self.copy_tilegroup_buildability.get()
+				},
+				TileGroupField.edge: self.copy_tilegroup_edge_types.get(),
+				TileGroupField.piece: self.copy_tilegroup_piece_types.get(),
+			}
+		f = io.StringIO()
+		self.tileset.export_group_settings(f, [group], fields)
+		self.clipboard_clear()
+		self.clipboard_append(f.getvalue())
+
+	def paste_group_settings(self) -> None:
+		if not self.tileset:
+			return
+		group = self.palette.selected[0]
+		settings = self.clipboard_get()
+		try:
+			self.tileset.import_group_settings(settings, [group])
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		self.megaload()
+		self.mark_edited()
 
 	def doodad_apply_all(self) -> None:
 		if not self.tileset:
@@ -780,7 +832,7 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 		pass
 
 	def group_doodad_changed(self, *_: Any) -> None:
-		pass
+		self.copy_menu_states()
 
 	def group_values_changed(self, *_: Any) -> None:
 		if not self.tileset or self.loading_megas:
@@ -819,6 +871,9 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 			select=self.palette.selected[0] if tile_type == TileType.group else self.tileset.cv5.get_group(self.palette.selected[0]).megatile_ids[self.palette.sub_selection],
 			editing=True
 		)
+
+	def choose_group(self) -> None:
+		self.choose(TileType.group)
 
 	def change(self, tiletype: TileType, entry_id: int) -> None:
 		if not self.tileset:

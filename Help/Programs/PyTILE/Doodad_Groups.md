@@ -30,7 +30,7 @@ The **Placeability** button opens the Doodad Placeability dialog, which edits wh
 The **Apply All** button applies the selected groups settings to all the other MegaTile Groups with the same Doodad ID, so you can set up one row of the doodad and copy the settings to the rest.
 
 ## Copying Doodad Settings
-The **Copy Group Settings** panel works the same as for [Tile Groups](/Help/Programs/PyTILE/Tile_Groups.md#copying-group-settings), with doodad categories: **Doodad**, **Overlay**, **Walkability**, **Buildability**, **Creep**, **Height**, **Misc.**, **Unknown**, **SC:R**, and **Name**. Press **Copy** (`Ctrl+Alt+C`) to copy the checked settings to the clipboard as text, and **Paste** (`Ctrl+Alt+V`) to apply copied settings onto the selected group.
+The **Copy Group Settings** panel works the same as for [Tile Groups](/Help/Programs/PyTILE/Tile_Groups.md#copying-group-settings), with doodad categories: **Doodad**, **Overlay**, **Walkability**, **Buildability**, **Creep**, **Height**, **Misc.**, **Unknown**, **SC:R**, and **Name**. Press **Copy** (`Ctrl+Alt+C`) to copy the checked settings to the clipboard as text, and **Paste** (`Ctrl+Alt+V`) to apply copied settings onto the selected group. The **Group** menus **Copy Group Settings** and **Paste Group Settings** items do the same, using the doodad categories when a doodad group is selected.
 
 ## See Also
 - [PyTILE](/Help/Programs/PyTILE.md)

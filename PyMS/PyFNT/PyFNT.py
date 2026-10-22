@@ -308,29 +308,61 @@ class PyFNT(UI.MainWindow, ErrorableSettingsDialogDelegate):
 
 		self.update_title()
 
-		#Toolbar
-		self.toolbar = UI.Toolbar()
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
 		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
+
+		#Menu
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File')
+		file_menu.add_command('New...', self.new, UI.Ctrl.n)
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_separator()
+		file_menu.add_command('Save', save, UI.Ctrl.s, enabled=False, tags='file_open')
+		file_menu.add_command('Save As...', saveas, UI.Ctrl.Alt.a, enabled=False, tags='file_open', underline='As')
+		file_menu.add_separator()
+		file_menu.add_command('Import Font from BMP...', self.imports, UI.Ctrl.i)
+		file_menu.add_command('Export Font to BMP...', self.exports, UI.Ctrl.e, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		settings_menu = self.menu.add_cascade('Settings')
+		settings_menu.add_command('Manage Settings...', self.settings, UI.Ctrl.m)
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.fnt Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='D')
+
+		help_menu = self.menu.add_cascade('Help')
+		help_menu.add_command('View Help', self.help, UI.Key.F1, underline='H')
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor, underline='D')
+		help_menu.add_command('About PyFNT', self.about, underline='A')
+
+		#Toolbar
+		self.toolbar = UI.Toolbar()
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('exportc'), self.exports, 'Export Font', UI.Ctrl.e, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('importc'), self.imports, 'Import Font', UI.Ctrl.i, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('importc'), self.imports, 'Import Font from BMP', UI.Ctrl.i, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('exportc'), self.exports, 'Export Font to BMP', UI.Ctrl.e, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, "Manage MPQ's and Special Palette", UI.Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.fnt editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.fnt Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyFNT')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
 		frame = UI.Frame(self)
@@ -409,6 +441,7 @@ class PyFNT(UI.MainWindow, ErrorableSettingsDialogDelegate):
 
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
+		self.menu.tag_enabled('file_open', self.is_file_open())
 
 	def updatelist(self) -> None:
 		self.listbox.delete(0,UI.END)

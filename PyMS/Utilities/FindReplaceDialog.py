@@ -120,7 +120,8 @@ class FindReplaceDialog(ReusablePyMSDialog):
 			self.findentry['bg'] = '#FFB4B4'
 			return None
 
-	def findnext(self, event: UI.Event | None = None, replace: bool = False) -> None:
+	# `from_parent` shows "Can't find text" over the parent window, for searches run from the parent (its menu or F3) while this dialog may be hidden
+	def findnext(self, event: UI.Event | None = None, replace: bool = False, from_parent: bool = False) -> None:
 		f = self.find.get()
 		if not f:
 			return
@@ -130,7 +131,7 @@ class FindReplaceDialog(ReusablePyMSDialog):
 			return
 		def not_found() -> None:
 			parent: UI.Misc = self
-			if event and UI.Keysym(event.keysym) != UI.Key.Return:
+			if from_parent or (event and UI.Keysym(event.keysym) != UI.Key.Return):
 				parent = self.parent
 			UI.MessageBox.showinfo(parent=parent, title='Find', message="Can't find text.")
 		if replace:

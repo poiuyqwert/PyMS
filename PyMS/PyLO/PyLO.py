@@ -76,36 +76,84 @@ class PyLO(UI.MainWindow, UI.CodeTextDelegate):
 
 		self.update_title()
 
-		#Toolbar
-		self.toolbar = UI.Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
-		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import LO?', UI.Ctrl.i)
-		self.toolbar.add_gap()
+		self.usebasegrp = UI.BooleanVar()
+		self.usebasegrp.set(self.config_.preview.use_base_grp.value)
+		self.usebasegrp.trace_add('write', self.update_grp_field_states)
+		self.useoverlaygrp = UI.BooleanVar()
+		self.useoverlaygrp.set(self.config_.preview.use_overlay_grp.value)
+		self.useoverlaygrp.trace_add('write', self.update_grp_field_states)
+
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
 		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export LO?', UI.Ctrl.e, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', UI.Ctrl.t, enabled=False, tags='file_open')
+
+		#Menu
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File')
+		file_menu.add_command('New', self.new, UI.Ctrl.n)
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_separator()
+		file_menu.add_command('Save', save, UI.Ctrl.s, enabled=False, tags='file_open')
+		file_menu.add_command('Save As...', saveas, UI.Ctrl.Alt.a, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Import Text...', self.iimport, UI.Ctrl.i)
+		file_menu.add_command('Export Text...', self.export, UI.Ctrl.e, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit)
+
+		edit_menu = self.menu.add_cascade('Edit')
+		edit_menu.add_command('Find/Replace...', self.find, UI.Ctrl.f, enabled=False, tags='file_open')
+		edit_menu.add_command('Find Next', self.find_next, UI.Key.F3, enabled=False, tags='file_open')
+		edit_menu.add_separator()
+		edit_menu.add_command('Test Code', self.test, UI.Ctrl.t, enabled=False, tags='file_open')
+
+		view_menu = self.menu.add_cascade('View')
+		view_menu.add_checkbutton('Use Base GRP', self.usebasegrp, command=self.updateusebase)
+		view_menu.add_checkbutton('Use Overlay GRP', self.useoverlaygrp, command=self.updateuseoverlay)
+
+		settings_menu = self.menu.add_cascade('Settings')
+		settings_menu.add_command('Manage Settings...', self.settings, UI.Ctrl.m)
+		settings_menu.add_command('Syntax Highlighting...', self.colors, UI.Ctrl.Alt.c)
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.lo? Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE)
+
+		help_menu = self.menu.add_cascade('Help')
+		help_menu.add_command('View Help', self.help, UI.Key.F1)
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor)
+		help_menu.add_command('About PyLO', self.about)
+
+		#Toolbar
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
-		self.toolbar.add_spacer(5)
-		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', UI.Ctrl.f, enabled=False, tags='file_open')
-		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', UI.Ctrl.Alt.c)
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage MPQ Settings', UI.Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Text', UI.Ctrl.i, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Text', UI.Ctrl.e, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.lo? editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
+		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', UI.Ctrl.f, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', UI.Ctrl.t, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Syntax Highlighting', UI.Ctrl.Alt.c, bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.lo? Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyLO')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
 		m = UI.Frame(self)
@@ -120,12 +168,6 @@ class PyLO(UI.MainWindow, UI.CodeTextDelegate):
 
 		self.mpq_handler = MPQHandler(self.config_.settings.mpqs)
 
-		self.usebasegrp = UI.BooleanVar()
-		self.usebasegrp.set(self.config_.preview.use_base_grp.value)
-		self.usebasegrp.trace_add('write', self.update_grp_field_states)
-		self.useoverlaygrp = UI.BooleanVar()
-		self.useoverlaygrp.set(self.config_.preview.use_overlay_grp.value)
-		self.useoverlaygrp.trace_add('write', self.update_grp_field_states)
 		self.baseframes = UI.StringVar()
 		self.baseframes.set('Base Frame: - / -')
 		self.overlayframes = UI.StringVar()
@@ -379,6 +421,7 @@ class PyLO(UI.MainWindow, UI.CodeTextDelegate):
 
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
+		self.menu.tag_enabled('file_open', self.is_file_open())
 		self.text['state'] = UI.NORMAL if self.is_file_open() else UI.DISABLED
 
 	def statusupdate(self, _event: UI.Event | None = None) -> None:
@@ -646,9 +689,14 @@ class PyLO(UI.MainWindow, UI.CodeTextDelegate):
 	def find(self) -> None:
 		if not self.findwindow:
 			self.findwindow = FindReplaceDialog(self, self.text, self.config_.windows.find)
-			self.bind(UI.Key.F3(), self.findwindow.findnext)
 		else:
 			self.findwindow.show()
+
+	def find_next(self) -> None:
+		if not self.findwindow:
+			self.find()
+		else:
+			self.findwindow.findnext(from_parent=True)
 
 	def colors(self) -> None:
 		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())

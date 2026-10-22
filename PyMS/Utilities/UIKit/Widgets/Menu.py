@@ -35,6 +35,14 @@ class Menu(_Tk.Menu, MiscExtensions):
 		_Tk.Menu.__init__(self, master, cnf or {}, **kw)
 		Theme.apply_theme(self)
 
+	# Shortcuts are bound on the window that owns the menu. Cascades are children of their parent
+	# menu, and menus never receive key events, so walk up past any menus to reach that window.
+	def _default_shortcut_widget(self) -> _Tk.Misc:
+		widget: _Tk.Misc = self
+		while isinstance(widget, _Tk.Menu) and widget.master is not None:
+			widget = widget.master
+		return widget
+
 	def _detect_underline(self, label: str, shortcut: EventPattern | None, kwargs: dict[str, Any]) -> None:
 		underline = kwargs.get('underline')
 		if isinstance(underline, int):
@@ -78,7 +86,7 @@ class Menu(_Tk.Menu, MiscExtensions):
 						return
 					command()
 				return _binding_trigger_command
-			shortcut_widget = shortcut_widget or self.master
+			shortcut_widget = shortcut_widget or self._default_shortcut_widget()
 			shortcut_widget.bind(shortcut(), _command_callback(item, command))
 		if tags:
 			self._tag_manager.add_item(item, tags)
@@ -102,7 +110,7 @@ class Menu(_Tk.Menu, MiscExtensions):
 						return
 					variable.set(value)
 				return _binding_trigger_radiobutton
-			shortcut_widget = shortcut_widget or self.master
+			shortcut_widget = shortcut_widget or self._default_shortcut_widget()
 			shortcut_widget.bind(shortcut(), _callback(item, variable, value))
 		if tags:
 			self._tag_manager.add_item(item, tags)
@@ -126,7 +134,7 @@ class Menu(_Tk.Menu, MiscExtensions):
 						return
 					variable.set(onvalue if variable.get() == offvalue else offvalue)
 				return _binding_trigger_checkbutton
-			shortcut_widget = shortcut_widget or self.master
+			shortcut_widget = shortcut_widget or self._default_shortcut_widget()
 			shortcut_widget.bind(shortcut(), _callback(item, variable, onvalue, offvalue))
 		if tags:
 			self._tag_manager.add_item(item, tags)

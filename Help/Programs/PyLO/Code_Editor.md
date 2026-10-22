@@ -20,7 +20,7 @@ Frame:
 - A `#` starts a comment, which runs to the end of the line.
 
 ## Editor Features
-- **Syntax highlighting**: Comments, `Frame:` headers, numbers, and operators each have their own configurable style — customize them with **Color Settings** (`Ctrl+Alt+C`).
+- **Syntax highlighting**: Comments, `Frame:` headers, numbers, and operators each have their own configurable style — customize them with **Settings > Syntax Highlighting...** (`Ctrl+Alt+C`).
 - **Autocomplete**: Press `Tab` to complete the word being typed (`Frame` is the only keyword).
 - **Offset tooltip**: Selecting an offset and hovering over the selection shows a small diagram of the offset — a green crosshair marks the center of the graphic, and a blue crosshair marks the offset position.
 - **Comment toggle** (`Ctrl+/`): Comments/uncomments the current line or selected lines.
@@ -29,10 +29,10 @@ Frame:
 - **Jump to error** (`Alt+Left`/`Alt+Right`): Moves the cursor to the previous/next highlighted error or warning.
 
 ## Test Code
-**Test Code** (`Ctrl+T`) compiles the source code without saving it. If there is a problem the editor scrolls to and highlights the offending line (along with any warning lines), otherwise you are told the code compiles cleanly.
+**Test Code** (`Ctrl+T`), in the **Edit** menu and on the toolbar, compiles the source code without saving it. If there is a problem the editor scrolls to and highlights the offending line (along with any warning lines), otherwise you are told the code compiles cleanly.
 
 ## Find and Replace
-**Find/Replace** (`Ctrl+F`) opens the Find/Replace dialog to search (and optionally replace) text in the code. Each match is selected in the code as it is found. `F3` repeats the last find, and `Esc` closes the dialog.
+**Find/Replace...** (`Ctrl+F`), in the **Edit** menu and on the toolbar, opens the Find/Replace dialog to search (and optionally replace) text in the code. Each match is selected in the code as it is found. **Edit > Find Next** (`F3`) repeats the last find (opening the dialog if it hasn't been opened yet), and `Esc` closes the dialog.
 
 ## See Also
 - [PyLO](/Help/Programs/PyLO.md)

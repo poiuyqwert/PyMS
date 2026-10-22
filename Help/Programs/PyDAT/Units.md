@@ -1,6 +1,6 @@
 # Units Tab
 The Units tab of [PyDAT](/Help/Programs/PyDAT.md) edits [units.dat](/Help/Files/DAT/units.dat.md), which contains the settings for all the units in the game.
-Units have far more settings than any other DAT type, so the tab is split into six sub-tabs. **Copy Sub-Tab to Clipboard** (`Ctrl+Y`, or the entry lists right click menu) copies only the properties of the active sub-tab, which is handy for copying just a units sounds or graphics to another unit.
+Units have far more settings than any other DAT type, so the tab is split into six sub-tabs. **Copy Sub-Tab to Clipboard** (`Ctrl+Y`, in the **Entry** menu or the entry lists right click menu) copies only the properties of the active sub-tab, which is handy for copying just a units sounds or graphics to another unit.
 Unit names are not stored in `units.dat` — they are the first 228 strings in `stat_txt.tbl` (expanded units use `unitnames.tbl`, see [Expanded DAT Files](/Help/Programs/PyDAT.md#expanded-dat-files)).
 
 ## Basic

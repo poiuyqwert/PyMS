@@ -18,7 +18,7 @@ Walkability, height, sight blocking, and ramps are controlled per MiniTile, so t
 1. Select a MegaTile in a grassy group, and switch the MegaTile Editors mode dropdown to **Walkable** (or just press `w`). Each of the 16 MiniTiles gets a green (walkable) or red (unwalkable) border.
 2. Click a MiniTile to toggle it, or click and drag to paint several. Right click to apply the same state to all 16 MiniTiles at once. Notice the unsaved changes indicator light up in the status bar.
 3. Try the **Height** mode (`h`) too: pick **Low**, **Mid**, or **High** in the dropdown that appears, then paint it onto MiniTiles.
-4. To give the whole group the same flags, press **Apply to Megas** and choose to apply the current modes flags (or all flags) to the rest of the groups MegaTiles.
+4. To give the whole group the same flags, press **Apply to Megas** and choose to apply the current modes flags (or all flags) to the rest of the groups MegaTiles. The same actions are in the **MegaTile** menu.
 
 ## Changing Graphics
 Custom terrain graphics come in and out of PyTILE as BMP images:

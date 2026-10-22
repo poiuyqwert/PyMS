@@ -8,7 +8,7 @@ from ..Utilities import UIKit as UI
 from ..Utilities import Assets
 
 class StarsTab(UI.NotebookTab):
-	def __init__(self, parent: UI.Misc, delegate: MainDelegate, bind_target: UI.Misc) -> None:
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
 		self.delegate = delegate
 		UI.NotebookTab.__init__(self, parent)
 
@@ -16,10 +16,10 @@ class StarsTab(UI.NotebookTab):
 		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), self.select_updated)
 		self.listbox.pack(side=UI.TOP, fill=UI.BOTH, padx=2, expand=1)
 
-		self.toolbar = UI.Toolbar(self, bind_target=bind_target)
-		self.toolbar.add_radiobutton(Assets.get_image('select'), self.delegate.tool, Tool.select, 'Select', UI.Key.m, enabled=False, tags='file_open')
-		self.toolbar.add_radiobutton(Assets.get_image('arrows'), self.delegate.tool, Tool.move, 'Move', UI.Key.v, enabled=False, tags='file_open')
-		self.toolbar.add_radiobutton(Assets.get_image('pencil'), self.delegate.tool, Tool.draw, 'Draw', UI.Key.p, enabled=False, tags='file_open')
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_radiobutton(Assets.get_image('select'), self.delegate.tool, Tool.select.value, 'Select', UI.Key.m, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_radiobutton(Assets.get_image('arrows'), self.delegate.tool, Tool.move.value, 'Move', UI.Key.v, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_radiobutton(Assets.get_image('pencil'), self.delegate.tool, Tool.draw.value, 'Draw', UI.Key.p, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_spacer(2, flexible=True)
 		self.move_up_button = self.toolbar.add_button(Assets.get_image('up'), lambda: self.move_stars(-1), 'Move Stars Up', enabled=False, tags='stars_selected')
 		self.move_down_button = self.toolbar.add_button(Assets.get_image('down'), lambda: self.move_stars(1), 'Move Stars Down', enabled=False, tags='stars_selected')
@@ -74,7 +74,7 @@ class StarsTab(UI.NotebookTab):
 		for i,(star,_) in enumerate(self.get_listbox_rows()):
 			if star in self.delegate.selected_stars:
 				self.listbox.select_set(i)
-		self.action_states()
+		self.delegate.action_states()
 
 	def move_stars(self, delta: int) -> None:
 		if not self.delegate.spk:

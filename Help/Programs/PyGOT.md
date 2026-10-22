@@ -4,14 +4,20 @@ PyGOT is a tool used for editing the Game Template [.got](/Help/Files/GOT.md) fi
 ## Main Window
 The window is a single fixed-size form that edits one Game Template at a time. The form is split into three groups — [Template Info](#template-info), [Variation Info](#variation-info), and [Settings](#settings) — and every field is disabled until a template is created or opened. The status bar at the bottom shows status messages and an indicator for unsaved changes.
 
+The menubar has **File**, **TRG**, **Settings**, and **Help** menus. The toolbar below it has a button for every command, in the same order: the **File** commands, then the TRG conversions, then **Manage Settings**, then **Set as Default `*.got` Editor**, **View Help**, **About PyGOT**, **Donate**, and finally **Exit**. Hover a button to see its name and shortcut.
+
 ## Managing Files
+These commands are in the **File** menu and on the toolbar.
+
 - **New** (`Ctrl+N`): Creates a new Game Template with default settings.
-- **Open** (`Ctrl+O`): Opens a `.got` file.
-- **Save** (`Ctrl+S`) and **Save As** (`Ctrl+Alt+A`): Saves the template to a `.got` file.
-- **Export Game Template** (`Ctrl+E`): Saves the template as an editable text file, with a reference at the top listing the options for each setting.
-- **Import Game Template** (`Ctrl+I`): Loads the text format produced by **Export Game Template** as a new unsaved template.
+- **Open...** (`Ctrl+O`): Opens a `.got` file.
+- **Save** (`Ctrl+S`) and **Save As...** (`Ctrl+Alt+A`): Saves the template to a `.got` file.
+- **Import Game Template...** (`Ctrl+I`): Loads the text format produced by **Export Game Template** as a new unsaved template.
+- **Export Game Template...** (`Ctrl+E`): Saves the template as an editable text file, with a reference at the top listing the options for each setting.
 - **Close** (`Ctrl+W`): Closes the template.
-- **Set as default `.got` editor** (Windows Only): Associates `.got` files with PyGOT, so they open in PyGOT when double clicked.
+- **Exit**: Quits PyGOT.
+
+**Set as Default `*.got` Editor** (Windows Only), in the **Settings** menu, associates `.got` files with PyGOT, so they open in PyGOT when double clicked.
 
 Creating, opening, importing, closing, or exiting asks to save any unsaved changes first.
 
@@ -45,13 +51,18 @@ Each setting is a dropdown. **Victory Conditions** and **Resource Type** also ha
 - **Tournament Mode**: Off or On.
 
 ## TRG Conversion
-Game modes are initialized by [.trg](/Help/Files/TRG.md) trigger files, which the game stores in a special headerless "GOT compatible" format alongside its templates. PyGOT converts between the two formats:
+Game modes are initialized by [.trg](/Help/Files/TRG.md) trigger files, which the game stores in a special headerless "GOT compatible" format alongside its templates. PyGOT converts between the two formats with the commands in the **TRG** menu (also on the toolbar):
 
-- **Convert `*.trg` to GOT compatible** (`Ctrl+T`): Converts a normal `.trg` file (like one made with [PyTRG](/Help/Programs/PyTRG.md)) into the GOT compatible format.
-- **Revert GOT compatible `*.trg`** (`Ctrl+Alt+T`): Converts a GOT compatible `.trg` file back into the normal format, so it can be edited with PyTRG.
+- **Convert TRG to GOT Compatible...** (`Ctrl+T`): Converts a normal `.trg` file (like one made with [PyTRG](/Help/Programs/PyTRG.md)) into the GOT compatible format.
+- **Revert GOT Compatible TRG...** (`Ctrl+Alt+T`): Converts a GOT compatible `.trg` file back into the normal format, so it can be edited with PyTRG.
 
 ## Settings Dialog
-**Manage Settings** (`Ctrl+M`) opens the settings dialog, where you can change the PyMS window [theme](/Help/Programs/Themes.md).
+**Manage Settings...** (`Ctrl+M`), in the **Settings** menu, opens the settings dialog, where you can change the PyMS window [theme](/Help/Programs/Themes.md).
+
+## Help Menu
+- **View Help** (`F1`): Opens this help page.
+- **Donate...**: Shows ways to support PyMS.
+- **About PyGOT**: Shows the version and credits.
 
 ## Command Line
 PyGOT can also be used from the command line to decompile `.got` files to the editable text format and compile them back:

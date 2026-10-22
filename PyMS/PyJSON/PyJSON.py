@@ -39,34 +39,62 @@ class PyJSON(UI.MainWindow):
 		self.file_path: str | None = None
 		self.edited = False
 
-		self.update_title()
-
-		self.toolbar = UI.Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
-		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
-		self.toolbar.add_gap()
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
 		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
+
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File')
+		file_menu.add_command('New', self.new, UI.Ctrl.n)
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_separator()
+		file_menu.add_command('Save', save, UI.Ctrl.s, enabled=False, tags='file_open')
+		file_menu.add_command('Save As...', saveas, UI.Ctrl.Alt.a, enabled=False, tags='file_open', underline='As')
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		objects_menu = self.menu.add_cascade('Objects')
+		objects_menu.add_command('Add Object', self.add, UI.Key.Insert, enabled=False, tags='file_open', underline='a')
+		objects_menu.add_command('Insert Object', self.insert, UI.Shift.Insert, enabled=False, tags='object_selected', underline='i')
+		objects_menu.add_command('Remove Object', self.remove, UI.Shift.Delete, enabled=False, tags='object_selected', underline='r')
+
+		settings_menu = self.menu.add_cascade('Settings')
+		settings_menu.add_command('Manage Settings...', self.settings, UI.Ctrl.m)
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.json Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='d')
+
+		help_menu = self.menu.add_cascade('Help')
+		help_menu.add_command('View Help', self.help, UI.Key.F1, underline='h')
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor, underline='d')
+		help_menu.add_command('About PyJSON', self.about, underline='a')
+
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
-		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add Object', UI.Key.Insert, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('insert'), self.insert, 'Insert Object', UI.Shift.Insert, enabled=False, tags='object_selected')
-		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Object', UI.Shift.Delete, enabled=False, tags='object_selected')
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage Settings', UI.Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.json editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
+		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add Object', UI.Key.Insert, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('insert'), self.insert, 'Insert Object', UI.Shift.Insert, enabled=False, tags='object_selected', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Object', UI.Shift.Delete, enabled=False, tags='object_selected', bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.json Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyJSON')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.grid(row=0,column=0, padx=1,pady=1, sticky=UI.EW)
 
 		self.hor_pane = UI.PanedWindow(self,orient=UI.HORIZONTAL)
@@ -95,6 +123,7 @@ class PyJSON(UI.MainWindow):
 		self.data_source = DataSource(data)
 		self.data_source.name_key = 'id'
 		self.data_source.attach(self.tree.treeview)
+		self.update_title()
 
 		# Editor
 		self.editor_frame = UI.LabelFrame(self.hor_pane, text='Editor')
@@ -149,6 +178,8 @@ class PyJSON(UI.MainWindow):
 		object_selected = self.is_object_selected()
 		self.toolbar.tag_enabled('file_open', file_open)
 		self.toolbar.tag_enabled('object_selected', object_selected)
+		self.menu.tag_enabled('file_open', file_open)
+		self.menu.tag_enabled('object_selected', object_selected)
 
 	def update_title(self) -> None:
 		file_path = self.file_path

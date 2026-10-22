@@ -4,13 +4,14 @@ A dialog is a tree of widgets (buttons, labels, images, sliders, and so on). See
 PyBIN supports both legacy (pre-Remastered) and StarCraft: Remastered dialog files (see [UI BIN](/Help/Files/UI_BIN.md#legacy-and-remastered-files) for the differences). The **SC:R** indicator above the widget tree shows whether the loaded file is in the Remastered format — it is enabled automatically when you open a Remastered file or use Remastered-only widgets.
 
 ## Main Window
+The menubar has **File**, **View**, **Widgets**, **Settings**, and **Help** menus. The main toolbar along the top has the same file commands as the File menu, followed by **Manage Settings**, then **Set as Default** `*.bin` **Editor**, **View Help** (`F4`), **About PyBIN**, and **Donate**, and finally **Exit**.
 The left side of the window shows the widget tree — the dialogs widgets in their draw order, including any editor-only groups you have made to organize them. Each widget is listed with its text, control ID, and type. Selecting a widget in the tree also selects it on the canvas.
-The toolbar under the widget tree has the widget editing actions:
+The toolbar under the widget tree has the widget editing actions, which are also in the **Widgets** menu (the preview settings toggle is **View > Preview Settings Panel**):
 
-- **Add Widget**: Adds a new widget (or group), chosen from a menu of the widget types. See [Adding and Removing Widgets](/Help/Programs/PyBIN/Widgets.md#adding-and-removing-widgets).
-- **Remove Selected**: Removes the selected widget or group (the root Dialog can't be removed).
+- **Add Widget**: Adds a new widget (or group), chosen from a menu of the widget types (in the Widgets menu, **Add Widget** is a submenu of the types). See [Adding and Removing Widgets](/Help/Programs/PyBIN/Widgets.md#adding-and-removing-widgets).
+- **Remove Widget**: Removes the selected widget or group (the root Dialog can't be removed).
 - **Edit Widget**: Opens the selected widget in the [Widget Editor](/Help/Programs/PyBIN/Widget_Editor.md) (also `Enter`, or double clicking the widget in the tree or on the canvas).
-- **Toggle Preview Settings**: Shows/hides the [Preview Settings](#preview-settings) panel.
+- **Toggle Preview Settings** (**View > Preview Settings Panel**): Shows/hides the [Preview Settings](#preview-settings) panel.
 - **Move Widget Up** and **Move Widget Down**: Reorders the selected widget among its siblings, which also changes its draw order (see [Tree Order and Z-Order](/Help/Programs/PyBIN/Widgets.md#tree-order-and-z-order)).
 
 The right side of the window is the canvas: a 640x480 preview of the dialog where you can select, move, and resize widgets directly (see [Editing on the Canvas](/Help/Programs/PyBIN/Widgets.md#editing-on-the-canvas)).
@@ -18,13 +19,15 @@ Below the canvas is a collapsible **Failed Assets** panel, which lists any game 
 The status bar shows the general status, an indicator for unsaved changes, and the widget the mouse is over on the canvas.
 
 ## Managing Files
+These commands are in the **File** menu and on the main toolbar.
+
 - **New** (`Ctrl+N`): Creates a new dialog, containing just an empty 640x480 Dialog widget.
-- **Open** (`Ctrl+O`): Opens an existing `.bin` dialog file. The format (legacy or Remastered) is detected automatically.
-- **Import from TXT** (`Ctrl+I`): Loads a dialog from the text format produced by **Export to TXT**.
-- **Save** (`Ctrl+S`) and **Save As** (`Ctrl+Alt+A`): Saves the dialog to a `.bin` file. The file is saved in the Remastered format if it was loaded as one or uses Remastered-only features, and in the legacy format otherwise.
-- **Export to TXT** (`Ctrl+E`): Saves the dialog as an editable text file listing every widget and SMK with its properties. Exporting, editing the text, and re-importing can be an easy way to make bulk changes.
+- **Open...** (`Ctrl+O`): Opens an existing `.bin` dialog file. The format (legacy or Remastered) is detected automatically.
+- **Import from TXT...** (`Ctrl+I`): Loads a dialog from the text format produced by **Export to TXT**.
+- **Save** (`Ctrl+S`) and **Save As...** (`Ctrl+Alt+A`): Saves the dialog to a `.bin` file. The file is saved in the Remastered format if it was loaded as one or uses Remastered-only features, and in the legacy format otherwise.
+- **Export to TXT...** (`Ctrl+E`): Saves the dialog as an editable text file listing every widget and SMK with its properties. Exporting, editing the text, and re-importing can be an easy way to make bulk changes.
 - **Close** (`Ctrl+W`): Closes the loaded file.
-- **Set as default .bin editor** (Windows Only): Associates `.bin` files with PyBIN, so they open in PyBIN when double clicked.
+- **Exit**: Closes PyBIN, asking to save any unsaved changes first.
 
 ## Preview Settings
 The Preview Settings panel below the widget tree controls what the canvas renders. All the settings are remembered between sessions.
@@ -35,6 +38,7 @@ The Preview Settings panel below the widget tree controls what the canvas render
 - **Theme**: Chooses which of the games UI themes (Main Menu, Campaign, the mission briefings, the victory/defeat screens, or General) supplies the button/checkbox/slider art, dialog frame art, and title font used by the preview. **Background** also draws that themes background image behind the dialog. Since a `.bin` file doesn't record which screen it belongs to, pick the theme matching the file you are editing (see the file list in [UI BIN](/Help/Files/UI_BIN.md#dialog-files)).
 
 ## Program Settings
+The **Settings** menu has **Manage Settings...** and **Set as Default** `*.bin` **Editor (Windows Only)**, which associates `.bin` files with PyBIN, so they open in PyBIN when double clicked. Both are also on the main toolbar.
 **Manage Settings** (`Ctrl+M`) opens the settings dialog. It also opens automatically at startup if any of the preview files fail to load.
 
 - **MPQ Settings**: Manages the list of MPQs that game assets are loaded from (usually your StarCraft MPQs and/or your mods MPQ).

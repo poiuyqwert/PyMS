@@ -67,47 +67,92 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.listmenu.add_command(label='Move String Up', command=lambda: self.movestring(-1), shortcut=UI.Shift.Up, bind_shortcut=False) # type: ignore[call-arg]
 		self.listmenu.add_command(label='Move String Down', command=lambda: self.movestring(1), shortcut=UI.Shift.Down, bind_shortcut=False) # type: ignore[call-arg]
 
-		self.toolbar = UI.Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
-		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default TBL', UI.Ctrl.d)
-		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Strings', UI.Ctrl.i)
-		self.toolbar.add_gap()
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
 		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Strings', UI.Ctrl.e, enabled=False, tags='file_open')
+
+		#Menu
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File')
+		file_menu.add_command('New', self.new, UI.Ctrl.n)
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_command('Open Default TBL', self.open_default, UI.Ctrl.d, underline='Default')
+		file_menu.add_separator()
+		file_menu.add_command('Save', save, UI.Ctrl.s, enabled=False, tags='file_open')
+		file_menu.add_command('Save As...', saveas, UI.Ctrl.Alt.a, enabled=False, tags='file_open', underline='As')
+		file_menu.add_separator()
+		file_menu.add_command('Import Strings...', self.iimport, UI.Ctrl.i)
+		file_menu.add_command('Export Strings...', self.export, UI.Ctrl.e, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open', underline='c')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		edit_menu = self.menu.add_cascade('Edit')
+		edit_menu.add_command('Find Strings...', self.find, UI.Ctrl.f, enabled=False, tags='file_open')
+		edit_menu.add_command('Find Next', self.find_next, UI.Key.F3, enabled=False, tags='file_open', underline='Next')
+		edit_menu.add_command('Go To...', self.goto, UI.Ctrl.g, enabled=False, tags='file_open')
+
+		strings_menu = self.menu.add_cascade('Strings')
+		strings_menu.add_command('Add String', self.add, UI.Key.Insert, enabled=False, tags='file_open', underline='A')
+		strings_menu.add_command('Insert String', self.insert, UI.Shift.Insert, enabled=False, tags='string_selected')
+		strings_menu.add_command('Remove String', self.remove, UI.Shift.Delete, enabled=False, tags='string_selected', underline='R')
+		strings_menu.add_separator()
+		strings_menu.add_command('Move String Up', lambda: self.movestring(-1), UI.Shift.Up, enabled=False, tags='string_selected', underline='Up')
+		strings_menu.add_command('Move String Down', lambda: self.movestring(1), UI.Shift.Down, enabled=False, tags='string_selected', underline='Down')
+		strings_menu.add_separator()
+		strings_menu.add_command('Test String...', self.preview, UI.Ctrl.t, enabled=False, tags='string_selected')
+
+		settings_menu = self.menu.add_cascade('Settings')
+		settings_menu.add_command('Manage Settings...', self.mpqsettings, UI.Ctrl.m)
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.tbl Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='D')
+
+		help_menu = self.menu.add_cascade('Help')
+		help_menu.add_command('View Help', self.help, UI.Key.F1, underline='H')
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor, underline='D')
+		help_menu.add_command('About PyTBL', self.about, underline='A')
+
+		#Toolbar
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default TBL', UI.Ctrl.d, bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Strings', UI.Ctrl.i, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Strings', UI.Ctrl.e, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add String', UI.Key.Insert, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('insert'), self.insert, 'Insert String', UI.Shift.Insert, enabled=False, tags='string_selected')
-		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove String (Delete in Listbox, Shift+Delete in Textbox)', UI.Shift.Delete, enabled=False, tags='string_selected', add_shortcut_to_tooltip=False)
+		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find Strings', UI.Ctrl.f, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('ffw'), self.goto, 'Go To', UI.Ctrl.g, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add String', UI.Key.Insert, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('insert'), self.insert, 'Insert String', UI.Shift.Insert, enabled=False, tags='string_selected', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove String', UI.Shift.Delete, enabled=False, tags='string_selected', bind_shortcut=False)
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('up'), lambda: self.movestring(-1), 'Move String Up', UI.Shift.Up, enabled=False, tags='string_selected', bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('down'), lambda: self.movestring(1), 'Move String Down', UI.Shift.Down, enabled=False, tags='string_selected', bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find Strings', UI.Ctrl.f, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('ffw'), self.goto, 'Go to', UI.Ctrl.g, enabled=False, tags='file_open')
-		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('test'), self.preview, 'Test String', UI.Ctrl.t, enabled=False, tags='string_selected')
+		self.toolbar.add_button(Assets.get_image('test'), self.preview, 'Test String', UI.Ctrl.t, enabled=False, tags='string_selected', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', UI.Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.tbl editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.tbl Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyTBL')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.grid(row=0,column=0, padx=1,pady=1, sticky=UI.EW)
-
-		self.bind_all(UI.Shift.Up(), lambda e: self.movestring(-1))
-		self.bind_all(UI.Shift.Down(), lambda e: self.movestring(1))
 
 		self.hor_pane = UI.PanedWindow(self,orient=UI.HORIZONTAL)
 
@@ -132,6 +177,15 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.text.mark_gravity('textend', UI.RIGHT)
 		self.text.grid(sticky=UI.NSEW)
 		self.text.bind(UI.Ctrl.a(), lambda e: self.after_managed(1, self.selectall))
+		# Add/Insert/Remove String keys are bound on the window, but must not fire while typing in the
+		# string text box (Shift+Insert/Shift+Delete are Paste/Cut there on Windows). A tag after the
+		# Text class lets the text box handle the key, then stops it before the window bindings.
+		text_keys_tag = 'PyTBLTextStringKeys'
+		for pattern in (UI.Key.Insert, UI.Shift.Insert, UI.Shift.Delete):
+			self.text.bind_class(text_keys_tag, pattern(), lambda _: 'break')
+		bindtags = list(self.text.bindtags())
+		bindtags.insert(bindtags.index('Text') + 1, text_keys_tag)
+		self.text.bindtags(tuple(bindtags))
 		hscroll.config(command=self.text.xview)
 		hscroll.grid(sticky=UI.EW)
 		vscroll.config(command=self.text.yview)
@@ -266,8 +320,10 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		file_open = self.is_file_open()
 		string_selected = self.is_string_selected()
 		self.toolbar.tag_enabled('file_open', file_open)
+		self.menu.tag_enabled('file_open', file_open)
 		self.text['state'] = UI.NORMAL if string_selected else UI.DISABLED
 		self.toolbar.tag_enabled('string_selected', string_selected)
+		self.menu.tag_enabled('string_selected', string_selected)
 
 	def text_insert(self, pos: str, text: str) -> None:
 		self.tk.call((self.text_orig, 'insert', pos, text))
@@ -475,9 +531,16 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			return
 		if not self.findwindow:
 			self.findwindow = FindDialog(self, self)
-			self.bind(UI.Key.F3(), self.findwindow.findnext)
 		else:
 			self.findwindow.show()
+
+	def find_next(self) -> None:
+		if not self.is_file_open():
+			return
+		if not self.findwindow:
+			self.find()
+			return
+		self.findwindow.findnext(from_parent=True)
 
 	def goto(self) -> None:
 		if not self.is_file_open():

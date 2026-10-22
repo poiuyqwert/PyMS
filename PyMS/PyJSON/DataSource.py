@@ -142,7 +142,9 @@ class DataSource:
 	def attach(self, treeview: UI.Treeview) -> None:
 		UI.Style().configure('Treeview', indent=25)
 		self._treeview = treeview
-		self._treeview_font = UI.Font.named(UI.Style().lookup('Treeview', 'font')) or UI.Font.default()
+		# The style returns the font name as a Tcl object, which `Font.named` can't use as a key
+		font_name = str(UI.Style().lookup('Treeview', 'font'))
+		self._treeview_font = (UI.Font.named(font_name) if font_name else None) or UI.Font.default()
 		self._treeview_arrow_width = 16
 		self._treeview_indent_width = UI.Style().lookup('Treeview', 'indent')
 		self._refresh()

@@ -47,39 +47,85 @@ class PyPAL(UI.MainWindow):
 
 		self.update_title()
 
-		#Toolbar
-		self.toolbar = UI.Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags=('file_open', 'format_known'))
 		def saveas_callback(file_type: Palette.FileType) -> Callable[[], None]:
 			def saveas() -> None:
 				self.saveas(file_type=file_type)
 			return saveas
-		self.toolbar.add_button(Assets.get_image('saveriff'), saveas_callback(Palette.FileType.riff), 'Save as RIFF *.pal', UI.Ctrl.r, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savejasc'), saveas_callback(Palette.FileType.jasc), 'Save as JASC *.pal', UI.Ctrl.j, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savepal'), saveas_callback(Palette.FileType.sc_pal), 'Save as StarCraft *.pal', UI.Ctrl.Alt.p, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savewpe'), saveas_callback(Palette.FileType.wpe), 'Save as StarCraft Terrain *.wpe', UI.Ctrl.t, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('saveact'), saveas_callback(Palette.FileType.act), 'Save as Adobe Color Table *.act', UI.Ctrl.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
+		save_riff = saveas_callback(Palette.FileType.riff)
+		save_jasc = saveas_callback(Palette.FileType.jasc)
+		save_sc_pal = saveas_callback(Palette.FileType.sc_pal)
+		save_wpe = saveas_callback(Palette.FileType.wpe)
+		save_act = saveas_callback(Palette.FileType.act)
+
+		#Menu
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File')
+		file_menu.add_command('New', self.new, UI.Ctrl.n)
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_separator()
+		file_menu.add_command('Save', save, UI.Ctrl.s, enabled=False, tags=('file_open', 'format_known'))
+		file_menu.add_command('Save As...', self.saveas_current, enabled=False, tags='file_open', underline='As')
+		file_menu.add_command('Save as RIFF *.pal...', save_riff, UI.Ctrl.r, enabled=False, tags='file_open')
+		file_menu.add_command('Save as JASC *.pal...', save_jasc, UI.Ctrl.j, enabled=False, tags='file_open')
+		file_menu.add_command('Save as StarCraft *.pal...', save_sc_pal, UI.Ctrl.Alt.p, enabled=False, tags='file_open')
+		file_menu.add_command('Save as StarCraft Terrain *.wpe...', save_wpe, UI.Ctrl.t, enabled=False, tags='file_open')
+		file_menu.add_command('Save as Adobe Color Table *.act...', save_act, UI.Ctrl.a, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		edit_menu = self.menu.add_cascade('Edit')
+		edit_menu.add_command('Copy', self.copy, UI.Ctrl.c, enabled=False, tags='file_open')
+		# Paste stays enabled while a palette is open (rather than following `canpaste()` like the swatch menu): its state
+		# can't be refreshed when the clipboard changes outside PyPAL, and a stale disabled state would swallow `Ctrl+P`. `paste` guards itself.
+		edit_menu.add_command('Paste', self.paste, UI.Ctrl.p, enabled=False, tags='file_open')
+		edit_menu.add_separator()
+		edit_menu.add_command('Edit Color...', self.edit_color, enabled=False, tags='file_open')
+
+		settings_menu = self.menu.add_cascade('Settings')
+		settings_menu.add_command('Manage Settings...', self.sets, UI.Ctrl.m)
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.pal and *.wpe Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='D')
+
+		help_menu = self.menu.add_cascade('Help')
+		help_menu.add_command('View Help', self.help, UI.Key.F1, underline='H')
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor, underline='D')
+		help_menu.add_command('About PyPAL', self.about, underline='A')
+
+		#Toolbar
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags=('file_open', 'format_known'), bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas_current, 'Save As', enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveriff'), save_riff, 'Save as RIFF *.pal', UI.Ctrl.r, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('savejasc'), save_jasc, 'Save as JASC *.pal', UI.Ctrl.j, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('savepal'), save_sc_pal, 'Save as StarCraft *.pal', UI.Ctrl.Alt.p, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('savewpe'), save_wpe, 'Save as StarCraft Terrain *.wpe', UI.Ctrl.t, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveact'), save_act, 'Save as Adobe Color Table *.act', UI.Ctrl.a, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", UI.Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.pal and *.wpe editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.pal and *.wpe Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyPAL')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
 		self.palmenu = UI.Menu(self, tearoff=0)
-		self.palmenu.add_command(label='Copy', command=self.copy, shortcut=UI.Ctrl.c) # type: ignore[call-arg]
-		# The 'paste' tag state is only refreshed when the popup opens, so the shortcut is bound directly instead of through the menu item; `paste` guards itself.
+		self.palmenu.add_command(label='Copy', command=self.copy, shortcut=UI.Ctrl.c, bind_shortcut=False) # type: ignore[call-arg]
 		self.palmenu.add_command(label='Paste', command=self.paste, shortcut=UI.Ctrl.p, tags='paste', bind_shortcut=False) # type: ignore[call-arg]
-		self.bind(UI.Ctrl.p(), self.paste)
 
 		#Canvas
 		self.canvas = UI.Canvas(self, width=273, height=273, background='#000000', coordinate_adjust=UI.Canvas.coordinate_adjust_os, theme_tag='preview') # type: ignore[call-arg, attr-defined]
@@ -147,6 +193,8 @@ class PyPAL(UI.MainWindow):
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
 		self.toolbar.tag_enabled('format_known', self.format is not None)
+		self.menu.tag_enabled('file_open', self.is_file_open())
+		self.menu.tag_enabled('format_known', self.format is not None)
 
 	def popup(self, event: UI.Event, i: int) -> None:
 		if not self.palette:
@@ -180,7 +228,12 @@ class PyPAL(UI.MainWindow):
 		x,y = 2+17*(i%16),2+17*(i//16)
 		self.sel.coords(x, y, x+17, y+17)
 
-	def changecolor(self, _event: UI.Event, i: int) -> None:
+	def edit_color(self) -> None:
+		if self.selected is None:
+			return
+		self.changecolor(None, self.selected)
+
+	def changecolor(self, _event: UI.Event | None, i: int) -> None:
 		if not self.palette:
 			return
 		self.select(None,i)
@@ -298,6 +351,19 @@ class PyPAL(UI.MainWindow):
 		self.update_title()
 		self.action_states()
 		return CheckSaved.saved
+
+	# Save As in the current format, or as a StarCraft *.pal for a palette that hasn't been saved yet
+	def saveas_current(self) -> None:
+		file_type = Palette.FileType.sc_pal
+		if self.format == Palette.Format.riff:
+			file_type = Palette.FileType.riff
+		elif self.format == Palette.Format.jasc:
+			file_type = Palette.FileType.jasc
+		elif self.format == Palette.Format.raw_rgba:
+			file_type = Palette.FileType.wpe
+		elif self.format == Palette.Format.raw_rgb and self.file and self.file.lower().endswith('.act'):
+			file_type = Palette.FileType.act
+		self.saveas(file_format=self.format, file_type=file_type)
 
 	def close(self) -> None:
 		if not self.is_file_open():

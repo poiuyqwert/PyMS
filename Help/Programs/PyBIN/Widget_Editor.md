@@ -1,5 +1,5 @@
 # Widget Editor
-The Widget Editor edits all the properties of a single widget. Open it with **Edit Widget** on the widgets toolbar, by pressing `Enter`, or by double clicking a widget in the tree or on the canvas.
+The Widget Editor edits all the properties of a single widget. Open it with **Edit Widget** on the widgets toolbar or **Widgets > Edit Widget...**, by pressing `Enter`, or by double clicking a widget in the tree or on the canvas.
 **Ok** applies the changes and closes the editor, and **Update Preview** applies them while leaving the editor open, so you can tweak values and see the result on the canvas. Closing the editor any other way discards all the changes (including ones already previewed).
 The **Advanced** checkbox shows every property of the widget. With it off, properties that don't normally apply to the widgets type are hidden (for example text styling for an Image, or button flags for a Label) — the sections below describe everything, so some fields will only be visible with Advanced on. The Advanced state is remembered between sessions.
 

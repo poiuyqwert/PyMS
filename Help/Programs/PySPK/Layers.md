@@ -7,13 +7,13 @@ The Layers panel in [PySPK](/Help/Programs/PySPK.md) lists the layers in the ope
 - The layer name — click it (or anywhere on the row) to make it the active layer, which is the layer the **Draw** tool places stars on. The active layer is highlighted.
 
 Visibility and locking only affect editing in PySPK — they are not saved into the `.spk` file.
-The toolbar below the list manages the layers:
+The toolbar below the list, and the **Layer** menu, manage the layers:
 
 - **Add Layer** (`Insert`): Adds a new empty layer (up to the maximum of 5) and makes it the active layer.
-- **Remove Layer** (`Delete`): Deletes the active layer, asking for confirmation if it has any stars.
+- **Remove Layer**: Deletes the active layer, asking for confirmation if it has any stars. It has no shortcut — `Delete` deletes the selected stars (see [Editing Stars](/Help/Programs/PySPK.md#editing-stars)).
 - **Move Layer Up** and **Move Layer Down**: Moves the active layer up or down the list, changing its scroll speed.
-- **Auto-lock**: While on (the default), selecting a layer automatically locks all the other layers, so you only ever edit one layer at a time.
-- **Auto-visibility**: While on, selecting a layer automatically hides all the other layers, showing just the layer you are working on.
+- **Auto-Lock**: While on (the default), selecting a layer automatically locks all the other layers, so you only ever edit one layer at a time.
+- **Auto-Visibility**: While on, selecting a layer automatically hides all the other layers, showing just the layer you are working on.
 
 ## See Also
 - [PySPK](/Help/Programs/PySPK.md)

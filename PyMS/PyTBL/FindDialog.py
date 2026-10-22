@@ -61,7 +61,8 @@ class FindDialog(ReusablePyMSDialog):
 	def on_show(self) -> None:
 		self.findentry.focus_set(highlight=True)
 
-	def findnext(self, event: UI.Event | None = None) -> None:
+	# `from_parent` reports a failed search over the main window (for Find Next from the main window)
+	def findnext(self, _event: UI.Event | None = None, from_parent: bool = False) -> None:
 		self.updatecolor()
 		t = self.find.get()
 		self.findhistory.record(t)
@@ -105,9 +106,7 @@ class FindDialog(ReusablePyMSDialog):
 					self.delegate.update()
 					return
 				i = next_i(i, down, size)
-		p: UI.Misc = self
-		if event and UI.Keysym(event.keysym) != UI.Key.Return:
-			p = self.parent
+		p: UI.Misc = self.parent if from_parent else self
 		UI.MessageBox.showinfo('Find', "Can't find text.", parent=p)
 
 	def updatecolor(self) -> None:

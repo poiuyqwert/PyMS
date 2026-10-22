@@ -145,33 +145,6 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		self.widget_asset_load_failures: dict[str, set[str]] = {}
 		self.global_asset_load_failures: dict[str, set[str]] = {}
 
-		#Toolbar
-		self.toolbar = UI.Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
-		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import from TXT', UI.Ctrl.i)
-		self.toolbar.add_gap()
-		def save() -> None:
-			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
-		def save_as() -> None:
-			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), save_as, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export to TXT', UI.Ctrl.e, enabled=False, tags='file_open')
-		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
-		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', UI.Ctrl.m)
-		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F4)
-		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyBIN')
-		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
-		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
-		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
-
 		self.show_preview_settings = UI.BooleanVar()
 		self.show_images = UI.BooleanVar()
 		self.show_text = UI.BooleanVar()
@@ -189,38 +162,82 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		self.show_bounds_responsive = UI.BooleanVar()
 		self.load_settings()
 
+		def save() -> None:
+			self.save()
+		def save_as() -> None:
+			self.saveas()
+
+		#Menu
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File')
+		file_menu.add_command('New', self.new, UI.Ctrl.n)
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_separator()
+		file_menu.add_command('Save', save, UI.Ctrl.s, enabled=False, tags='file_open')
+		file_menu.add_command('Save As...', save_as, UI.Ctrl.Alt.a, enabled=False, tags='file_open', underline='As')
+		file_menu.add_separator()
+		file_menu.add_command('Import from TXT...', self.iimport, UI.Ctrl.i)
+		file_menu.add_command('Export to TXT...', self.export, UI.Ctrl.e, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		view_menu = self.menu.add_cascade('View')
+		view_menu.add_checkbutton('Preview Settings Panel', self.show_preview_settings, command=self.update_preview_settings_visibility)
+
+		widgets_menu = self.menu.add_cascade('Widgets')
+		add_widget_menu = widgets_menu.add_cascade('Add Widget', state=UI.DISABLED)
+		self.add_widget_menu_item = UI.Menu.Item(widgets_menu, widgets_menu.index(UI.END) or 0)
+		self.populate_type_menu(add_widget_menu)
+		widgets_menu.add_command('Remove Widget', self.remove_node, enabled=False, tags=('node_selected', 'dialog_not_selected'))
+		widgets_menu.add_separator()
+		widgets_menu.add_command('Edit Widget...', self.edit_node_settings, UI.Key.Return, enabled=False, tags='node_selected')
+		widgets_menu.add_separator()
+		widgets_menu.add_command('Move Widget Up', self.move_node_up, enabled=False, tags='can_move_up')
+		widgets_menu.add_command('Move Widget Down', self.move_node_down, enabled=False, tags='can_move_down')
+
+		settings_menu = self.menu.add_cascade('Settings')
+		settings_menu.add_command('Manage Settings...', self.mpqsettings, UI.Ctrl.m)
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.bin Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE)
+
+		help_menu = self.menu.add_cascade('Help')
+		help_menu.add_command('View Help', self.help, UI.Key.F4)
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor)
+		help_menu.add_command('About PyBIN', self.about)
+
+		#Toolbar
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveas'), save_as, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import from TXT', UI.Ctrl.i, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export to TXT', UI.Ctrl.e, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.bin Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F4, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyBIN')
+		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
+		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
+
 		self.last_tick: int | None = None
 		self.tick_alarm: str | None = None
 
 		self.type_menu = UI.Menu(self, tearoff=0)
-		type_fields = (
-			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_DEFAULT_BTN], DialogBIN.BINWidget.TYPE_DEFAULT_BTN),
-			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_BUTTON], DialogBIN.BINWidget.TYPE_BUTTON),
-			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_OPTION_BTN], DialogBIN.BINWidget.TYPE_OPTION_BTN),
-			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_CHECKBOX], DialogBIN.BINWidget.TYPE_CHECKBOX),
-			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_IMAGE], DialogBIN.BINWidget.TYPE_IMAGE),
-			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_SLIDER], DialogBIN.BINWidget.TYPE_SLIDER),
-			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_UNK], DialogBIN.BINWidget.TYPE_UNK),
-			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_TEXTBOX], DialogBIN.BINWidget.TYPE_TEXTBOX),
-			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_LABEL_LEFT_ALIGN], DialogBIN.BINWidget.TYPE_LABEL_LEFT_ALIGN),
-			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_LABEL_RIGHT_ALIGN], DialogBIN.BINWidget.TYPE_LABEL_RIGHT_ALIGN),
-			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_LABEL_CENTER_ALIGN], DialogBIN.BINWidget.TYPE_LABEL_CENTER_ALIGN),
-			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_LISTBOX], DialogBIN.BINWidget.TYPE_LISTBOX),
-			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_COMBOBOX], DialogBIN.BINWidget.TYPE_COMBOBOX),
-			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN], DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN),
-			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_HTML] + ' (SC:R)', DialogBIN.BINWidget.TYPE_HTML),
-			None,
-			('Group',-1),
-		)
-		def add_new_node_callback(node_type: int) -> Callable[[], None]:
-			def add_new_node() -> None:
-				self.add_new_node(node_type)
-			return add_new_node
-		for info in type_fields:
-			if info:
-				self.type_menu.add_command(label=info[0], command=add_new_node_callback(info[1]))
-			else:
-				self.type_menu.add_separator()
+		self.populate_type_menu(self.type_menu)
 
 		self.scr_enabled = UI.BooleanVar()
 
@@ -242,13 +259,13 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 
 		self.widgets_toolbar = UI.Toolbar(leftframe)
 		self.widgets_toolbar.add_button(Assets.get_image('add'), self.add_node, 'Add Widget', enabled=False, tags='file_open')
-		self.widgets_toolbar.add_button(Assets.get_image('remove'), self.remove_node, 'Remove Selected', enabled=False, tags=('node_selected', 'dialog_not_selected'))
-		self.widgets_toolbar.add_button(Assets.get_image('edit'), self.edit_node_settings, 'Edit Widget', enabled=False, tags='node_selected')
+		self.widgets_toolbar.add_button(Assets.get_image('remove'), self.remove_node, 'Remove Widget', enabled=False, tags=('node_selected', 'dialog_not_selected'))
+		self.widgets_toolbar.add_button(Assets.get_image('edit'), self.edit_node_settings, 'Edit Widget', UI.Key.Return, enabled=False, tags='node_selected', bind_shortcut=False)
 		self.widgets_toolbar.add_spacer(2, flexible=True)
 		self.widgets_toolbar.add_button(Assets.get_image('arrow'), self.toggle_preview_settings, 'Toggle Preview Settings', identifier='settings_toggle')
 		self.widgets_toolbar.add_spacer(2, flexible=True)
-		self.widgets_toolbar.add_button(Assets.get_image('up'), lambda: self.move_node(-1), 'Move Widget Up', enabled=False, tags='can_move_up')
-		self.widgets_toolbar.add_button(Assets.get_image('down'), lambda: self.move_node(2), 'Move Widget Down', enabled=False, tags='can_move_down')
+		self.widgets_toolbar.add_button(Assets.get_image('up'), self.move_node_up, 'Move Widget Up', enabled=False, tags='can_move_up')
+		self.widgets_toolbar.add_button(Assets.get_image('down'), self.move_node_down, 'Move Widget Down', enabled=False, tags='can_move_down')
 		self.widgets_toolbar.grid(row=2, column=0, padx=1, pady=1, sticky=UI.EW)
 
 		self.preview_settings_frame = UI.LabelFrame(leftframe, text='Preview Settings')
@@ -382,8 +399,6 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 					event = event_mod + event
 				self.widgetCanvas.bind(event(), mouse_event_callback(etype,mod))
 
-		self.bind(UI.Key.Return(), self.list_double_click)
-
 		#Statusbar
 		self.status = UI.StringVar()
 		self.status.set('Load or create a Dialog BIN.')
@@ -439,14 +454,46 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		self.bin.remastered = self.scr_enabled.get()
 
 	def toggle_preview_settings(self) -> None:
-		show = not self.show_preview_settings.get()
-		self.show_preview_settings.set(show)
-		if show:
+		self.show_preview_settings.set(not self.show_preview_settings.get())
+		self.update_preview_settings_visibility()
+
+	def update_preview_settings_visibility(self) -> None:
+		if self.show_preview_settings.get():
 			self.widgets_toolbar.update_icon('settings_toggle', Assets.get_image('arrow'))
 			self.preview_settings_frame.grid(sticky=UI.EW)
 		else:
 			self.widgets_toolbar.update_icon('settings_toggle', Assets.get_image('arrowup'))
 			self.preview_settings_frame.grid_remove()
+
+	def populate_type_menu(self, menu: UI.Menu) -> None:
+		type_fields = (
+			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_DEFAULT_BTN], DialogBIN.BINWidget.TYPE_DEFAULT_BTN),
+			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_BUTTON], DialogBIN.BINWidget.TYPE_BUTTON),
+			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_OPTION_BTN], DialogBIN.BINWidget.TYPE_OPTION_BTN),
+			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_CHECKBOX], DialogBIN.BINWidget.TYPE_CHECKBOX),
+			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_IMAGE], DialogBIN.BINWidget.TYPE_IMAGE),
+			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_SLIDER], DialogBIN.BINWidget.TYPE_SLIDER),
+			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_UNK], DialogBIN.BINWidget.TYPE_UNK),
+			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_TEXTBOX], DialogBIN.BINWidget.TYPE_TEXTBOX),
+			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_LABEL_LEFT_ALIGN], DialogBIN.BINWidget.TYPE_LABEL_LEFT_ALIGN),
+			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_LABEL_RIGHT_ALIGN], DialogBIN.BINWidget.TYPE_LABEL_RIGHT_ALIGN),
+			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_LABEL_CENTER_ALIGN], DialogBIN.BINWidget.TYPE_LABEL_CENTER_ALIGN),
+			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_LISTBOX], DialogBIN.BINWidget.TYPE_LISTBOX),
+			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_COMBOBOX], DialogBIN.BINWidget.TYPE_COMBOBOX),
+			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN], DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN),
+			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_HTML] + ' (SC:R)', DialogBIN.BINWidget.TYPE_HTML),
+			None,
+			('Group',-1),
+		)
+		def add_new_node_callback(node_type: int) -> Callable[[], None]:
+			def add_new_node() -> None:
+				self.add_new_node(node_type)
+			return add_new_node
+		for info in type_fields:
+			if info:
+				menu.add_command(label=info[0], command=add_new_node_callback(info[1]))
+			else:
+				menu.add_separator()
 
 	def add_node(self) -> None:
 		self.type_menu.post(*self.winfo_pointerxy())
@@ -511,6 +558,13 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		self.update_selection_box()
 		self.refresh_nodes()
 		self.mark_edited()
+
+	def move_node_up(self) -> None:
+		self.move_node(-1)
+
+	def move_node_down(self) -> None:
+		# `move_node` inserts before `index + delta`, so moving down one place inserts 2 ahead
+		self.move_node(2)
 
 	def move_node(self, delta: int) -> None:
 		if not self.selected_node or not self.selected_node.parent or self.selected_node.parent.children is None:
@@ -691,6 +745,8 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 	def action_states(self) -> None:
 		is_file_open = self.is_file_open()
 		self.toolbar.tag_enabled('file_open', is_file_open)
+		self.menu.tag_enabled('file_open', is_file_open)
+		self.add_widget_menu_item['state'] = UI.NORMAL if is_file_open else UI.DISABLED
 
 		selection_is_dialog = (self.selected_node and self.selected_node.widget and self.selected_node.widget.type == DialogBIN.BINWidget.TYPE_DIALOG)
 		can_move_up = False
@@ -704,6 +760,10 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		self.widgets_toolbar.tag_enabled('dialog_not_selected', not selection_is_dialog)
 		self.widgets_toolbar.tag_enabled('can_move_up', can_move_up)
 		self.widgets_toolbar.tag_enabled('can_move_down', can_move_down)
+		self.menu.tag_enabled('node_selected', self.has_selected_node())
+		self.menu.tag_enabled('dialog_not_selected', not selection_is_dialog)
+		self.menu.tag_enabled('can_move_up', can_move_up)
+		self.menu.tag_enabled('can_move_down', can_move_down)
 
 	def setup_nodes(self) -> None:
 		if not self.bin:

@@ -45,35 +45,77 @@ class PyPCX(UI.MainWindow):
 
 		self.update_title()
 
-		#Toolbar
-		self.toolbar = UI.Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
 		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
+
+		#Menu
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File')
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_separator()
+		file_menu.add_command('Save', save, UI.Ctrl.s, enabled=False, tags='file_open')
+		file_menu.add_command('Save As...', saveas, UI.Ctrl.Alt.a, enabled=False, tags='file_open', underline='As')
+		file_menu.add_separator()
+		file_menu.add_command('Import BMP...', self.iimport, UI.Ctrl.i)
+		file_menu.add_command('Export BMP...', self.export, UI.Ctrl.e, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open', underline='c')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		palette_menu = self.menu.add_cascade('Palette')
+		palette_menu.add_command('Import Palette...', self.loadpal, UI.Ctrl.Alt.i, enabled=False, tags='file_open')
+		palette_menu.add_separator()
+		save_palette_menu = palette_menu.add_cascade('Save Palette As')
+		save_palette_menu.add_command('RIFF *.pal...', lambda: self.savepal(file_type=Palette.FileType.riff), UI.Ctrl.r, enabled=False, tags='file_open')
+		save_palette_menu.add_command('JASC *.pal...', lambda: self.savepal(file_type=Palette.FileType.jasc), UI.Ctrl.j, enabled=False, tags='file_open')
+		save_palette_menu.add_command('StarCraft *.pal...', lambda: self.savepal(file_type=Palette.FileType.sc_pal), UI.Ctrl.p, enabled=False, tags='file_open')
+		save_palette_menu.add_command('StarCraft Terrain *.wpe...', lambda: self.savepal(file_type=Palette.FileType.wpe), UI.Ctrl.t, enabled=False, tags='file_open')
+		save_palette_menu.add_command('Adobe Color Table *.act...', lambda: self.savepal(file_type=Palette.FileType.act), UI.Ctrl.a, enabled=False, tags='file_open')
+
+		settings_menu = self.menu.add_cascade('Settings')
+		settings_menu.add_command('Manage Settings...', self.sets, UI.Ctrl.m)
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.pcx Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='D')
+
+		help_menu = self.menu.add_cascade('Help')
+		help_menu.add_command('View Help', self.help, UI.Key.F1, underline='H')
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor, underline='D')
+		help_menu.add_command('About PyPCX', self.about, underline='A')
+
+		#Toolbar
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('exportc'), self.export, 'Export as BMP', UI.Ctrl.e, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('importc'), self.iimport, 'Import BMP', UI.Ctrl.i)
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('importc'), self.iimport, 'Import BMP', UI.Ctrl.i, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('exportc'), self.export, 'Export BMP', UI.Ctrl.e, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('colors'), self.loadpal, 'Import a palette', UI.Ctrl.Alt.i, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('saveriff'), lambda: self.savepal(file_type=Palette.FileType.riff), 'Save Palette as RIFF *.pal', UI.Ctrl.r, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savejasc'), lambda: self.savepal(file_type=Palette.FileType.jasc), 'Save Palette as JASC *.pal', UI.Ctrl.j, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savepal'), lambda: self.savepal(file_type=Palette.FileType.sc_pal), 'Save Palette as StarCraft *.pal', UI.Ctrl.p, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savewpe'), lambda: self.savepal(file_type=Palette.FileType.wpe), 'Save Palette as StarCraft Terrain *.wpe', UI.Ctrl.t, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('saveact'), lambda: self.savepal(file_type=Palette.FileType.act), 'Save as Adobe Color Table *.act', UI.Ctrl.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('colors'), self.loadpal, 'Import Palette', UI.Ctrl.Alt.i, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('saveriff'), lambda: self.savepal(file_type=Palette.FileType.riff), 'Save Palette as RIFF *.pal', UI.Ctrl.r, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('savejasc'), lambda: self.savepal(file_type=Palette.FileType.jasc), 'Save Palette as JASC *.pal', UI.Ctrl.j, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('savepal'), lambda: self.savepal(file_type=Palette.FileType.sc_pal), 'Save Palette as StarCraft *.pal', UI.Ctrl.p, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('savewpe'), lambda: self.savepal(file_type=Palette.FileType.wpe), 'Save Palette as StarCraft Terrain *.wpe', UI.Ctrl.t, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveact'), lambda: self.savepal(file_type=Palette.FileType.act), 'Save Palette as Adobe Color Table *.act', UI.Ctrl.a, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", UI.Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.pcx editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.pcx Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyPCX')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
 		#Canvas
@@ -103,6 +145,7 @@ class PyPCX(UI.MainWindow):
 
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
+		self.menu.tag_enabled('file_open', self.is_file_open())
 		self.editstatus['state'] = UI.NORMAL if self.edited else UI.DISABLED
 
 	def mark_edited(self, edited: bool = True) -> None:

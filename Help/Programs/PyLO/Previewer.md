@@ -7,7 +7,7 @@ The preview composites two [GRP](/Help/Files/GRP.md) graphics, drawn with the un
 - **Base GRP**: The graphic the `.lo?` file attaches to (a unit, for example), drawn at the center of the preview.
 - **Overlay GRP**: The graphic positioned by the offsets (an attack flash or shield effect, for example), drawn at the offset under the cursor.
 
-The two file fields under the preview choose the graphics, either from a file on disk or from your [MPQs](/Help/Files/MPQ.md) (manage the MPQ list with **Manage MPQ Settings** (`Ctrl+M`)). The **Use base GRP** and **Use overlay GRP** checkboxes toggle each graphic — when a graphic is off, a crosshair is drawn in its place instead (green for the base graphic's center, blue for the offset position), which can be easier to judge exact positions with.
+The two file fields under the preview choose the graphics, either from a file on disk or from your [MPQs](/Help/Files/MPQ.md) (manage the MPQ list with **Settings > Manage Settings...** (`Ctrl+M`)). The **Use base GRP** and **Use overlay GRP** checkboxes (also **View > Use Base GRP** and **View > Use Overlay GRP**) toggle each graphic — when a graphic is off, a crosshair is drawn in its place instead (green for the base graphic's center, blue for the offset position), which can be easier to judge exact positions with.
 
 ## Frames
 - **Base Frame**: Follows the cursor in the editor — the preview shows the frame of the Base GRP matching the `Frame:` block the cursor is inside.

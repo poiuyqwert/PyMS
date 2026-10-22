@@ -4,13 +4,13 @@ This tutorial walks through writing a simple trigger with [PyTRG](/Help/Programs
 ## Setting Up PyTRG
 PyTRG loads unit names and AI scripts from the games files in your [MPQs](/Help/Files/MPQ.md), so the first step is to point it at them:
 
-1. Open PyTRG and press **Manage `stat_txt.tbl` and `aiscript.bin` files** (`Ctrl+M`). This dialog also opens by itself on startup if any files failed to load.
+1. Open PyTRG and choose **Settings > Manage Settings...** (`Ctrl+M`). This dialog also opens by itself on startup if any files failed to load.
 2. In the **MPQ Settings** tab, add your StarCraft MPQs (for example `StarDat.mpq`, `BrooDat.mpq`, and `patch_rt.mpq` from your StarCraft folder), plus your mods MPQ if you have one.
 3. The **File Settings** tab chooses the [data files](/Help/Programs/PyTRG.md#data-files) used for unit names and AI scripts. The defaults load from the MPQs you just added, so you shouldn't need to change anything.
 4. Press **Ok**.
 
 ## Writing the Trigger
-1. Press **New** (`Ctrl+N`) to start a new TRG. The editor is now enabled.
+1. Choose **File > New** (`Ctrl+N`) to start a new TRG. The editor is now enabled.
 2. Type the following code (see the [TRG Language](/Help/Programs/PyTRG/TRG_Language.md) page for what each part means):
 
 ```
@@ -30,16 +30,16 @@ While typing, press `Tab` to autocomplete condition and action names, and hover 
 The `PreserveTrigger()` action makes the trigger fire every time Player 1 reaches 100 ore, instead of only once.
 
 ## Testing Your Code
-1. Press **Test Code** (`Ctrl+T`). If there are problems, the lines are highlighted in the editor and the errors are explained — use `Alt+Left` and `Alt+Right` to jump between them.
+1. Choose **Edit > Test Code** (`Ctrl+T`). If there are problems, the lines are highlighted in the editor and the errors are explained — use `Alt+Left` and `Alt+Right` to jump between them.
 2. Fix any problems and test again until you are told the code compiles with no errors or warnings.
 
 ## Saving Your Changes
-1. Press **Save** (`Ctrl+S`) and choose where to save your `.trg` file. Saving compiles the code, so it can also report errors like **Test Code** does.
+1. Choose **File > Save** (`Ctrl+S`) and pick where to save your `.trg` file. Saving compiles the code, so it can also report errors like **Test Code** does.
 
-You can also share triggers as plain text with **Export TRG** (`Ctrl+E`) and **Import TRG** (`Ctrl+I`).
+You can also share triggers as plain text with **File > Export Text...** (`Ctrl+E`) and **File > Import Text...** (`Ctrl+I`).
 
 ## Using It In the Game
-A `.trg` file can be imported into a [map](/Help/Files/Maps.md) using a map editor or plugin that supports the format (like FaRTy1billion's TrigPlug for StarEdit). The other use for `.trg` files is initializing [game modes](/Help/Files/GOT.md): those are saved with **Save `*.got` Compatable `*.trg`** (`Ctrl+G`) and stored at `triggers\*.trg` in your mods MPQ, where a game template made with [PyGOT](/Help/Programs/PyGOT.md) can reference them.
+A `.trg` file can be imported into a [map](/Help/Files/Maps.md) using a map editor or plugin that supports the format (like FaRTy1billion's TrigPlug for StarEdit). The other use for `.trg` files is initializing [game modes](/Help/Files/GOT.md): those are saved with **File > Save GOT Compatible TRG...** (`Ctrl+G`) and stored at `triggers\*.trg` in your mods MPQ, where a game template made with [PyGOT](/Help/Programs/PyGOT.md) can reference them.
 
 ## See Also
 - [PyTRG](/Help/Programs/PyTRG.md)

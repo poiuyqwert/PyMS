@@ -9,19 +9,19 @@ PyPCX imports images from 256 color [.bmp](/Help/Files/BMP.md) files, so the ima
 3. Save the image as a `.bmp` file, with compression turned off (or set to RLE).
 
 ## Importing into PyPCX
-1. Open PyPCX and press **Import BMP** (`Ctrl+I`), then select your `.bmp` file.
+1. Open PyPCX and choose **File > Import BMP** (`Ctrl+I`), then select your `.bmp` file.
 2. The image appears in the preview. If no file was open, PyPCX creates a new untitled PCX for it.
 
 ## Applying a Palette
 If the image already uses the right colors you can skip this step. To swap in a different palette:
 
-1. Press **Import a palette** (`Ctrl+Alt+I`) and select a palette file — for example one of the StarCraft palettes bundled with PyMS in its `Palettes` folder, or any `.pal`, `.wpe`, `.act`, `.pcx`, or `.bmp` file.
+1. Choose **Palette > Import Palette** (`Ctrl+Alt+I`) and select a palette file — for example one of the StarCraft palettes bundled with PyMS in its `Palettes` folder, or any `.pal`, `.wpe`, `.act`, `.pcx`, or `.bmp` file.
 2. The preview recolors to show the new palette.
 
 Note that importing a palette only replaces the colors — the pixels keep their palette positions, they are not remapped to the nearest new color. If the image was converted with a different palette it will look scrambled, and it is better to go back and convert the image with the target palette in your image editor.
 
 ## Saving the PCX
-1. Press **Save** (`Ctrl+S`) and choose where to save the `.pcx` file.
+1. Choose **File > Save** (`Ctrl+S`) and choose where to save the `.pcx` file.
 2. To use it in the game, add it to your mods MPQ at the path of the file you are replacing, using [PyMPQ](/Help/Programs/PyMPQ.md) — see the [Creating a Mod MPQ](/Help/Tutorials/Creating_a_Mod_MPQ.md) tutorial.
 
 ## See Also
