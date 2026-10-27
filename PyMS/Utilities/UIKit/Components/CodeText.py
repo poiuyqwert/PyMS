@@ -74,7 +74,7 @@ class CodeText(Frame):
 		self.read_only = False
 
 		self.highlight_components: Sequence[HighlightComponent] | None = None
-		self.re_syntax: re.Pattern | None = None
+		self.syntax_highlighting: SyntaxHighlighting | None = None
 		self.autocomplete_state: AutocompleteState | None = None
 
 		Frame.__init__(self, parent, bd=2, relief=SUNKEN)
@@ -342,7 +342,7 @@ class CodeText(Frame):
 			for highlight_component in self.highlight_components:
 				self.tag_delete(highlight_component.tag_name)
 		self.highlight_components = syntax_highlighting.all_highlight_components()
-		self.re_syntax = syntax_highlighting.re_pattern
+		self.syntax_highlighting = syntax_highlighting
 		self.update_highlight_styles()
 		self.focus_set()
 		self.mark_recolor_range('1.0', END)
@@ -366,7 +366,7 @@ class CodeText(Frame):
 			self.after_id = self.after_managed(1, self.docolor)
 
 	def colorize(self) -> None:
-		if self.re_syntax is None or self.highlight_components is None:
+		if self.syntax_highlighting is None or self.highlight_components is None:
 			return
 		next_index = '1.0'
 		while True:
@@ -383,13 +383,8 @@ class CodeText(Frame):
 					self.tag_remove(highlight_compoent.tag_name, head, tail)
 			for line_index in self.lines_range(head, tail):
 				line = self.get(line_index, f'{line_index} lineend')
-				match = self.re_syntax.search(line)
-				while match:
-					for key, value in list(match.groupdict().items()):
-						if value is not None:
-							match_head, match_tail = match.span(key)
-							self.tag_add(key, f'{line_index} +{match_head}c', f'{line_index} +{match_tail}c')
-					match = self.re_syntax.search(line, match.end())
+				for tag, match_head, match_tail in self.syntax_highlighting.highlight_spans(line):
+					self.tag_add(tag, f'{line_index} +{match_head}c', f'{line_index} +{match_tail}c')
 			if not self.coloring:
 				return
 

@@ -51,6 +51,26 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, UI.CodeTextDelegate)
 					),
 				)),
 				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='String',
+							description='The style of quoted strings.',
+							highlight_style=highlights_config.string
+						),
+						pattern=r'"(?:[^\\"\n]|\\.)*"|\'(?:[^\\\'\n]|\\.)*\'',
+						nested=(
+							UI.HighlightPattern(
+								highlight=UI.HighlightComponent(
+									name='TBL Format',
+									description='The style of TBL formatted characters in strings, like null: <0>',
+									highlight_style=highlights_config.tbl_format
+								),
+								pattern=r'<0*(?:25[0-5]|2[0-4]\d|1?\d?\d)?>'
+							),
+						)
+					),
+				)),
+				UI.SyntaxComponent((
 					r'^[ \t]*',
 					UI.HighlightPattern(
 						highlight=UI.HighlightComponent(
@@ -140,16 +160,6 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, UI.CodeTextDelegate)
 						pattern=r'\d+'
 					),
 					r'\b'
-				)),
-				UI.SyntaxComponent((
-					UI.HighlightPattern(
-						highlight=UI.HighlightComponent(
-							name='TBL Format',
-							description='The style of TBL formatted characters, like null: <0>',
-							highlight_style=highlights_config.tbl_format
-						),
-						pattern=r'<0*(?:25[0-5]|2[0-4]\d|1?\d?\d)?>'
-					),
 				)),
 				UI.SyntaxComponent((
 					UI.HighlightPattern(

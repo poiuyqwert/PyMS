@@ -114,3 +114,43 @@ class Test_SyntaxHighlighting(unittest.TestCase):
 			highlight_components=[standalone],
 		)
 		self.assertEqual(highlighting.all_highlight_components(), [a, b, c, standalone])
+
+
+class Test_NestedPatterns(unittest.TestCase):
+	def _highlighting(self) -> tuple[SyntaxHighlighting, HighlightComponent, HighlightComponent, HighlightComponent]:
+		string = _component('String')
+		tbl = _component('TBL')
+		number = _component('Number')
+		highlighting = SyntaxHighlighting(
+			syntax_components=[
+				SyntaxComponent([HighlightPattern(string, r'"[^"]*"', nested=[HighlightPattern(tbl, r'<\d+>')])]),
+				SyntaxComponent([r'\b', HighlightPattern(number, r'\d+'), r'\b']),
+			],
+			highlight_components=[],
+		)
+		return (highlighting, string, tbl, number)
+
+	def test_highlight_components_include_nested_after_parent(self) -> None:
+		highlighting, string, tbl, number = self._highlighting()
+		self.assertEqual(highlighting.all_highlight_components(), [string, tbl, number])
+
+	def test_nested_patterns_keyed_by_parent_tag(self) -> None:
+		highlighting, _, _, _ = self._highlighting()
+		self.assertEqual(list(highlighting.nested_patterns.keys()), ['String'])
+		self.assertEqual(highlighting.nested_patterns['String'].pattern, r'(?P<TBL><\d+>)')
+
+	def test_highlight_spans_plain(self) -> None:
+		highlighting, _, _, _ = self._highlighting()
+		self.assertEqual(list(highlighting.highlight_spans('a 12 b 3')), [('Number', 2, 4), ('Number', 7, 8)])
+
+	def test_highlight_spans_nested_offsets(self) -> None:
+		highlighting, _, _, _ = self._highlighting()
+		self.assertEqual(list(highlighting.highlight_spans('x "a<0>b 7" 5')), [
+			('String', 2, 11),
+			('TBL', 4, 7),
+			('Number', 12, 13),
+		])
+
+	def test_nested_not_matched_outside_parent(self) -> None:
+		highlighting, _, _, _ = self._highlighting()
+		self.assertEqual(list(highlighting.highlight_spans('<0>')), [('Number', 1, 2)])

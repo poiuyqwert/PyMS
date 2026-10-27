@@ -119,6 +119,7 @@ class PyAIConfig(Config.Config):
 		class Highlights(Config.Group):
 			def __init__(self) -> None:
 				self.comment = Config.HighlightStyle(default=Config.Style(foreground='#008000'))
+				self.string = Config.HighlightStyle(default=Config.Style(foreground='#A31515'))
 				self.header = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
 				self.ai_id = Config.HighlightStyle(default=Config.Style(foreground='#FF00FF', bold=True))
 				self.block = Config.HighlightStyle(default=Config.Style(foreground='#FF00FF'))

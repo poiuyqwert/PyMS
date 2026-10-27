@@ -13,7 +13,7 @@ The Code Editor is where you write and edit AI script code (see [AI Language](/H
 - **Debuggerize your code** (`Ctrl+D`): Automatically inserts `debug` commands around flow commands (`goto`, `call`, `multirun`, `stop`, and the various jumps) so that when the script runs in the game, it reports each jump it takes and what triggered it.
 
 ## Editor Features
-- **Syntax highlighting**: Comments, `script` headers, AI IDs, blocks, commands, AISE commands, types, `@directives`, numbers, TBL formatted characters (like `<44>`), operators, and keywords each have their own configurable style.
+- **Syntax highlighting**: Comments, quoted strings, TBL formatted characters inside strings (like `<44>`), `script` headers, AI IDs, blocks, commands, AISE commands, types, `@directives`, numbers, operators, and keywords each have their own configurable style.
 - **Autocomplete**: Press `Tab` to complete the word being typed, and keep pressing `Tab` to cycle through the matches. Suggestions include commands, `@directives`, type names and keywords, unit/upgrade/technology names from your [Data Files](/Help/Programs/PyAI.md#data-files), and the block names already in your code.
 - **Go to block** (`Ctrl+Click`): Clicking a block name (such as the target of a `goto` or a header `entry_point`) while holding `Ctrl` moves the cursor to where that block is defined.
 - **Tooltips**: Hovering over a command, type, or `@directive` shows its parameters and a description of what it does — a built in [Command Reference](/Help/Programs/PyAI/Command_Reference.md).
