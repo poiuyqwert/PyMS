@@ -124,6 +124,7 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PySPK')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
+		self.toolbar.add_button(Assets.get_image('update'), self.check_for_updates, 'Check for Updates')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
@@ -233,6 +234,8 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		file_menu.add_command('Export to BMP...', self.export, UI.Ctrl.e, enabled=False, tags=('file_open', 'has_layers'))
 		file_menu.add_separator()
 		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Check for Updates...', self.check_for_updates, underline='u')
 		file_menu.add_separator()
 		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
 
@@ -831,6 +834,9 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 	def sponsor(self) -> None:
 		SponsorDialog(self)
+
+	def check_for_updates(self) -> None:
+		UpdateDialog(self, 'PySPK')
 
 	def load_settings(self) -> None:
 		self.config_.windows.main.load_size(self)

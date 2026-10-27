@@ -56,6 +56,8 @@ class PyJSON(UI.MainWindow):
 		file_menu.add_separator()
 		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open')
 		file_menu.add_separator()
+		file_menu.add_command('Check for Updates...', self.check_for_updates, underline='u')
+		file_menu.add_separator()
 		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
 
 		objects_menu = self.menu.add_cascade('Objects')
@@ -93,6 +95,7 @@ class PyJSON(UI.MainWindow):
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyJSON')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
+		self.toolbar.add_button(Assets.get_image('update'), self.check_for_updates, 'Check for Updates')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.grid(row=0,column=0, padx=1,pady=1, sticky=UI.EW)
@@ -327,6 +330,9 @@ class PyJSON(UI.MainWindow):
 
 	def sponsor(self) -> None:
 		SponsorDialog(self)
+
+	def check_for_updates(self) -> None:
+		UpdateDialog(self, 'PyJSON')
 
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:

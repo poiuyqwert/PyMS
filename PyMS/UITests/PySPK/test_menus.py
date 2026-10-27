@@ -28,6 +28,8 @@ EXPECTED_MENUS: list[tuple[str, list[str]]] = [
 		SEPARATOR,
 		'Close',
 		SEPARATOR,
+		'Check for Updates...',
+		SEPARATOR,
 		'Exit',
 	]),
 	('View', [
@@ -93,6 +95,7 @@ EXPECTED_TOOLBAR: ToolbarLayout = [
 	('View Help', UI.Key.F1),
 	('About PySPK', None),
 	('Donate', None),
+	('Check for Updates', None),
 	SECTION,
 	('Exit', UI.Shortcut.Exit),
 ]

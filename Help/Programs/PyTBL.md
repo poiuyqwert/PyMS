@@ -9,7 +9,7 @@ The status bar shows the result of the last action, an indicator for unsaved cha
 
 Every command is in the menubar, and most also have a toolbar button:
 
-- **File**: New, Open, Open Default TBL, Save, Save As, Import Strings, Export Strings, Close, and Exit. The toolbar's first group has the same buttons in the same order.
+- **File**: New, Open, Open Default TBL, Save, Save As, Import Strings, Export Strings, Close, Check for Updates, and Exit. The toolbar's first group has the file buttons in the same order, Check for Updates is next to the Donate button, and Exit is the last toolbar button. Check for Updates checks GitHub for a newer version of PyTBL and PyMS, and shows the result. PyTBL also checks automatically when it starts, but only shows a message when an update is available.
 - **Edit**: Find Strings, Find Next, and Go To. The toolbar's second group has the Find Strings and Go To buttons.
 - **Strings**: Add String, Insert String, Remove String, Move String Up, Move String Down, and Test String. The toolbar's third group has the same buttons.
 - **Settings**: Manage Settings, and Set as Default `*.tbl` Editor.

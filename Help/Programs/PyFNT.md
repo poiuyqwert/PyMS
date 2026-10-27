@@ -14,6 +14,7 @@ These commands are in the **File** menu:
 - **Open...** (`Ctrl+O`): Opens a `.fnt` file.
 - **Save** (`Ctrl+S`) and **Save As...** (`Ctrl+Alt+A`): Saves the font.
 - **Close** (`Ctrl+W`): Closes the font.
+- **Check for Updates...**: Checks GitHub for a newer version of PyFNT and PyMS, and shows the result. PyFNT also checks automatically when it starts, but only shows a message when an update is available.
 - **Exit**: Closes PyFNT.
 
 Creating, opening, importing, or closing a font (or exiting PyFNT) asks to save any unsaved changes first.

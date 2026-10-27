@@ -49,7 +49,7 @@ class Test_PyTBL_menubar(PyTBLTestCase):
 	def test_menu_items_in_order(self) -> None:
 		gui = self.make_pytbl()
 		expected = {
-			'File': ['New', 'Open...', 'Open Default TBL', SEPARATOR, 'Save', 'Save As...', SEPARATOR, 'Import Strings...', 'Export Strings...', SEPARATOR, 'Close', SEPARATOR, 'Exit'],
+			'File': ['New', 'Open...', 'Open Default TBL', SEPARATOR, 'Save', 'Save As...', SEPARATOR, 'Import Strings...', 'Export Strings...', SEPARATOR, 'Close', SEPARATOR, 'Check for Updates...', SEPARATOR, 'Exit'],
 			'Edit': ['Find Strings...', 'Find Next', 'Go To...'],
 			'Strings': ['Add String', 'Insert String', 'Remove String', SEPARATOR, 'Move String Up', 'Move String Down', SEPARATOR, 'Test String...'],
 			'Settings': ['Manage Settings...', SEPARATOR, 'Set as Default *.tbl Editor (Windows Only)'],
@@ -71,7 +71,7 @@ class Test_PyTBL_menubar(PyTBLTestCase):
 			'Move String Up', 'Move String Down', GAP,
 			'Test String', SECTION,
 			'Manage Settings', SECTION,
-			'Set as Default *.tbl Editor (Windows Only)', 'View Help', 'About PyTBL', 'Donate', SECTION,
+			'Set as Default *.tbl Editor (Windows Only)', 'View Help', 'About PyTBL', 'Donate', 'Check for Updates', SECTION,
 			'Exit',
 		])
 

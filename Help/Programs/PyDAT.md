@@ -37,6 +37,7 @@ The file actions are in the **File** menu and on the toolbar. Each tab manages i
 - **Save MPQ** (`Ctrl+Alt+M`): Saves files directly into an MPQ at their correct paths. You choose any combination of the eleven `.dat` files, the TBL files, and `cmdicons.grp`.
 - **Import from TXT** (`Ctrl+I`): Loads entries from the text format produced by **Export to TXT**, asking before each entry is overwritten (Yes / Yes to All / No / Cancel). Exporting, editing the text, and re-importing can be an easy way to make bulk changes.
 - **Export to TXT** (`Ctrl+E`): Saves the active tabs file as an editable text file listing every entry and its properties.
+- **Check for Updates...**: Checks GitHub for a newer version of PyDAT and PyMS, and shows the result. PyDAT also checks automatically when it starts, but only shows a message when an update is available.
 
 Opening and saving MPQs requires MPQ support (SFmpq) to be available.
 

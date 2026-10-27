@@ -8,7 +8,7 @@ PyTRG is a tool used for editing the triggers in [.trg](/Help/Files/TRG.md) file
 
 ## Main Window
 The window is a single [Code Editor](/Help/Programs/PyTRG/Code_Editor.md) with a menubar and a toolbar above it. The status bar at the bottom shows a status message, an indicator for unsaved changes, and the current line, column, and selection size.
-The menubar has **File**, **Edit**, **Settings**, and **Help** menus. The toolbar has a button for most commands, in the same order: the **File** commands, then **Find/Replace** and **Test Code**, then **Manage Settings** and **Syntax Highlighting**, then **Set as Default `*.trg` Editor**, **View Help**, **About PyTRG**, **Donate**, and finally **Exit**. Hover a button to see its name and shortcut.
+The menubar has **File**, **Edit**, **Settings**, and **Help** menus. The toolbar has a button for most commands, in the same order: the **File** commands, then **Find/Replace** and **Test Code**, then **Manage Settings** and **Syntax Highlighting**, then **Set as Default `*.trg` Editor**, **View Help**, **About PyTRG**, **Donate**, **Check for Updates**, and finally **Exit**. Hover a button to see its name and shortcut.
 The commands that work on the open file (Save, Save As, Save GOT Compatible TRG, Export Text, Close, Find/Replace, Find Next, and Test Code) are disabled until a TRG is created or opened.
 
 ## Managing Files
@@ -21,6 +21,7 @@ These commands are in the **File** menu and on the toolbar.
 - **Import Text...** (`Ctrl+I`): Loads a text file of trigger code into the editor (the format produced by **Export Text**).
 - **Export Text...** (`Ctrl+E`): Saves the code in the editor to a text file, without compiling it.
 - **Close** (`Ctrl+W`): Closes the open TRG, asking to save unsaved changes first.
+- **Check for Updates...**: Checks GitHub for a newer version of PyTRG and PyMS, and shows the result. PyTRG also checks automatically when it starts, but only shows a message when an update is available.
 
 **Set as Default `*.trg` Editor** (Windows Only), in the **Settings** menu, associates `.trg` files with PyTRG, so they open in PyTRG when double clicked.
 

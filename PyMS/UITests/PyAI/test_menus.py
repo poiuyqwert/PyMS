@@ -30,6 +30,8 @@ EXPECTED_MENUS: dict[str, list[str]] = {
 		SEPARATOR,
 		'Close',
 		SEPARATOR,
+		'Check for Updates...',
+		SEPARATOR,
 		'Exit',
 	],
 	'Edit': [
@@ -107,6 +109,7 @@ EXPECTED_TOOLBAR_ROWS: list[list[ToolbarItem]] = [
 		('View Help', UI.Key.F1),
 		('About PyAI', None),
 		('Donate', None),
+		('Check for Updates', None),
 		SECTION,
 		('Exit', UI.Shortcut.Exit),
 	],

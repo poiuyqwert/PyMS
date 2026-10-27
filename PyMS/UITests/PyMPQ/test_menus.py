@@ -21,6 +21,8 @@ EXPECTED_MENUS: list[tuple[str, list[str]]] = [
 		SEPARATOR,
 		'Close',
 		SEPARATOR,
+		'Check for Updates...',
+		SEPARATOR,
 		'Exit',
 	]),
 	('Files', [
@@ -112,6 +114,7 @@ EXPECTED_TOOLBAR: list[str | tuple[str, EventPattern | None]] = [
 	('View Help', UI.Key.F1),
 	('About PyMPQ', None),
 	('Donate', None),
+	('Check for Updates', None),
 	SECTION,
 	('Exit', UI.Shortcut.Exit),
 ]

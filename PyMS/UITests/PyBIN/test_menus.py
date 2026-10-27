@@ -59,7 +59,7 @@ class Test_PyBIN_menubar(PyBINTestCase):
 	def test_menu_items(self) -> None:
 		gui = self.make_pybin()
 		expected = {
-			'File': ['New', 'Open...', SEPARATOR, 'Save', 'Save As...', SEPARATOR, 'Import from TXT...', 'Export to TXT...', SEPARATOR, 'Close', SEPARATOR, 'Exit'],
+			'File': ['New', 'Open...', SEPARATOR, 'Save', 'Save As...', SEPARATOR, 'Import from TXT...', 'Export to TXT...', SEPARATOR, 'Close', SEPARATOR, 'Check for Updates...', SEPARATOR, 'Exit'],
 			'View': ['Preview Settings Panel'],
 			'Widgets': ['Add Widget', 'Remove Widget', SEPARATOR, 'Edit Widget...', SEPARATOR, 'Move Widget Up', 'Move Widget Down'],
 			'Settings': ['Manage Settings...', SEPARATOR, 'Set as Default *.bin Editor (Windows Only)'],
@@ -107,6 +107,7 @@ class Test_PyBIN_toolbar(PyBINTestCase):
 			with_key('View Help', UI.Key.F4),
 			'About PyBIN',
 			'Donate',
+			'Check for Updates',
 			SECTION,
 			with_key('Exit', UI.Shortcut.Exit),
 		])

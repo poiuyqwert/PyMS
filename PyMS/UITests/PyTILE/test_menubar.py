@@ -17,7 +17,7 @@ class Test_Menubar_Layout(PyTILETestCase):
 		gui = self.open_pytile()
 		menus = {label: menu_entries(menu) for label, menu in menubar_cascades(gui).items()}
 		self.assertEqual(menus, {
-			'File': ['Open...', '-', 'Save', 'Save As...', '-', 'Close', '-', 'Exit'],
+			'File': ['Open...', '-', 'Save', 'Save As...', '-', 'Close', '-', 'Check for Updates...', '-', 'Exit'],
 			'View': ['MegaTile Group Palette...', '-', 'Scroll Group Palette Up', 'Scroll Group Palette Down'],
 			'Group': ['Copy Group Settings', 'Paste Group Settings'],
 			'MegaTile': [
@@ -65,6 +65,7 @@ class Test_Toolbar_Layout(PyTILETestCase):
 			f'View Help ({UI.Key.F1.description()})',
 			'About PyTILE',
 			'Donate',
+			'Check for Updates',
 			'||',
 			f'Exit ({UI.Shortcut.Exit.description()})',
 		])

@@ -17,6 +17,7 @@ These commands are in the **File** menu and on the toolbar:
 - **Open...** (`Ctrl+O`): Opens a `.grp` file. Opening an [uncompressed](/Help/Files/GRP.md#compression) GRP shows a reminder to turn on **Save Uncompressed** before saving.
 - **Save** (`Ctrl+S`) and **Save As...** (`Ctrl+Alt+A`): Saves the GRP, without compression if **Save Uncompressed** (the checkbox under the preview, or in the **Settings** menu) is checked.
 - **Close** (`Ctrl+W`): Closes the GRP.
+- **Check for Updates...**: Checks GitHub for a newer version of PyGRP and PyMS, and shows the result. PyGRP also checks automatically when it starts, but only shows a message when an update is available.
 
 Creating, opening, or closing a GRP (or exiting PyGRP) asks to save any unsaved changes first.
 

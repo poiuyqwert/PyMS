@@ -80,6 +80,8 @@ class Test_PyFNT_menubar(PyFNTTestCase):
 			SEPARATOR,
 			'Close',
 			SEPARATOR,
+			'Check for Updates...',
+			SEPARATOR,
 			'Exit',
 		])
 
@@ -135,6 +137,7 @@ class Test_PyFNT_toolbar(PyFNTTestCase):
 			tooltip('View Help', UI.Key.F1),
 			tooltip('About PyFNT'),
 			tooltip('Donate'),
+			tooltip('Check for Updates'),
 			SECTION,
 			tooltip('Exit', UI.Shortcut.Exit),
 		])

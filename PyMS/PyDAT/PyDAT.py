@@ -81,6 +81,8 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		file_menu.add_command('Import from TXT...', self.iimport, UI.Ctrl.i)
 		file_menu.add_command('Export to TXT...', self.export, UI.Ctrl.e)
 		file_menu.add_separator()
+		file_menu.add_command('Check for Updates...', self.check_for_updates, underline='u')
+		file_menu.add_separator()
 		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
 
 		entry_menu = self.menu.add_cascade('Entry')
@@ -131,6 +133,7 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyDAT')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
+		self.toolbar.add_button(Assets.get_image('update'), self.check_for_updates, 'Check for Updates')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
@@ -545,6 +548,9 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 	def sponsor(self) -> None:
 		SponsorDialog(self)
+
+	def check_for_updates(self) -> None:
+		UpdateDialog(self, 'PyDAT')
 
 	def exit(self, _event: UI.Event | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:

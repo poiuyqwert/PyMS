@@ -7,7 +7,7 @@ The status bar at the bottom shows the result of the last action and an indicato
 
 Every command is in the menubar, and most also have a toolbar button:
 
-- **File**: Open, Save, Save As, Import BMP, Export BMP, Close, and Exit. The toolbar's first group has the same buttons in the same order (Exit is the last toolbar button).
+- **File**: Open, Save, Save As, Import BMP, Export BMP, Close, Check for Updates, and Exit. The toolbar's first group has the same buttons in the same order (Check for Updates is next to the Donate button, and Exit is the last toolbar button). Check for Updates checks GitHub for a newer version of PyPCX and PyMS, and shows the result. PyPCX also checks automatically when it starts, but only shows a message when an update is available.
 - **Palette**: Import Palette, and the **Save Palette As** submenu with one item per palette format. The toolbar's second group has the same buttons.
 - **Settings**: Manage Settings, and **Set as Default `*.pcx` Editor (Windows Only)**, which associates `.pcx` files with PyPCX on Windows so they open in PyPCX when double clicked.
 - **Help**: View Help (`F1`), Donate, and About PyPCX.

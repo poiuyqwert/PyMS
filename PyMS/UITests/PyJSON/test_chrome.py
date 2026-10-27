@@ -62,6 +62,8 @@ class Test_PyJSON_menubar(PyJSONTestCase):
 			SEPARATOR,
 			'Close',
 			SEPARATOR,
+			'Check for Updates...',
+			SEPARATOR,
 			'Exit',
 		])
 
@@ -114,6 +116,7 @@ class Test_PyJSON_toolbar(PyJSONTestCase):
 			f'View Help ({UI.Key.F1.description()})',
 			'About PyJSON',
 			'Donate',
+			'Check for Updates',
 			SECTION,
 			f'Exit ({UI.Shortcut.Exit.description()})',
 		])

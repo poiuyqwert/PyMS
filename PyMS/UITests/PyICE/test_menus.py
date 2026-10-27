@@ -65,6 +65,8 @@ class Test_Menubar(PyICETestCase):
 			SEPARATOR,
 			'Close',
 			SEPARATOR,
+			'Check for Updates...',
+			SEPARATOR,
 			'Exit',
 		])
 		self.assertEqual(menu_labels(submenu(gui.menu, 'Edit')), [
@@ -126,6 +128,7 @@ class Test_Toolbar(PyICETestCase):
 			f'View Help ({UI.Key.F1.description()})',
 			'About PyICE',
 			'Donate',
+			'Check for Updates',
 			SECTION,
 			f'Exit ({UI.Shortcut.Exit.description()})',
 		])

@@ -4,7 +4,7 @@ PyGOT is a tool used for editing the Game Template [.got](/Help/Files/GOT.md) fi
 ## Main Window
 The window is a single fixed-size form that edits one Game Template at a time. The form is split into three groups — [Template Info](#template-info), [Variation Info](#variation-info), and [Settings](#settings) — and every field is disabled until a template is created or opened. The status bar at the bottom shows status messages and an indicator for unsaved changes.
 
-The menubar has **File**, **TRG**, **Settings**, and **Help** menus. The toolbar below it has a button for every command, in the same order: the **File** commands, then the TRG conversions, then **Manage Settings**, then **Set as Default `*.got` Editor**, **View Help**, **About PyGOT**, **Donate**, and finally **Exit**. Hover a button to see its name and shortcut.
+The menubar has **File**, **TRG**, **Settings**, and **Help** menus. The toolbar below it has a button for every command, in the same order: the **File** commands, then the TRG conversions, then **Manage Settings**, then **Set as Default `*.got` Editor**, **View Help**, **About PyGOT**, **Donate**, **Check for Updates**, and finally **Exit**. Hover a button to see its name and shortcut.
 
 ## Managing Files
 These commands are in the **File** menu and on the toolbar.
@@ -15,6 +15,7 @@ These commands are in the **File** menu and on the toolbar.
 - **Import Game Template...** (`Ctrl+I`): Loads the text format produced by **Export Game Template** as a new unsaved template.
 - **Export Game Template...** (`Ctrl+E`): Saves the template as an editable text file, with a reference at the top listing the options for each setting.
 - **Close** (`Ctrl+W`): Closes the template.
+- **Check for Updates...**: Checks GitHub for a newer version of PyGOT and PyMS, and shows the result. PyGOT also checks automatically when it starts, but only shows a message when an update is available.
 - **Exit**: Quits PyGOT.
 
 **Set as Default `*.got` Editor** (Windows Only), in the **Settings** menu, associates `.got` files with PyGOT, so they open in PyGOT when double clicked.

@@ -4,7 +4,7 @@ A dialog is a tree of widgets (buttons, labels, images, sliders, and so on). See
 PyBIN supports both legacy (pre-Remastered) and StarCraft: Remastered dialog files (see [UI BIN](/Help/Files/UI_BIN.md#legacy-and-remastered-files) for the differences). The **SC:R** indicator above the widget tree shows whether the loaded file is in the Remastered format — it is enabled automatically when you open a Remastered file or use Remastered-only widgets.
 
 ## Main Window
-The menubar has **File**, **View**, **Widgets**, **Settings**, and **Help** menus. The main toolbar along the top has the same file commands as the File menu, followed by **Manage Settings**, then **Set as Default** `*.bin` **Editor**, **View Help** (`F4`), **About PyBIN**, and **Donate**, and finally **Exit**.
+The menubar has **File**, **View**, **Widgets**, **Settings**, and **Help** menus. The main toolbar along the top has the same file commands as the File menu, followed by **Manage Settings**, then **Set as Default** `*.bin` **Editor**, **View Help** (`F4`), **About PyBIN**, **Donate**, and **Check for Updates**, and finally **Exit**.
 The left side of the window shows the widget tree — the dialogs widgets in their draw order, including any editor-only groups you have made to organize them. Each widget is listed with its text, control ID, and type. Selecting a widget in the tree also selects it on the canvas.
 The toolbar under the widget tree has the widget editing actions, which are also in the **Widgets** menu (the preview settings toggle is **View > Preview Settings Panel**):
 
@@ -27,6 +27,7 @@ These commands are in the **File** menu and on the main toolbar.
 - **Save** (`Ctrl+S`) and **Save As...** (`Ctrl+Alt+A`): Saves the dialog to a `.bin` file. The file is saved in the Remastered format if it was loaded as one or uses Remastered-only features, and in the legacy format otherwise.
 - **Export to TXT...** (`Ctrl+E`): Saves the dialog as an editable text file listing every widget and SMK with its properties. Exporting, editing the text, and re-importing can be an easy way to make bulk changes.
 - **Close** (`Ctrl+W`): Closes the loaded file.
+- **Check for Updates...**: Checks GitHub for a newer version of PyBIN and PyMS, and shows the result. PyBIN also checks automatically when it starts, but only shows a message when an update is available.
 - **Exit**: Closes PyBIN, asking to save any unsaved changes first.
 
 ## Preview Settings

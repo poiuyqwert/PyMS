@@ -183,6 +183,8 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		file_menu.add_separator()
 		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open')
 		file_menu.add_separator()
+		file_menu.add_command('Check for Updates...', self.check_for_updates, underline='u')
+		file_menu.add_separator()
 		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
 
 		view_menu = self.menu.add_cascade('View')
@@ -229,6 +231,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F4, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyBIN')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
+		self.toolbar.add_button(Assets.get_image('update'), self.check_for_updates, 'Check for Updates')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
 		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
@@ -1261,6 +1264,9 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 
 	def sponsor(self) -> None:
 		SponsorDialog(self)
+
+	def check_for_updates(self) -> None:
+		UpdateDialog(self, 'PyBIN')
 
 	def load_settings(self) -> None:
 		self.show_preview_settings.set(self.config_.preview.show_settings.value)

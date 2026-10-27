@@ -17,7 +17,7 @@ Multiple entries can be selected in each list, in any combination of lists. Each
 ## Menus and Toolbar
 Every command is in the menubar, and most are also on the toolbar (the toolbar tooltips use the menu labels without the trailing `...`):
 
-- **File**: New, Open..., Open Default Scripts, Save, Save As..., Close, and Exit (see [Managing Files](#managing-files)).
+- **File**: New, Open..., Open Default Scripts, Save, Save As..., Close, Check for Updates..., and Exit (see [Managing Files](#managing-files)).
 - **Edit**: Select All and Find Entries... (see [Main Window](#main-window) and [Finding Entries](#finding-entries)).
 - **Entries**: Edit IScript Entries..., Import Entries..., Import a List of Files..., and Export Entries... (see [Editing Entries](#editing-entries) and [Exporting and Importing](#exporting-and-importing)).
 - **Settings**: Manage Settings... and Set as Default `*.bin` Editor (Windows Only) (see [Data Files](#data-files)).
@@ -31,6 +31,7 @@ These commands are in the **File** menu:
 - **Open Default Scripts** (`Ctrl+D`): Opens the default StarCraft `iscript.bin` bundled with PyMS.
 - **Save** (`Ctrl+S`) and **Save As...** (`Ctrl+Alt+A`): Saves the `iscript.bin`.
 - **Close** (`Ctrl+W`): Closes the loaded file.
+- **Check for Updates...**: Checks GitHub for a newer version of PyICE and PyMS, and shows the result. PyICE also checks automatically when it starts, but only shows a message when an update is available.
 - **Exit**: Closes PyICE, asking to save any unsaved changes first.
 
 Set as Default `*.bin` Editor (Windows Only), in the **Settings** menu, associates `.bin` files with PyICE, so they open in PyICE when double clicked.

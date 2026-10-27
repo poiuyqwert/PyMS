@@ -74,6 +74,8 @@ class Test_PyDAT_menubar(PyDATTestCase):
 			'Import from TXT...',
 			'Export to TXT...',
 			SEPARATOR,
+			'Check for Updates...',
+			SEPARATOR,
 			'Exit',
 		])
 
@@ -155,6 +157,7 @@ class Test_PyDAT_toolbar(PyDATTestCase):
 			'View Help',
 			'About PyDAT',
 			'Donate',
+			'Check for Updates',
 			SECTION,
 			'Exit',
 		])

@@ -18,14 +18,14 @@ Changes to the script list (adding, removing, and editing scripts) can be undone
 ## Menus and Toolbar
 The menubar groups the commands by what they act on:
 
-- **File**: New, Open..., Open Default Scripts, Open MPQ..., Save, Save As..., Save MPQ..., Close, and Exit (see [Managing Files](#managing-files)).
+- **File**: New, Open..., Open Default Scripts, Open MPQ..., Save, Save As..., Save MPQ..., Close, Check for Updates..., and Exit (see [Managing Files](#managing-files)).
 - **Edit**: Undo, Redo, Select All, and Find Scripts... (see [Finding Scripts](#finding-scripts)).
 - **View**: The script list sort order.
 - **Scripts**: Add Blank Script..., Remove Scripts, Edit AI Script..., Edit AI ID, String, and Extra Info..., Edit Flags..., Import Scripts..., Import a List of Files..., and Export Scripts... (see [Editing Scripts](#editing-scripts) and [Exporting and Importing](#exporting-and-importing)).
 - **Settings**: Manage Settings..., Decompiling Format..., Manage External Definition Files..., Open TBL and DAT Settings..., Save TBL and DAT Settings..., and Set as Default `*.bin` Editor (Windows Only).
 - **Help**: View Help (`F1`), Donate..., and About PyAI.
 
-The toolbar has two rows. The first row has the file buttons (in the same order as the File menu), Undo and Redo, the sort buttons, Manage Settings, then Set as Default `*.bin` Editor, View Help, About PyAI, Donate, and Exit. The second row has Add Blank Script, Remove Scripts, and Find Scripts, then the script editing buttons (Edit AI Script; Edit AI ID, String, and Extra Info; Edit Flags), the import and export buttons (Import Scripts, Import a List of Files, Export Scripts), and finally the settings buttons (Decompiling Format, Manage External Definition Files, Open TBL and DAT Settings, Save TBL and DAT Settings). Hovering over a button shows its name and keyboard shortcut.
+The toolbar has two rows. The first row has the file buttons (in the same order as the File menu), Undo and Redo, the sort buttons, Manage Settings, then Set as Default `*.bin` Editor, View Help, About PyAI, Donate, Check for Updates, and Exit. The second row has Add Blank Script, Remove Scripts, and Find Scripts, then the script editing buttons (Edit AI Script; Edit AI ID, String, and Extra Info; Edit Flags), the import and export buttons (Import Scripts, Import a List of Files, Export Scripts), and finally the settings buttons (Decompiling Format, Manage External Definition Files, Open TBL and DAT Settings, Save TBL and DAT Settings). Hovering over a button shows its name and keyboard shortcut.
 
 ## Managing Files
 These commands are in the File menu and on the toolbar:
@@ -37,6 +37,7 @@ These commands are in the File menu and on the toolbar:
 - **Save** (`Ctrl+S`) and **Save As...** (`Ctrl+Alt+A`): Saves the `aiscript.bin`, and asks where to save the `bwscript.bin` if any scripts are stored in it.
 - **Save MPQ...** (`Ctrl+Alt+M`): Saves both files into an MPQ as `scripts\aiscript.bin` and `scripts\bwscript.bin`.
 - **Close** (`Ctrl+W`): Closes the loaded files.
+- **Check for Updates...**: Checks GitHub for a newer version of PyAI and PyMS, and shows the result. PyAI also checks automatically when it starts, but only shows a message when an update is available.
 - **Set as Default `*.bin` Editor** (Windows Only, in the Settings menu): Associates `.bin` files with PyAI, so they open in PyAI when double clicked.
 
 `aiscript.bin` has a maximum file size of 65535 bytes (the reason `bwscript.bin` exists). If your scripts don't fit, PyAI will offer to "expand" the file, which raises the limit but makes the file require the AISE plugin to work in the game (see [Plugins](#plugins)). `aiscript.bin` and `bwscript.bin` are expanded independently, so expanding one doesn't change the format of the other. An expanded file is only saved in the expanded format while it is larger than 65535 bytes; otherwise it is saved in the normal format. PyAI can also open files that use the expanded format's long jump table even if they are smaller than 65535 bytes.

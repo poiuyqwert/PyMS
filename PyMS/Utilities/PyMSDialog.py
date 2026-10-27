@@ -20,9 +20,8 @@ class PyMSDialog(UI.Toplevel):
 			required_size = UI.Size(self.winfo_reqwidth(), self.winfo_reqheight())
 			if set_min_size[0] or set_min_size[1]:
 				self.minsize(required_size.width if set_min_size[0] else 0, required_size.height if set_min_size[1] else 0)
-			screen_size = UI.Size(self.winfo_screenwidth(), self.winfo_screenheight())
 			if center:
-				self.geometry(UI.GeometryAdjust(pos=required_size.centered_in(screen_size)).text)
+				self.recenter()
 			self.resizable(*resizable)
 			self.setup_complete()
 		finally:
@@ -32,6 +31,13 @@ class PyMSDialog(UI.Toplevel):
 		focus.focus_set()
 		if grabwait:
 			self.grab_wait()
+
+	def recenter(self) -> None:
+		"""Center the dialog on screen at its current required size (e.g. after its contents change)."""
+		self.update_idletasks()
+		required_size = UI.Size(self.winfo_reqwidth(), self.winfo_reqheight())
+		screen_size = UI.Size(self.winfo_screenwidth(), self.winfo_screenheight())
+		self.geometry(UI.GeometryAdjust(pos=required_size.centered_in(screen_size)).text)
 
 	def widgetize(self) -> UI.Misc | None:
 		return None

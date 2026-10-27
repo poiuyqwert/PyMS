@@ -73,6 +73,8 @@ class Test_PyPAL_menubar(PyPALTestCase):
 			SEPARATOR,
 			'Close',
 			SEPARATOR,
+			'Check for Updates...',
+			SEPARATOR,
 			'Exit',
 		])
 
@@ -182,6 +184,7 @@ class Test_PyPAL_toolbar(PyPALTestCase):
 			'View Help',
 			'About PyPAL',
 			'Donate',
+			'Check for Updates',
 			SECTION,
 			'Exit',
 		])

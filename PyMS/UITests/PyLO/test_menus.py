@@ -50,6 +50,8 @@ class Test_PyLO_menubar(PyLOTestCase):
 			'Save', 'Save As...', '-',
 			'Import Text...', 'Export Text...', '-',
 			'Close', '-',
+			'Check for Updates...',
+			'-',
 			'Exit',
 		])
 		self.assertEqual(menu_entries(cascade(gui, 'Edit')), ['Find/Replace...', 'Find Next', '-', 'Test Code'])
@@ -94,7 +96,7 @@ class Test_PyLO_toolbar(PyLOTestCase):
 			'Close' + key(UI.Ctrl.w), '||',
 			'Find/Replace' + key(UI.Ctrl.f), '|', 'Test Code' + key(UI.Ctrl.t), '||',
 			'Manage Settings' + key(UI.Ctrl.m), 'Syntax Highlighting' + key(UI.Ctrl.Alt.c), '||',
-			'Set as Default *.lo? Editor (Windows Only)', 'View Help' + key(UI.Key.F1), 'About PyLO', 'Donate', '||',
+			'Set as Default *.lo? Editor (Windows Only)', 'View Help' + key(UI.Key.F1), 'About PyLO', 'Donate', 'Check for Updates', '||',
 			'Exit' + key(UI.Shortcut.Exit),
 		])
 
