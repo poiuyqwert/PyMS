@@ -46,7 +46,9 @@ String(1):
   It can span multiple lines.
 ```
 
-The text lines must be indented — the indentation of the first line sets the level, and the string ends at the first line that doesn't match it. String index 0 means "no string", so real strings start at index 1, and each index can only be defined once. Special characters are written as [TBL](/Help/Files/TBL.md) format codes like `<3>` (the codes are highlighted in the editor).
+The text lines must be indented — the indentation of the first line sets the level, and the string ends at the first line that doesn't match it. Indentation past that level on later lines is kept as part of the string. Special characters are written as [TBL](/Help/Files/TBL.md) format codes like `<3>` (the codes are highlighted in the editor), a literal `<` is written as `<60>`, and spaces at the start of a line are written as `<32>` so they aren't mistaken for indentation.
+
+String index 0 means "no string", so real strings start at index 1, and each index can only be defined once.
 
 ## Unit Properties
 The CreateUnitWithProperties action applies one of 64 unit property slots to the units it creates. Each slot is defined in a `UnitProperties` block with an id from `1` to `64`:

@@ -245,6 +245,35 @@ class Test_StrCodeType(unittest.TestCase):
 		context.command_in_parens = True
 		self.assertEqual(str_type.lex(context), 'hello world')
 
+	def test_serialize_tbl_escapes_special_characters(self) -> None:
+		str_type = CodeType.StrCodeType('s', 's')
+		self.assertEqual(str_type.serialize('a\nb<c#\x01', serialize_context()), "'a<10>b<60>c<35><1>'")
+
+	def test_serialize_tbl_escapes_quotes(self) -> None:
+		str_type = CodeType.StrCodeType('s', 's')
+		self.assertEqual(str_type.serialize('say "hi" it\'s', serialize_context()), "'say <34>hi<34> it<39>s'")
+
+	def test_lex_quoted_string_compiles_tbl_escapes(self) -> None:
+		str_type = CodeType.StrCodeType('s', 's')
+		self.assertEqual(str_type.lex(make_parse_context('"a<10>b<60>c<34>"')), 'a\nb<c"')
+
+	def test_lex_open_string_compiles_tbl_escapes(self) -> None:
+		str_type = CodeType.StrCodeType('s', 's')
+		context = make_parse_context('x<40>y<44>z<41>)')
+		context.command_in_parens = True
+		self.assertEqual(str_type.lex(context), 'x(y,z)')
+
+	def test_tbl_formatting_round_trips(self) -> None:
+		str_type = CodeType.StrCodeType('s', 's')
+		value = 'Tab\there, "quotes" \'apos\' <60> #hash; (paren), back\\slash é\x00\x1f'
+		serialized = str_type.serialize(value, serialize_context())
+		self.assertEqual(str_type.lex(make_parse_context(serialized)), value)
+
+	def test_tbl_formatting_disabled_keeps_raw_text(self) -> None:
+		str_type = CodeType.StrCodeType('s', 's', tbl_formatting=False)
+		self.assertEqual(str_type.serialize('a<b"', serialize_context()), "'a<b\"'")
+		self.assertEqual(str_type.lex(make_parse_context('"a<10>b"')), 'a<10>b')
+
 
 class Test_EnumCodeType(unittest.TestCase):
 	def make(self, **kwargs) -> CodeType.EnumCodeType:

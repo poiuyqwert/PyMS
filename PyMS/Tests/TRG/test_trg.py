@@ -95,6 +95,32 @@ class Test_text_round_trip(unittest.TestCase):
 		trg = _compile(text)
 		self.assertEqual(trg.strings[1], 'Line one! (with parens), commas; and #hash\nLine two: 100% sure? é "quote \'apos\nLine three)')
 
+	def test_compile_converts_tbl_escapes(self) -> None:
+		text = NORMAL_TEXT.replace('  Hello World\n', '  <3>Yellow<1> <60>tag<62> <35>\n')
+		trg = _compile(text)
+		self.assertEqual(trg.strings[1], '\x03Yellow\x01 <tag> #')
+
+	def test_decompile_compile_round_trips_tbl_formatting(self) -> None:
+		raw = '\x03Colored<\x01 #hash "q" \'a\'\n  indented line\n\tTabbed\r\nlast  '
+		trg = _compile(NORMAL_TEXT)
+		trg.strings[1] = raw
+		output = io.StringIO()
+		trg.decompile(output)
+		self.assertEqual(_compile(output.getvalue()).strings[1], raw)
+
+	def test_decompile_compile_round_trips_leading_spaces(self) -> None:
+		raw = '   first\n second'
+		trg = _compile(NORMAL_TEXT)
+		trg.strings[1] = raw
+		output = io.StringIO()
+		trg.decompile(output)
+		self.assertIn('String(1):\n  <32><32><32>first\n  <32>second\n', output.getvalue())
+		self.assertEqual(_compile(output.getvalue()).strings[1], raw)
+
+	def test_compile_keeps_extra_indentation_on_continuation_lines(self) -> None:
+		text = NORMAL_TEXT.replace('  Hello World\n', '  Hello\n    World\n')
+		self.assertEqual(_compile(text).strings[1], 'Hello\n  World')
+
 	def test_no_triggers_raises(self) -> None:
 		with self.assertRaises(PyMSError) as cm:
 			_compile('String(1):\n  orphan\n\n')
@@ -185,6 +211,16 @@ class Test_binary_round_trip(unittest.TestCase):
 		reloaded = TRG()
 		reloaded.load(data)
 		self.assertEqual(self._save(reloaded), data)
+
+	def test_tbl_formatted_string_round_trips_through_binary(self) -> None:
+		text = NORMAL_TEXT.replace('  Hello World\n', '  <3>Yellow<1> <60>tag<62> <35>\n  <32>next line\n')
+		data = self._save(_compile(text))
+		reloaded = TRG()
+		reloaded.load(data)
+		output = io.StringIO()
+		reloaded.decompile(output)
+		self.assertEqual(output.getvalue(), text)
+		self.assertEqual(self._save(_compile(output.getvalue())), data)
 
 	def test_got_format_omits_header(self) -> None:
 		data = self._save(_compile(NORMAL_TEXT), Format.got)

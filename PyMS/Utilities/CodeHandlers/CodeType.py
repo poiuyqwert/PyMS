@@ -9,6 +9,7 @@ from . import WarningID
 from .. import Struct
 from ..PyMSError import PyMSError
 from ..BytesScanner import BytesScanner
+from ...FileFormats import TBL
 
 from typing import TYPE_CHECKING, Generic, TypeVar, cast, runtime_checkable, Protocol, Sequence
 if TYPE_CHECKING:
@@ -166,8 +167,10 @@ class AddressCodeType(CodeType[int, CodeBlock]):
 		raise parse_context.error('Parse', f'Expected block label identifier but got `{token.raw_value}`')
 
 class StrCodeType(CodeType[str, str]):
-	def __init__(self, name: str, help_text: str) -> None:
+	def __init__(self, name: str, help_text: str, *, tbl_formatting: bool = True) -> None:
 		CodeType.__init__(self, name, help_text, Struct.l_str(0), False) # TODO: We don't actually use the Struct field
+		# Source text uses TBL string formatting (`<NN>` escapes), while the in-memory value stays raw
+		self.tbl_formatting = tbl_formatting
 
 	@staticmethod
 	def open_string_stop(token: Tokens.Token) -> Lexer.Stop:
@@ -202,6 +205,9 @@ class StrCodeType(CodeType[str, str]):
 		context.add_data(value.encode('utf-8') + b'\x00')
 
 	def serialize(self, value: str, context: SerializeContext) -> str:
+		if self.tbl_formatting:
+			# Quotes are escaped too, so the quoted result never needs backslash escapes for them
+			value = TBL.decompile_string(value, include='"\'')
 		return StrCodeType.serialize_string(value)
 
 	def lex(self, parse_context: ParseContext) -> str:
@@ -211,12 +217,16 @@ class StrCodeType(CodeType[str, str]):
 			parse_context.lexer.rollback(start)
 			token = parse_context.lexer.read_open_string(StrCodeType.open_string_stop)
 		if isinstance(token, Tokens.StringToken):
+			value: str
 			try:
-				return StrCodeType.parse_string(token.raw_value)
+				value = StrCodeType.parse_string(token.raw_value)
 			except Exception:
-				if parse_context and parse_context.command_in_parens:
-					return token.raw_value
-				raise
+				if not parse_context or not parse_context.command_in_parens:
+					raise
+				value = token.raw_value
+			if self.tbl_formatting:
+				value = TBL.compile_string(value)
+			return value
 		raise parse_context.error('Parse', f'Expected string value but got `{token.raw_value}`')
 
 class EnumCodeType(CodeType[int, int], HasKeywords):

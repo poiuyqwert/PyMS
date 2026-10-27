@@ -523,6 +523,13 @@ class Test_StringCodeType(unittest.TestCase):
 	def test_parse(self) -> None:
 		self.assertEqual(CodeTypes.StringCodeType().parse(utils.parse_context('"Hello"')), 'Hello')
 
+	def test_tbl_formatting_round_trips(self) -> None:
+		_, serialize_context = utils.serialize_context()
+		value = 'Line\x01one\n"two" <three> #four (five, six)'
+		serialized = CodeTypes.StringCodeType().serialize(value, serialize_context)
+		self.assertEqual(serialized, "'Line<1>one<10><34>two<34> <60>three<62> <35>four (five, six)'")
+		self.assertEqual(CodeTypes.StringCodeType().parse(utils.parse_context(serialized)), value)
+
 
 class Test_CompareCodeType(unittest.TestCase):
 	def test_accepts_and_compatible(self) -> None:

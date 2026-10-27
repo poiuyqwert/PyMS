@@ -45,7 +45,7 @@ build(5, Zerg Drone, 80)
 
 Every command and its parameters is documented in the [Command Reference](/Help/Programs/PyAI/Command_Reference.md), and the [Code Editor](/Help/Programs/PyAI/Code_Editor.md) shows the same documentation in tooltips when hovering a command.
 Parameters that take a unit, upgrade, or technology can be written either as the numeric ID or as the full name from `stat_txt.tbl` (like `Zerg Drone` above). A name containing spaces must be quoted (`"Zerg Drone"`) when the command is not written with parenthesis. Inside parenthesis the quotes can be left off, since the comma or closing parenthesis ends the name — unless the name itself contains a comma/parenthesis, which needs quotes even inside parenthesis (`build(5, "Zerg, Drone", 80)`).
-String parameters (like the message of a `debug` command) use TBL string formatting for special characters: `<44>` for a comma, `<40>` and `<41>` for parenthesis, and so on.
+String parameters (like the message of a `debug` command) use TBL string formatting for special characters: `<44>` for a comma, `<40>` and `<41>` for parenthesis, and so on. When decompiling, control characters, `#`, `<`, `>`, and quotes (`<34>` for `"` and `<39>` for `'`) are written as codes, so a literal `<` in a string is written as `<60>`.
 Unquoted text inside parenthesis ends at the next comma, the closing parenthesis, or the end of the line, so it can't continue onto the next line. A `#` or `;` starts a [comment](#comments) even inside parenthesis, so text containing them must be quoted (`print("Phase 2; attack")`) or use `<35>` for `#` and `<59>` for `;`.
 
 ## Comments

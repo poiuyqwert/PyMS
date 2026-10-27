@@ -100,10 +100,14 @@ class TRG:
 		return warnings
 
 	RE_NEWLINES = re.compile(r'(\r\n|\r|\n)')
+	RE_LEADING_SPACES = re.compile(r'(?:^|(?<=[\r\n])) +')
 	def decompile(self, output: IO.AnyOutputText) -> None:
 		with IO.OutputText(output) as f:
 			for string_index,raw_string in self.strings.items():
-				string = TRG.RE_NEWLINES.sub('\\1  ', TBL.decompile_string(raw_string, '\r\n'))
+				string = TBL.decompile_string(raw_string, '\r\n')
+				# Leading spaces would be read back as indentation, so escape them
+				string = TRG.RE_LEADING_SPACES.sub(lambda match: '<32>' * len(match.group(0)), string)
+				string = TRG.RE_NEWLINES.sub('\\1  ', string)
 				f.write(f'String({string_index}):\n  {string}\n\n')
 			for properties_index,properties in self.unit_properties.items():
 				properties.decompile(properties_index + 1, f)
@@ -308,8 +312,9 @@ class TRG:
 				if not whitespace_token or not whitespace_token.raw_value.startswith(indent_token.raw_value):
 					string += string_token.raw_value.rstrip('\r\n')
 					break
-				string += string_token.raw_value
-			strings[string_id] = string
+				# Whitespace past the string's indentation is part of the string
+				string += string_token.raw_value + whitespace_token.raw_value[len(indent_token.raw_value):]
+			strings[string_id] = TBL.compile_string(string)
 
 		def process_properties() -> Tokens.Token:
 			nonlocal unit_properties
