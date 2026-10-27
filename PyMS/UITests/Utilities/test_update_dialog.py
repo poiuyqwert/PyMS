@@ -41,6 +41,7 @@ class _DeferredThread:
 
 class Test_UpdateDialog(UITestCase):
 	def setUp(self) -> None:
+		super().setUp()
 		self.pending: list[Callable[[], None]] = []
 		for patcher in (
 			mock.patch.object(UI.WindowExtensions, 'grab_wait', lambda self: None),

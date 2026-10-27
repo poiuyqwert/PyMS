@@ -1,9 +1,11 @@
 
 import contextlib
+import tkinter
 from tkinter import TclError
 import unittest
 from unittest import mock
 
+from . import isolation
 from ..Utilities import UIKit as UI
 from ..Utilities.UIKit.EventPattern import EventPattern
 
@@ -11,27 +13,27 @@ from typing import Any, Callable, TypeVar
 
 W = TypeVar('W', bound=UI.WindowExtensions)
 
-# A non-None stand-in for the trace module's installed-tracer global; see below.
-_TRACE_SENTINEL = mock.MagicMock()
-
 # `target -> mock.patch(**kwargs)` applied around every window construction. PyMS
-# main windows reach out to the world in `__init__` — read/write settings, fire
-# analytics, check for updates over the network, and install a stdout/stderr
+# main windows reach out to the world in `__init__` — read/write settings, apply the
+# user's theme, check for updates over the network, and install a stdout/stderr
 # tracer that logs to disk. Neutralizing those keeps a UI test deterministic and
 # disk-free (the project forbids tests writing data to disk). Keyed by target so
 # each patch site is unique and `extra_patches` can override a default by path.
+# Analytics, settings files, disk writes and modal waits are also isolated for the
+# whole test process by `isolation.py`.
 #   - `Config._read` returns an empty dict so settings fall back to defaults
 #     without touching `Settings/`; `_write` is a no-op so a stray `save()` can't.
+#   - `Theme._THEME` is cleared so every window gets the default (unthemed) look.
 #   - `trace._TRACER` is set non-None so `setup_trace()` early-returns for every
 #     program. Patching the module global (not the function) works regardless of
 #     how each program imports `setup_trace`, and avoids redirecting stdout/stderr.
+#     It records `trace_error()` calls, which fail the test.
 _DEFAULT_PATCHES: dict[str, dict[str, Any]] = {
 	'PyMS.Utilities.Config.Config._read': {'return_value': {}},
 	'PyMS.Utilities.Config.Config._write': {'return_value': None},
 	'PyMS.Utilities.UpdateDialog.UpdateDialog.check_update': {'return_value': None},
-	'PyMS.Utilities.analytics.ga.track': {'return_value': None},
-	'PyMS.Utilities.analytics.ga.set_application': {'return_value': None},
-	'PyMS.Utilities.trace._TRACER': {'new': _TRACE_SENTINEL},
+	'PyMS.Utilities.UIKit.Theme._THEME': {'new': None},
+	'PyMS.Utilities.trace._TRACER': {'new': isolation.TRACER},
 }
 
 
@@ -40,6 +42,28 @@ class UITestCase(unittest.TestCase):
 	# entering `mainloop`), drives it through real widget seams, and asserts on
 	# widget and model state. Subclasses call `make_window(...)` then act with the
 	# `shortcut`/`click`/`invoke` helpers, pumping the event loop with `pump`.
+	# Subclasses overriding `setUp` must call `super().setUp()`.
+
+	def setUp(self) -> None:
+		# Fail the test if, while it ran, anything wrote to disk, waited on a modal,
+		# or reported an error through the tracer (see `isolation.py`). Registered
+		# first so it runs last, after the window is destroyed.
+		self._traced_errors_mark = isolation.TRACED_ERRORS.mark()
+		marks = (isolation.DISK_WRITES.mark(), isolation.MODALS.mark(), self._traced_errors_mark)
+		self.addCleanup(self._assert_isolated, *marks)
+
+	def take_traced_errors(self) -> list[str]:
+		# The tracebacks reported through the tracer so far in this test, which no
+		# longer fail it. For tests that deliberately exercise a swallowed error.
+		return isolation.TRACED_ERRORS.take(self._traced_errors_mark)
+
+	def _assert_isolated(self, disk_writes_mark: int, modals_mark: int, traced_errors_mark: int) -> None:
+		problems: list[str] = []
+		problems.extend(f'Wrote to disk: {entry}' for entry in isolation.DISK_WRITES.take(disk_writes_mark))
+		problems.extend(f'Waited on a modal: {entry}' for entry in isolation.MODALS.take(modals_mark))
+		problems.extend(f'Traced error:\n{entry}' for entry in isolation.TRACED_ERRORS.take(traced_errors_mark))
+		if problems:
+			self.fail('\n'.join(problems))
 
 	def make_window(self, factory: Callable[[], W], extra_patches: dict[str, dict[str, Any]] | None = None) -> W:
 		# Build a window with `_DEFAULT_PATCHES` (plus any program-specific
@@ -65,7 +89,14 @@ class UITestCase(unittest.TestCase):
 		try:
 			window = factory()
 		except TclError as e:
-			raise unittest.SkipTest(f'No display available for Tk: {e}')
+			if 'display' in str(e):
+				raise unittest.SkipTest(f'No display available for Tk: {e}')
+			# A real error, not a missing display: don't leave a half built root
+			# alive to leak into later tests.
+			root = getattr(tkinter, '_default_root', None)
+			if root is not None:
+				self._destroy(root)
+			raise
 		self.addCleanup(self._destroy, window)
 		# Windows stay concealed until `startup()`, which tests don't call; reveal
 		# so tests interact with a visible window (keyboard focus needs one).
@@ -73,11 +104,31 @@ class UITestCase(unittest.TestCase):
 		self.pump(window)
 		return window
 
-	def _destroy(self, window: UI.WindowExtensions) -> None:
+	def _destroy(self, window: UI.WindowExtensions | tkinter.Tk) -> None:
+		# On macOS Aqua, destroying a root without pumping the event loop again
+		# leaves its native window (and any dialogs) on screen until the process
+		# exits. Hide them and let the event loop order them out while the
+		# interpreter still exists, then destroy.
+		try:
+			for toplevel in reversed(self._toplevels(window)):
+				toplevel.withdraw()
+			window.withdraw()
+			UI.Misc.update_idletasks(window)
+			UI.Misc.update(window)
+		except Exception:
+			pass
 		try:
 			window.destroy()
-		except TclError:
+		except Exception:
 			pass
+
+	def _toplevels(self, widget: tkinter.Misc) -> list[tkinter.Toplevel]:
+		toplevels: list[tkinter.Toplevel] = []
+		for child in widget.winfo_children():
+			if isinstance(child, tkinter.Toplevel):
+				toplevels.append(child)
+			toplevels.extend(self._toplevels(child))
+		return toplevels
 
 	def pump(self, widget: UI.Misc, count: int = 2) -> None:
 		# Flush queued events, idle tasks, and geometry so the UI reflects the

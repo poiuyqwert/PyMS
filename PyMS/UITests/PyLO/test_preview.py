@@ -39,6 +39,12 @@ class Test_PyLO_preview(PyLOTestCase):
 		self.assertEqual(gui.overlayframe, 1)
 		self.assertEqual(gui.previewing_overlaygrp_frame, 1)
 		self.assertEqual(gui.overlayframes.get(), 'Overlay Frame: 2 / 3')
+		# The stand-in GRP has a frame count but no frame data, so drawing each
+		# overlay frame fails and is traced.
+		traced_errors = self.take_traced_errors()
+		self.assertTrue(traced_errors)
+		for error in traced_errors:
+			self.assertIn('IndexError', error)
 
 	def test_grp_frame_render_failure_falls_back_to_no_image(self) -> None:
 		gui = self.make_pylo()
@@ -46,3 +52,6 @@ class Test_PyLO_preview(PyLOTestCase):
 		grp.frames = 3
 		gui.basegrp = grp
 		self.assertIsNone(gui.base_grp_frame(2))
+		traced_errors = self.take_traced_errors()
+		self.assertEqual(len(traced_errors), 1)
+		self.assertIn('IndexError', traced_errors[0])

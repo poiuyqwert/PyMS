@@ -48,7 +48,11 @@ class MiscExtensions(_Tk.Misc):
 		except Exception:
 			pass
 
-	def _cancel_managed_afters(self, _event: Any = None) -> None:
+	def _cancel_managed_afters(self, event: Any = None) -> None:
+		# A root or toplevel's `<Destroy>` binding also fires for each of its
+		# descendants being destroyed; only this widget's own destruction cancels.
+		if event is not None and str(event.widget) != str(self):
+			return
 		for after_id in list(getattr(self, '_managed_after_ids', ())):
 			try:
 				self.after_cancel(after_id)

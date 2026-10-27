@@ -5,7 +5,6 @@ from ...Utilities import UIKit as UI
 from ...Utilities.CheckSaved import CheckSaved
 from ...Utilities.PyMSError import PyMSError
 
-import os
 from unittest import mock
 
 
@@ -51,12 +50,26 @@ class Test_PyTRG_import(PyTRGTestCase):
 
 
 class Test_PyTRG_export(PyTRGTestCase):
+	def test_export_writes_the_editor_text(self) -> None:
+		gui = self.make_pytrg()
+		gui.new()
+		gui.text.insert('1.0', 'Trigger():\n')
+		self.pump(gui)
+		expected = gui.text.get('1.0', UI.END)
+		with mock.patch('PyMS.Utilities.Config.SelectFile.select_save', return_value='export.txt'), \
+				mock.patch('builtins.open', mock.mock_open()) as open_file:
+			gui.export()
+		open_file.assert_called_once_with('export.txt', 'w', encoding='utf-8')
+		written = ''.join(call.args[0] for call in open_file().write.call_args_list)
+		self.assertEqual(written, expected)
+		self.assertEqual(gui.status.get(), 'Export Successful!')
+
 	def test_unwritable_path_shows_error_instead_of_raising(self) -> None:
 		gui = self.make_pytrg()
 		gui.new()
-		unwritable = os.path.join(os.path.dirname(__file__), 'does-not-exist', 'export.txt')
 		with mock.patch('PyMS.PyTRG.PyTRG.ErrorDialog') as error_dialog, \
-				mock.patch('PyMS.Utilities.Config.SelectFile.select_save', return_value=unwritable):
+				mock.patch('PyMS.Utilities.Config.SelectFile.select_save', return_value='export.txt'), \
+				mock.patch('builtins.open', side_effect=OSError('unwritable')):
 			gui.export()
 		error_dialog.assert_called_once()
 		error = error_dialog.call_args.args[1]

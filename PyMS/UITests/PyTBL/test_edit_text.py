@@ -10,13 +10,23 @@ class Test_PyTBL_edit_text(PyTBLTestCase):
 		# Python exception raised by a widget proxy and re-raises it from
 		# `mainloop()`. Run the script inside a short mainloop so such errors
 		# surface the way they do in the running app.
+		# A watchdog ends the mainloop if the script never gets to run (or opens
+		# something that waits), so the test fails instead of hanging.
+		timed_out = False
+		def timeout() -> None:
+			nonlocal timed_out
+			timed_out = True
+			UI.Misc.quit(gui)
+		watchdog = gui.after(5000, timeout)
 		def run() -> None:
 			try:
 				gui.tk.eval(script)
 			finally:
+				gui.after_cancel(watchdog)
 				UI.Misc.quit(gui)
 		gui.after(0, run)
 		UI.Misc.mainloop(gui)
+		self.assertFalse(timed_out, f'Timed out running {script!r}')
 
 	def select_string(self, gui: PyTBL, index: int) -> None:
 		gui.listbox.select_set(index)
