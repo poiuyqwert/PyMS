@@ -697,3 +697,6 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 
 	def jump_sections(self) -> Sequence[str] | None:
 		return ('Header',)
+
+	def find_definition(self, name: str) -> str | None:
+		return None

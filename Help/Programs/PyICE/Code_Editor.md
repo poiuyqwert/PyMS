@@ -15,6 +15,7 @@ The IScript Editor is where you write and edit IScript code (see [IScript Langua
 ## Editor Features
 - **Syntax highlighting**: Comments, `.headerstart`/`.headerend` headers, header commands, blocks, commands, numbers, operators, and keywords each have their own configurable style.
 - **Autocomplete**: Press `Tab` to complete the word being typed, and keep pressing `Tab` to cycle through the matches. Suggestions include commands, header commands, and the block names already in your code.
+- **Go to block** (`Ctrl+Click`): Clicking a block name (such as the target of a `goto` or an animation in the header) while holding `Ctrl` moves the cursor to where that block is defined.
 - **Tooltips**: Hovering over a command or header command shows its parameters and a description of what it does — a built in [Command Reference](/Help/Programs/PyICE/Command_Reference.md).
 - **Status bar**: Shows the IDs of the entries being edited, an indicator for unsaved changes, and the current line, column, and selection size.
 

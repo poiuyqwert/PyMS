@@ -23,7 +23,7 @@ from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
 
 import re, io
 
-from typing import Sequence, Any
+from typing import Iterator, Sequence, Any
 
 class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 	def __init__(self, parent: UI.Misc, delegate: MainDelegate, config: PyICEConfig, ids: list[int]) -> None:
@@ -422,10 +422,8 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 		return ' (,):'
 
 	RE_FIRST_IDENTIFIER = re.compile(r'^\s*[a-z]')
-	RE_BLOCK_NAME = re.compile(r'(?:--|:)(\w+)')
-	def get_autocomplete_options(self, line: str) -> Sequence[str] | None:
-		autocomplete_options = ['.headerstart','.headerend']
-
+	RE_BLOCK_NAME = re.compile(r'(\w+):')
+	def _block_definitions(self) -> Iterator[tuple[str, str]]:
 		head = '1.0'
 		while True:
 			block_range = self.text.tag_nextrange('Block', head)
@@ -433,9 +431,16 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 				break
 			block_text = self.text.get(*block_range)
 			match = CodeEditDialog.RE_BLOCK_NAME.match(block_text)
-			if match and not match.group(1) in autocomplete_options:
-				autocomplete_options.append(match.group(1))
+			if match:
+				yield (match.group(1), str(block_range[0]))
 			head = block_range[1]
+
+	def get_autocomplete_options(self, line: str) -> Sequence[str] | None:
+		autocomplete_options = ['.headerstart','.headerend']
+
+		for block_name, _ in self._block_definitions():
+			if not block_name in autocomplete_options:
+				autocomplete_options.append(block_name)
 
 		main_identifiers = sorted(cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands)
 		is_first_identifier = not not CodeEditDialog.RE_FIRST_IDENTIFIER.match(line)
@@ -451,6 +456,12 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 
 	def jump_sections(self) -> Sequence[str] | None:
 		return ('Header', 'Block')
+
+	def find_definition(self, name: str) -> str | None:
+		for block_name, block_index in self._block_definitions():
+			if block_name == name:
+				return block_index
+		return None
 
 	# CodeGeneratorDelegate
 	def insert_code(self, code: str) -> None:

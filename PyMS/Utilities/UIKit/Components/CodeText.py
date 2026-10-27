@@ -43,6 +43,9 @@ class CodeTextDelegate(Protocol):
 	def jump_sections(self) -> Sequence[str] | None:
 		...
 
+	def find_definition(self, name: str) -> str | None:
+		...
+
 class _UndoGroup:
 	def __init__(self, text: Text) -> None:
 		self.text = text
@@ -59,6 +62,7 @@ class _UndoGroup:
 class CodeText(Frame):
 	autoindent = re.compile('^([ \\t]*)')
 	selregex = re.compile('\\bsel\\b')
+	RE_IDENTIFIER = re.compile(r'\w+')
 
 	class WidgetEvent:
 		TextChanged = CustomEventPattern(Field('TextChanged'))
@@ -159,6 +163,7 @@ class CodeText(Frame):
 			if self.delegate.jump_sections():
 				self.text.bind(Alt.Up(), lambda _: self.goto_section(-1))
 				self.text.bind(Alt.Down(), lambda _: self.goto_section(1))
+			self.text.bind(Ctrl.Click_Left(), self.goto_definition_at_click)
 
 		self.tag_configure('sel', foreground='')
 
@@ -485,6 +490,22 @@ class CodeText(Frame):
 			return
 		if (tags := self.delegate.jump_sections()):
 			self._goto_tag(tags, direction)
+
+	def goto_definition_at_click(self, event: Event) -> str | None:
+		if not self.delegate:
+			return EventPropogation.Continue
+		index = self.index(f'@{event.x},{event.y}')
+		name = self.get(f'{index} wordstart', f'{index} wordend')
+		if not CodeText.RE_IDENTIFIER.fullmatch(name):
+			return EventPropogation.Continue
+		definition_index = self.delegate.find_definition(name)
+		if definition_index is None:
+			return EventPropogation.Continue
+		self.tag_remove('sel', '1.0', END)
+		self.mark_set(INSERT, definition_index)
+		self.see(definition_index)
+		self.focus_set()
+		return EventPropogation.Break
 
 	def highlight_error(self, error: PyMSError, tag: str = 'Error', warnings_tag: str = 'Warning') -> None:
 		if error.line is not None:

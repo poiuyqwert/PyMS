@@ -21,7 +21,7 @@ from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
 
 import re, io
 
-from typing import Sequence
+from typing import Iterator, Sequence
 
 class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, UI.CodeTextDelegate):
 	@staticmethod
@@ -605,6 +605,18 @@ script {header_id} {{
 
 	RE_FIRST_IDENTIFIER = re.compile(r'^\s*[a-z]')
 	RE_BLOCK_NAME = re.compile(r'(?:--|:)(\w+)')
+	def _block_definitions(self) -> Iterator[tuple[str, str]]:
+		head = '1.0'
+		while True:
+			block_range = self.text.tag_nextrange('Block', head)
+			if not block_range:
+				break
+			block_text = self.text.get(*block_range)
+			match = CodeEditDialog.RE_BLOCK_NAME.match(block_text)
+			if match:
+				yield (match.group(1), str(block_range[0]))
+			head = block_range[1]
+
 	def get_autocomplete_options(self, line: str) -> list[str] | None:
 		autocomplete_options = list(type.name for type in CodeTypes.all_basic_types)
 		autocomplete_options.extend(keyword for type in CodeTypes.all_basic_types + AISECodeTypes.all_types if isinstance(type, CodeType.HasKeywords) for keyword in type.keywords())
@@ -623,16 +635,9 @@ script {header_id} {{
 			if tech_name and not tech_name in autocomplete_options:
 				autocomplete_options.append(tech_name)
 
-		head = '1.0'
-		while True:
-			block_range = self.text.tag_nextrange('Block', head)
-			if not block_range:
-				break
-			block_text = self.text.get(*block_range)
-			match = CodeEditDialog.RE_BLOCK_NAME.match(block_text)
-			if match and not match.group(1) in autocomplete_options:
-				autocomplete_options.append(match.group(1))
-			head = block_range[1]
+		for block_name, _ in self._block_definitions():
+			if not block_name in autocomplete_options:
+				autocomplete_options.append(block_name)
 		autocomplete_options.sort()
 
 		main_identifiers = list(cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands + AISECodeCommands.all_commands)
@@ -653,3 +658,9 @@ script {header_id} {{
 
 	def jump_sections(self) -> Sequence[str] | None:
 		return ('AIID', 'Block')
+
+	def find_definition(self, name: str) -> str | None:
+		for block_name, block_index in self._block_definitions():
+			if block_name == name:
+				return block_index
+		return None
