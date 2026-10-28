@@ -9,6 +9,7 @@ class SpecialScriptPlayers(Enum):
 SPECIAL_SCRIPTS: dict[str, SpecialScriptPlayers] = {
 	'EnBk': SpecialScriptPlayers.any_player,
 	'EnTr': SpecialScriptPlayers.any_player,
+	'ExTr': SpecialScriptPlayers.any_player,
 	'DWHe': SpecialScriptPlayers.any_player,
 	'PB3F': SpecialScriptPlayers.any_player,
 	'+Vi0': SpecialScriptPlayers.any_player,
