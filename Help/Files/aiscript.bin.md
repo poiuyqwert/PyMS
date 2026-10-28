@@ -29,6 +29,35 @@ Each header in `aiscript.bin` contains the following fields:
 
 Each header in `bwscript.bin` contains only the first two fields (`id` and `address`), and an address of 0 is not valid.
 
+### Special script IDs
+Normally an AI script only runs on computer players. The game hardcodes the following script IDs so they can also run on other players:
+
+- Runs on any player (computer, neutral, and human):
+  - `EnBk`
+  - `EnTr`
+  - `DWHe`
+  - `PB3F`
+  - `+Vi0`
+  - `+Vi1`
+  - `+Vi2`
+  - `+Vi3`
+  - `+Vi4`
+  - `+Vi5`
+  - `+Vi6`
+  - `+Vi7`
+  - `-Vi0`
+  - `-Vi1`
+  - `-Vi2`
+  - `-Vi3`
+  - `-Vi4`
+  - `-Vi5`
+  - `-Vi6`
+  - `-Vi7`
+- Runs on computer and neutral players:
+  - `Rscu`
+
+PyAI marks these scripts with a `*` in the script list, and the tooltip for the script has a `Special ID (*)` line showing which players it can run on.
+
 ### Expanded files
 To get around the 65535 byte size limit, files can be "expanded", which requires the AISE plugin for the game to load them (see [AISE Commands](/Help/Programs/PyAI/AISE_Commands.md)). An expanded file is detected by its header table offset being `0x10000` or higher.
 

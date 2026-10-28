@@ -2,6 +2,7 @@
 from .Delegates import MainDelegate
 
 from ..FileFormats.AIBIN.AIScript import AIScript
+from ..FileFormats.AIBIN.SpecialScripts import special_script_players
 
 from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
@@ -119,7 +120,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 		self.listbox.delete(0, UI.END)
 		data_context = self.delegate.get_data_context()
 		for script in self.matching_scripts:
-			self.listbox.insert(UI.END, f"{script.id}     {'BW' if script.in_bwscript else '  '}     {binary(script.flags, 3)}     {script.string_id}: {data_context.stattxt_string(script.string_id)}")
+			self.listbox.insert(UI.END, f"{script.id} {'*' if special_script_players(script.id) else ' '}   {'BW' if script.in_bwscript else '  '}     {binary(script.flags, 3)}     {script.string_id}: {data_context.stattxt_string(script.string_id)}")
 
 	def find(self, _: UI.Event | None = None) -> None:
 		self.updatecolor()

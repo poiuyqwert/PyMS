@@ -6,11 +6,12 @@ The source code is written in the [AI Language](/Help/Programs/PyAI/AI_Language.
 The main window shows the list of AI scripts in the loaded files. Each script in the list shows:
 
 - The scripts 4 character AI ID
+- A `*` marker if the AI ID is a [special script ID](/Help/Files/aiscript.bin.md#special-script-ids) that the game can run on players other than computers
 - A `BW` marker if the script is stored in `bwscript.bin`
 - The scripts three [flags](#script-flags) in binary form
 - The scripts name, which is its string from `stat_txt.tbl` (or `String N` if the string could not be looked up)
 
-Hovering over a script shows a tooltip with its full details. Double clicking a script opens it in the [Code Editor](/Help/Programs/PyAI/Code_Editor.md), and right clicking opens a menu with the common editing actions.
+Hovering over a script shows a tooltip with its full details, including which players a special script ID can run on. Double clicking a script opens it in the [Code Editor](/Help/Programs/PyAI/Code_Editor.md), and right clicking opens a menu with the common editing actions.
 The View menu (or the sort buttons on the toolbar) controls the order the scripts are listed in: File Order, Sort by ID, Sort by BroodWar, Sort by Flags, or Sort by String.
 The status bar shows the general status, an indicator for unsaved changes, the script count and file size of each `.bin` file, and the [plugins](#plugins) required by the loaded files (if any).
 Changes to the script list (adding, removing, and editing scripts) can be undone with **Undo** (`Ctrl+Z`) and redone with **Redo** (`Ctrl+Y`) in the Edit menu. **Select All** (`Ctrl+A`) in the Edit menu selects every script in the list.

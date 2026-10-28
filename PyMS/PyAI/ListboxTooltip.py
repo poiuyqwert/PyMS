@@ -2,6 +2,7 @@
 from .Delegates import TooltipDelegate
 
 from ..FileFormats.AIBIN.AIFlag import AIFlag
+from ..FileFormats.AIBIN.SpecialScripts import special_script_players
 
 from ..Utilities.utils import fit
 from ..Utilities import UIKit as UI
@@ -51,7 +52,10 @@ class ListboxTooltip(UI.Tooltip):
 				flags += name
 		if flags:
 			flags = f'Flags             : {flags}\n'
-		text = f"Script ID         : {script.id}\nIn bwscript.bin   : {in_bwbin}\n{flags}String ID         : {script.string_id}\n"
+		special = ''
+		if (players := special_script_players(script.id)):
+			special = f'Special ID (*)    : {players.value}\n'
+		text = f"Script ID         : {script.id}\n{special}In bwscript.bin   : {in_bwbin}\n{flags}String ID         : {script.string_id}\n"
 		data_context = self.delegate.get_data_context()
 		if (string := data_context.stattxt_string(script.string_id)):
 			text += fit('String            : ', string, end=True)

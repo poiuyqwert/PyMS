@@ -17,6 +17,7 @@ from .AddedPluginsDialog import AddedPluginsDialog
 from .FixIssuesUI.FixIssuesDialog import FixIssuesDialog
 
 from ..FileFormats.AIBIN import AIBIN
+from ..FileFormats.AIBIN.SpecialScripts import special_script_players
 from ..FileFormats.AIBIN.CodeHandlers import AISerializeContext, AIParseContext, AIParseSettings, AILexer, AIDefsSourceCodeHandler, DataContext
 from ..FileFormats import TBL
 from ..FileFormats import DAT
@@ -290,7 +291,8 @@ class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, Errorab
 			string = tbl_string
 		if len(string) > 50:
 			string = string[:47] + '...'
-		return f'{script.id}     {"BW" if script.in_bwscript else "  "}     {binary(script.flags, 3)}     {string}'
+		marker = '*' if special_script_players(script.id) else ' '
+		return f'{script.id} {marker}   {"BW" if script.in_bwscript else "  "}     {binary(script.flags, 3)}     {string}'
 
 	def get_sortby(self) -> SortBy:
 		return SortBy(self.sort.get())

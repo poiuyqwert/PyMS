@@ -16,7 +16,7 @@ script MyAI {
 }
 ```
 
-The value after `script` is the scripts 4 character AI ID (it cannot contain commas, parenthesis, or colons). The header commands are:
+The value after `script` is the scripts 4 character AI ID (it cannot contain commas, parenthesis, or colons). Some AI IDs are [special script IDs](/Help/Files/aiscript.bin.md#special-script-ids) that the game can also run on human or neutral players. The header commands are:
 
 - `name_string`: The index of the scripts name string in `stat_txt.tbl` (the name displayed in StarEdit). This is the index as shown in PyAI, for example by the Insert String ID tool in the [Code Editor](/Help/Programs/PyAI/Code_Editor.md).
 - `bin_file`: Which file the script is saved in — either `aiscript` or `bwscript`.
