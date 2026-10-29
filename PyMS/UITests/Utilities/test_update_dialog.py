@@ -7,7 +7,7 @@ from ..harness import UITestCase
 from ...Utilities import UIKit as UI
 from ...Utilities.PyMSConfig import PYMS_CONFIG
 from ...Utilities.PyMSError import PyMSError
-from ...Utilities.UpdateDialog import UpdateDialog
+from ...Utilities.UpdateDialog import UpdateDialog, ChangeLogDialog
 
 from typing import Any, Callable
 
@@ -101,10 +101,10 @@ class Test_UpdateDialog(UITestCase):
 			result.extend(self.descendants(child))
 		return result
 
-	def text(self, dialog: UpdateDialog) -> str:
+	def text(self, dialog: UpdateDialog | ChangeLogDialog) -> str:
 		return '\n'.join(str(widget.cget('text')) for widget in self.descendants(dialog.body) if isinstance(widget, UI.Label) and not isinstance(widget, UI.Hotlink))
 
-	def buttons(self, dialog: UpdateDialog) -> dict[str, UI.Button]:
+	def buttons(self, dialog: UpdateDialog | ChangeLogDialog) -> dict[str, UI.Button]:
 		return {str(widget.cget('text')): widget for widget in self.descendants(dialog.body) if isinstance(widget, UI.Button)}
 
 	def has_checkbox(self, dialog: UpdateDialog) -> bool:
@@ -224,4 +224,77 @@ class Test_UpdateDialog(UITestCase):
 		self.assertEqual(len(dialogs), 1)
 		self.assertEqual(dialogs[0].title(), 'New Version Found')
 		self.assertIn('Your version of PyTest (2.0.0) is older than the current version (2.1.0).', self.text(dialogs[0]))
-		self.assertEqual(list(self.buttons(dialogs[0])), ['Ok'])
+		self.assertEqual(list(self.buttons(dialogs[0])), ['Ok', 'Change Log'])
+
+	# Change log
+
+	CHANGE_LOG = '# Change Log\n\n# October 29, 2026\n\n## PyTest v2.1.0\n- Added a shiny new feature.\n'
+
+	def change_log_returns(self, *results: str | Exception) -> None:
+		# Each fetch consumes the next result
+		remaining = list(results)
+		def fetch() -> str:
+			result = remaining.pop(0)
+			if isinstance(result, Exception):
+				raise result
+			return result
+		patcher = mock.patch.object(UpdateDialog, 'fetch_change_log', side_effect=fetch)
+		patcher.start()
+		self.addCleanup(patcher.stop)
+
+	def open_change_log(self) -> ChangeLogDialog:
+		self.fetch_returns(NEWER)
+		dialog = self.manual_check()
+		self.wait_for_result(dialog)
+		self.buttons(dialog)['Change Log'].invoke()
+		self.pump(self.window)
+		change_logs = [child for child in dialog.winfo_children() if isinstance(child, ChangeLogDialog)]
+		self.assertEqual(len(change_logs), 1)
+		return change_logs[0]
+
+	def rendered(self, dialog: ChangeLogDialog) -> str:
+		assert dialog.markdownview is not None
+		return dialog.markdownview.textview.get('1.0', UI.END)
+
+	def wait_for_change_log(self, dialog: ChangeLogDialog) -> None:
+		self.wait_until(lambda: 'Loading change log' not in self.text(dialog))
+
+	def test_change_log_is_only_offered_for_available_updates(self) -> None:
+		self.fetch_returns(CURRENT)
+		dialog = self.manual_check()
+		self.wait_for_result(dialog)
+		self.assertNotIn('Change Log', self.buttons(dialog))
+
+	def test_change_log_shows_the_downloaded_change_log(self) -> None:
+		self.change_log_returns(self.CHANGE_LOG)
+		change_log = self.open_change_log()
+		self.assertEqual(change_log.title(), 'Change Log')
+		self.assertIn('Loading change log...', self.text(change_log))
+		self.assertEqual(list(self.buttons(change_log)), ['Cancel'])
+		self.wait_for_change_log(change_log)
+		rendered = self.rendered(change_log)
+		self.assertIn('PyTest v2.1.0', rendered)
+		self.assertIn('Added a shiny new feature.', rendered)
+		self.assertEqual(list(self.buttons(change_log)), ['Ok'])
+
+	def test_change_log_shows_errors_and_can_retry(self) -> None:
+		self.change_log_returns(PyMSError('Update', "Couldn't download the latest change log from GitHub (offline)."), self.CHANGE_LOG)
+		change_log = self.open_change_log()
+		self.wait_for_change_log(change_log)
+		self.assertIn('Unable to load the change log.', self.text(change_log))
+		self.assertIn('(offline)', self.text(change_log))
+		buttons = self.buttons(change_log)
+		self.assertEqual(list(buttons), ['Ok', 'Retry'])
+		buttons['Retry'].invoke()
+		self.pump(self.window)
+		self.wait_for_change_log(change_log)
+		self.assertIn('Added a shiny new feature.', self.rendered(change_log))
+
+	def test_change_log_ok_returns_to_the_update_dialog(self) -> None:
+		self.change_log_returns(self.CHANGE_LOG)
+		change_log = self.open_change_log()
+		self.wait_for_change_log(change_log)
+		self.buttons(change_log)['Ok'].invoke()
+		self.pump(self.window)
+		self.assertEqual(len(self.dialogs()), 1)
+		self.assertEqual([child for child in self.dialogs()[0].winfo_children() if isinstance(child, ChangeLogDialog)], [])

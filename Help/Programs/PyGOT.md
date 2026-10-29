@@ -15,7 +15,7 @@ These commands are in the **File** menu and on the toolbar.
 - **Import Game Template...** (`Ctrl+I`): Loads the text format produced by **Export Game Template** as a new unsaved template.
 - **Export Game Template...** (`Ctrl+E`): Saves the template as an editable text file, with a reference at the top listing the options for each setting.
 - **Close** (`Ctrl+W`): Closes the template.
-- **Check for Updates...**: Checks GitHub for a newer version of PyGOT and PyMS, and shows the result. PyGOT also checks automatically when it starts, but only shows a message when an update is available.
+- **Check for Updates...**: Checks GitHub for a newer version of PyGOT and PyMS, and shows the result. PyGOT also checks automatically when it starts, but only shows a message when an update is available. When an update is available, the **Change Log** button shows what's new in the [change log](/Help/Programs/Change_Log.md).
 - **Exit**: Quits PyGOT.
 
 **Set as Default `*.got` Editor** (Windows Only), in the **Settings** menu, associates `.got` files with PyGOT, so they open in PyGOT when double clicked.

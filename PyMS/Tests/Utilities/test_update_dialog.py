@@ -42,6 +42,25 @@ class Test_fetch_versions(unittest.TestCase):
 		self.assertIn('version information downloaded from GitHub is invalid', str(cm.exception))
 
 
+
+class Test_fetch_change_log(unittest.TestCase):
+	def test_returns_decoded_text(self) -> None:
+		with mock.patch('urllib.request.urlopen', return_value=response('# Change Log\n- Fixed “quotes”\n'.encode('utf-8'))):
+			self.assertEqual(UpdateDialog.fetch_change_log(), '# Change Log\n- Fixed “quotes”\n')
+
+	def test_network_failure_is_a_pymserror(self) -> None:
+		with mock.patch('urllib.request.urlopen', side_effect=urllib.error.URLError('offline')):
+			with self.assertRaises(PyMSError) as cm:
+				UpdateDialog.fetch_change_log()
+		self.assertIn("Couldn't download the latest change log", str(cm.exception))
+		self.assertIsInstance(cm.exception.__cause__, urllib.error.URLError)
+
+	def test_invalid_text_is_a_pymserror(self) -> None:
+		with mock.patch('urllib.request.urlopen', return_value=response(b'\xff\xfe\xfa')):
+			with self.assertRaises(PyMSError) as cm:
+				UpdateDialog.fetch_change_log()
+		self.assertIn('change log downloaded from GitHub is invalid', str(cm.exception))
+
 @mock.patch('PyMS.Utilities.Assets.version', installed_version)
 class Test_outdated(unittest.TestCase):
 	def test_current_versions_are_not_outdated(self) -> None:

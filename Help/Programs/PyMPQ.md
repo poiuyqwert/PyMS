@@ -24,7 +24,7 @@ These commands are in the **File** menu (except **Compact Archive**, which is in
 - **New...** (`Ctrl+N`): Creates a new empty archive. The file capacity and block size of new archives are configured in the [settings](#settings).
 - **Open...** (`Ctrl+O`): Opens an existing archive. Other non-PyMS programs may lock an MPQ while they have it open, so if an archive fails to open, try closing any program that might be using it.
 - **Close** (`Ctrl+W`): Closes the archive.
-- **Check for Updates...**: Checks GitHub for a newer version of PyMPQ and PyMS, and shows the result. PyMPQ also checks automatically when it starts, but only shows a message when an update is available.
+- **Check for Updates...**: Checks GitHub for a newer version of PyMPQ and PyMS, and shows the result. PyMPQ also checks automatically when it starts, but only shows a message when an update is available. When an update is available, the **Change Log** button shows what's new in the [change log](/Help/Programs/Change_Log.md).
 - **Compact Archive** (`Ctrl+P`): Rebuilds the archive to reclaim the space left behind by deleted and replaced files. It is only enabled when there is space to reclaim — the file counts in the status bar show the listed files against the space used in the archive.
 - **Set as Default `*.mpq` Editor** (Windows only): Associates `.mpq` files with PyMPQ, so they open in PyMPQ when double clicked.
 

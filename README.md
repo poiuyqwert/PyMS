@@ -5,6 +5,7 @@ PyMS is a cross platform BroodWar modding suite written using [Python](http://ww
 1. [Installation](https://github.com/poiuyqwert/PyMS#installation)
 1. [Issues](https://github.com/poiuyqwert/PyMS#issues)
 1. [Analytics](https://github.com/poiuyqwert/PyMS#analytics)
+1. [Change Log](https://github.com/poiuyqwert/PyMS#change-log)
 1. [Programs](https://github.com/poiuyqwert/PyMS#programs)
    * [PyAI](https://github.com/poiuyqwert/PyMS#PyAI)
    * [PyBIN](https://github.com/poiuyqwert/PyMS#PyBIN)
@@ -69,6 +70,9 @@ At the moment PyMS only tracks the launch of PyMS programs, anonamously and with
 ```
 
 Even though the analytics is anonamous and has no sensitive information, you can still disable analytics by editing "Settings/PyMS.txt", and setting the "allow" key under "analytics" to be False.
+
+## Change Log
+See the [Change Log](/Help/Programs/Change_Log.md) for what's new in each version of PyMS and its programs. When a program finds an update, its update dialog also has a **Change Log** button to view it.
 
 ## Programs
 PyMS contains 16 programs to edit most of the file types you will encounter while modding.

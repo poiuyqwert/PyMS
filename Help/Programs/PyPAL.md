@@ -29,7 +29,7 @@ These commands are in the **File** menu:
 - **Save** (`Ctrl+S`): Saves the palette back to its file in the same format. A new palette has no format yet, so it must be saved with one of the save as commands first.
 - **Save As...**: Saves the palette to a new file, keeping its current format (a new palette is saved as a StarCraft `.pal`). To change the format, see [Converting Between Formats](#converting-between-formats).
 - **Close** (`Ctrl+W`): Closes the palette.
-- **Check for Updates...**: Checks GitHub for a newer version of PyPAL and PyMS, and shows the result. PyPAL also checks automatically when it starts, but only shows a message when an update is available.
+- **Check for Updates...**: Checks GitHub for a newer version of PyPAL and PyMS, and shows the result. PyPAL also checks automatically when it starts, but only shows a message when an update is available. When an update is available, the **Change Log** button shows what's new in the [change log](/Help/Programs/Change_Log.md).
 - **Exit**: Closes PyPAL.
 
 Creating, opening, or closing a palette (or exiting PyPAL) asks to save any unsaved changes first.

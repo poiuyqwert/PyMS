@@ -31,7 +31,7 @@ These commands are in the **File** menu:
 - **Open Default Scripts** (`Ctrl+D`): Opens the default StarCraft `iscript.bin` bundled with PyMS.
 - **Save** (`Ctrl+S`) and **Save As...** (`Ctrl+Alt+A`): Saves the `iscript.bin`.
 - **Close** (`Ctrl+W`): Closes the loaded file.
-- **Check for Updates...**: Checks GitHub for a newer version of PyICE and PyMS, and shows the result. PyICE also checks automatically when it starts, but only shows a message when an update is available.
+- **Check for Updates...**: Checks GitHub for a newer version of PyICE and PyMS, and shows the result. PyICE also checks automatically when it starts, but only shows a message when an update is available. When an update is available, the **Change Log** button shows what's new in the [change log](/Help/Programs/Change_Log.md).
 - **Exit**: Closes PyICE, asking to save any unsaved changes first.
 
 Set as Default `*.bin` Editor (Windows Only), in the **Settings** menu, associates `.bin` files with PyICE, so they open in PyICE when double clicked.

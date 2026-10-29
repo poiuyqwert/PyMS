@@ -27,7 +27,7 @@ These commands are in the **File** menu and on the main toolbar.
 - **Save** (`Ctrl+S`) and **Save As...** (`Ctrl+Alt+A`): Saves the dialog to a `.bin` file. The file is saved in the Remastered format if it was loaded as one or uses Remastered-only features, and in the legacy format otherwise.
 - **Export to TXT...** (`Ctrl+E`): Saves the dialog as an editable text file listing every widget and SMK with its properties. Exporting, editing the text, and re-importing can be an easy way to make bulk changes.
 - **Close** (`Ctrl+W`): Closes the loaded file.
-- **Check for Updates...**: Checks GitHub for a newer version of PyBIN and PyMS, and shows the result. PyBIN also checks automatically when it starts, but only shows a message when an update is available.
+- **Check for Updates...**: Checks GitHub for a newer version of PyBIN and PyMS, and shows the result. PyBIN also checks automatically when it starts, but only shows a message when an update is available. When an update is available, the **Change Log** button shows what's new in the [change log](/Help/Programs/Change_Log.md).
 - **Exit**: Closes PyBIN, asking to save any unsaved changes first.
 
 ## Preview Settings

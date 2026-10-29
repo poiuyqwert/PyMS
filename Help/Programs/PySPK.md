@@ -20,7 +20,7 @@ These commands are in the **File** menu and on the toolbar:
 - **Save** (`Ctrl+S`) and **Save As...** (`Ctrl+Alt+A`): Saves the parallax to a `.spk` file.
 - **Export to BMP...** (`Ctrl+E`): Saves the parallax as an 8-bit BMP with the layers stacked vertically — the same arrangement **Import from BMP** expects, so you can export a parallax, edit the image in a paint program, and import it back.
 - **Close** (`Ctrl+W`): Closes the parallax.
-- **Check for Updates...**: Checks GitHub for a newer version of PySPK and PyMS, and shows the result. PySPK also checks automatically when it starts, but only shows a message when an update is available.
+- **Check for Updates...**: Checks GitHub for a newer version of PySPK and PyMS, and shows the result. PySPK also checks automatically when it starts, but only shows a message when an update is available. When an update is available, the **Change Log** button shows what's new in the [change log](/Help/Programs/Change_Log.md).
 - **Set as Default `*.spk` Editor** (Windows Only, in the **Settings** menu and on the toolbar): Associates `.spk` files with PySPK, so they open in PySPK when double clicked.
 
 PySPK asks to save unsaved changes before they would be lost (when creating, opening, or importing over the open file, closing it, or exiting).

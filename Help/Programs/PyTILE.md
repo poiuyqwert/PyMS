@@ -19,7 +19,7 @@ A tileset is made up of multiple files, and PyTILE loads and saves them together
 - **Open** (`Ctrl+O`): Opens a `.cv5` file, automatically loading the sibling [.vf4](/Help/Files/Tilesets/VF4.md), [.vx4](/Help/Files/Tilesets/VX4.md), [.vr4](/Help/Files/Tilesets/VR4.md), and `.wpe` palette files, and the `dddata.bin` inside the folder named after the tileset.
 - **Save** (`Ctrl+S`) and **Save As** (`Ctrl+Alt+A`): Saves all of the tilesets component files next to the chosen `.cv5` path (creating the folder for `dddata.bin` if needed).
 - **Close** (`Ctrl+W`): Closes the tileset, asking to save any unsaved changes first.
-- **Check for Updates...**: Checks GitHub for a newer version of PyTILE and PyMS, and shows the result. PyTILE also checks automatically when it starts, but only shows a message when an update is available.
+- **Check for Updates...**: Checks GitHub for a newer version of PyTILE and PyMS, and shows the result. PyTILE also checks automatically when it starts, but only shows a message when an update is available. When an update is available, the **Change Log** button shows what's new in the [change log](/Help/Programs/Change_Log.md).
 
 The rest of the toolbar mirrors the other menus:
 

@@ -21,7 +21,7 @@ These commands are in the **File** menu and on the toolbar.
 - **Import Text...** (`Ctrl+I`): Loads a text file of trigger code into the editor (the format produced by **Export Text**).
 - **Export Text...** (`Ctrl+E`): Saves the code in the editor to a text file, without compiling it.
 - **Close** (`Ctrl+W`): Closes the open TRG, asking to save unsaved changes first.
-- **Check for Updates...**: Checks GitHub for a newer version of PyTRG and PyMS, and shows the result. PyTRG also checks automatically when it starts, but only shows a message when an update is available.
+- **Check for Updates...**: Checks GitHub for a newer version of PyTRG and PyMS, and shows the result. PyTRG also checks automatically when it starts, but only shows a message when an update is available. When an update is available, the **Change Log** button shows what's new in the [change log](/Help/Programs/Change_Log.md).
 
 **Set as Default `*.trg` Editor** (Windows Only), in the **Settings** menu, associates `.trg` files with PyTRG, so they open in PyTRG when double clicked.
 
