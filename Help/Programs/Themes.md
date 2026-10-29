@@ -68,7 +68,7 @@ There is a defined set of settings which can be appled to widgets. Note that not
 - **selectforeground**: The text [Color](#values) for selected items
 - **selectbackground**: The background [Color](#values) for selected items
 - **selectborderwidth**: An [Integer](#values) border width for selected items
-- **inactiveselectbackground**: The [Color](#values) of the selection in a `Text`/`Entry` widget when its window is not active
+- **inactiveselectbackground**: The [Color](#values) of the selection in a `Text`/`Entry` widget when its window is not active. Note that code editors ignore this and instead show their selection color (from the Syntax Highlighting settings) at 50% opacity over the editor background.
 - **insertbackground**: The [Color](#values) for the insertion cursor in a `Text`/`Entry` widget
 - **insertborderwidth**: An [Integer](#values) border width for the insertion cursor in a `Text`/`Entry` widget
 - **insertofftime**: An [Integer](#values) to specify the amount of milliseconds the insertion cursor is not displayed when blinking
