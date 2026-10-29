@@ -354,6 +354,18 @@ class CodeText(Frame):
 			self.tag_delete(highlight_component.tag_name)
 			self.tag_configure(highlight_component.tag_name, **highlight_component.highlight_style.style.configuration)
 		self.tag_raise('sel')
+		self.update_inactive_select_background()
+
+	def update_inactive_select_background(self) -> None:
+		# Show the unfocused selection as the selection color at 50% opacity over the background
+		select_background = self.text.cget('selectbackground')
+		background = self.text.cget('background')
+		if not select_background or not background:
+			return
+		select_rgb = self.winfo_rgb(select_background)
+		background_rgb = self.winfo_rgb(background)
+		red, green, blue = (((select + back) // 2) >> 8 for select, back in zip(select_rgb, background_rgb))
+		self.text.config(inactiveselectbackground=f'#{red:02X}{green:02X}{blue:02X}')
 
 	def docolor(self) -> None:
 		self.after_id = None
