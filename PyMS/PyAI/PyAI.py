@@ -545,7 +545,9 @@ class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, Errorab
 			('ashara','Lots of help with beta testing and ideas'),
 			('MamiyaOtaru','Found lots of bugs, most importantly ones on Mac and Linux.'),
 			('Heinerman','File specs and command information'),
-			('modmaster50','Lots of ideas, testing, and support, thanks a lot!')
+			('modmaster50','Lots of ideas, testing, and support, thanks a lot!'),
+			('neive','AISE and PyAI integration for AISE, as well as general improvements/support'),
+			('Ilya_Snopchenko','Tons of testing and feedback'),
 		]
 		AboutDialog(self, 'PyAI', LONG_VERSION, thanks)
 

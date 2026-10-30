@@ -11,6 +11,7 @@ class AboutDialog(PyMSDialog):
 		self.thanks.extend([
 			('ShadowFlare','For SFmpq, some file specs, and all her tools!'),
 			('Ladislav Zezula','For StormLib'),
+			('Veeq7 & Pr0nogo','Lots of fixes/changes across the programs'),
 			('BroodWarAI.com','Support and hosting of course!'),
 			('Blizzard','For creating StarCraft and BroodWar...'),
 		])
