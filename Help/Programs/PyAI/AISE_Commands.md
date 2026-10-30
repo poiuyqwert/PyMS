@@ -149,6 +149,9 @@ Signatures are shown in the parenthesis command style, using the AISE parameter 
 ### `debug_name`
 `debug_name(string)` — Not yet documented.
 
+### `autosave`
+`autosave(base_name, max_saves)` — Creates an autosave with the base name `base_name`, deleting the oldest one if `max_saves` saves with the same base name already exist. Never deletes player-created saves.
+
 ## Parameter Types
 AISE commands use the core parameter types (see the [Command Reference](/Help/Programs/PyAI/Command_Reference.md#parameter-types)) plus the following:
 

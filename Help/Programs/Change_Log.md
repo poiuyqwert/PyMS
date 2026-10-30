@@ -1,5 +1,13 @@
 # Change Log
 
+# October 30, 2026
+
+## PyMS v2.3.10
+- Fixed issue with expanding/collapsing groups in a tree list.
+
+## PyAI v2.9.9
+- Added `autosave` AISE command.
+
 # October 29, 2026
 
 ## Highlights

@@ -264,7 +264,7 @@ class TreeList(Frame):
 					self.write_node(f'{base} +{line_offset}l linestart', child)
 					line_offset += 1
 					if isinstance(child, TreeGroup) and child.expanded:
-						line_offset += insert_children(child, line_offset)
+						line_offset = insert_children(child, line_offset)
 				return line_offset
 			insert_children(group)
 		else:

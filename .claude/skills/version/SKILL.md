@@ -74,9 +74,9 @@ Insert a new section at the top of `Help/Programs/Change_Log.md`, directly under
 
 ## 6. Write the bullets
 
-- One short sentence per bullet, ending in a period.
-- Write for non-technical modders: say what changed for them, not how. No class, function or file names, no commit hashes, issue numbers or internal jargon.
-- Start fixes with what now works ("Opening a file with spaces in its name no longer fails."), and features with what you can now do ("You can now jump to a block's definition with `Ctrl+Click`.").
+- Keep each bullet terse: a short phrase or brief sentence ending in a period. Name the change, don't explain it: no parameters, usage details or rationale.
+- Start with a past-tense verb: "Added ..." for new features, "Fixed issue with ..." for bug fixes, "Improved ..." or "Changed ..." for other improvements. Examples: "Added `autosave` AISE command.", "Fixed issue with expanding/collapsing groups in a tree list."
+- Write for modders: name what they see (the command, menu item, dialog or widget). User-visible names such as script commands are fine. No class, function or file names, no commit hashes, issue numbers or internal jargon.
 - Follow the `Help/` authoring rules in `.claude/CLAUDE.md`: `**bold**` is the only emphasis, no italics, tables or HTML. Write keyboard shortcuts as Windows-form code spans (`Ctrl+Shift+A`), and put anything containing underscores in a code span (`stat_txt`). Links must be root-absolute `/Help/....md` or full `https://` URLs.
 
 ## 7. Validate and report

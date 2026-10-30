@@ -54,6 +54,8 @@ Defense = CodeCommandDefinition('defense', 'TODO', 0x9D, (CodeTypes.WordCodeType
 BWKills = CodeCommandDefinition('bw_kills', 'TODO', 0xA0, (CodeTypes.ByteCodeType(), AISECodeTypes.CompareTrigCodeType(), CodeTypes.DWordCodeType(), AISECodeTypes.UnitGroupCodeType(), AISECodeTypes.LongBlockCodeType()))
 BuildAt = CodeCommandDefinition('build_at', 'TODO', 0xA1, (AISECodeTypes.UnitGroupCodeType(), AISECodeTypes.BuildAtPointCodeType(), AISECodeTypes.BuildAtFlagsCodeType()))
 DebugName = CodeCommandDefinition('debug_name', 'TODO', 0xA2, (CodeTypes.StringCodeType(),))
+# IfPreparing = CodeCommandDefinition('if_preparing', 'TODO', 0xA3, (AISECodeTypes.LongBlockCodeType(),))
+Autosave = CodeCommandDefinition('autosave', 'Creates an autosave with base name {1}, deleting the oldest one if {2} saves with the same base name exist. Never deletes player-created saves', 0xA4, (CodeTypes.StringCodeType(), CodeTypes.ByteCodeType()))
 
 all_commands = [
 	AttackTo,
@@ -104,4 +106,5 @@ all_commands = [
 	BWKills,
 	BuildAt,
 	DebugName,
+	Autosave,
 ]
