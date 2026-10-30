@@ -1,0 +1,166 @@
+
+from ..CompressionSetting import CompressionOption, CompressionSetting
+
+from ...Utilities import Assets
+from ...Utilities import UIKit as UI
+from ...Utilities import Config
+from ...Utilities.SettingsUI.SettingsTab import SettingsTab
+from ...Utilities.EditedState import EditedState
+from ...Utilities.PyMSError import PyMSError
+from ...Utilities.ErrorDialog import ErrorDialog
+
+import os
+
+class CompressionSettingsTab(SettingsTab):
+	COMPRESSION_CHOICES = (
+		CompressionOption.NoCompression,
+		CompressionOption.Standard,
+		CompressionOption.Deflate,
+		CompressionOption.Audio
+	)
+
+	def __init__(self, notebook: UI.Notebook, edited_state: EditedState, autocompression_config: Config.Dictionary) -> None:
+		super().__init__(notebook)
+		self.edited_state = edited_state
+		self.autocompression_config = autocompression_config
+
+		self.autocompression = dict(self.autocompression_config.data)
+
+		self.extension = UI.StringVar()
+		self.extension.trace_add('write', lambda *e: self.action_states())
+
+		left = UI.Frame(self)
+		UI.Label(left, text='File Extension:', anchor=UI.W, justify=UI.LEFT).pack(fill=UI.X)
+		e = UI.Frame(left)
+		UI.Entry(e, textvariable=self.extension).pack(side=UI.LEFT, fill=UI.X, expand=1)
+		self.addbutton = UI.Button(e, image=Assets.get_image('add'), width=20, height=20, command=self.add, state=UI.DISABLED)
+		self.addbutton.pack(side=UI.LEFT, padx=2)
+		e.pack(side=UI.TOP)
+
+		self.listbox = UI.ScrolledListbox(left, width=15, height=1)
+		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), lambda *e: self.select_extension())
+		self.listbox.pack(fill=UI.BOTH, padx=1, pady=1, expand=1)
+
+		extensions = sorted(self.autocompression.keys())
+		extensions.remove('Default')
+		extensions.insert(0, 'Default')
+		self.listbox.insert(UI.END, *extensions)
+		self.listbox.select_set(0)
+
+		self.rembutton = UI.Button(left, image=Assets.get_image('remove'), width=20, height=20, command=self.remove, state=UI.DISABLED)
+		self.rembutton.pack()
+		left.pack(side=UI.LEFT, fill=UI.Y, padx=2)
+
+		self.compression_index = UI.IntVar()
+		self.compression_level = UI.IntVar()
+
+		right = UI.Frame(self)
+		UI.Label(right, text='Compression Type:', anchor=UI.W, justify=UI.LEFT).pack(fill=UI.X)
+		UI.DropDown(right, self.compression_index, [type.display_name() for type in CompressionSettingsTab.COMPRESSION_CHOICES], self.choose_compression).pack(fill=UI.X)
+
+		self.levels_frame = UI.Frame(right)
+		UI.Label(self.levels_frame, text='Compression Level:', anchor=UI.W, justify=UI.LEFT).pack(side=UI.TOP, fill=UI.X)
+		self.levels_dropdown = UI.DropDown(self.levels_frame, self.compression_level, [], self.choose_level)
+		self.levels_dropdown.pack(side=UI.BOTTOM, fill=UI.X)
+		right.pack(side=UI.LEFT, fill=UI.BOTH, expand=1, padx=2)
+
+		self.select_extension()
+
+	def action_states(self) -> None:
+		self.addbutton['state'] = UI.NORMAL if self.extension.get() else UI.DISABLED
+		selection = self.listbox.curselection()
+		self.rembutton['state'] = UI.NORMAL if selection and int(selection[0]) else UI.DISABLED
+
+	def get_selected_extension(self) -> str | None:
+		selection = self.listbox.curselection()
+		if not selection:
+			return None
+		return self.listbox.get(int(selection[0]))
+
+	def select_extension(self) -> None:
+		self.action_states()
+		extension = self.get_selected_extension()
+		if extension is None:
+			return
+		try:
+			compression = CompressionSetting.parse_value(self.autocompression[extension])
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		self.compression_index.set(CompressionSettingsTab.COMPRESSION_CHOICES.index(compression.type))
+		self.update_levels(compression)
+
+	def choose_compression(self, compression_type_index: int) -> None:
+		compression_type = CompressionSettingsTab.COMPRESSION_CHOICES[compression_type_index]
+		extension = self.get_selected_extension()
+		if extension is None:
+			return
+		try:
+			if CompressionSetting.parse_value(self.autocompression[extension]).type == compression_type:
+				return
+		except PyMSError:
+			pass # Corrupt stored value, replace it with the newly chosen compression
+		self.edited_state.mark_edited()
+		compression = compression_type.setting()
+		self.autocompression[extension] = str(compression)
+		self.update_levels(compression)
+
+	def update_levels(self, compression: CompressionSetting) -> None:
+		if compression.type.level_count() > 0:
+			level_names = []
+			for level in range(compression.type.level_count()):
+				level_names.append(compression.type.setting(level).level_name())
+			self.levels_dropdown.setentries(level_names)
+			self.compression_level.set(compression.level)
+			self.levels_frame.pack(pady=(5,0), fill=UI.X)
+		else:
+			self.levels_frame.forget()
+
+	def choose_level(self, level: int) -> None:
+		extension = self.get_selected_extension()
+		if extension is None:
+			return
+		try:
+			compression = CompressionSetting.parse_value(self.autocompression[extension])
+		except PyMSError:
+			return
+		if level != compression.level:
+			self.autocompression[extension] = str(compression.type.setting(level))
+			self.edited_state.mark_edited()
+
+	def add(self, _event: UI.Event | None = None) -> None:
+		if self.addbutton['state'] == UI.DISABLED:
+			return
+		e = self.extension.get()
+		if not e.startswith(os.extsep):
+			e = os.extsep + e
+		self.extension.set('')
+		self.action_states()
+		if not e in self.autocompression:
+			self.autocompression[e] = str(CompressionOption.Standard.setting())
+			s: int = self.listbox.size() # type: ignore[assignment]
+			self.listbox.insert(UI.END,e)
+			self.listbox.select_clear(0,UI.END)
+			self.listbox.select_set(s)
+			self.listbox.see(s)
+			self.edited_state.mark_edited()
+			self.select_extension()
+
+	def remove(self, _event: UI.Event | None = None) -> None:
+		if self.rembutton['state'] == UI.DISABLED:
+			return
+		selection = self.listbox.curselection()
+		if not selection:
+			return
+		s = int(selection[0])
+		del self.autocompression[self.listbox.get(s)]
+		self.listbox.delete(s)
+		if s == self.listbox.size():
+			s -= 1
+		self.listbox.select_set(s)
+		self.listbox.see(s)
+		self.edited_state.mark_edited()
+		self.action_states()
+
+	def save(self) -> None:
+		self.autocompression_config.data = self.autocompression

@@ -3,7 +3,11 @@ from . import AbstractDAT
 from . import DATFormat
 from . import DATCoders
 
-class Image(AbstractDAT.AbstractDATEntry):
+from collections import OrderedDict
+
+from typing import cast, Any
+
+class DATImage(AbstractDAT.AbstractDATEntry):
 	class Property:
 		grp_file = 'grp_file'
 		gfx_turns = 'gfx_turns'
@@ -52,23 +56,23 @@ class Image(AbstractDAT.AbstractDATEntry):
 		unknown8 = 8
 		uknonwn9 = 9
 
-	def __init__(self):
-		self.grp_file = 0
-		self.gfx_turns = 0
-		self.clickable = 0
-		self.use_full_iscript = 0
-		self.draw_if_cloaked = 0
-		self.draw_function = 0
-		self.remapping = 0
-		self.iscript_id = 0
-		self.shield_overlay = 0
-		self.attack_overlay = 0
-		self.damage_overlay = 0
-		self.special_overlay = 0
-		self.landing_dust_overlay = 0
-		self.lift_off_dust_overlay = 0
+	def __init__(self) -> None:
+		self.grp_file: int = 0
+		self.gfx_turns: int = 0
+		self.clickable: int = 0
+		self.use_full_iscript: int = 0
+		self.draw_if_cloaked: int = 0
+		self.draw_function: int = 0
+		self.remapping: int = 0
+		self.iscript_id: int = 0
+		self.shield_overlay: int = 0
+		self.attack_overlay: int = 0
+		self.damage_overlay: int = 0
+		self.special_overlay: int = 0
+		self.landing_dust_overlay: int = 0
+		self.lift_off_dust_overlay: int = 0
 
-	def load_values(self, values):
+	def load_values(self, values: tuple[int | DATFormat.DATType | None, ...]) -> None:
 		self.grp_file,\
 		self.gfx_turns,\
 		self.clickable,\
@@ -83,9 +87,9 @@ class Image(AbstractDAT.AbstractDATEntry):
 		self.special_overlay,\
 		self.landing_dust_overlay,\
 		self.lift_off_dust_overlay\
-			= values
+			= values # type: ignore[assignment]
 
-	def save_values(self):
+	def save_values(self) -> tuple[int | DATFormat.DATType | None, ...]:
 		return (
 			self.grp_file,
 			self.gfx_turns,
@@ -104,65 +108,65 @@ class Image(AbstractDAT.AbstractDATEntry):
 		)
 
 	EXPORT_NAME = 'Image'
-	def _export_data(self, export_properties, data):
-		self._export_property_value(export_properties, Image.Property.grp_file, self.grp_file, data)
-		self._export_property_value(export_properties, Image.Property.gfx_turns, self.gfx_turns, data, _ImagePropertyCoder.gfx_turns)
-		self._export_property_value(export_properties, Image.Property.clickable, self.clickable, data, _ImagePropertyCoder.clickable)
-		self._export_property_value(export_properties, Image.Property.use_full_iscript, self.use_full_iscript, data, _ImagePropertyCoder.use_full_iscript)
-		self._export_property_value(export_properties, Image.Property.draw_if_cloaked, self.draw_if_cloaked, data, _ImagePropertyCoder.draw_if_cloaked)
-		self._export_property_value(export_properties, Image.Property.draw_function, self.draw_function, data)
-		self._export_property_value(export_properties, Image.Property.remapping, self.remapping, data)
-		self._export_property_value(export_properties, Image.Property.iscript_id, self.iscript_id, data)
-		self._export_property_value(export_properties, Image.Property.shield_overlay, self.shield_overlay, data)
-		self._export_property_value(export_properties, Image.Property.attack_overlay, self.attack_overlay, data)
-		self._export_property_value(export_properties, Image.Property.damage_overlay, self.damage_overlay, data)
-		self._export_property_value(export_properties, Image.Property.special_overlay, self.special_overlay, data)
-		self._export_property_value(export_properties, Image.Property.landing_dust_overlay, self.landing_dust_overlay, data)
-		self._export_property_value(export_properties, Image.Property.lift_off_dust_overlay, self.lift_off_dust_overlay, data)
+	def _export_data(self, export_properties: list[str] | None, data: OrderedDict[str, Any]) -> None:
+		self._export_property_value(export_properties, DATImage.Property.grp_file, self.grp_file, data)
+		self._export_property_value(export_properties, DATImage.Property.gfx_turns, self.gfx_turns, data, property_encoder=_ImagePropertyCoder.gfx_turns)
+		self._export_property_value(export_properties, DATImage.Property.clickable, self.clickable, data, property_encoder=_ImagePropertyCoder.clickable)
+		self._export_property_value(export_properties, DATImage.Property.use_full_iscript, self.use_full_iscript, data, property_encoder=_ImagePropertyCoder.use_full_iscript)
+		self._export_property_value(export_properties, DATImage.Property.draw_if_cloaked, self.draw_if_cloaked, data, property_encoder=_ImagePropertyCoder.draw_if_cloaked)
+		self._export_property_value(export_properties, DATImage.Property.draw_function, self.draw_function, data)
+		self._export_property_value(export_properties, DATImage.Property.remapping, self.remapping, data)
+		self._export_property_value(export_properties, DATImage.Property.iscript_id, self.iscript_id, data)
+		self._export_property_value(export_properties, DATImage.Property.shield_overlay, self.shield_overlay, data)
+		self._export_property_value(export_properties, DATImage.Property.attack_overlay, self.attack_overlay, data)
+		self._export_property_value(export_properties, DATImage.Property.damage_overlay, self.damage_overlay, data)
+		self._export_property_value(export_properties, DATImage.Property.special_overlay, self.special_overlay, data)
+		self._export_property_value(export_properties, DATImage.Property.landing_dust_overlay, self.landing_dust_overlay, data)
+		self._export_property_value(export_properties, DATImage.Property.lift_off_dust_overlay, self.lift_off_dust_overlay, data)
 
-	def _import_data(self, data):
-		grp_file = self._import_property_value(data, Image.Property.grp_file)
-		gfx_turns = self._import_property_value(data, Image.Property.gfx_turns, _ImagePropertyCoder.gfx_turns)
-		clickable = self._import_property_value(data, Image.Property.clickable, _ImagePropertyCoder.clickable)
-		use_full_iscript = self._import_property_value(data, Image.Property.use_full_iscript, _ImagePropertyCoder.use_full_iscript)
-		draw_if_cloaked = self._import_property_value(data, Image.Property.draw_if_cloaked, _ImagePropertyCoder.draw_if_cloaked)
-		draw_function = self._import_property_value(data, Image.Property.draw_function)
-		remapping = self._import_property_value(data, Image.Property.remapping)
-		iscript_id = self._import_property_value(data, Image.Property.iscript_id)
-		shield_overlay = self._import_property_value(data, Image.Property.shield_overlay)
-		attack_overlay = self._import_property_value(data, Image.Property.attack_overlay)
-		damage_overlay = self._import_property_value(data, Image.Property.damage_overlay)
-		special_overlay = self._import_property_value(data, Image.Property.special_overlay)
-		landing_dust_overlay = self._import_property_value(data, Image.Property.landing_dust_overlay)
-		lift_off_dust_overlay = self._import_property_value(data, Image.Property.lift_off_dust_overlay)
+	def _import_data(self, data: dict[str, Any]) -> None:
+		grp_file = self._import_property_value(data, DATImage.Property.grp_file)
+		gfx_turns = self._import_property_value(data, DATImage.Property.gfx_turns, _ImagePropertyCoder.gfx_turns)
+		clickable = self._import_property_value(data, DATImage.Property.clickable, _ImagePropertyCoder.clickable)
+		use_full_iscript = self._import_property_value(data, DATImage.Property.use_full_iscript, _ImagePropertyCoder.use_full_iscript)
+		draw_if_cloaked = self._import_property_value(data, DATImage.Property.draw_if_cloaked, _ImagePropertyCoder.draw_if_cloaked)
+		draw_function = self._import_property_value(data, DATImage.Property.draw_function)
+		remapping = self._import_property_value(data, DATImage.Property.remapping)
+		iscript_id = self._import_property_value(data, DATImage.Property.iscript_id)
+		shield_overlay = self._import_property_value(data, DATImage.Property.shield_overlay)
+		attack_overlay = self._import_property_value(data, DATImage.Property.attack_overlay)
+		damage_overlay = self._import_property_value(data, DATImage.Property.damage_overlay)
+		special_overlay = self._import_property_value(data, DATImage.Property.special_overlay)
+		landing_dust_overlay = self._import_property_value(data, DATImage.Property.landing_dust_overlay)
+		lift_off_dust_overlay = self._import_property_value(data, DATImage.Property.lift_off_dust_overlay)
 
-		if grp_file != None:
+		if grp_file is not None:
 			self.grp_file = grp_file
-		if gfx_turns != None:
+		if gfx_turns is not None:
 			self.gfx_turns = gfx_turns
-		if clickable != None:
+		if clickable is not None:
 			self.clickable = clickable
-		if use_full_iscript != None:
+		if use_full_iscript is not None:
 			self.use_full_iscript = use_full_iscript
-		if draw_if_cloaked != None:
+		if draw_if_cloaked is not None:
 			self.draw_if_cloaked = draw_if_cloaked
-		if draw_function != None:
+		if draw_function is not None:
 			self.draw_function = draw_function
-		if remapping != None:
+		if remapping is not None:
 			self.remapping = remapping
-		if iscript_id != None:
+		if iscript_id is not None:
 			self.iscript_id = iscript_id
-		if shield_overlay != None:
+		if shield_overlay is not None:
 			self.shield_overlay = shield_overlay
-		if attack_overlay != None:
+		if attack_overlay is not None:
 			self.attack_overlay = attack_overlay
-		if damage_overlay != None:
+		if damage_overlay is not None:
 			self.damage_overlay = damage_overlay
-		if special_overlay != None:
+		if special_overlay is not None:
 			self.special_overlay = special_overlay
-		if landing_dust_overlay != None:
+		if landing_dust_overlay is not None:
 			self.landing_dust_overlay = landing_dust_overlay
-		if lift_off_dust_overlay != None:
+		if lift_off_dust_overlay is not None:
 			self.lift_off_dust_overlay = lift_off_dust_overlay
 
 class _ImagePropertyCoder:
@@ -235,8 +239,8 @@ class ImagesDAT(AbstractDAT.AbstractDAT):
 				}
 			]
 		})
-	ENTRY_STRUCT = Image
+	ENTRY_STRUCT = DATImage
 	FILE_NAME = "images.dat"
 
-	def get_entry(self, index): # type: (int) -> Image
-		return super(ImagesDAT, self).get_entry(index)
+	def get_entry(self, index: int) -> DATImage:
+		return cast(DATImage, super().get_entry(index))

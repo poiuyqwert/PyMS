@@ -1,2 +1,49 @@
 # PyLO
-PyLO is a tool used for editing offset data contained in the various [.lo?](/Help/Files/LO.md) files, which is used for various purposes like projectiles and overlays. PyLO decompiles the `.lo?` files into text source code, and compiles the text source code back into a `.lo?` file. There is a built in editor and preview to help with constructing the offsets.
+PyLO is a tool used for editing the offset data contained in the various [.lo?](/Help/Files/LO.md) files, which the game uses to position things relative to a unit's graphics — like where overlay graphics are drawn, or where projectiles spawn. PyLO decompiles the `.lo?` files into text source code, and compiles the text source code back into a `.lo?` file.
+The source code is written using the built in [Code Editor](/Help/Programs/PyLO/Code_Editor.md), with a live [Previewer](/Help/Programs/PyLO/Previewer.md) to visualize and adjust the offsets on real graphics. If you are new to offset editing, start with the [Editing Offsets](/Help/Tutorials/Editing_Offsets.md) tutorial.
+
+## Main Window
+The main window shows the [Code Editor](/Help/Programs/PyLO/Code_Editor.md) on the left and the [Previewer](/Help/Programs/PyLO/Previewer.md) on the right. The menubar holds every command, grouped into **File**, **Edit**, **View**, **Settings**, and **Help** menus. The toolbar below it has buttons for the same commands, and the status bar at the bottom shows the result of the last action along with an indicator for unsaved changes.
+
+## Managing Files
+These commands are in the **File** menu, and on the toolbar.
+
+- **New** (`Ctrl+N`): Creates new source code, with a single frame containing a single `(0, 0)` offset.
+- **Open...** (`Ctrl+O`): Opens a `.lo?` file, decompiling it into the editor.
+- **Save** (`Ctrl+S`) and **Save As...** (`Ctrl+Alt+A`): Compiles the source code and saves it as a `.lo?` file. Compile errors are shown, and nothing is saved until the code compiles.
+- **Import Text...** (`Ctrl+I`): Loads source code from a text file into the editor. The file must compile to be imported.
+- **Export Text...** (`Ctrl+E`): Saves the source code in the editor to a text file.
+- **Close** (`Ctrl+W`): Closes the loaded file.
+- **Check for Updates...**: Checks GitHub for a newer version of PyLO and PyMS, and shows the result. PyLO also checks automatically when it starts, but only shows a message when an update is available. When an update is available, the **Change Log** button shows what's new in the [change log](/Help/Programs/Change_Log.md).
+- **Exit**: Closes PyLO.
+
+Closing a file (or exiting PyLO) with unsaved changes will ask if you want to save them first.
+
+## Settings
+These commands are in the **Settings** menu, and on the toolbar.
+
+- **Manage Settings...** (`Ctrl+M`): Opens the settings dialog, where you manage the [MPQs](/Help/Files/MPQ.md) that the [Previewer](/Help/Programs/PyLO/Previewer.md) can load its [GRP](/Help/Files/GRP.md) files from, and change the [theme](/Help/Programs/Themes.md).
+- **Syntax Highlighting...** (`Ctrl+Alt+C`): Customizes the syntax highlighting styles of the [Code Editor](/Help/Programs/PyLO/Code_Editor.md).
+- **Set as Default `*.lo?` Editor (Windows Only)**: Associates the `.lo?` file extensions with PyLO, so they open in PyLO when double clicked.
+
+## Help
+The **Help** menu has **View Help** (`F1`), which opens this help, along with **Donate...** and **About PyLO**.
+
+## Command Line
+PyLO can also be used from the command line to decompile and compile `.lo?` files without opening the GUI:
+
+```
+PyLO [options] <inp> [out]
+```
+
+- `-d`, `--decompile`: Decompile a `.lo?` file to text source code (the default).
+- `-c`, `--compile`: Compile text source code to a `.lo?` file.
+- `--gui`: Opens a file with the GUI.
+
+If no output file is given, the output is named after the input file, with the extension swapped to `.txt` when decompiling or `.lox` when compiling.
+
+## See Also
+- [Code Editor](/Help/Programs/PyLO/Code_Editor.md)
+- [Previewer](/Help/Programs/PyLO/Previewer.md)
+- [LO?](/Help/Files/LO.md)
+- [Editing Offsets](/Help/Tutorials/Editing_Offsets.md)

@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ..CHKSection import CHKSection
 from ..CHKRequirements import CHKRequirements
 
@@ -6,10 +8,14 @@ from ....Utilities.utils import pad
 
 import struct
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..CHK import CHK
+
 class CHKSectionSIDE(CHKSection):
-	NAME = 'SIDE'
+	NAME = b'SIDE'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
-	
+
 	ZERG = 0
 	TERRAN = 1
 	PROTOSS = 2
@@ -19,7 +25,7 @@ class CHKSectionSIDE(CHKSection):
 	RANDOM = 6
 	INACTIVE = 7
 	@staticmethod
-	def SIDE_NAME(v):
+	def SIDE_NAME(v: int) -> str:
 		names = {
 			CHKSectionSIDE.ZERG:'Zerg',
 			CHKSectionSIDE.TERRAN:'Terran',
@@ -32,18 +38,18 @@ class CHKSectionSIDE(CHKSection):
 		}
 		return names.get(v,'Unknown')
 
-	def __init__(self, chk):
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.sides = [CHKSectionSIDE.RANDOM] * 8 + [CHKSectionSIDE.INACTIVE] * 4
-	
-	def load_data(self, data):
-		self.sides = list(struct.unpack('<12B', data[:12]))
-	
-	def save_data(self):
+
+	def load_data(self, data: bytes) -> None:
+		self.sides = list(int(s) for s in struct.unpack('<12B', data[:12]))
+
+	def save_data(self) -> bytes:
 		return struct.pack('<12B', *self.sides)
-	
-	def decompile(self):
-		result = '%s:\n' % self.NAME
+
+	def decompile(self) -> str:
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for n,value in enumerate(self.sides):
-			result += '\t%s # %s\n' % (pad('Slot%02d' % n,value), CHKSectionSIDE.SIDE_NAME(value))
+			result += f'\t{pad(f"Slot{n:02d}",str(value))} # {CHKSectionSIDE.SIDE_NAME(value)}\n'
 		return result

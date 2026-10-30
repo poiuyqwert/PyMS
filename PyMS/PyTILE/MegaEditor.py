@@ -1,40 +1,54 @@
 
+from .Config import PyTILEConfig
+from .MegaEditorMode import MegaEditorMode
 from . import MegaEditorView
+from .Delegates import MegaEditorDelegate, MegaEditorViewDelegate
 
-from ..Utilities.UIKit import *
+from ..FileFormats.Tileset.Tileset import Tileset
+from ..FileFormats.Tileset.VX4 import VX4Minitile
+
+from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
 
-class MegaEditor(PyMSDialog):
-	def __init__(self, parent, settings, id):
-		self.settings = settings
-		self.id = id
-		self.tileset = parent.tileset
-		self.gettile = parent.gettile
+class MegaEditor(PyMSDialog, MegaEditorViewDelegate):
+	def __init__(self, parent: UI.Misc, config: PyTILEConfig, delegate: MegaEditorDelegate, tile_id: int) -> None:
+		self.config_ = config
+		self.delegate = delegate
+		self.id = tile_id
 		self.edited = False
-		PyMSDialog.__init__(self, parent, 'MegaTile Editor [%s]' % id)
+		PyMSDialog.__init__(self, parent, f'MegaTile Editor [{tile_id}]')
 
-	def widgetize(self):
-		self.editor = MegaEditorView.MegaEditorView(self, self.settings, self, self.id)
-		self.editor.pack(side=TOP, padx=3, pady=(3,0))
-		ok = Button(self, text='Ok', width=10, command=self.ok)
-		ok.pack(side=BOTTOM, padx=3, pady=3)
+	def widgetize(self) -> UI.Widget | None:
+		self.editor = MegaEditorView.MegaEditorView(parent=self, config=self.config_, delegate=self, megatile_id=self.id)
+		self.editor.pack(side=UI.TOP, padx=3, pady=(3,0))
+		ok = UI.Button(self, text='Ok', width=10, command=self.ok)
+		ok.pack(side=UI.BOTTOM, padx=3, pady=3)
 		return ok
 
-	def mark_edited(self):
+	def get_tileset(self) -> Tileset | None:
+		return self.delegate.get_tileset()
+
+	def get_tile(self, tile_id: int | VX4Minitile) -> UI.AnyPhotoImage:
+		return self.delegate.get_tile(tile_id)
+
+	def mega_edit_mode_updated(self, mode: MegaEditorMode) -> None:
+		pass
+
+	def draw_group(self) -> None:
+		pass
+
+	def mark_edited(self) -> None:
 		self.edited = True
 
-	def megaload(self):
+	def megaload(self) -> None:
 		self.editor.draw()
 
-	def ok(self):
+	def ok(self, _event: UI.Event | None = None) -> None:
 		if self.edited:
-			from .TilePalette import TilePalette
-			if self.editor.megatile_id in TilePalette.TILE_CACHE:
+			from .TilePalette import TilePalette  # pylint: disable=cyclic-import
+			if self.editor.megatile_id is not None and self.editor.megatile_id in TilePalette.TILE_CACHE:
 				del TilePalette.TILE_CACHE[self.editor.megatile_id]
-			if hasattr(self.parent, 'megaload'):
-				self.parent.megaload()
-			if hasattr(self.parent, 'draw_tiles'):
-				self.parent.draw_tiles(force=True)
-			if hasattr(self.parent, 'mark_edited'):
-				self.parent.mark_edited()
+			self.delegate.megaload()
+			self.delegate.draw_tiles(force=True)
+			self.delegate.mark_edited()
 		PyMSDialog.ok(self)

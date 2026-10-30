@@ -1,14 +1,16 @@
 
+from .Config import PyPCXConfig
+from .SettingsDialog import SettingsDialog
+
 from ..FileFormats.PCX import PCX
 from ..FileFormats.Palette import Palette
 from ..FileFormats.GRP import frame_to_photo
 from ..FileFormats.BMP import BMP
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
-from ..Utilities.UIKit import *
+from ..Utilities import registry
+from ..Utilities import UIKit as UI
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.Settings import Settings
 from ..Utilities import Assets
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
@@ -16,177 +18,245 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
-from ..Utilities.SettingsDialog import SettingsDialog
+from ..Utilities.CheckSaved import CheckSaved
+from ..Utilities.SponsorDialog import SponsorDialog
 
-LONG_VERSION = 'v%s' % Assets.version('PyPCX')
 
-class PyPCX(MainWindow):
-	def __init__(self, guifile=None):
-		self.settings = Settings('PyPCX', '1')
+LONG_VERSION = 'v' + Assets.version('PyPCX')
 
+class PyPCX(UI.MainWindow):
+	def __init__(self, guifile: str | None = None) -> None:
 		#Window
-		MainWindow.__init__(self)
+		UI.MainWindow.__init__(self)
 		self.set_icon('PyPCX')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyPCX', Assets.version('PyPCX'))
 		ga.track(GAScreen('PyPCX'))
 		setup_trace('PyPCX', self)
-		Theme.load_theme(self.settings.get('theme'), self)
 
-		self.pcx = None
-		self.file = None
+		self.config_ = PyPCXConfig()
+		UI.Theme.load_theme(self.config_.theme.value, self)
+
+		self.pcx: PCX | None = None
+		self.file: str | None = None
+		self.image: UI.AnyPhotoImage | None = None
+		self.canvas_image: UI.Canvas.Item | None = None
 		self.edited = False
 
 		self.update_title()
 
+		def save() -> None:
+			self.save()
+		def saveas() -> None:
+			self.saveas()
+
+		#Menu
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File')
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_separator()
+		file_menu.add_command('Save', save, UI.Ctrl.s, enabled=False, tags='file_open')
+		file_menu.add_command('Save As...', saveas, UI.Ctrl.Alt.a, enabled=False, tags='file_open', underline='As')
+		file_menu.add_separator()
+		file_menu.add_command('Import BMP...', self.iimport, UI.Ctrl.i)
+		file_menu.add_command('Export BMP...', self.export, UI.Ctrl.e, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open', underline='c')
+		file_menu.add_separator()
+		file_menu.add_command('Check for Updates...', self.check_for_updates, underline='u')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		palette_menu = self.menu.add_cascade('Palette')
+		palette_menu.add_command('Import Palette...', self.loadpal, UI.Ctrl.Alt.i, enabled=False, tags='file_open')
+		palette_menu.add_separator()
+		save_palette_menu = palette_menu.add_cascade('Save Palette As')
+		save_palette_menu.add_command('RIFF *.pal...', lambda: self.savepal(file_type=Palette.FileType.riff), UI.Ctrl.r, enabled=False, tags='file_open')
+		save_palette_menu.add_command('JASC *.pal...', lambda: self.savepal(file_type=Palette.FileType.jasc), UI.Ctrl.j, enabled=False, tags='file_open')
+		save_palette_menu.add_command('StarCraft *.pal...', lambda: self.savepal(file_type=Palette.FileType.sc_pal), UI.Ctrl.p, enabled=False, tags='file_open')
+		save_palette_menu.add_command('StarCraft Terrain *.wpe...', lambda: self.savepal(file_type=Palette.FileType.wpe), UI.Ctrl.t, enabled=False, tags='file_open')
+		save_palette_menu.add_command('Adobe Color Table *.act...', lambda: self.savepal(file_type=Palette.FileType.act), UI.Ctrl.a, enabled=False, tags='file_open')
+
+		settings_menu = self.menu.add_cascade('Settings')
+		settings_menu.add_command('Manage Settings...', self.sets, UI.Ctrl.m)
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.pcx Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='D')
+
+		help_menu = self.menu.add_cascade('Help')
+		help_menu.add_command('View Help', self.help, UI.Key.F1, underline='H')
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor, underline='D')
+		help_menu.add_command('About PyPCX', self.about, underline='A')
+
 		#Toolbar
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('exportc'), self.export, 'Export as BMP', Ctrl.e, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('importc'), self.iimport, 'Import BMP', Ctrl.i),
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('importc'), self.iimport, 'Import BMP', UI.Ctrl.i, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('exportc'), self.export, 'Export BMP', UI.Ctrl.e, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('colors'), self.loadpal, 'Import a palette', Ctrl.Alt.i, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('saveriff'), lambda: self.savepal(file_type=Palette.FileType.riff), 'Save Palette as RIFF *.pal', Ctrl.r, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savejasc'), lambda: self.savepal(file_type=Palette.FileType.jasc), 'Save Palette as JASC *.pal', Ctrl.j, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savepal'), lambda: self.savepal(file_type=Palette.FileType.sc_pal), 'Save Palette as StarCraft *.pal', Ctrl.p, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savewpe'), lambda: self.savepal(file_type=Palette.FileType.wpe), 'Save Palette as StarCraft Terrain *.wpe', Ctrl.t, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('saveact'), lambda: self.savepal(file_type=Palette.FileType.act), 'Save as Adobe Color Table *.act', Ctrl.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('colors'), self.loadpal, 'Import Palette', UI.Ctrl.Alt.i, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('saveriff'), lambda: self.savepal(file_type=Palette.FileType.riff), 'Save Palette as RIFF *.pal', UI.Ctrl.r, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('savejasc'), lambda: self.savepal(file_type=Palette.FileType.jasc), 'Save Palette as JASC *.pal', UI.Ctrl.j, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('savepal'), lambda: self.savepal(file_type=Palette.FileType.sc_pal), 'Save Palette as StarCraft *.pal', UI.Ctrl.p, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('savewpe'), lambda: self.savepal(file_type=Palette.FileType.wpe), 'Save Palette as StarCraft Terrain *.wpe', UI.Ctrl.t, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveact'), lambda: self.savepal(file_type=Palette.FileType.act), 'Save Palette as Adobe Color Table *.act', UI.Ctrl.a, enabled=False, tags='file_open', bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.pcx editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.pcx Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyPCX')
+		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
+		self.toolbar.add_button(Assets.get_image('update'), self.check_for_updates, 'Check for Updates')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
+		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
 		#Canvas
-		f = Frame(self, bd=2, relief=SUNKEN, background='#808080')
-		l = Frame(f, background='#808080')
-		self.canvas = Canvas(l, width=0, height=0, bd=0, highlightthickness=0)
-		l.pack(side=LEFT, fill=Y, padx=2, pady=2)
-		f.pack(fill=BOTH, expand=1, padx=5, pady=5)
+		f = UI.Frame(self, bd=2, relief=UI.SUNKEN, background='#808080')
+		l = UI.Frame(f, background='#808080')
+		self.canvas = UI.Canvas(l, width=0, height=0, bd=0, highlightthickness=0)
+		l.pack(side=UI.LEFT, fill=UI.Y, padx=2, pady=2)
+		f.pack(fill=UI.BOTH, expand=1, padx=5, pady=5)
 
 		#Statusbar
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.status.set('Load a PCX or import a BMP.')
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, weight=0.6)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
 
-		self.settings.windows.load_window_size('main', self)
+		self.config_.windows.main.load_size(self)
 
 		if guifile:
 			self.open(file=guifile)
 
 		UpdateDialog.check_update(self, 'PyPCX')
 
-	def is_file_open(self):
-		return not not self.pcx
+	def is_file_open(self) -> bool:
+		return self.pcx is not None
 
-	def action_states(self):
+	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
-		self.editstatus['state'] = NORMAL if self.edited else DISABLED
+		self.menu.tag_enabled('file_open', self.is_file_open())
+		self.editstatus['state'] = UI.NORMAL if self.edited else UI.DISABLED
 
-	def preview(self):
-		self.canvas.config(width=self.pcx.width,height=self.pcx.height)
-		self.canvas.pack(side=TOP)
-		self.canvas.pcx = frame_to_photo(self.pcx.palette, self.pcx, -1, size=False, trans=False)
-		self.canvas.create_image(0, 0, image=self.canvas.pcx, anchor=NW)
+	def mark_edited(self, edited: bool = True) -> None:
+		self.edited = edited
 		self.action_states()
 
-	def unsaved(self):
-		if self.pcx and self.edited:
-			file = self.file
-			if not file:
-				file = 'Unnamed.pcx'
-			save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-			if save != MessageBox.NO:
-				if save == MessageBox.CANCEL:
-					return True
-				if self.file:
-					self.save()
-				else:
-					self.saveas()
+	def preview(self) -> None:
+		if not self.pcx:
+			return
+		self.canvas.config(width=self.pcx.width,height=self.pcx.height)
+		if not self.canvas.winfo_manager():
+			self.canvas.pack(side=UI.TOP)
+		self.image = frame_to_photo(self.pcx.palette, self.pcx)
+		if self.canvas_image is not None:
+			self.canvas_image.config(image=self.image)
+		else:
+			self.canvas_image = self.canvas.create_image(0, 0, image=self.image, anchor=UI.NW)
+		self.action_states()
 
-	def update_title(self):
+	def check_saved(self) -> CheckSaved:
+		if not self.pcx or not self.edited:
+			return CheckSaved.saved
+		file = self.file
+		if not file:
+			file = 'Unnamed.pcx'
+		save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=UI.MessageBox.YES)
+		if save is None:
+			return CheckSaved.cancelled
+		if not save:
+			return CheckSaved.saved
+		if self.file:
+			return self.save()
+		return self.saveas()
+
+	def update_title(self) -> None:
 		file_path = self.file
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.pcx'
 		if not file_path:
-			self.title('PyPCX %s' % LONG_VERSION)
+			self.title(f'PyPCX {LONG_VERSION}')
 		else:
-			self.title('PyPCX %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyPCX {LONG_VERSION} ({file_path})')
 
-	def open(self, key=None, file=None):
-		if self.unsaved():
+	def open(self, file: str | None = None) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
 			return
-		if file == None:
-			file = self.settings.lastpath.pcx.select_open_file(self, title='Open PCX', filetypes=[FileType.pcx()])
+		if file is None:
+			file = self.config_.last_path.pcx.select_open(self)
 			if not file:
 				return
 		pcx = PCX()
 		try:
-			pcx.load_file(file)
+			pcx.load(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		self.pcx = pcx
 		self.file = file
 		self.update_title()
-		self.edited = False
+		self.mark_edited(False)
 		self.status.set('Load Successful!')
 		self.preview()
 
-	def save(self, key=None):
-		self.saveas(file_path=self.file)
+	def save(self) -> CheckSaved:
+		return self.saveas(file_path=self.file)
 
-	def saveas(self, key=None, file_path=None):
+	def saveas(self, file_path: str | None = None) -> CheckSaved:
+		if not self.pcx:
+			return CheckSaved.saved
 		if not file_path:
-			file_path = self.settings.lastpath.pcx.select_save_file(self, title='Save PCX As', filetypes=[FileType.pcx()])
+			file_path = self.config_.last_path.pcx.select_save(self)
 			if not file_path:
-				return
+				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
-			return
+			return CheckSaved.cancelled
 		try:
-			self.pcx.save_file(file_path)
+			self.pcx.save(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-			return
-		self.edited = False
-		self.status.set('Save Successful!')
-		self.action_states()
+			return CheckSaved.cancelled
 		self.file = file_path
 		self.update_title()
+		self.mark_edited(False)
+		self.status.set('Save Successful!')
+		return CheckSaved.saved
 
-	def loadpal(self, key=None):
-		if not self.is_file_open():
+	def loadpal(self) -> None:
+		if not self.pcx:
 			return
-		file = self.settings.lastpath.pal.select_open_file(self, key='import', title='Import Palette', filetypes=Palette.FileType.load_types())
+		file = self.config_.last_path.pal.select_open(self)
 		if not file:
-			return True
+			return
 		pal = Palette()
 		try:
-			pal.load_file(file)
+			pal.load(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		self.pcx.palette = list(pal.palette)
-		self.edited = True
+		self.mark_edited()
 		self.preview()
 
-	def savepal(self, key=None, file_type=Palette.FileType.sc_pal):
-		if not self.is_file_open():
+	def savepal(self, file_type: Palette.FileType = Palette.FileType.sc_pal) -> None:
+		if not self.pcx:
 			return
-		file = self.settings.lastpath.pal.select_save_file(self, key='export', title='Save Palette As', filetypes=Palette.FileType.save_types(file_type.format, file_type.ext))
+		file = self.config_.last_path.pal.select_save(self, filetypes=list(Palette.FileType.save_types(file_type.format, file_type.ext)))
 		if not file:
-			return True
+			return
 		p = Palette()
 		p.palette = list(self.pcx.palette)
 		try:
@@ -195,74 +265,78 @@ class PyPCX(MainWindow):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def export(self, key=None):
-		if not self.is_file_open():
+	def export(self) -> None:
+		if not self.pcx:
 			return
-		file = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export to BMP', filetypes=[FileType.bmp()])
+		file = self.config_.last_path.bmp.select_save(self)
 		if not file:
-			return True
+			return
 		b = BMP()
 		b.set_pixels(self.pcx.image,self.pcx.palette)
 		try:
-			b.save_file(file)
+			b.save(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		self.status.set('Image exported successfully!')
 
-	def iimport(self, key=None):
-		if not self.is_file_open():
+	def iimport(self) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
 			return
-		file = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import a BMP', filetypes=[FileType.bmp()])
+		file = self.config_.last_path.bmp.select_open(self)
 		if not file:
-			return True
+			return
 		b = BMP()
 		try:
-			b.load_file(file)
+			b.load(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		if not self.pcx:
 			self.pcx = PCX()
-			self.file = 'Unnamed.pcx'
 			self.update_title()
-		self.pcx.load_data(b.image,b.palette)
-		self.edited = False
+		self.pcx.load_pixels(b.image,b.palette)
+		self.mark_edited()
 		self.preview()
 		self.status.set('Image imported successfully!')
 
-	def close(self, key=None):
-		if self.unsaved():
-			return
-		if not self.is_file_open():
+	def close(self) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.pcx = None
 		self.file = None
 		self.update_title()
 		self.status.set('Load a PCX or import a BMP.')
-		self.canvas.delete(ALL)
+		self.canvas.delete(UI.ALL)
+		self.canvas_image = None
 		self.canvas.forget()
-		self.canvas.pcx = None
+		self.image = None
 		self.action_states()
 
-	def register(self, e=None):
+	def register_registry(self) -> None:
 		try:
-			register_registry('PyPCX', 'pcx')
+			registry.register('PyPCX', 'pcx')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def sets(self, key=None, err=None):
-		SettingsDialog(self, [('Theme',)], (550,380), err, settings=self.settings)
+	def sets(self) -> None:
+		SettingsDialog(self, self.config_)
 
-	def help(self, e=None):
-		HelpDialog(self, self.settings, 'Help/Programs/PyPCX.md')
+	def help(self) -> None:
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyPCX.md')
 
-	def about(self, key=None):
+	def about(self) -> None:
 		AboutDialog(self, 'PyPCX', LONG_VERSION)
 
-	def exit(self, e=None):
-		if self.unsaved():
+	def sponsor(self) -> None:
+		SponsorDialog(self)
+
+	def check_for_updates(self) -> None:
+		UpdateDialog(self, 'PyPCX')
+
+	def exit(self) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.settings.windows.save_window_size('main', self)
-		self.settings.save()
+		self.config_.windows.main.save_size(self)
+		self.config_.save()
 		self.destroy()

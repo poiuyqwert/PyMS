@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ..CHKSection import CHKSection
 from ..CHKRequirements import CHKRequirements
 
@@ -6,8 +8,12 @@ from ....Utilities.utils import pad
 
 import struct
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..CHK import CHK
+
 class CHKSectionIOWN(CHKSection):
-	NAME = 'IOWN'
+	NAME = b'IOWN'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 
 	INACTIVE = 0
@@ -20,7 +26,7 @@ class CHKSectionIOWN(CHKSection):
 	NEUTRAL = 7
 	CLOSED_INVALID = 8 # INVALID
 	@staticmethod
-	def OWNER_NAME(v):
+	def OWNER_NAME(v: int) -> str:
 		names = {
 			CHKSectionIOWN.INACTIVE:'Inactive',
 			CHKSectionIOWN.COMPUTER_GAME_INVALID:'Occupied by Computer (Invalid)',
@@ -33,19 +39,19 @@ class CHKSectionIOWN(CHKSection):
 			CHKSectionIOWN.CLOSED_INVALID: 'Closed (Invalid)'
 		}
 		return names.get(v,'Unknown')
-	
-	def __init__(self, chk):
+
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.owners = [CHKSectionIOWN.HUMAN]*8 + [CHKSectionIOWN.INACTIVE]*4
-	
-	def load_data(self, data):
-		self.owners = list(struct.unpack('<12B', data[:12]))
-	
-	def save_data(self):
+
+	def load_data(self, data: bytes) -> None:
+		self.owners = list(int(o) for o in struct.unpack('<12B', data[:12]))
+
+	def save_data(self) -> bytes:
 		return struct.pack('<12B', *self.owners)
 
-	def decompile(self):
-		result = '%s:\n' % self.NAME
+	def decompile(self) -> str:
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for n,value in enumerate(self.owners):
-			result += '\t%s # %s\n' % (pad('Slot%02d' % n,value), CHKSectionIOWN.OWNER_NAME(value))
+			result += f'\t{pad(f"Slot{n:02d}",str(value))} # {CHKSectionIOWN.OWNER_NAME(value)}\n'
 		return result

@@ -1,41 +1,29 @@
 
-from utils import fit
+from __future__ import annotations
 
 class PyMSWarning(Exception):
-	def __init__(self, type, warning, line=None, code=None, extra=None, level=0, id=None, sub_warnings=None):
-		self.type = type
+	def __init__(self, *, warn_type: str, warning: str, line: int | None = None, code: str | None = None, level: int = 0, warn_id: str | None = None, sub_warnings: list[PyMSWarning] | None = None) -> None:
+		self.type = warn_type
 		self.warning = warning
 		self.line = line
-		if self.line != None:
+		if self.line is not None:
 			self.line += 1
 		self.code = code
-		self.extra = extra
 		self.level = level
-		self.id = id
-		self.sub_warnings = [] if not sub_warnings else sub_warnings
+		self.id = warn_id
+		self.sub_warnings = sub_warnings or []
 
-	def repr(self):
-		r = fit('%s Warning%s: ' % (self.type, ' (%s)' % self.id if self.id else ''), self.warning, end=True)
-		if self.line:
-			r += fit('    Line %s: ' % self.line, self.code, end=True)
+	def __repr__(self) -> str:
+		r = f'{self.type} Warning{f" ({self.id})" if self.id else ""}: {self.warning}'
+		if self.line and self.code:
+			r += f'\n    Line {self.line}: {self.code}'
 		for w in self.sub_warnings:
-			r += w.repr()
+			r += '\n' + repr(w)
 		return r
 
-	def __repr__(self):
-		r = fit('%s Warning%s: ' % (self.type, ' (%s)' % self.id if self.id else ''), self.warning)
-		if self.line:
-			r += fit('    Line %s: ' % self.line, self.code)
-		for w in self.sub_warnings:
-			r += repr(w)
-		return r[:-1]
-
 class PyMSWarnList(Exception):
-	def __init__(self, warnings):
+	def __init__(self, warnings: list[PyMSWarning]) -> None:
 		self.warnings = warnings
 
-	def __repr__(self):
-		r = ''
-		for w in self.warnings:
-			r += repr(w)
-		return r[:-1]
+	def __repr__(self) -> str:
+		return '\n'.join(repr(w) for w in self.warnings)

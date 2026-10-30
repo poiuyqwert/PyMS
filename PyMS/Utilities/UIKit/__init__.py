@@ -1,7 +1,16 @@
 
+# This package is the public-API barrel: the `*` re-exports are deliberate, each
+# backed by an `__all__` in the submodule. (Wildcards elsewhere were removed.)
+# pylint: disable=wildcard-import,unused-wildcard-import
+
+from .Event import *
+
+from .Constants import *
+from .Variables import *
+from .InputHistory import *
+from .Images import *
 from .Widgets import *
 from .Components import *
-from .Variables import *
 from .Colors import *
 from .Font import *
 from .Utils import *
@@ -9,27 +18,19 @@ from . import Theme
 from .EventPattern import *
 from .FileType import *
 from .ShowScrollbar import *
+from .Types import *
+from .SyntaxHighlighting import *
 
+import tkinter.filedialog as FileDialog
+import tkinter.messagebox as MessageBox
+import tkinter.colorchooser as ColorChooser
 
-try: # Python 2
-	import tkFileDialog as FileDialog
-	import tkMessageBox as MessageBox
-	import tkColorChooser as ColorChooser
-except: # Python 3
-	import tkinter.filedialog as FileDialog
-	import tkinter.messagebox as MessageBox
-	import tkinter.colorchooser as ColorChooser
-# import Tkdnd
-
+from tkinter import Tcl, TclError
+from tkinter.ttk import Style
+READONLY = 'readonly'
 
 try:
 	from PIL import Image as PILImage
-	try:
-		from PIL import ImageTk
-	except:
-		import ImageTk
-except:
-	class PILImage(object):
-		pass
-	class ImageTk(object):
-		pass
+	from PIL import ImageTk
+except Exception:
+	pass

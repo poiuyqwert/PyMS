@@ -1,6 +1,6 @@
 # MPQ
 `.mpq` files contain almost all the data files used by the game, kind of like a `.zip` file. They can also be embedded in other files like [EXE](/Help/Files/EXE.md) files, which is how a lot of mods are packaged. The game will load a set of MPQ's, and load files from those MPQ's in a defined order. The default MPQ's are in this order:
-1. [Patch_rt.mpq](#patchrtmpq)
+1. [Patch_rt.mpq](#patch_rtmpq)
 2. [BrooDat.mpq](#broodatmpq)
 3. [StarDat.mpq](#stardatmpq)
 

@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat, Requirement
 check_compat('PySPK', Requirement.PIL)
 
-def main():
+def main(): # type: () -> None
 	from PyMS.PySPK.PySPK import PySPK, LONG_VERSION
 
 	import os, optparse, sys
@@ -12,7 +12,7 @@ def main():
 		gui = PySPK()
 		gui.startup()
 	else:
-		p = optparse.OptionParser(usage='usage: PySPK [options] <inp> [out]', version='PySPK %s' % LONG_VERSION)
+		p = optparse.OptionParser(usage='usage: PySPK [options] <inp> [out]', version='PySPK ' + LONG_VERSION)
 		p.add_option('--gui', help="Opens a file with the GUI", default='')
 		opt, _ = p.parse_args()
 		if opt.gui:

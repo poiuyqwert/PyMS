@@ -1,0 +1,308 @@
+
+from __future__ import annotations
+
+from .DATUnitsTab import DATUnitsTab
+from ...DataID import DATID, AnyID
+
+from ....FileFormats.DAT.UnitsDAT import DATUnit
+
+from ....Utilities import UIKit as UI
+from ....Utilities import Assets
+
+from math import floor, ceil
+
+from typing import TYPE_CHECKING, Sequence
+if TYPE_CHECKING:
+	from ...Delegates import MainDelegate, SubDelegate
+
+class GraphicsUnitsTab(DATUnitsTab):
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:
+		DATUnitsTab.__init__(self, parent, delegate, sub_delegate)
+		scrollview = UI.ScrollView(self)
+
+		self.graphicsentry = UI.IntegerVar(0, [0,208])
+		self.graphicsdd = UI.IntVar()
+		self.constructionentry = UI.IntegerVar(0, [0,998])
+		self.constructiondd = UI.IntVar()
+		self.portraitsentry = UI.IntegerVar(0, [0,109], maxout=65535)
+		self.portraitsdd = UI.IntVar()
+		self.elevationentry = UI.IntegerVar(0, [0,19])
+		self.elevationdd = UI.IntVar()
+		self.direction = UI.IntegerVar(0, [0,255])
+
+		l = UI.LabelFrame(scrollview.content_view, text='Sprite Graphics:')
+		s = UI.Frame(l)
+		def add_dropdown(title: str, *, entry_variable: UI.IntegerVar, dropdown_variable: UI.IntVar, hint_name: str, values: Sequence[str], none_value: int | None = None, jump_dat_id: DATID | None = None) -> UI.DropDown:
+			f = UI.Frame(s)
+			UI.Label(f, text=title + ':', width=13, anchor=UI.E).pack(side=UI.LEFT)
+			UI.Entry(f, textvariable=entry_variable, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT)
+			UI.Label(f, text='=').pack(side=UI.LEFT)
+			dropdown = UI.DropDown(f, dropdown_variable, values, entry_variable, width=30, none_value=none_value)
+			dropdown.pack(side=UI.LEFT, fill=UI.X, expand=1, padx=2)
+			if jump_dat_id:
+				UI.Button(f, text='Jump ->', command=lambda: self.jump(jump_dat_id, dropdown_variable.get())).pack(side=UI.LEFT)
+			self.tip(f, title, hint_name)
+			f.pack(fill=UI.X)
+			return dropdown
+		self.graphics_ddw = add_dropdown('Graphics', entry_variable=self.graphicsentry, dropdown_variable=self.graphicsdd, hint_name='UnitGfx', values=[], jump_dat_id=DATID.flingy)
+		self.construction_ddw = add_dropdown('Construction', entry_variable=self.constructionentry, dropdown_variable=self.constructiondd, hint_name='UnitConstruction', values=[], jump_dat_id=DATID.images)
+		self.portraits_ddw = add_dropdown('Portraits', entry_variable=self.portraitsentry, dropdown_variable=self.portraitsdd, hint_name='UnitPortrait', values=[], none_value=65535, jump_dat_id=DATID.portdata)
+		self.elevation_ddw = add_dropdown('Elevation', entry_variable=self.elevationentry, dropdown_variable=self.elevationdd, hint_name='UnitElevationLevel', values=Assets.data_cache(Assets.DataReference.ElevationLevels))
+		f = UI.Frame(s)
+		UI.Label(f, text='Direction:', width=13, anchor=UI.E).pack(side=UI.LEFT)
+		UI.Entry(f, textvariable=self.direction, font=UI.Font.fixed(), width=3).pack(side=UI.LEFT)
+		self.tip(f, 'Direction', 'UnitDirection')
+		f.pack(fill=UI.X)
+		s.pack(fill=UI.BOTH, padx=5, pady=5)
+		l.pack(fill=UI.X)
+
+		self.left = UI.IntegerVar(0, [0,65535])
+		self.right = UI.IntegerVar(0, [0,65535])
+		self.up = UI.IntegerVar(0, [0,65535])
+		self.down = UI.IntegerVar(0, [0,65535])
+		self.horizontal = UI.IntegerVar(0, [0,65535])
+		self.vertical = UI.IntegerVar(0, [0,65535])
+		self.previewing = None
+		self.showpreview = UI.BooleanVar()
+		self.showpreview.set(self.delegate.data_context.config.preview.unit.show.value)
+		self.showplace = UI.BooleanVar()
+		self.showplace.set(self.delegate.data_context.config.preview.unit.show_placement.value)
+		self.showdims = UI.BooleanVar()
+		self.showdims.set(self.delegate.data_context.config.preview.unit.show_dimensions.value)
+		self.show_addon_placement = UI.BooleanVar()
+		self.show_addon_placement.set(self.delegate.data_context.config.preview.unit.show_addon_placement.value)
+		self.addon_parent_id = UI.IntegerVar(0, [0,228])
+		self.addon_parent_id.set(self.delegate.data_context.config.preview.unit.addon_parent_unit_id.value)
+
+		bottom = UI.Frame(scrollview.content_view)
+		left = UI.Frame(bottom)
+		l = UI.LabelFrame(left, text='Unit Dimensions:')
+		s = UI.Frame(l)
+		dims = [
+			('Left', self.left),
+			('Right', self.right),
+			('Up', self.up),
+			('Down', self.down),
+		]
+		for t,v in dims:
+			f = UI.Frame(s)
+			UI.Label(f, text=f'{t}:', width=13, anchor=UI.E).pack(side=UI.LEFT)
+			UI.Entry(f, textvariable=v, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT)
+			self.tip(f, t + ' Dimension', 'UnitDim' + t)
+			f.pack(fill=UI.X)
+		s.pack(padx=5, pady=5)
+		l.pack(side=UI.TOP, fill=UI.X)
+		l = UI.LabelFrame(left, text='Addon Position:')
+		s = UI.Frame(l)
+		f = UI.Frame(s)
+		UI.Label(f, text='Horizontal:', width=13, anchor=UI.E).pack(side=UI.LEFT)
+		self.horizontalw = UI.Entry(f, textvariable=self.horizontal, font=UI.Font.fixed(), width=5)
+		self.horizontalw.pack(side=UI.LEFT)
+		self.tip(f, 'Addons Horizontal Position', 'UnitAddPosX')
+		f.pack(fill=UI.X)
+		f = UI.Frame(s)
+		UI.Label(f, text='Vertical:', width=13, anchor=UI.E).pack(side=UI.LEFT)
+		self.verticalw = UI.Entry(f, textvariable=self.vertical, font=UI.Font.fixed(), width=5)
+		self.verticalw.pack(side=UI.LEFT)
+		self.tip(f, 'Addons Vertical Position', 'UnitAddPosY')
+		f.pack(fill=UI.X)
+		s.pack(padx=5, pady=5)
+		l.pack(side=UI.TOP, fill=UI.X)
+		left.pack(side=UI.LEFT, fill=UI.BOTH, expand=1)
+		l = UI.LabelFrame(bottom, text='Preview:')
+		s = UI.Frame(l)
+		self.preview = UI.Canvas(s, width=257, height=257, background='#000000', theme_tag='preview') # type: ignore[call-arg]
+		self.preview.pack(side=UI.TOP)
+
+		self.unit_item: UI.Canvas.Item | None = None
+		self.addon_parent_item: UI.Canvas.Item | None = None
+		self.size_item = self.preview.create_rectangle(0, 0, 0, 0, outline='#00FF00')
+		self.place_item = self.preview.create_rectangle(0, 0, 0, 0, outline='#FF0000')
+		self.addon_parent_size_item = self.preview.create_rectangle(0, 0, 0, 0, outline='#FFFF00')
+
+		UI.Checkbutton(s, text='Show Preview', variable=self.showpreview, command=self.drawpreview).pack(side=UI.TOP)
+		o = UI.Frame(s)
+		UI.Checkbutton(o, text='Show StarEdit Placement Box (Red)', variable=self.showplace, command=self.drawboxes).pack(side=UI.LEFT)
+		UI.Checkbutton(o, text='Show Dimensions Box (Green)', variable=self.showdims, command=self.drawboxes).pack(side=UI.LEFT)
+		o.pack(side=UI.TOP)
+		a = UI.Frame(s)
+		self.show_addon_placement_checkbox = UI.Checkbutton(a, text='Show Addon Placement (Yellow) with parent building:', variable=self.show_addon_placement, command=self.drawpreview)
+		self.show_addon_placement_checkbox.pack(side=UI.LEFT)
+		self.addon_parent_id_entry = UI.Entry(a, textvariable=self.addon_parent_id, font=UI.Font.fixed(), width=3)
+		self.addon_parent_id_entry.pack(side=UI.LEFT)
+		a.pack(side=UI.BOTTOM)
+		s.pack()
+		l.pack()
+		bottom.pack(fill=UI.X)
+
+		scrollview.pack(fill=UI.BOTH, expand=1)
+
+		for v in (self.graphicsentry, self.horizontal, self.vertical, self.addon_parent_id):
+			v.trace_add('write', lambda *_: self.drawpreview())
+		for v in (self.left, self.up, self.right, self.down):
+			v.trace_add('write', lambda *_: self.drawboxes())
+
+	def copy(self) -> None:
+		if not self.delegate.data_context.units.dat:
+			return
+		text = self.delegate.data_context.units.dat.export_entry(self.sub_delegate.id, export_properties=[
+			DATUnit.Property.graphics,
+			DATUnit.Property.construction_animation,
+			DATUnit.Property.unit_direction,
+			DATUnit.Property.elevation_level,
+			DATUnit.Property.unit_extents,
+			DATUnit.Property.portrait,
+			DATUnit.Property.addon_position,
+		])
+		self.clipboard_set(text) # type: ignore[attr-defined]
+
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
+		if DATID.flingy in ids:
+			self.graphics_ddw.setentries(self.delegate.data_context.flingy.names)
+		if DATID.images in ids:
+			self.construction_ddw.setentries(self.delegate.data_context.images.names)
+		if DATID.portdata in ids:
+			self.portraits_ddw.setentries(self.delegate.data_context.portraits.names + ('None',))
+
+		if self.delegate.data_context.config.settings.reference_limits.value:
+			if DATID.flingy in ids:
+				self.graphicsentry.range[1] = self.delegate.data_context.flingy.entry_count() - 1
+			if DATID.images in ids:
+				self.constructionentry.range[1] = self.delegate.data_context.images.entry_count() - 1
+			if DATID.portdata in ids:
+				self.portraitsentry.range[1] = self.delegate.data_context.portraits.entry_count()
+		else:
+			self.graphicsentry.range[1] = 65535 if self.delegate.data_context.units.is_expanded() else 255
+			self.constructionentry.range[1] = 4294967295
+			self.portraitsentry.range[1] = 65535
+
+	def drawboxes(self) -> None:
+		if not self.delegate.data_context.units.dat:
+			return
+		if self.showpreview.get() and self.showplace.get():
+			entry = self.delegate.data_context.units.dat.get_entry(self.sub_delegate.id)
+			w = entry.staredit_placement_size.width / 2.0
+			h = entry.staredit_placement_size.height / 2.0
+			self.place_item.coords(130-floor(w), 130-floor(h), 129+ceil(w), 129+ceil(h))
+			self.place_item.tag_raise()
+		else:
+			self.place_item.coords(0, 0, 0, 0)
+		if self.showpreview.get() and self.showdims.get():
+			self.size_item.coords(130-self.left.get(), 130-self.up.get(), 130+self.right.get(), 130+self.down.get())
+			self.size_item.tag_raise()
+		else:
+			self.size_item.coords(0, 0, 0 ,0)
+
+	def draw_image(self, image_id: int, x: int = 130, y: int = 130) -> UI.Canvas.Item | None:
+		frame = self.delegate.data_context.get_image_frame(image_id)
+		if not frame:
+			return None
+		return self.preview.create_image(x, y, image=frame[0])
+
+	def draw_addon_preview(self) -> None:
+		if not self.delegate.data_context.units.dat or not self.delegate.data_context.flingy.dat or not self.delegate.data_context.sprites.dat:
+			return
+		if self.addon_parent_item:
+			self.addon_parent_item.delete()
+			self.addon_parent_item = None
+		addon_preview = self.showpreview.get()
+		addon_preview = addon_preview and self.show_addon_placement_checkbox['state'] == UI.NORMAL
+		addon_preview = addon_preview and self.show_addon_placement.get()
+		addon_preview = addon_preview and not not (self.horizontal.get() or self.vertical.get())
+		if addon_preview:
+			entry = self.delegate.data_context.units.dat.get_entry(self.sub_delegate.id)
+			w = entry.staredit_placement_size.width
+			h = entry.staredit_placement_size.height
+			parent_id = self.addon_parent_id.get()
+			parent_entry = self.delegate.data_context.units.dat.get_entry(parent_id)
+			parent_w = parent_entry.staredit_placement_size.width
+			parent_h = parent_entry.staredit_placement_size.height
+			x = 129 - w//2 - self.horizontal.get()
+			y = 129 - h//2 - self.vertical.get()
+			parent_flingy = self.delegate.data_context.flingy.dat.get_entry(parent_entry.graphics)
+			parent_sprite = self.delegate.data_context.sprites.dat.get_entry(parent_flingy.sprite)
+			self.addon_parent_item = self.draw_image(parent_sprite.image, x=x+parent_w//2, y=y+parent_h//2)
+			self.addon_parent_size_item.coords(x, y, x+parent_w, y+parent_h)
+			self.addon_parent_size_item.tag_raise()
+		else:
+			self.addon_parent_size_item.coords(0, 0, 0 ,0)
+
+	def drawpreview(self) -> None:
+		if not self.delegate.data_context.flingy.dat or not self.delegate.data_context.sprites.dat:
+			return
+		self.draw_addon_preview()
+		if self.unit_item:
+			self.unit_item.delete()
+			self.unit_item = None
+		if self.showpreview.get():
+			flingy_id = self.graphicsentry.get()
+			flingy = self.delegate.data_context.flingy.dat.get_entry(flingy_id)
+			sprite = self.delegate.data_context.sprites.dat.get_entry(flingy.sprite)
+			self.unit_item = self.draw_image(sprite.image)
+		self.drawboxes()
+
+	def load_data(self, entry: DATUnit) -> None:
+		self.graphicsentry.set(entry.graphics)
+		self.constructionentry.set(entry.construction_animation)
+		self.direction.set(entry.unit_direction)
+		self.elevationentry.set(entry.elevation_level)
+		self.left.set(entry.unit_extents.left)
+		self.up.set(entry.unit_extents.up)
+		self.right.set(entry.unit_extents.right)
+		self.down.set(entry.unit_extents.down)
+		self.portraitsentry.set(entry.portrait)
+
+		self.horizontal.set(entry.addon_position.x if entry.addon_position is not None else 0)
+		self.vertical.set(entry.addon_position.y if entry.addon_position is not None else 0)
+		state = UI.NORMAL if entry.addon_position is not None else UI.DISABLED
+		self.horizontalw['state'] = state
+		self.verticalw['state'] = state
+		self.show_addon_placement_checkbox['state'] = state
+		self.addon_parent_id_entry['state'] = state
+		self.drawpreview()
+
+	def save_data(self, entry: DATUnit) -> bool:
+		self.delegate.data_context.config.preview.unit.show.value = not not self.showpreview.get()
+		self.delegate.data_context.config.preview.unit.show_placement.value = not not self.showplace.get()
+		self.delegate.data_context.config.preview.unit.show_dimensions.value = not not self.showdims.get()
+		self.delegate.data_context.config.preview.unit.show_addon_placement.value = not not self.show_addon_placement.get()
+		self.delegate.data_context.config.preview.unit.addon_parent_unit_id.value = self.addon_parent_id.get()
+
+		edited = False
+		if self.graphicsentry.get() != entry.graphics:
+			entry.graphics = self.graphicsentry.get()
+			edited = True
+		if self.constructionentry.get() != entry.construction_animation:
+			entry.construction_animation = self.constructionentry.get()
+			edited = True
+		if self.direction.get() != entry.unit_direction:
+			entry.unit_direction = self.direction.get()
+			edited = True
+		if self.elevationentry.get() != entry.elevation_level:
+			entry.elevation_level = self.elevationentry.get()
+			edited = True
+		if self.left.get() != entry.unit_extents.left:
+			entry.unit_extents.left = self.left.get()
+			edited = True
+		if self.up.get() != entry.unit_extents.up:
+			entry.unit_extents.up = self.up.get()
+			edited = True
+		if self.right.get() != entry.unit_extents.right:
+			entry.unit_extents.right = self.right.get()
+			edited = True
+		if self.down.get() != entry.unit_extents.down:
+			entry.unit_extents.down = self.down.get()
+			edited = True
+		if self.portraitsentry.get() != entry.portrait:
+			entry.portrait = self.portraitsentry.get()
+			edited = True
+
+		if entry.addon_position is not None:
+			if self.horizontal.get() != entry.addon_position.x:
+				entry.addon_position.x = self.horizontal.get()
+				edited = True
+			if self.vertical.get() != entry.addon_position.y:
+				entry.addon_position.y = self.vertical.get()
+				edited = True
+
+		return edited

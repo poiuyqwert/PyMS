@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ..CHKSection import CHKSection
 from ..CHKRequirements import CHKRequirements
 
@@ -6,8 +8,12 @@ from ....Utilities.utils import pad
 
 import struct
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..CHK import CHK
+
 class CHKUnitStats:
-	def __init__(self):
+	def __init__(self) -> None:
 		self.default = True
 		self.health = 0
 		self.shields = 0
@@ -16,112 +22,113 @@ class CHKUnitStats:
 		self.costMinerals = 0
 		self.costGas = 0
 		self.name = 0
+
 class CHKWeaponStats:
-	def __init__(self):
+	def __init__(self) -> None:
 		self.damage = 0
 		self.damageUpgrade = 0
 
 class CHKSectionUNIS(CHKSection):
-	NAME = 'UNIS'
+	NAME = b'UNIS'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_VANILLA_HYBRID, CHKRequirements.MODE_UMS)
 
 	UNITS = 228
 	WEAPONS = 100
-	
-	def __init__(self, chk):
+
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
-		self.unit_stats = []
+		self.unit_stats: list[CHKUnitStats] = []
 		for _ in range(self.UNITS):
 			self.unit_stats.append(CHKUnitStats())
-		self.weapon_stats = []
+		self.weapon_stats: list[CHKWeaponStats] = []
 		for _ in range(self.WEAPONS):
 			self.weapon_stats.append(CHKWeaponStats())
-	
-	def load_data(self, data):
+
+	def load_data(self, data: bytes) -> None:
 		o = 0
-		defaults = list(struct.unpack('<%dB' % self.UNITS, data[o:o+self.UNITS]))
+		defaults = list(bool(v) for v in struct.unpack(f'<{self.UNITS}B', data[o:o+self.UNITS]))
 		o += self.UNITS
-		healths = list(struct.unpack('<%dL' % self.UNITS, data[o:o+self.UNITS*4]))
+		healths = list(int(v) for v in struct.unpack(f'<{self.UNITS}L', data[o:o+self.UNITS*4]))
 		o += self.UNITS*4
-		shields = list(struct.unpack('<%dH' % self.UNITS, data[o:o+self.UNITS*2]))
+		shields = list(int(v) for v in struct.unpack(f'<{self.UNITS}H', data[o:o+self.UNITS*2]))
 		o += self.UNITS*2
-		armor = list(struct.unpack('<%dB' % self.UNITS, data[o:o+self.UNITS]))
+		armor = list(int(v) for v in struct.unpack(f'<{self.UNITS}B', data[o:o+self.UNITS]))
 		o += self.UNITS
-		buildTimes = list(struct.unpack('<%dH' % self.UNITS, data[o:o+self.UNITS*2]))
+		buildTimes = list(int(v) for v in struct.unpack(f'<{self.UNITS}H', data[o:o+self.UNITS*2]))
 		o += self.UNITS*2
-		costMinerals = list(struct.unpack('<%dH' % self.UNITS, data[o:o+self.UNITS*2]))
+		costMinerals = list(int(v) for v in struct.unpack(f'<{self.UNITS}H', data[o:o+self.UNITS*2]))
 		o += self.UNITS*2
-		costGas = list(struct.unpack('<%dH' % self.UNITS, data[o:o+self.UNITS*2]))
+		costGas = list(int(v) for v in struct.unpack(f'<{self.UNITS}H', data[o:o+self.UNITS*2]))
 		o += self.UNITS*2
-		names = list(struct.unpack('<%dH' % self.UNITS, data[o:o+self.UNITS*2]))
+		names = list(int(v) for v in struct.unpack(f'<{self.UNITS}H', data[o:o+self.UNITS*2]))
 		o += self.UNITS*2
 		for n,values in enumerate(zip(defaults,healths,shields,armor,buildTimes,costMinerals,costGas,names)):
-			stat = self.unit_stats[n]
-			stat.default,stat.health,stat.shields,stat.armor,stat.buildTime,stat.costMinerals,stat.costGas,stat.name = values
-		damage = list(struct.unpack('<%dH' % self.WEAPONS, data[o:o+self.WEAPONS*2]))
+			unit_stat = self.unit_stats[n]
+			unit_stat.default,unit_stat.health,unit_stat.shields,unit_stat.armor,unit_stat.buildTime,unit_stat.costMinerals,unit_stat.costGas,unit_stat.name = values
+		damage = list(int(v) for v in struct.unpack(f'<{self.WEAPONS}H', data[o:o+self.WEAPONS*2]))
 		o += self.WEAPONS*2
-		damageUpgrade = list(struct.unpack('<%dH' % self.WEAPONS, data[o:o+self.WEAPONS*2]))
+		damageUpgrade = list(int(v) for v in struct.unpack(f'<{self.WEAPONS}H', data[o:o+self.WEAPONS*2]))
 		for n,values in enumerate(zip(damage,damageUpgrade)):
-			stat = self.weapon_stats[n]
-			stat.damage,stat.damageUpgrade = values
+			weapon_stat = self.weapon_stats[n]
+			weapon_stat.damage,weapon_stat.damageUpgrade = values
 
-	def save_data(self):
-		defaults = []
-		healths = []
-		shields = []
-		armor = []
-		buildTimes = []
-		costMinerals = []
-		costGas = []
-		names = []
-		damage = []
-		damageUpgrade = []
-		for stat in self.unit_stats:
-			defaults.append(stat.default)
-			healths.append(stat.health)
-			shields.append(stat.shields)
-			armor.append(stat.armor)
-			buildTimes.append(stat.buildTime)
-			costMinerals.append(stat.costMinerals)
-			costGas.append(stat.costGas)
-			names.append(stat.name)
-		for stat in self.weapon_stats:
-			damage.append(stat.damage)
-			damageUpgrade.append(stat.damageUpgrade)
-		result = struct.pack('<%dB' % self.UNITS, *defaults)
-		result += struct.pack('<%dL' % self.UNITS, *healths)
-		result += struct.pack('<%dH' % self.UNITS, *shields)
-		result += struct.pack('<%dB' % self.UNITS, *armor)
-		result += struct.pack('<%dH' % self.UNITS, *buildTimes)
-		result += struct.pack('<%dH' % self.UNITS, *costMinerals)
-		result += struct.pack('<%dH' % self.UNITS, *costGas)
-		result += struct.pack('<%dH' % self.UNITS, *names)
-		result += struct.pack('<%dH' % self.WEAPONS, *damage)
-		result += struct.pack('<%dH' % self.WEAPONS, *damageUpgrade)
+	def save_data(self) -> bytes:
+		defaults: list[bool] = []
+		healths: list[int] = []
+		shields: list[int] = []
+		armor: list[int] = []
+		buildTimes: list[int] = []
+		costMinerals: list[int] = []
+		costGas: list[int] = []
+		names: list[int] = []
+		damage: list[int] = []
+		damageUpgrade: list[int] = []
+		for unit_stats in self.unit_stats:
+			defaults.append(unit_stats.default)
+			healths.append(unit_stats.health)
+			shields.append(unit_stats.shields)
+			armor.append(unit_stats.armor)
+			buildTimes.append(unit_stats.buildTime)
+			costMinerals.append(unit_stats.costMinerals)
+			costGas.append(unit_stats.costGas)
+			names.append(unit_stats.name)
+		for weapon_stats in self.weapon_stats:
+			damage.append(weapon_stats.damage)
+			damageUpgrade.append(weapon_stats.damageUpgrade)
+		result = struct.pack(f'<{self.UNITS}B', *defaults)
+		result += struct.pack(f'<{self.UNITS}L', *healths)
+		result += struct.pack(f'<{self.UNITS}H', *shields)
+		result += struct.pack(f'<{self.UNITS}B', *armor)
+		result += struct.pack(f'<{self.UNITS}H', *buildTimes)
+		result += struct.pack(f'<{self.UNITS}H', *costMinerals)
+		result += struct.pack(f'<{self.UNITS}H', *costGas)
+		result += struct.pack(f'<{self.UNITS}H', *names)
+		result += struct.pack(f'<{self.WEAPONS}H', *damage)
+		result += struct.pack(f'<{self.WEAPONS}H', *damageUpgrade)
 		return result
-	
-	def decompile(self):
-		result = '%s:\n' % (self.NAME)
+
+	def decompile(self) -> str:
+		result = f'{self.NAME.decode("ascii")}:\n'
 		result += '\t' + pad('#')
 		for name in ['Use Defaults','Health','Shields','Armor','Build Time','Mineral Cost','Gas Cost','Name']:
 			result += pad(name)
 		result += '\n'
-		for n,stat in enumerate(self.unit_stats):
-			result += '\t' + pad('Unit%03d' % n)
-			result += pad(stat.default)
-			result += pad(stat.health / 256.0)
-			result += pad(stat.shields)
-			result += pad(stat.armor)
-			result += pad(stat.buildTime)
-			result += pad(stat.costMinerals)
-			result += pad(stat.costGas)
-			result += '%s\n' % stat.name
+		for n,unit_stats in enumerate(self.unit_stats):
+			result += '\t' + pad(f'Unit{n:03d}')
+			result += pad(str(unit_stats.default))
+			result += pad(str(unit_stats.health / 256.0))
+			result += pad(str(unit_stats.shields))
+			result += pad(str(unit_stats.armor))
+			result += pad(str(unit_stats.buildTime))
+			result += pad(str(unit_stats.costMinerals))
+			result += pad(str(unit_stats.costGas))
+			result += f'{unit_stats.name}\n'
 		result += '\t' + pad('#')
 		for name in ['Damage','Damage Upgrade']:
 			result += pad(name)
 		result += '\n'
-		for n,stat in enumerate(self.weapon_stats):
-			result += '\t' + pad('Weapon%03d' % n)
-			result += pad(stat.damage)
-			result += '%s\n' % stat.damageUpgrade
+		for n,weapon_stats in enumerate(self.weapon_stats):
+			result += '\t' + pad(f'Weapon{n:03d}')
+			result += pad(str(weapon_stats.damage))
+			result += f'{weapon_stats.damageUpgrade}\n'
 		return result

@@ -6,7 +6,7 @@ from ..utils import data_to_hex
 import unittest
 
 class Test_RLE_Encode_Transparent(unittest.TestCase):
-	def test_length_one(self):
+	def test_length_one(self) -> None:
 		length = 1
 		expected = '81'
 
@@ -14,7 +14,7 @@ class Test_RLE_Encode_Transparent(unittest.TestCase):
 
 		self.assertEqual(result, expected)
 
-	def test_length_two(self):
+	def test_length_two(self) -> None:
 		length = 2
 		expected = '82'
 
@@ -22,7 +22,7 @@ class Test_RLE_Encode_Transparent(unittest.TestCase):
 
 		self.assertEqual(result, expected)
 
-	def test_length_max(self):
+	def test_length_max(self) -> None:
 		length = 127
 		expected = 'FF'
 
@@ -30,7 +30,7 @@ class Test_RLE_Encode_Transparent(unittest.TestCase):
 
 		self.assertEqual(result, expected)
 
-	def test_over_max_length(self):
+	def test_over_max_length(self) -> None:
 		length = 128
 		expected = 'FF 81'
 
@@ -38,7 +38,7 @@ class Test_RLE_Encode_Transparent(unittest.TestCase):
 
 		self.assertEqual(result, expected)
 
-	def test_over_max_length_twice(self):
+	def test_over_max_length_twice(self) -> None:
 		length = 255
 		expected = 'FF FF 81'
 

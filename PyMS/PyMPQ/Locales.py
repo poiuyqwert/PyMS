@@ -1,7 +1,7 @@
 
 from ..FileFormats.MPQ.MPQ import MPQLocale
 
-LOCALE_CHOICES = (
+LOCALE_CHOICES: tuple[tuple[str, int | None], ...] = (
 	('Neutral (English)', MPQLocale.neutral),
 	('Chinese (Taiwan)', MPQLocale.chinese),
 	('Czech', MPQLocale.czech),
@@ -19,7 +19,9 @@ LOCALE_CHOICES = (
 	('Other', None)
 )
 
-def find_locale_index(find_locale):
+def find_locale_index(find_locale: int) -> int:
 	for index,(_, locale) in enumerate(LOCALE_CHOICES):
-		if find_locale == locale or locale == None:
+		if locale == find_locale:
 			return index
+	# Locales without their own entry resolve to the trailing 'Other' entry
+	return len(LOCALE_CHOICES) - 1

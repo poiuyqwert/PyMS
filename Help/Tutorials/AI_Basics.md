@@ -10,12 +10,12 @@ Opcodes can be categorized into [Flag Commands](#flag-commands), [Header Command
 
 
 ## Flag Commands
-Flags are simple booleans that the AIscript may check against during its operation; some of them are static and cannot be changed after being set once (with the notable mention of "start_campaign", that not only is irreversible but also always True in the Use Map Settings Mode), and some others may be very temporary in their nature, and back to False very frequently - for instance, an opcode that can be used to have AI Players defend each other - "help_iftrouble" - will only affect regions once, and needs to be refreshed afterwards to maintain the effect.
+Flags are simple booleans that the AIscript may check against during its operation; some of them are static and cannot be changed after being set once (with the notable mention of `start_campaign`, that not only is irreversible but also always True in the Use Map Settings Mode), and some others may be very temporary in their nature, and back to False very frequently - for instance, an opcode that can be used to have AI Players defend each other - `help_iftrouble` - will only affect regions once, and needs to be refreshed afterwards to maintain the effect.
 A single flag can affect many parts of the AIs functionality - the already-mentioned campaign flag influences everything from how the AI attacks and defends down to how it's going to be producing transports and spending money.
 
 
 ## Header Commands
-Headers are a few opcodes that you will most likely always run in an AI script - you always need to "start_town" or "start_areatown" for an AI player to create a town array that can process requests. This sometimes involves single-frame waits, since structure assignment for UMS maps happens in a specific order - Areatowns need to be initialized 1 frame after the main Town.
+Headers are a few opcodes that you will most likely always run in an AI script - you always need to `start_town` or `start_areatown` for an AI player to create a town array that can process requests. This sometimes involves single-frame waits, since structure assignment for UMS maps happens in a specific order - Areatowns need to be initialized 1 frame after the main Town.
 
 
 ## Request Commands
@@ -36,3 +36,8 @@ Flow operations are related to moving within the constraints of the script or fl
 
 ## Editor Commands
 Some opcodes are just made to be used with the editor. They will usually be recognizable from Campaign scenarios, such as `create_nuke` that creates a nuke immediately in a free silo, or `move_dt` that moves Hero Dark Templar to a Location.
+
+## See Also
+- [Creating Your First AI Script](/Help/Tutorials/Creating_Your_First_AI_Script.md)
+- [AI Language](/Help/Programs/PyAI/AI_Language.md)
+- [Command Reference](/Help/Programs/PyAI/Command_Reference.md)

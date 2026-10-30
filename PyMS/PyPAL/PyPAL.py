@@ -1,9 +1,12 @@
 
-from ..FileFormats.Palette import Palette
+from .Config import PyPALConfig
+from .SettingsDialog import SettingsDialog
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
-from ..Utilities.UIKit import *
-from ..Utilities.Settings import Settings
+from ..FileFormats.Palette import Palette
+from ..FileFormats.Images import RGB
+
+from ..Utilities import registry
+from ..Utilities import UIKit as UI
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
@@ -13,281 +16,399 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
-from ..Utilities.SettingsDialog import SettingsDialog
+from ..Utilities.CheckSaved import CheckSaved
+from ..Utilities.SponsorDialog import SponsorDialog
 
-LONG_VERSION = 'v%s' % Assets.version('PyPAL')
+import re
 
-class PyPAL(MainWindow):
-	def __init__(self, guifile=None):
-		#Config
-		self.settings = Settings('PyPAL', '1')
+from typing import Callable
 
+LONG_VERSION = 'v' + Assets.version('PyPAL')
+
+class PyPAL(UI.MainWindow):
+	def __init__(self, guifile: str | None = None) -> None:
 		#Window
-		MainWindow.__init__(self)
+		UI.MainWindow.__init__(self)
 		self.set_icon('PyPAL')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyPAL', Assets.version('PyPAL'))
 		ga.track(GAScreen('PyPAL'))
 		setup_trace('PyPAL', self)
-		Theme.load_theme(self.settings.get('theme'), self)
+
+		self.config_ = PyPALConfig()
+		UI.Theme.load_theme(self.config_.theme.value, self)
 		self.resizable(False, False)
 
-		self.palette = None
-		self.file = None
-		self.format = None
+		self.palette: Palette | None = None
+		self.file: str | None = None
+		self.format: Palette.Format | None = None
 		self.edited = False
-		self.selected = None
+		self.selected: int | None = None
 
 		self.update_title()
 
-		#Toolbar
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags=('file_open', 'format_known'))
-		self.toolbar.add_button(Assets.get_image('saveriff'), lambda: self.saveas(file_type=Palette.FileType.riff), 'Save as RIFF *.pal', Ctrl.r, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savejasc'), lambda: self.saveas(file_type=Palette.FileType.jasc), 'Save as JASC *.pal', Ctrl.j, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savepal'), lambda: self.saveas(file_type=Palette.FileType.sc_pal), 'Save as StarCraft *.pal', Ctrl.p, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savewpe'), lambda: self.saveas(file_type=Palette.FileType.wpe), 'Save as StarCraft Terrain *.wpe', Ctrl.t, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('saveact'), lambda: self.saveas(file_type=Palette.FileType.act), 'Save as Adobe Color Table *.act', Ctrl.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
-		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", Ctrl.m)
-		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.pal and *.wpe editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
-		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyPAL')
-		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
+		def save() -> None:
+			self.save()
+		def saveas_callback(file_type: Palette.FileType) -> Callable[[], None]:
+			def saveas() -> None:
+				self.saveas(file_type=file_type)
+			return saveas
+		save_riff = saveas_callback(Palette.FileType.riff)
+		save_jasc = saveas_callback(Palette.FileType.jasc)
+		save_sc_pal = saveas_callback(Palette.FileType.sc_pal)
+		save_wpe = saveas_callback(Palette.FileType.wpe)
+		save_act = saveas_callback(Palette.FileType.act)
 
-		self.palmenu = Menu(self, tearoff=0)
-		self.palmenu.add_command(label='Copy', command=self.copy, shortcut=Ctrl.c)
-		self.palmenu.add_command(label='Paste', command=self.paste, shortcut=Ctrl.p, tags='paste')
+		#Menu
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File')
+		file_menu.add_command('New', self.new, UI.Ctrl.n)
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_separator()
+		file_menu.add_command('Save', save, UI.Ctrl.s, enabled=False, tags=('file_open', 'format_known'))
+		file_menu.add_command('Save As...', self.saveas_current, enabled=False, tags='file_open', underline='As')
+		file_menu.add_command('Save as RIFF *.pal...', save_riff, UI.Ctrl.r, enabled=False, tags='file_open')
+		file_menu.add_command('Save as JASC *.pal...', save_jasc, UI.Ctrl.j, enabled=False, tags='file_open')
+		file_menu.add_command('Save as StarCraft *.pal...', save_sc_pal, UI.Ctrl.Alt.p, enabled=False, tags='file_open')
+		file_menu.add_command('Save as StarCraft Terrain *.wpe...', save_wpe, UI.Ctrl.t, enabled=False, tags='file_open')
+		file_menu.add_command('Save as Adobe Color Table *.act...', save_act, UI.Ctrl.a, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Check for Updates...', self.check_for_updates, underline='u')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		edit_menu = self.menu.add_cascade('Edit')
+		edit_menu.add_command('Copy', self.copy, UI.Ctrl.c, enabled=False, tags='file_open')
+		# Paste stays enabled while a palette is open (rather than following `canpaste()` like the swatch menu): its state
+		# can't be refreshed when the clipboard changes outside PyPAL, and a stale disabled state would swallow `Ctrl+P`. `paste` guards itself.
+		edit_menu.add_command('Paste', self.paste, UI.Ctrl.p, enabled=False, tags='file_open')
+		edit_menu.add_separator()
+		edit_menu.add_command('Edit Color...', self.edit_color, enabled=False, tags='file_open')
+
+		settings_menu = self.menu.add_cascade('Settings')
+		settings_menu.add_command('Manage Settings...', self.sets, UI.Ctrl.m)
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.pal and *.wpe Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='D')
+
+		help_menu = self.menu.add_cascade('Help')
+		help_menu.add_command('View Help', self.help, UI.Key.F1, underline='H')
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor, underline='D')
+		help_menu.add_command('About PyPAL', self.about, underline='A')
+
+		#Toolbar
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags=('file_open', 'format_known'), bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas_current, 'Save As', enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveriff'), save_riff, 'Save as RIFF *.pal', UI.Ctrl.r, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('savejasc'), save_jasc, 'Save as JASC *.pal', UI.Ctrl.j, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('savepal'), save_sc_pal, 'Save as StarCraft *.pal', UI.Ctrl.Alt.p, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('savewpe'), save_wpe, 'Save as StarCraft Terrain *.wpe', UI.Ctrl.t, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveact'), save_act, 'Save as Adobe Color Table *.act', UI.Ctrl.a, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.pal and *.wpe Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyPAL')
+		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
+		self.toolbar.add_button(Assets.get_image('update'), self.check_for_updates, 'Check for Updates')
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
+		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
+
+		self.palmenu = UI.Menu(self, tearoff=0)
+		self.palmenu.add_command(label='Copy', command=self.copy, shortcut=UI.Ctrl.c, bind_shortcut=False) # type: ignore[call-arg]
+		self.palmenu.add_command(label='Paste', command=self.paste, shortcut=UI.Ctrl.p, tags='paste', bind_shortcut=False) # type: ignore[call-arg]
 
 		#Canvas
-		self.canvas = Canvas(self, width=273, height=273, background='#000000', coordinate_adjust=Canvas.coordinate_adjust_os, theme_tag='preview')
+		self.canvas = UI.Canvas(self, width=273, height=273, background='#000000', coordinate_adjust=UI.Canvas.coordinate_adjust_os, theme_tag='preview') # type: ignore[call-arg, attr-defined]
 		self.canvas.pack(padx=2, pady=2)
+		def colorstatus_callback(index: int) -> Callable[[UI.Event], None]:
+			def colorstatus(event: UI.Event) -> None:
+				self.colorstatus(event, index)
+			return colorstatus
+		def select_callback(index: int) -> Callable[[UI.Event], None]:
+			def select(event: UI.Event) -> None:
+				self.select(event, index)
+			return select
+		def changecolor_callback(index: int) -> Callable[[UI.Event], None]:
+			def changecolor(event: UI.Event) -> None:
+				self.changecolor(event, index)
+			return changecolor
+		def popup_callback(index: int) -> Callable[[UI.Event], None]:
+			def popup(event: UI.Event) -> None:
+				self.popup(event, index)
+			return popup
 		for n in range(256):
-			x,y = 3+17*(n%16),3+17*(n/16)
+			x,y = 3+17*(n%16),3+17*(n//16)
 			self.canvas.create_rectangle(x, y, x+15, y+15, fill='#000000', outline='#000000')
-			self.canvas.tag_bind(n+1, Cursor.Enter, lambda e,i=n: self.colorstatus(e,i))
-			self.canvas.tag_bind(n+1, Cursor.Leave, lambda e,i=-1: self.colorstatus(e,i))
-			self.canvas.tag_bind(n+1, Mouse.Click_Left, lambda e,i=n: self.select(e,i))
-			self.canvas.tag_bind(n+1, Double.Click_Left, lambda e,i=n: self.changecolor(e,i))
-			self.canvas.tag_bind(n+1, ButtonRelease.Click_Right, lambda e,i=n: self.popup(e,i))
+			self.canvas.tag_bind(n+1, UI.Cursor.Enter(), colorstatus_callback(n))
+			self.canvas.tag_bind(n+1, UI.Cursor.Leave(), colorstatus_callback(-1))
+			self.canvas.tag_bind(n+1, UI.Mouse.Click_Left(), select_callback(n))
+			self.canvas.tag_bind(n+1, UI.Double.Click_Left(), changecolor_callback(n))
+			self.canvas.tag_bind(n+1, UI.ButtonRelease.Click_Right(), popup_callback(n))
 		self.sel = self.canvas.create_rectangle(0,0,0,0,outline='#FFFFFF')
 
 		#Statusbar
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.status.set('Load or create a Palette.')
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, width=40)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 		if guifile:
 			self.open(file=guifile)
 
-		self.settings.windows.load_window_size('main', self)
+		self.config_.windows.main.load_size(self)
 
 		UpdateDialog.check_update(self, 'PyPAL')
 
-	def unsaved(self):
-		if self.palette and self.edited:
-			file = self.file
-			if not file:
-				file = 'Unnamed.pal'
-			save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-			if save != MessageBox.NO:
-				if save == MessageBox.CANCEL:
-					return True
-				if self.file:
-					self.save()
-				else:
-					self.saveas()
+	def check_saved(self) -> CheckSaved:
+		if not self.palette or not self.edited:
+			return CheckSaved.saved
+		file = self.file
+		if not file:
+			file = 'Unnamed.pal'
+		save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=UI.MessageBox.YES)
+		if save is None:
+			return CheckSaved.cancelled
+		if not save:
+			return CheckSaved.saved
+		if self.file:
+			return self.save()
+		return self.saveas()
 
-	def is_file_open(self):
-		return not not self.palette
+	def is_file_open(self) -> bool:
+		return self.palette is not None
 
-	def action_states(self):
+	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
-		self.toolbar.tag_enabled('format_known', self.format != None)
+		self.toolbar.tag_enabled('format_known', self.format is not None)
+		self.menu.tag_enabled('file_open', self.is_file_open())
+		self.menu.tag_enabled('format_known', self.format is not None)
 
-	def popup(self, e, i):
-		if self.palette:
-			self.select(e,i)
-			self.palmenu.tag_enabled('paste', not not self.canpaste())
-			self.palmenu.post(e.x_root, e.y_root)
+	def popup(self, event: UI.Event, i: int) -> None:
+		if not self.palette:
+			return
+		self.select(event,i)
+		self.palmenu.tag_enabled('paste', self.canpaste() is not None) # type: ignore[attr-defined]
+		self.palmenu.post(event.x_root, event.y_root)
 
-	def update(self):
+	def update_canvas(self) -> None:
 		if self.palette:
-			pal = self.palette.palette
+			for n,rgb in enumerate(self.palette.palette):
+				c = UI.Colors.to_html(rgb)
+				self.canvas.itemconfigure(n+1, fill=c, outline=c)
 		else:
-			pal = [(0,0,0)] * 256
-		for n,rgb in enumerate(pal):
-			c = '#%02X%02X%02X' % tuple(rgb)
-			self.canvas.itemconfigure(n+1, fill=c, outline=c)
+			for n in range(256):
+				self.canvas.itemconfigure(n+1, fill='#000000', outline='#000000')
 
-	def colorstatus(self, e, i):
-		if self.palette and i > -1:
-			info = (i,) + tuple(self.palette.palette[i]) * 2
-			self.status.set('Index: %s  RGB: (%s,%s,%s)  Hex: #%02X%02X%02X' % info)
+	def colorstatus(self, _event: UI.Event | None, i: int) -> None:
+		if not self.palette:
+			return
+		if i > -1:
+			r,g,b = self.palette.palette[i]
+			self.status.set(f'Index: {i}  RGB: ({r},{g},{b})  Hex: {UI.Colors.to_html(r,g,b)}')
+		else:
+			self.status.set('')
 
-	def select(self, e, i):
-		if self.palette:
-			self.selected = i
-			x,y = 2+17*(i%16),2+17*(i/16)
-			self.canvas.coords(self.sel, x, y, x+17, y+17)
+	def select(self, _event: UI.Event | None, i: int) -> None:
+		if not self.palette:
+			return
+		self.selected = i
+		x,y = 2+17*(i%16),2+17*(i//16)
+		self.sel.coords(x, y, x+17, y+17)
 
-	def changecolor(self, e, i):
-		if self.palette:
-			self.select(None,i)
-			c = ColorChooser.askcolor(parent=self, initialcolor='#%02X%02X%02X' % tuple(self.palette.palette[i]), title='Select Color')
-			if c[1]:
-				self.mark_edited()
-				self.canvas.itemconfigure(i+1, fill=c[1], outline=c[1])
-				self.palette.palette[i] = c[0]
+	def edit_color(self) -> None:
+		if self.selected is None:
+			return
+		self.changecolor(None, self.selected)
 
-	def copy(self, key=None):
-		if self.palette and self.selected != None:
-			self.clipboard_clear()
-			self.clipboard_append('#%02X%02X%02X' % tuple(self.palette.palette[self.selected]))
+	def changecolor(self, _event: UI.Event | None, i: int) -> None:
+		if not self.palette:
+			return
+		self.select(None,i)
+		rgb,hex_color = UI.ColorChooser.askcolor(parent=self, initialcolor=UI.Colors.to_html(self.palette.palette[i]), title='Select Color')
+		if rgb is not None and hex_color:
+			self.mark_edited()
+			self.canvas.itemconfigure(i+1, fill=hex_color, outline=hex_color)
+			# `askcolor` can return floats for the color components on some platforms
+			r,g,b = (int(round(component)) for component in rgb)
+			self.palette.palette[i] = (r,g,b)
 
-	def canpaste(self, c=None):
+	def copy(self, _event: UI.Event | None = None) -> None:
+		if not self.palette or self.selected is None:
+			return
+		self.clipboard_clear()
+		self.clipboard_append(UI.Colors.to_html(self.palette.palette[self.selected]))
+
+	def canpaste(self, c: str | None = None) -> RGB | None:
 		try:
-			if c == None:
+			if c is None:
 				c = self.selection_get(selection='CLIPBOARD')
-		except:
+		except Exception:
 			pass
 		else:
 			m = re.match(r'^#([\dA-Fa-f]{2})([\dA-Fa-f]{2})([\dA-Fa-f]{2})$', c)
 			if m:
-				return [int(c,16) for c in m.groups()]
+				return (int(m.group(1), 16), int(m.group(2), 16), int(m.group(3), 16))
+		return None
 
-	def paste(self, key=None):
-		if self.palette and self.selected != None:
-			try:
-				c = self.selection_get(selection='CLIPBOARD')
-			except:
-				pass
-			else:
-				rgb = self.canpaste(c)
-				if rgb:
-					self.palette.palette[self.selected] = rgb
-					self.canvas.itemconfigure(self.selected+1, fill=c, outline=c)
-					self.mark_edited()
+	def paste(self, _event: UI.Event | None = None) -> None:
+		if not self.palette or self.selected is None:
+			return
+		rgb = self.canpaste()
+		if rgb:
+			self.palette.palette[self.selected] = rgb
+			color = UI.Colors.to_html(rgb)
+			self.canvas.itemconfigure(self.selected+1, fill=color, outline=color)
+			self.mark_edited()
 
-	def update_title(self):
+	def update_title(self) -> None:
 		file_path = self.file
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.pal'
 		if not file_path:
-			self.title('PyPAL %s' % LONG_VERSION)
+			self.title(f'PyPAL {LONG_VERSION}')
 		else:
-			self.title('PyPAL %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyPAL {LONG_VERSION} ({file_path})')
 
-	def mark_edited(self, edited=True):
+	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
-		self.editstatus['state'] = NORMAL if edited else DISABLED
+		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 
-	def new(self, key=None):
-		if not self.unsaved():
-			self.palette = Palette()
-			self.file = None
-			self.format = None
-			self.status.set('Editing new Palette.')
-			self.mark_edited(False)
-			self.update_title()
-			if self.selected == None:
-				self.selected = 0
-				self.select(None,0)
-			self.update()
-			self.action_states()
-			self.colorstatus(None, 0)
-
-	def open(self, key=None, file=None):
-		if not self.unsaved():
-			if file == None:
-				file = self.settings.lastpath.select_open_file(self, title='Open Palette', filetypes=Palette.FileType.load_types())
-				if not file:
-					return
-			pal = Palette()
-			try:
-				pal.load_file(file)
-				self.format = pal.format
-			except PyMSError as e:
-				ErrorDialog(self, e)
-				return
-			self.palette = pal
-			self.file = file
-			self.update_title()
-			self.status.set('Load Successful!')
-			self.mark_edited(False)
-			if self.selected == None:
-				self.selected = 0
-				self.select(None,0)
-			self.update()
-			self.action_states()
-			self.colorstatus(None, 0)
-
-	def save(self, key=None):
-		self.saveas(file_path=self.file, file_format=self.format)
-
-	def saveas(self, key=None, file_path=None, file_format=None, file_type=Palette.FileType.sc_pal):
-		if not file_path:
-			file_path = self.settings.lastpath.select_save_file(self, title='Save Palette As', filetypes=Palette.FileType.save_types(file_type.format, file_type.ext))
-			if not file_path:
-				return
-		elif not check_allow_overwrite_internal_file(file_path):
+	def new(self) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
 			return
+		self.palette = Palette()
+		self.file = None
+		self.format = None
+		self.status.set('Editing new Palette.')
+		self.mark_edited(False)
+		self.update_title()
+		self.select(None, self.selected or 0)
+		self.update_canvas()
+		self.action_states()
+		self.colorstatus(None, 0)
+
+	def open(self, file: str | None = None) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		if file is None:
+			file = self.config_.last_path.pal.select_open(self)
+			if not file:
+				return
+		pal = Palette()
+		try:
+			pal.load(file)
+			self.format = pal.format
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		self.palette = pal
+		self.file = file
+		self.update_title()
+		self.status.set('Load Successful!')
+		self.mark_edited(False)
+		self.select(None, self.selected or 0)
+		self.update_canvas()
+		self.action_states()
+		self.colorstatus(None, 0)
+
+	def save(self) -> CheckSaved:
+		return self.saveas(file_path=self.file, file_format=self.format)
+
+	def saveas(self, file_path: str | None = None, file_format: Palette.Format | None = None, file_type: Palette.FileType = Palette.FileType.sc_pal) -> CheckSaved:
+		if not self.palette:
+			return CheckSaved.saved
+		if not file_path:
+			filetypes = list(Palette.FileType.save_types(file_type.format, file_type.ext))
+			file_path = self.config_.last_path.pal.select_save(self, filetypes=filetypes)
+			if not file_path:
+				return CheckSaved.cancelled
+		elif not check_allow_overwrite_internal_file(file_path):
+			return CheckSaved.cancelled
 		if not file_format:
 			file_format = file_type.format
 		try:
 			self.palette.save(file_path, file_format)
 		except PyMSError as e:
 			ErrorDialog(self, e)
+			return CheckSaved.cancelled
 		self.status.set('Save Successful!')
 		self.mark_edited(False)
 		self.file = file_path
 		self.format = file_format
 		self.update_title()
 		self.action_states()
+		return CheckSaved.saved
 
-	def close(self, key=None):
+	# Save As in the current format, or as a StarCraft *.pal for a palette that hasn't been saved yet
+	def saveas_current(self) -> None:
+		file_type = Palette.FileType.sc_pal
+		if self.format == Palette.Format.riff:
+			file_type = Palette.FileType.riff
+		elif self.format == Palette.Format.jasc:
+			file_type = Palette.FileType.jasc
+		elif self.format == Palette.Format.raw_rgba:
+			file_type = Palette.FileType.wpe
+		elif self.format == Palette.Format.raw_rgb and self.file and self.file.lower().endswith('.act'):
+			file_type = Palette.FileType.act
+		self.saveas(file_format=self.format, file_type=file_type)
+
+	def close(self) -> None:
 		if not self.is_file_open():
 			return
-		if not self.unsaved():
-			self.palette = None
-			self.file = None
-			self.update_title()
-			self.status.set('Load or create a palette.')
-			self.mark_edited(False)
-			self.selected = None
-			self.canvas.coords(self.sel, 0, 0, 0, 0)
-			self.update()
-			self.action_states()
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		self.palette = None
+		self.file = None
+		self.update_title()
+		self.status.set('Load or create a palette.')
+		self.mark_edited(False)
+		self.selected = None
+		self.sel.coords(0, 0, 0, 0)
+		self.update_canvas()
+		self.action_states()
 
-	def register(self, e=None):
-		for type,ext in [('','pal'),('Tileset ','wpe')]:
+	def register_registry(self) -> None:
+		for pal_type,ext in [('','pal'),('Tileset ','wpe')]:
 			try:
-				register_registry('PyPAL', ext, type + 'Palette')
+				registry.register('PyPAL', ext, pal_type + 'Palette')
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				break
 
-	def sets(self, key=None, err=None):
-		SettingsDialog(self, [('Theme',)], (550,380), err, settings=self.settings)
+	def sets(self) -> None:
+		SettingsDialog(self, self.config_)
 
-	def help(self, e=None):
-		HelpDialog(self, self.settings, 'Help/Programs/PyPAL.md')
+	def help(self) -> None:
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyPAL.md')
 
-	def about(self, key=None):
+	def about(self) -> None:
 		AboutDialog(self, 'PyPAL', LONG_VERSION)
 
-	def exit(self, e=None):
-		if not self.unsaved():
-			self.settings.windows.save_window_size('main', self)
-			self.settings.save()
-			self.destroy()
+	def sponsor(self) -> None:
+		SponsorDialog(self)
+
+	def check_for_updates(self) -> None:
+		UpdateDialog(self, 'PyPAL')
+
+	def exit(self) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		self.config_.windows.main.save_size(self)
+		self.config_.save()
+		self.destroy()

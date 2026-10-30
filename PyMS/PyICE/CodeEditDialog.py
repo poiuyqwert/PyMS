@@ -1,371 +1,468 @@
 
-from .IScriptCodeText import IScriptCodeText
-from .FindReplaceDialog import FindReplaceDialog
-from .CodeColors import CodeColors
+from .Delegates import MainDelegate, CodeGeneratorDelegate
+from .Config import PyICEConfig
 from .CodeGeneratorDialog import CodeGeneratorDialog
-from .PreviewerDialog import PreviewerDialog, PREVIEWER_CMDS
+from .PreviewerDialog import PreviewerDialog, PREVIEWER_CMDS, EntryType
 from .SoundDialog import SoundDialog
+from .CodeTooltip import AnimationTooltip, CommandTooltip
 
-from ..FileFormats import IScriptBIN
-from ..FileFormats import GRP
+from ..FileFormats.IScriptBIN import IScriptBIN
+from ..FileFormats.IScriptBIN.CodeHandlers import CodeCommands, CodeTypes
+# from ..FileFormats import GRP
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
+from ..Utilities.FindReplaceDialog import FindReplaceDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities import Assets
+from ..Utilities.EditedState import EditedState
+from ..Utilities.CodeHandlers import CodeType
+from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
 
-import os
+import re, io
 
-class CodeEditDialog(PyMSDialog):
-	def __init__(self, parent, settings, ids):
-		self.settings = settings
+from typing import Iterator, Sequence, Any
+
+class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate, config: PyICEConfig, ids: list[int]) -> None:
+		self.delegate = delegate
+		self.config_ = config
 		self.ids = ids
+
+		self.edited_state = EditedState()
+		self.edited_state.callback += self.update_edited
+
 		self.decompile = ''
-		self.file = None
-		self.autocomptext = IScriptBIN.TYPE_HELP.keys() + ['.headerstart','.headerend']
-		for o in IScriptBIN.OPCODES:
-			self.autocomptext.extend(o[0])
-		for a in IScriptBIN.HEADER:
-			self.autocomptext.extend(a)
-		self.completing = False
-		self.complete = [None, 0]
-		t = ''
+		self.file: str | None = None
+
+		title = ''
 		if ids:
-			t = ', '.join([str(i) for i in ids[:5]])
+			title = ', '.join([str(i) for i in ids[:5]])
 			if len(ids) > 5:
-				t += '...'
-			t += ' - '
-		t += 'IScript Editor'
-		PyMSDialog.__init__(self, parent, t, grabwait=False)
-		self.findwindow = None
-		self.previewer = None
+				title += '...'
+			title += ' - '
+		title += 'IScript Editor'
+		PyMSDialog.__init__(self, parent, title, grabwait=False)
+		self.findwindow: FindReplaceDialog | None = None
+		self.previewer: PreviewerDialog | None = None
 
-	def widgetize(self):
-		self.bind(Alt.Left, lambda e,i=0: self.gotosection(e,i))
-		self.bind(Alt.Right, lambda e,i=1: self.gotosection(e,i))
-		self.bind(Alt.Up, lambda e,i=2: self.gotosection(e,i))
-		self.bind(Alt.Down, lambda e,i=3: self.gotosection(e,i))
+		self.syntax_highlighting: UI.SyntaxHighlighting
 
-		toolbar = Toolbar(self)
-		toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s)
-		toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', Ctrl.t)
+	def widgetize(self) -> UI.Widget:
+		toolbar = UI.Toolbar(self)
+		toolbar.add_button(Assets.get_image('save'), self.save, 'Save', UI.Ctrl.s)
+		toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', UI.Ctrl.t)
 		toolbar.add_gap()
-		toolbar.add_button(Assets.get_image('export'), self.export, 'Export Code', Ctrl.e)
-		toolbar.add_button(Assets.get_image('saveas'), self.exportas, 'Export As...', Ctrl.Alt.a)
-		toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Code', Ctrl.i)
+		toolbar.add_button(Assets.get_image('export'), self.export, 'Export Code', UI.Ctrl.e)
+		toolbar.add_button(Assets.get_image('saveas'), self.exportas, 'Export As...', UI.Ctrl.Alt.a)
+		toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Code', UI.Ctrl.i)
 		toolbar.add_section()
-		toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', Ctrl.f)
+		toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', UI.Ctrl.f)
 		toolbar.add_section()
-		toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', Ctrl.Alt.c)
+		toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', UI.Ctrl.Alt.c)
 		toolbar.add_section()
-		toolbar.add_button(Assets.get_image('debug'), self.generate, 'Generate Code', Ctrl.g)
-		toolbar.add_button(Assets.get_image('insert'), self.preview, 'Insert/Preview Window', Ctrl.w)
-		toolbar.add_button(Assets.get_image('fwp'), self.sounds, 'Sound Previewer', Ctrl.q)
-		toolbar.pack(side=TOP, fill=X, padx=2, pady=2)
+		toolbar.add_button(Assets.get_image('debug'), self.generate, 'Generate Code', UI.Ctrl.g)
+		toolbar.add_button(Assets.get_image('insert'), self.preview, 'Insert/Preview Window', UI.Ctrl.w)
+		toolbar.add_button(Assets.get_image('fwp'), self.sounds, 'Sound Previewer', UI.Ctrl.q)
+		toolbar.pack(side=UI.TOP, fill=UI.X, padx=2, pady=2)
 
-		self.text = IScriptCodeText(self, self.parent.ibin, self.edited, highlights=self.parent.highlights)
-		self.text.pack(fill=BOTH, expand=1, padx=1, pady=1)
-		self.text.icallback = self.statusupdate
-		self.text.scallback = self.statusupdate
-		self.text.acallback = self.autocomplete
+		self.text = UI.CodeText(self, self.edited_state, self)
+		self.text.pack(fill=UI.BOTH, expand=1, padx=1, pady=1)
 
-		self.status = StringVar()
+		self.setup_syntax_highlighting()
+
+		self.status = UI.StringVar()
 		self.status.set("Origional ID's: " + ', '.join([str(i) for i in self.ids]))
-		self.scriptstatus = StringVar()
+		self.scriptstatus = UI.StringVar()
 		self.scriptstatus.set('Line: 1  Column: 0  Selected: 0')
 
-		statusbar = Frame(self)
-		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
-		self.editstatus = Label(statusbar, image=Assets.get_image('save'), bd=0, state=DISABLED)
-		self.editstatus.pack(side=LEFT, padx=1, fill=Y)
-		Label(statusbar, textvariable=self.scriptstatus, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar = UI.Frame(self)
+		UI.Label(statusbar, textvariable=self.status, bd=1, relief=UI.SUNKEN, anchor=UI.W).pack(side=UI.LEFT, expand=1, padx=1, fill=UI.X)
+		self.editstatus = UI.Label(statusbar, image=Assets.get_image('save'), bd=0, state=UI.DISABLED)
+		self.editstatus.pack(side=UI.LEFT, padx=1, fill=UI.Y)
+		UI.Label(statusbar, textvariable=self.scriptstatus, bd=1, relief=UI.SUNKEN, anchor=UI.W).pack(side=UI.LEFT, expand=1, padx=1, fill=UI.X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 		return self.text
 
-	def setup_complete(self):
-		self.after(1, self.load)
+	def setup_complete(self) -> None:
+		self.after_managed(1, self.load)
 
-		self.settings.windows.load_window_size('codeedit', self)
+		self.config_.windows.code_edit.load_size(self)
 
-	def gotosection(self, e, i):
-		c = [self.text.tag_prevrange, self.text.tag_nextrange][i % 2]
-		t = [('Error','Warning'),('HeaderStart','Block')][i > 1]
-		a = c(t[0], INSERT)
-		b = c(t[1], INSERT)
-		s = None
-		if a:
-			if not b or self.text.compare(a[0], ['>','<'][i % 2], b[0]):
-				s = a
-			else:
-				s = b
-		elif b:
-			s = b
-		if s:
-			self.text.see(s[0])
-			self.text.mark_set(INSERT, s[0])
+	def setup_syntax_highlighting(self) -> None:
+		cmd_names = [cmd.name for cmd in CodeCommands.all_basic_commands]
+		header_names = [cmd.name for cmd in CodeCommands.all_header_commands]
+		keywords: list[str] = []
+		for code_type in CodeTypes.all_basic_types + CodeTypes.all_header_types:
+			if isinstance(code_type, CodeType.HasKeywords):
+				keywords.extend(code_type.keywords())
+		self.syntax_highlighting = UI.SyntaxHighlighting(
+			syntax_components=(
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Comment',
+							description='The style of a comment.',
+							highlight_style=self.config_.code.highlights.comment
+						),
+						pattern=r'#[^\n]*$'
+					),
+				)),
+				UI.SyntaxComponent((
+					r'\b',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Keyword',
+							description='The style of keywords.',
+							highlight_style=self.config_.code.highlights.keyword
+						),
+						pattern='|'.join(keywords)
+					),
+					r'\b'
+				)),
+				UI.SyntaxComponent((
+					r'^[ \t]*',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Block',
+							description='The style of a --block-- or :block in the code.',
+							highlight_style=self.config_.code.highlights.block
+						),
+						pattern=r'\w+:'
+					)
+				)),
+				UI.SyntaxComponent((
+					r'\b',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Command',
+							description='The style of command names.',
+							highlight_style=self.config_.code.highlights.command
+						),
+						pattern='|'.join(cmd_names)
+					),
+					r'\b'
+				)),
+				UI.SyntaxComponent((
+					r'\b',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Header Command',
+							description='The style of header command names.',
+							highlight_style=self.config_.code.highlights.header_command
+						),
+						pattern='|'.join(header_names)
+					),
+					r'\b'
+				)),
+				UI.SyntaxComponent((
+					r'\b',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Number',
+							description='The style of all numbers.',
+							highlight_style=self.config_.code.highlights.number
+						),
+						pattern=r'\d+|0x[0-9a-fA-F]+'
+					),
+					r'\b'
+				)),
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Operator',
+							description='The style of the operators:\n    ( ) : , =',
+							highlight_style=self.config_.code.highlights.operator
+						),
+						pattern=r'[():,=]'
+					),
+				)),
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Header',
+							description='The style of a `script` header.',
+							highlight_style=self.config_.code.highlights.header
+						),
+						pattern=r'\.headerstart|\.headerend'
+					),
+				)),
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Newline',
+							description='The style of newlines',
+							highlight_style=self.config_.code.highlights.newline
+						),
+						pattern=r'\n'
+					),
+				)),
+			),
+			highlight_components=(
+				UI.HighlightComponent(
+					name='Selection',
+					description='The style of selected text in the editor.',
+					highlight_style=self.config_.code.highlights.selection,
+					tag='sel'
+				),
+				UI.HighlightComponent(
+					name='Error',
+					description='The style of highlighted errors in the editor.',
+					highlight_style=self.config_.code.highlights.error
+				),
+				UI.HighlightComponent(
+					name='Warning',
+					description='The style of highlighted warnings in the editor.',
+					highlight_style=self.config_.code.highlights.warning
+				),
+			)
+		)
+		self.text.set_syntax_highlighting(self.syntax_highlighting)
 
-	def autocomplete(self):
-		i = self.text.tag_ranges('Selection')
-		if i and '\n' in self.text.get(*i):
-			return False
-		self.completing = True
-		self.text.taboverride = ' :'
-		def docomplete(s, e, v, t):
-			ss = '%s+%sc' % (s,len(t))
-			se = '%s+%sc' % (s,len(v))
-			self.text.delete(s, ss)
-			self.text.insert(s, v)
-			self.text.tag_remove('Selection', '1.0', END)
-			self.text.tag_add('Selection', ss, se)
-			if self.complete[0] == None:
-				self.complete = [t, 1, s, se]
-			else:
-				self.complete[1] += 1
-				self.complete[3] = se
-		if self.complete[0] != None:
-			t,f,s,e = self.complete
-		else:
-			s,e = self.text.index('%s -1c wordstart' % INSERT),self.text.index('%s -1c wordend' % INSERT)
-			t,f = self.text.get(s,e),0
-		if t and t[0].lower() in 'abcdefghijklmnopqrstuvwxyz_.':
-			ac = list(self.autocomptext)
-			head = '1.0'
-			while True:
-				item = self.text.tag_nextrange('Block', head)
-				if not item:
-					break
-				block = self.text.get(*item)
-				if not block in ac:
-					ac.append(block)
-				head = item[1]
-			ac.sort()
-			r = False
-			matches = []
-			for v in ac:
-				if v and v.lower().startswith(t.lower()):
-					matches.append(v)
-			if matches:
-				if f < len(matches):
-					docomplete(s,e,matches[f],t)
-					self.text.taboverride = ' (,):'
-				elif self.complete[0] != None:
-					docomplete(s,e,t,t)
-					self.complete[1] = 0
-				r = True
-			self.after(1, self.completed)
-			return r
+		AnimationTooltip(self.text.text)
+		CommandTooltip(self.text.text)
 
-	def completed(self):
-		self.completing = False
+	def statusupdate(self, _event: UI.Event | None = None) -> None:
+		line, column = self.text.index(UI.INSERT).split('.')
+		selected = 0
+		sel_range = self.text.tag_ranges('sel')
+		if sel_range:
+			selected = len(self.text.get(*sel_range))
+		self.scriptstatus.set(f'Line: {line}  Column: {column}  Selected: {selected}')
 
-	def statusupdate(self):
-		if not self.completing:
-			self.text.taboverride = False
-			self.complete = [None, 0]
-		i = self.text.index(INSERT).split('.') + [0]
-		item = self.text.tag_ranges('Selection')
-		if item:
-			i[2] = len(self.text.get(*item))
-		self.scriptstatus.set('Line: %s  Column: %s  Selected: %s' % tuple(i))
-
-	def edited(self):
-		if not self.completing:
-			self.text.taboverride = False
-			self.complete = [None, 0]
-		self.editstatus['state'] = NORMAL
+	def update_edited(self, edited: bool) -> None:
+		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 		if self.file:
-			self.title('IScript Editor [*%s*]' % self.file)
+			self.title(f'IScript Editor [*{self.file}*]')
 
-	def cancel(self):
-		if self.text.edited:
-			save = MessageBox.askquestion(parent=self, title='Save Code?', message="Would you like to save the code?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-			if save != MessageBox.NO:
-				if save == MessageBox.CANCEL:
-					return
+	def cancel(self, _event: UI.Event | None = None) -> None:
+		if self.edited_state.is_edited:
+			save = UI.MessageBox.askyesnocancel(parent=self, title='Save Code?', message="Would you like to save the code?", default=UI.MessageBox.YES)
+			if save is None:
+				return
+			if save:
 				self.save()
 		self.ok()
 
-	def save(self, e=None):
-		self.parent.iimport(file=self, parent=self)
-		self.text.edited = False
-		self.editstatus['state'] = DISABLED
+	def save(self, _event: UI.Event | None = None) -> None:
+		code = self.text.get('1.0', UI.END)
+		if self.delegate.save_code(code, self):
+			self.text.edit_modified(False)
 
-	def dismiss(self):
-		self.settings.windows.save_window_size('codeedit', self)
+	def dismiss(self) -> None:
+		self.config_.windows.code_edit.save_size(self)
 		PyMSDialog.dismiss(self)
 
-	def checkframes(self, grp):
-		if os.path.exists(grp):
-			p = grp
-		else:
-			p = self.parent.mpqhandler.get_file('MPQ:unit\\' + grp)
-		try:
-			grp = GRP.CacheGRP()
-			grp.load_file(p)
-		except PyMSError:
-			return None
-		return grp.frames
+	# TODO: Check frames
+	# def checkframes(self, grp: GRP) -> int | None:
+	# 	try:
+	# 		if os.path.exists(grp):
+	# 			p = grp
+	# 		else:
+	# 			p = self.parent.mpqhandler.load_file('MPQ:unit\\' + grp)
+	# 		grp = GRP.CacheGRP()
+	# 		grp.load_file(p)
+	# 	except PyMSError:
+	# 		return None
+	# 	return grp.frames
 
-	def test(self, e=None):
-		i = IScriptBIN.IScriptBIN(self.parent.weaponsdat, self.parent.flingydat, self.parent.imagesdat, self.parent.spritesdat, self.parent.soundsdat, self.parent.tbl, self.parent.imagestbl, self.parent.sfxdatatbl)
+	def test(self, _event: UI.Event | None = None) -> None:
+		code = self.text.get('1.0', UI.END)
+		parse_context = self.delegate.get_parse_context(code)
 		try:
-			warnings = i.interpret(self, checkframes=self.checkframes)
+			IScriptBIN.IScriptBIN.compile(parse_context)
 		except PyMSError as e:
-			if e.line != None:
-				self.text.see('%s.0' % e.line)
-				self.text.tag_add('Error', '%s.0' % e.line, '%s.end' % e.line)
-			if e.warnings:
-				for w in e.warnings:
-					if w.line != None:
-						self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
+			self.text.highlight_error(e)
 			ErrorDialog(self, e)
 			return
-		if warnings:
-			c = False
-			for w in warnings:
-				if w.line != None:
-					if not c:
-						self.text.see('%s.0' % w.line)
-						c = True
-					self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
-			WarningDialog(self, warnings, True)
+		if parse_context.warnings:
+			self.text.highlight_warnings(parse_context.warnings)
+			WarningDialog(self, parse_context.warnings, True)
 		else:
-			MessageBox.askquestion(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.', type=MessageBox.OK)
+			UI.MessageBox.showinfo(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.')
 
-	def export(self, e=None):
+	def export(self, _event: UI.Event | None = None) -> None:
 		if not self.file:
 			self.exportas()
 		else:
-			f = open(self.file, 'w')
-			f.write(self.text.get('1.0', END))
-			f.close()
-			self.title('IScript Editor [%s]' % self.file)
+			with open(self.file, 'w', encoding='utf-8') as f:
+				f.write(self.text.get('1.0', UI.END))
+			self.title(f'IScript Editor [{self.file}]')
 
-	def exportas(self, e=None):
-		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export Code', filetypes=[FileType.txt()])
+	def exportas(self, _event: UI.Event | None = None) -> None:
+		file = self.config_.last_path.txt.select_save(self)
 		if not file:
 			return
 		self.file = file
 		self.export()
 
-	def iimport(self, e=None):
-		iimport = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import From', filetypes=[FileType.txt()])
+	def iimport(self, _event: UI.Event | None = None) -> None:
+		iimport = self.config_.last_path.txt.select_open(self)
 		if iimport:
 			try:
-				f = open(iimport, 'r')
-				self.text.delete('1.0', END)
-				self.text.insert('1.0', f.read())
-				self.text.edit_reset()
-				f.close()
-			except:
-				ErrorDialog(self, PyMSError('Import','Could not import file "%s"' % iimport))
+				with open(iimport, 'r', encoding='utf-8') as f:
+					self.text.delete('1.0', UI.END)
+					self.text.insert('1.0', f.read())
+					self.text.edit_reset()
+			except Exception:
+				ErrorDialog(self, PyMSError('Import', f'Could not import file "{iimport}"'))
 
-	def find(self, e=None):
-		if not self.findwindow:
-			self.findwindow = FindReplaceDialog(self)
-			self.bind(Key.F3, self.findwindow.findnext)
-		elif self.findwindow.state() == 'withdrawn':
-			self.findwindow.deiconify()
-		self.findwindow.focus_set()
+	def find(self, _event: UI.Event | None = None) -> None:
+		if self.findwindow is None:
+			self.findwindow = FindReplaceDialog(self, self.text, self.config_.windows.find_replace)
+			self.bind(UI.Key.F3(), self.findwindow.findnext)
+		else:
+			self.findwindow.show()
 
-	def colors(self, e=None):
-		c = CodeColors(self)
-		if c.cont:
-			self.text.setup(c.cont)
-			self.parent.highlights = c.cont
+	def colors(self, _event: UI.Event | None = None) -> None:
+		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())
+		if dialog.updated:
+			self.text.update_highlight_styles()
 
-	def generate(self, *_):
-		CodeGeneratorDialog(self)
+	def generate(self, *_: Any) -> None:
+		CodeGeneratorDialog(self, self.config_, self)
 
-	def preview(self, e=None):
+	def preview(self, _event: UI.Event | None = None) -> None:
 		if not self.previewer or self.previewer.state() == 'withdrawn':
-			if not self.previewer:
-				self.previewer = PreviewerDialog(self)
+			if self.previewer is None:
+				self.previewer = PreviewerDialog(self, self.delegate, self.config_, self.text)
+			self.previewer.load_palettes()
 			self.previewer.updatecurrentimages()
-			t = re.split('\\s+',self.text.get('%s linestart' % INSERT,'%s lineend' % INSERT).split('#',1)[0].strip())
-			if t[0] in PREVIEWER_CMDS[0] and self.previewer.curradio['state'] == NORMAL:
+			t = re.split('\\s+',self.text.get(f'{UI.INSERT} linestart', f'{UI.INSERT} lineend').split('#',1)[0].strip())
+			parse_context = self.delegate.get_parse_context(t[1])
+			if t[0] in PREVIEWER_CMDS[EntryType.iscript] and self.previewer.curradio['state'] == UI.NORMAL:
 				try:
-					f = IScriptBIN.type_frame(2, None, t[1])
-				except:
+					f = CodeTypes.FrameCodeType().parse(parse_context)
+				except Exception:
 					f = 0
 				self.previewer.type.set(0)
 				self.previewer.curid.set(0)
-				self.previewer.curcmd.set(PREVIEWER_CMDS[0].index(t[0]))
-				self.previewer.select(0,0,f)
-			elif t[0] in PREVIEWER_CMDS[1]:
+				self.previewer.curcmd.set(PREVIEWER_CMDS[EntryType.iscript].index(t[0]))
+				self.previewer.select(0, EntryType.iscript, f)
+			elif t[0] in PREVIEWER_CMDS[EntryType.images_dat]:
 				try:
-					n = IScriptBIN.type_imageid(2, None, t[1])
-				except:
+					n = CodeTypes.ImageIDCodeType().parse(parse_context)
+				except Exception:
 					n = 0
 				self.previewer.type.set(1)
 				self.previewer.image.set(n)
-				self.previewer.imagecmd.set(PREVIEWER_CMDS[1].index(t[0]))
-				self.previewer.select(n,1)
-			elif t[0] in PREVIEWER_CMDS[2]:
+				self.previewer.imagecmd.set(PREVIEWER_CMDS[EntryType.images_dat].index(t[0]))
+				self.previewer.select(n, EntryType.images_dat)
+			elif t[0] in PREVIEWER_CMDS[EntryType.sprites_dat]:
 				try:
-					n = IScriptBIN.type_spriteid(2, None, t[1])
-				except:
+					n = CodeTypes.SpriteIDCodeType().parse(parse_context)
+				except Exception:
 					n = 0
 				self.previewer.type.set(2)
 				self.previewer.sprites.set(n)
-				self.previewer.spritescmd.set(PREVIEWER_CMDS[2].index(t[0]))
-				self.previewer.select(n,2)
-			elif t[0] in PREVIEWER_CMDS[3]:
+				self.previewer.spritescmd.set(PREVIEWER_CMDS[EntryType.sprites_dat].index(t[0]))
+				self.previewer.select(n, EntryType.sprites_dat)
+			elif t[0] in PREVIEWER_CMDS[EntryType.flingy_dat]:
 				try:
-					n = IScriptBIN.type_flingyid(2, None, t[1])
-				except:
+					n = CodeTypes.FlingyIDCodeType().parse(parse_context)
+				except Exception:
 					n = 0
 				self.previewer.type.set(3)
-				self.previewer.flingy.set(n)
-				self.previewer.flingycmd.set(PREVIEWER_CMDS[3].index(t[0]))
-				self.previewer.select(n,3)
+				self.previewer.flingys.set(n)
+				self.previewer.flingyscmd.set(PREVIEWER_CMDS[EntryType.flingy_dat].index(t[0]))
+				self.previewer.select(n, EntryType.flingy_dat)
 			else:
-				self.previewer.select(0,self.previewer.type.get())
+				self.previewer.select(0, self.previewer.entry_type())
 			self.previewer.deiconify()
-			self.after(50, self.previewer.updateframes)
+			self.after_managed(50, self.previewer.updateframes)
 		self.previewer.focus_set()
 
-	def sounds(self):
-		t = re.split('\\s+',self.text.get('%s linestart' % INSERT,'%s lineend' % INSERT).split('#',1)[0].strip())
+	def sounds(self) -> None:
+		t = re.split('\\s+',self.text.get(f'{UI.INSERT} linestart', f'{UI.INSERT} lineend').split('#',1)[0].strip())
 		i = 0
 		if t[0] == 'playsnd':
 			try:
-				i = IScriptBIN.type_soundid(2, None, t[1])
-			except:
+				i = CodeTypes.SoundIDCodeType().parse(self.delegate.get_parse_context(t[1]))
+			except Exception:
 				pass
-		SoundDialog(self, i)
+		SoundDialog(parent=self, delegate=self.delegate, config=self.config_.sounds, text=self.text, sound_id=i)
 
-	def load(self):
+	def load(self) -> None:
+		output = io.StringIO()
+		serialize_context = self.delegate.get_serialize_context(output)
 		try:
-			warnings = self.parent.ibin.decompile(self, ids=self.ids)
+			self.delegate.get_iscript_bin().decompile(serialize_context, script_ids=self.ids)
+			code = output.getvalue()
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		if warnings:
-			WarningDialog(self, warnings)
+		self.text.load(code)
+		# if warnings:
+		# 	WarningDialog(self, warnings)
 
-	def write(self, text):
+	def write(self, text: str) -> None:
 		self.decompile += text
 
-	def readlines(self):
-		return self.text.get('1.0', END).split('\n')
+	def readlines(self) -> list[str]:
+		return self.text.get('1.0', UI.END).split('\n')
 
-	def close(self):
-		if self.decompile:
-			self.text.insert('1.0', self.decompile.strip())
-			self.decompile = ''
-			self.text.text.mark_set(INSERT, '1.0')
-			self.text.text.see(INSERT)
-			self.text.edit_reset()
-			self.text.edited = False
-			self.editstatus['state'] = DISABLED
-
-	def destroy(self):
+	def destroy(self) -> None:
 		if self.findwindow:
-			Toplevel.destroy(self.findwindow)
+			self.findwindow.destroy()
 		if self.previewer:
-			Toplevel.destroy(self.previewer)
-		Toplevel.destroy(self)
+			self.previewer.destroy()
+		UI.Toplevel.destroy(self)
+
+	# CodeTextDelegate
+	def comment_symbols(self) -> Sequence[str]:
+		return ('#', )
+
+	def comment_symbol(self) -> str:
+		return '#'
+
+	def autocomplete_override_keys(self) -> str:
+		return ' (,):'
+
+	RE_FIRST_IDENTIFIER = re.compile(r'^\s*[a-z]')
+	RE_BLOCK_NAME = re.compile(r'(\w+):')
+	def _block_definitions(self) -> Iterator[tuple[str, str]]:
+		head = '1.0'
+		while True:
+			block_range = self.text.tag_nextrange('Block', head)
+			if not block_range:
+				break
+			block_text = self.text.get(*block_range)
+			match = CodeEditDialog.RE_BLOCK_NAME.match(block_text)
+			if match:
+				yield (match.group(1), str(block_range[0]))
+			head = block_range[1]
+
+	def get_autocomplete_options(self, line: str) -> Sequence[str] | None:
+		autocomplete_options = ['.headerstart','.headerend']
+
+		for block_name, _ in self._block_definitions():
+			if not block_name in autocomplete_options:
+				autocomplete_options.append(block_name)
+
+		main_identifiers = sorted(cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands)
+		is_first_identifier = not not CodeEditDialog.RE_FIRST_IDENTIFIER.match(line)
+		if is_first_identifier:
+			autocomplete_options = main_identifiers + autocomplete_options
+		else:
+			autocomplete_options.extend(main_identifiers)
+
+		return autocomplete_options
+
+	def jump_highlights(self) -> Sequence[str] | None:
+		return ('Error', 'Warning')
+
+	def jump_sections(self) -> Sequence[str] | None:
+		return ('Header', 'Block')
+
+	def find_definition(self, name: str) -> str | None:
+		for block_name, block_index in self._block_definitions():
+			if block_name == name:
+				return block_index
+		return None
+
+	# CodeGeneratorDelegate
+	def insert_code(self, code: str) -> None:
+		self.text.insert(UI.INSERT, code)

@@ -5,6 +5,7 @@ PyMS is a cross platform BroodWar modding suite written using [Python](http://ww
 1. [Installation](https://github.com/poiuyqwert/PyMS#installation)
 1. [Issues](https://github.com/poiuyqwert/PyMS#issues)
 1. [Analytics](https://github.com/poiuyqwert/PyMS#analytics)
+1. [Change Log](https://github.com/poiuyqwert/PyMS#change-log)
 1. [Programs](https://github.com/poiuyqwert/PyMS#programs)
    * [PyAI](https://github.com/poiuyqwert/PyMS#PyAI)
    * [PyBIN](https://github.com/poiuyqwert/PyMS#PyBIN)
@@ -25,11 +26,16 @@ PyMS is a cross platform BroodWar modding suite written using [Python](http://ww
 
 
 ## Installation
-1. **Install Python.** You should get the latest Python 2.7.x, currently that is [Python 2.7.12](https://www.python.org/downloads/release/python-2712/)
+1. **Install Python.** You should get the latest Python from the following list of supported versions:
+   * Python 3.11.x
+   * Python 3.12.x
+   * Python 3.13.x
+
+   Newer 3.x versions of Python (for example Python 3.14.x) should work, but are not verified to work. PyMS will not allow you to run it on older versions of Python, but it will allow you to run it on newer versions with a warning.
    
-   **Note:** On Windows, you must ensure that Python is in your "Path" environment variable. If you use the MSI Installer there is an "Add Python.exe to path" option you should make sure is enabled during installation, otherwise you can [set it up manually](https://docs.python.org/2.7/using/windows.html#excursus-setting-environment-variables).
+   **Note:** On Windows, you must ensure that Python is in your "Path" environment variable. If you use the MSI Installer there is an "Add Python.exe to path" option you should make sure is enabled during installation, otherwise you can [set it up manually](https://docs.python.org/3/using/windows.html#excursus-setting-environment-variables).
 2. **Download PyMS.** Always get the most up to date PyMS from [github](https://github.com/poiuyqwert/pyms) ([direct link](https://github.com/poiuyqwert/PyMS/archive/master.zip)). If you are updating PyMS, you can keep your settings files located in the Settings folder.
-3. **Install Dependencies.** Use PIP (the Python package manager), to install all dependencies of PyMS by opening the command line, navigating to the PyMS folder, and running `python2.7 -m pip install -r requirements.txt`. If you get an error like `python2.7 is not found`, try `python -m pip install -r requirements.txt` (just make sure you are using PIP that is installed with Python 2.7 and not another verson of Python on your machine).
+3. **Install Dependencies.** Install all dependencies of PyMS by opening the command line, navigating to the PyMS folder, and running `python -m pip install -r requirements.txt`. If you have multiple versions of python install, make sure you are using PIP that is installed with the correct Python version and not another verson of Python on your machine.
 
 ## Issues/Feedback
 If you run into any issues with the programs, or have any feedback to improve the programs, please do one of the following:
@@ -64,6 +70,9 @@ At the moment PyMS only tracks the launch of PyMS programs, anonamously and with
 ```
 
 Even though the analytics is anonamous and has no sensitive information, you can still disable analytics by editing "Settings/PyMS.txt", and setting the "allow" key under "analytics" to be False.
+
+## Change Log
+See the [Change Log](/Help/Programs/Change_Log.md) for what's new in each version of PyMS and its programs. When a program finds an update, its update dialog also has a **Change Log** button to view it.
 
 ## Programs
 PyMS contains 16 programs to edit most of the file types you will encounter while modding.

@@ -1,10 +1,16 @@
 
+from __future__ import annotations
+
 from ..CHKSection import CHKSection
 from ..CHKRequirements import CHKRequirements
 
 from ....Utilities.utils import pad, named_flags
 
 import struct
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..CHK import CHK
 
 class CHKUnit:
 	NYDUS_LINK = (1 << 9)
@@ -23,7 +29,7 @@ class CHKUnit:
 	RESOURCE = (1 << 4)
 	HANGER = (1 << 5)
 
-	def __init__(self, chk, ref_id):
+	def __init__(self, chk: CHK, ref_id: int) -> None:
 		self.ref_id = ref_id
 		self.chk = chk
 		self.instanceID = 0
@@ -41,27 +47,27 @@ class CHKUnit:
 		self.abilityStates = 0
 		self.unitRelationID = 0
 
-	def load_data(self, data):
+	def load_data(self, data: bytes) -> None:
 		self.instanceID,x,y,self.unit_id,self.buildingRelation,self.validAbilities,self.validProperties,self.owner,self.health,self.shields,self.energy,self.resources,self.hangerUnits,self.abilityStates,self.unitRelationID = \
-			struct.unpack('<L6H4BL2H4xL', data[:36])
+			tuple(int(v) for v in struct.unpack('<L6H4BL2H4xL', data[:36]))
 		self.position = [x,y]
 
-	def save_data(self):
+	def save_data(self) -> bytes:
 		return struct.pack('<L6H4BL2H4xL', self.instanceID,self.position[0],self.position[1],self.unit_id,self.buildingRelation,self.validAbilities,self.validProperties,self.owner,self.health,self.shields,self.energy,self.resources,self.hangerUnits,self.abilityStates,self.unitRelationID)
 
-	def decompile(self):
+	def decompile(self) -> str:
 		result = '\t#\n'
 		data = {
 			'InstanceID': self.instanceID,
-			'Position': '%s,%s' % (self.position[0], self.position[1]),
+			'Position': f'{self.position[0]},{self.position[1]}',
 			'UnitID': self.unit_id,
 			'BuildingRelation': named_flags(self.buildingRelation, ["Nydus Link","Addon Link"], 16, 9),
 			'ValidAbilities': named_flags(self.validAbilities, ["Cloak", "Burrow", "In Transit", "Hullucinated", "Invincible"], 16),
 			'ValidProperties': named_flags(self.validProperties, ["Owner", "Health", "Shields", "Energy", "Resources", "Hanger"], 16),
 			'Owner': self.owner + 1,
-			'Health': '%s%%' % self.health,
-			'Shields': '%s%%' % self.shields,
-			'Energy': '%s%%' % self.energy,
+			'Health': f'{self.health}%%',
+			'Shields': f'{self.shields}%%',
+			'Energy': f'{self.energy}%%',
 			'Resources': self.resources,
 			'HangerUnits': self.hangerUnits,
 			'AbilityStates': named_flags(self.validAbilities, ["Cloaked", "Burrowed", "In Transit", "Hullucinated", "Invincible"], 16),
@@ -70,21 +76,21 @@ class CHKUnit:
 		for key in ['InstanceID','Position','UnitID','BuildingRelation','ValidAbilities','ValidProperties','Owner','Health','Shields','Energy','Resources','HangerUnits','AbilityStates','UnitRelationID']:
 			value = data[key]
 			if isinstance(value, tuple):
-				result += '\t%s%s\n' % (pad('#'), value[0])
+				result += f'\t{pad("#")}{value[0]}\n'
 				value = value[1]
-			result += '\t%s\n' % pad(key, value)
+			result += f'\t{pad(key, str(value))}\n'
 		return result
 
 class CHKSectionUNIT(CHKSection):
-	NAME = 'UNIT'
+	NAME = b'UNIT'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
-	
-	def __init__(self, chk):
+
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
-		self.units = {}
-		self.unused_ids = []
-	
-	def load_data(self, data):
+		self.units: dict[int, CHKUnit] = {}
+		self.unused_ids: list[int] = []
+
+	def load_data(self, data: bytes) -> None:
 		self.units = {}
 		o = 0
 		ref_id = 0
@@ -95,25 +101,25 @@ class CHKSectionUNIT(CHKSection):
 			ref_id += 1
 			o += 36
 
-	def unit_count(self):
+	def unit_count(self) -> int:
 		return len(self.units)
 
-	def nth_unit(self, n):
+	def nth_unit(self, n: int) -> CHKUnit:
 		ref_ids = sorted(self.units.keys())
 		return self.units[ref_ids[n]]
 
-	def get_unit(self, ref_id):
+	def get_unit(self, ref_id: int) -> CHKUnit | None:
 		return self.units.get(ref_id)
-	
-	def save_data(self):
-		result = ''
+
+	def save_data(self) -> bytes:
+		result = b''
 		for ref_id in sorted(self.units.keys()):
 			unit = self.units[ref_id]
 			result += unit.save_data()
 		return result
-	
-	def decompile(self):
-		result = '%s:\n' % (self.NAME)
+
+	def decompile(self) -> str:
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for ref_id in sorted(self.units.keys()):
 			unit = self.units[ref_id]
 			result += unit.decompile()

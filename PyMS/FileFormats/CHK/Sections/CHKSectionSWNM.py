@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ..CHKSection import CHKSection
 from ..CHKRequirements import CHKRequirements
 
@@ -6,22 +8,26 @@ from ....Utilities.utils import pad
 
 import struct
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..CHK import CHK
+
 class CHKSectionSWNM(CHKSection):
-	NAME = 'SWNM'
+	NAME = b'SWNM'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
-	
-	def __init__(self, chk):
+
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.names = [0] * 256
-	
-	def load_data(self, data):
+
+	def load_data(self, data: bytes) -> None:
 		self.names = list(struct.unpack('<256L', data[:256*4]))
-	
-	def save_data(self):
+
+	def save_data(self) -> bytes:
 		return struct.pack('<256L', *self.names)
-	
-	def decompile(self):
-		result = '%s:\n' % (self.NAME)
+
+	def decompile(self) -> str:
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for n,name in enumerate(self.names):
-			result += '\t%s\n' % (pad('Switch %d' % n, 'String %d' % name))
+			result += f'\t{pad(f"Switch {n}", f"String {name}")}\n'
 		return result

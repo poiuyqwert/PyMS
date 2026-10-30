@@ -1,0 +1,433 @@
+
+from .Trigger import Trigger
+from .UnitProperties import UnitProperties, properties_definitions, PropertyFieldDefinition, PropertyStateDefinition
+from .Constants import ConditionType, ConditionFlag, ActionType, ActionFlag, PlayerGroup
+from .CodeHandler import TRGLexer
+from .Parameters import PlayerParameter
+from . import Conditions
+from . import Actions
+from . import BriefingActions
+from .Condition import Condition
+
+from ...FileFormats import TBL
+from ...FileFormats.AIBIN import AIBIN
+
+from ...Utilities import IO
+from ...Utilities.PyMSError import PyMSError
+from ...Utilities.PyMSWarning import PyMSWarning
+from ...Utilities.BytesScanner import BytesScanner
+from ...Utilities import Struct
+from ...Utilities.CodeHandlers import Tokens
+from ...Utilities.CodeHandlers.Lexer import Stop
+
+import enum, re
+
+class Format(enum.Enum):
+	normal = 0
+	briefing = 1
+	got = 2
+
+class TRG:
+	HEADER = b'qw\x986\x18\x00\x00\x00'
+
+	def __init__(self, stat_txt: TBL.TBL | None = None, aiscript: AIBIN.AIBIN | None = None) -> None:
+		self.triggers: list[Trigger] = []
+		self.strings: dict[int, str] = {}
+		self.unit_properties: dict[int, UnitProperties] = {}
+		self.format = Format.normal
+
+		self.stat_txt: TBL.TBL | None = stat_txt
+		self.aiscript: AIBIN.AIBIN | None = aiscript
+
+	STRING_STRUCT = Struct.l_str(2048)
+	def load(self, any_input: IO.AnyInputBytes, trg_format: Format = Format.normal) -> None:
+		with IO.InputBytes(any_input) as input_bytes:
+			data = input_bytes.read()
+		scanner = BytesScanner(data)
+		if trg_format != Format.got and not scanner.matches(TRG.HEADER):
+			raise PyMSError('Load', 'Not a valid .trg file (missing header), could possibly be a GOT .trg file')
+		triggers: list[Trigger] = []
+		strings: dict[int, str] = {}
+		unit_properties: dict[int, UnitProperties] = {}
+		try:
+			while not scanner.at_end():
+				trigger = scanner.scan(Trigger)
+				triggers.append(trigger)
+				if trg_format != Format.got:
+					for action in trigger.actions:
+						if action.string_index:
+							strings[action.string_index] = scanner.scan(TRG.STRING_STRUCT)
+						if action.flags & ActionFlag.unit_property_used:
+							props = scanner.scan(UnitProperties)
+							unit_properties[action.unit_properties_index] = props
+		except Exception as exc:
+			raise PyMSError('Load', 'Unsupported TRG file, could possibly be corrupt') from exc
+		self.triggers = triggers
+		self.strings = strings
+		self.unit_properties = unit_properties
+		self.format = trg_format
+
+	def save(self, output: IO.AnyOutputBytes, trg_format: Format | None = None) -> list[PyMSWarning]:
+		save_format = self.format if trg_format is None else trg_format
+		warnings: list[PyMSWarning] = []
+		is_missiong_briefing: bool | None = None
+		with IO.OutputBytes(output) as f:
+			if save_format != Format.got:
+				f.write(TRG.HEADER)
+			for trigger in self.triggers:
+				f.write(trigger.pack())
+				if is_missiong_briefing is None:
+					is_missiong_briefing = trigger.is_missing_briefing
+				elif trigger.is_missing_briefing != is_missiong_briefing:
+					warnings.append(PyMSWarning(warn_type='Save', warning='There is a mix of missing briefing and normal triggers'))
+				for action in trigger.actions:
+					if action.string_index:
+						string: str
+						if action.string_index in self.strings:
+							string = self.strings[action.string_index]
+						else:
+							string = ''
+							warnings.append(PyMSWarning(warn_type='Save', warning=f'String {action.string_index} is missing, saving an empty string'))
+						f.write(TRG.STRING_STRUCT.pack(string))
+					if action.flags & ActionFlag.unit_property_used:
+						properties: UnitProperties
+						if action.unit_properties_index in self.unit_properties:
+							properties = self.unit_properties[action.unit_properties_index]
+						else:
+							properties = UnitProperties()
+							warnings.append(PyMSWarning(warn_type='Save', warning=f'Unit properties {action.unit_properties_index} is missing, saving empty properties'))
+						f.write(properties.pack())
+		return warnings
+
+	RE_NEWLINES = re.compile(r'(\r\n|\r|\n)')
+	RE_LEADING_SPACES = re.compile(r'(?:^|(?<=[\r\n])) +')
+	def decompile(self, output: IO.AnyOutputText) -> None:
+		with IO.OutputText(output) as f:
+			for string_index,raw_string in self.strings.items():
+				string = TBL.decompile_string(raw_string, '\r\n')
+				# Leading spaces would be read back as indentation, so escape them
+				string = TRG.RE_LEADING_SPACES.sub(lambda match: '<32>' * len(match.group(0)), string)
+				string = TRG.RE_NEWLINES.sub('\\1  ', string)
+				f.write(f'String({string_index}):\n  {string}\n\n')
+			for properties_index,properties in self.unit_properties.items():
+				properties.decompile(properties_index + 1, f)
+				f.write('\n\n')
+			for trigger in self.triggers:
+				trigger.decompile(self, f)
+				f.write('\n\n')
+
+	# TODO: Compile
+	def compile(self, any_input: IO.AnyInputText) -> list[PyMSWarning]:
+		with IO.InputText(any_input) as input_text:
+			code = input_text.read()
+		trg_format: Format | None = None
+		triggers: list[Trigger] = []
+		strings: dict[int, str] = {}
+		unit_properties: dict[int, UnitProperties] = {}
+		warnings: list[PyMSWarning] = []
+
+		lexer = TRGLexer(code)
+
+		def process_conditions(trigger: Trigger) -> Tokens.Token:
+			nonlocal warnings
+			token = lexer.skip(Tokens.NewlineToken)
+			while trigger.conditions_free:
+				enabled = True
+				if isinstance(token, TRGLexer.SymbolToken) and token.raw_value == '-':
+					enabled = False
+					token = lexer.next_token()
+				if not isinstance(token, Tokens.IdentifierToken):
+					raise PyMSError('Compile', f"Expected a condition, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				definition = Conditions.get_definition_named(token.raw_value)
+				if not definition:
+					raise PyMSError('Compile', f"Unknown condition name '{token.raw_value}'", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				token = lexer.next_token()
+				if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != '(':
+					raise PyMSError('Compile', f"Expected '(' to start parameters, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				condition = definition.new_condition()
+				if not enabled:
+					condition.flags |= ConditionFlag.disabled
+				token = lexer.check_token(TRGLexer.ParameterToken)
+				for parameter in definition.parameters:
+					if not isinstance(token, TRGLexer.ParameterToken):
+						raise PyMSError('Compile', f"Expected a '{parameter.name()}' parameter, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+					try:
+						if warning := parameter.condition_compile(token.raw_value, condition, self):
+							warnings.append(warning)
+					except PyMSError as e:
+						e.line = lexer.state.line
+						raise e
+					except Exception as exc:
+						raise PyMSError('Compile', f"Couldn't parse '{token.raw_value}' as parameter", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line)) from exc
+					token = lexer.next_token()
+					if isinstance(token, TRGLexer.SymbolToken) and token.raw_value == ',':
+						token = lexer.check_token(TRGLexer.ParameterToken)
+				if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ')':
+					raise PyMSError('Compile', f"Expected ')' to end parameters, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				token = lexer.next_token()
+				if not isinstance(token, Tokens.NewlineToken):
+					raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				if condition.condition_type != ConditionType.no_condition:
+					trigger.add_condition(condition)
+				token = lexer.skip(Tokens.NewlineToken)
+				if isinstance(token, TRGLexer.KeywordToken):
+					break
+			return token
+
+		def process_actions(trigger: Trigger) -> Tokens.Token:
+			nonlocal warnings
+			token = lexer.skip(Tokens.NewlineToken)
+			while trigger.actions_free:
+				enabled = True
+				if isinstance(token, TRGLexer.SymbolToken) and token.raw_value == '-':
+					enabled = False
+					token = lexer.next_token()
+				if not isinstance(token, Tokens.IdentifierToken):
+					raise PyMSError('Compile', f"Expected an action, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				if trg_format == Format.briefing:
+					definition = BriefingActions.get_definition_named(token.raw_value)
+				else:
+					definition = Actions.get_definition_named(token.raw_value)
+				if not definition:
+					raise PyMSError('Compile', f"Unknown action name '{token.raw_value}'", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				token = lexer.next_token()
+				if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != '(':
+					raise PyMSError('Compile', f"Expected '(' to start parameters, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				action = definition.new_action()
+				if not enabled:
+					action.flags |= ActionFlag.disabled
+				token = lexer.check_token(TRGLexer.ParameterToken)
+				for parameter in definition.parameters:
+					if not isinstance(token, TRGLexer.ParameterToken):
+						raise PyMSError('Compile', f"Expected a '{parameter.name()}' parameter, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+					try:
+						if warning := parameter.action_compile(token.raw_value, action, self):
+							warnings.append(warning)
+					except PyMSError as e:
+						e.line = lexer.state.line
+						raise e
+					except Exception as exc:
+						raise PyMSError('Compile', f"Couldn't parse '{token.raw_value}' as parameter", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line)) from exc
+					token = lexer.next_token()
+					if isinstance(token, TRGLexer.SymbolToken) and token.raw_value == ',':
+						token = lexer.check_token(TRGLexer.ParameterToken)
+				if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ')':
+					raise PyMSError('Compile', f"Expected ')' to end parameters, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				token = lexer.next_token()
+				if not isinstance(token, Tokens.NewlineToken):
+					raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				if action.action_type != ActionType.no_action:
+					trigger.add_action(action)
+				token = lexer.skip(Tokens.NewlineToken)
+				if isinstance(token, (TRGLexer.KeywordToken, Tokens.EOFToken)):
+					break
+			return token
+
+		def process_trigger() -> Tokens.Token:
+			nonlocal triggers
+			token = lexer.next_token()
+			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != '(':
+				raise PyMSError('Compile', "Expected a '(' to start the list of players for trigger", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			trigger = Trigger()
+			triggers.append(trigger)
+			player_param = PlayerParameter()
+			token = lexer.check_token(TRGLexer.ParameterToken)
+			found_players = False
+			while isinstance(token, TRGLexer.ParameterToken):
+				try:
+					player = player_param.compile(token.raw_value)
+				except PyMSError as e:
+					e.line = lexer.state.line
+					raise e
+				except Exception as exc:
+					raise PyMSError('Compile', f"Couldn't parse '{token.raw_value}' as parameter", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line)) from exc
+				if player > PlayerGroup.non_allied_victory_players:
+					raise PyMSError('Compile', f"'{token.raw_value}' is an invalid player for a trigger", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				if trigger.execution.player_groups[player]:
+					raise PyMSError('Compile', f"'{token.raw_value}' already specified for trigger", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				trigger.execution.player_groups[player] = 1
+				found_players = True
+				token = lexer.next_token()
+				if isinstance(token, TRGLexer.SymbolToken) and token.raw_value == ',':
+					token = lexer.check_token(TRGLexer.ParameterToken)
+			if not found_players:
+				warnings.append(PyMSWarning(warn_type='Trigger', warning='There are no player groups applied to trigger', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line)))
+				# raise PyMSError('Compile', f"Expected player for trigger, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ')':
+				raise PyMSError('Compile', f"Expected ')' to end player list, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			token = lexer.next_token()
+			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ':':
+				raise PyMSError('Compile', "Expected ':' to start trigger body", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			token = lexer.next_token()
+			if not isinstance(token, Tokens.NewlineToken):
+				raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			if trg_format == Format.normal:
+				token = lexer.skip(Tokens.NewlineToken)
+				if not isinstance(token, TRGLexer.KeywordToken) or token.raw_value != 'Conditions':
+					raise PyMSError('Compile', "Expected 'Conditions:' to start list of conditions", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				token = lexer.next_token()
+				if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ':':
+					raise PyMSError('Compile', "Expected ':' after 'Conditions'", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				token = lexer.next_token()
+				if not isinstance(token, Tokens.NewlineToken):
+					raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				token = process_conditions(trigger)
+				if not isinstance(token, TRGLexer.KeywordToken) or token.raw_value != 'Actions':
+					raise PyMSError('Compile', "Expected 'Actions:' to start list of actions", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				token = lexer.next_token()
+				if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ':':
+					raise PyMSError('Compile', "Expected ':' after 'Actions'", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			else:
+				trigger.add_condition(Condition.mission_briefing())
+			token = process_actions(trigger)
+			return token
+
+		def process_string() -> None:
+			nonlocal strings
+			token = lexer.next_token()
+			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != '(':
+				raise PyMSError('Compile', "Expected a '(' to start the string id", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			id_token = lexer.get_token(Tokens.IntegerToken)
+			if not id_token:
+				raise PyMSError('Compile', 'Expected a numeric string id', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			token = lexer.next_token()
+			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ')':
+				raise PyMSError('Compile', f"Expected ')' to end string id, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			token = lexer.next_token()
+			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ':':
+				raise PyMSError('Compile', "Expected ':' to start string definition", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			token = lexer.next_token()
+			if not isinstance(token, Tokens.NewlineToken):
+				raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			string_id = int(id_token.raw_value)
+			if string_id in strings:
+				raise PyMSError('Compile', f"String with id {string_id} already defined", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			string = ''
+			indent_token = lexer.get_token(Tokens.WhitespaceToken)
+			if not indent_token:
+				raise PyMSError('Compile', 'Expected indentation for string', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			while True:
+				string_token = lexer.read_open_string(lambda token: Stop.include if isinstance(token, Tokens.NewlineToken) else Stop.proceed)
+				whitespace_token = lexer.get_token(Tokens.WhitespaceToken)
+				if not whitespace_token or not whitespace_token.raw_value.startswith(indent_token.raw_value):
+					string += string_token.raw_value.rstrip('\r\n')
+					break
+				# Whitespace past the string's indentation is part of the string
+				string += string_token.raw_value + whitespace_token.raw_value[len(indent_token.raw_value):]
+			strings[string_id] = TBL.compile_string(string)
+
+		def process_properties() -> Tokens.Token:
+			nonlocal unit_properties
+			token = lexer.next_token()
+			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != '(':
+				raise PyMSError('Compile', "Expected a '(' to start the unit properties id", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			id_token = lexer.get_token(Tokens.IntegerToken)
+			if not id_token:
+				raise PyMSError('Compile', 'Expected a properties id', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			token = lexer.next_token()
+			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ')':
+				raise PyMSError('Compile', 'Expected closing parenthesis', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			token = lexer.next_token()
+			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ':':
+				raise PyMSError('Compile', 'Expected start of properties', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			token = lexer.next_token()
+			if not isinstance(token, Tokens.NewlineToken):
+				raise PyMSError('Compile', 'Expected end of line', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			properties_id = int(id_token.raw_value) - 1
+			if properties_id < 0 or properties_id > 63:
+				raise PyMSError('Compile', 'Properties id is not valid', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			if properties_id in unit_properties:
+				raise PyMSError('Compile', 'Properties with id already defined', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			properties = UnitProperties()
+			token = lexer.next_token()
+			property_found = False
+			while isinstance(token, Tokens.IdentifierToken):
+				for definition in properties_definitions:
+					if token.raw_value == definition.name:
+						if isinstance(definition, PropertyFieldDefinition):
+							if properties.fields_available_flags & definition.flag:
+								raise PyMSError('Compile', 'Property already defined', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+							token = lexer.next_token()
+							if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != '(':
+								raise PyMSError('Compile', 'Expected open parenthesis', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+							value_token = lexer.get_token(Tokens.IntegerToken)
+							if not value_token:
+								raise PyMSError('Compile', 'Expected an integer parameter', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+							value = int(value_token.raw_value)
+							if value < 0 or definition.parameter.max < value:
+								raise PyMSError('Compile', 'Integer parameter too large', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+							token = lexer.next_token()
+							if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ')':
+								raise PyMSError('Compile', 'Expected closing parenthesis', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+							token = lexer.next_token()
+							if not isinstance(token, Tokens.NewlineToken):
+								raise PyMSError('Compile', 'Expected end of line', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+							setattr(properties, definition.attr, value)
+							properties.fields_available_flags |= definition.flag
+							property_found = True
+						elif isinstance(definition, PropertyStateDefinition):
+							if properties.state_flags & definition.flag:
+								raise PyMSError('Compile', 'Property already defined', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+							token = lexer.next_token()
+							if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != '(':
+								raise PyMSError('Compile', 'Expected open parenthesis', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+							token = lexer.next_token()
+							if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ')':
+								raise PyMSError('Compile', 'Expected closing parenthesis', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+							token = lexer.next_token()
+							if not isinstance(token, Tokens.NewlineToken):
+								raise PyMSError('Compile', 'Expected end of line', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+							properties.state_flags |= definition.flag
+							property_found = True
+						break
+				else:
+					raise PyMSError('Compile', 'Expected a property', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				token = lexer.next_token()
+			if not property_found:
+				raise PyMSError('Compile', 'No properties defined for Properties', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			unit_properties[properties_id] = properties
+			return token
+
+		token = lexer.skip(Tokens.NewlineToken)
+		while True:
+			if isinstance(token, Tokens.EOFToken):
+				break
+			if not isinstance(token, TRGLexer.KeywordToken):
+				raise PyMSError('Compile', 'Expected start of Trigger, String, or UnitProperties', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			if token.raw_value in ('Trigger', 'BriefingTrigger'):
+				trigger_format = Format.briefing if token.raw_value == 'BriefingTrigger' else Format.normal
+				if trg_format is None:
+					trg_format = trigger_format
+				elif trigger_format != trg_format:
+					raise PyMSError('Compile', 'Invalid mix of Triggers and BriefingTriggers', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				token = process_trigger()
+			elif token.raw_value == 'String':
+				process_string()
+				token = lexer.skip(Tokens.NewlineToken)
+			elif token.raw_value == 'UnitProperties':
+				token = process_properties()
+			else:
+				raise PyMSError('Compile', 'Expected start of Trigger, String, or UnitProperties', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+		if not triggers:
+			raise PyMSError('Compile', 'No triggers')
+
+		# TODO: Check for missing Strings/UnitProperties
+		self.triggers = triggers
+		self.strings = strings
+		self.unit_properties = unit_properties
+		assert trg_format is not None
+		self.format = trg_format
+		return warnings
+
+	def __eq__(self, other: object) -> bool:
+		if not isinstance(other, TRG):
+			return NotImplemented
+		if other.format != self.format:
+			return False
+		if other.triggers != self.triggers:
+			return False
+		if other.strings != self.strings:
+			return False
+		if other.unit_properties != self.unit_properties:
+			return False
+		return True

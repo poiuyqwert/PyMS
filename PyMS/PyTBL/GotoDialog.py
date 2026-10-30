@@ -1,39 +1,46 @@
 
-from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.UIKit import *
+from .Delegates import MainDelegate
 
-class GotoDialog(PyMSDialog):
-	def __init__(self, parent):
-		self.goto = IntegerVar(range=(0,65535), allow_hex=True)
-		PyMSDialog.__init__(self, parent, 'Goto', grabwait=False, escape=True, resizable=(False,False))
+from ..Utilities.ReusablePyMSDialog import ReusablePyMSDialog
+from ..Utilities import UIKit as UI
 
-	def widgetize(self):
-		f = Frame(self)
-		Label(f, text='Index:').grid(row=0,column=0)
-		self.gotoentry = TextDropDown(f, self.goto, self.parent.gotohistory, 5)
-		self.gotoentry.entry.selection_range(0, END)
+class GotoDialog(ReusablePyMSDialog):
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
+		self.delegate = delegate
+		self.goto = UI.IntegerVar(val_range=(0,65535), allow_hex=True)
+		self.gotohistory = UI.InputHistory()
+		ReusablePyMSDialog.__init__(self, parent, 'Goto', escape=True, resizable=(False,False))
+
+	def widgetize(self) -> (UI.Misc | None):
+		f = UI.Frame(self)
+		UI.Label(f, text='Index:').grid(row=0,column=0)
+		self.gotoentry = UI.TextDropDown(f, self.goto, self.gotohistory, 5)
+		self.gotoentry.entry.selection_range(0, UI.END)
 		self.gotoentry.grid(row=0,column=1)
 
-		Button(f, text='Goto', command=self.jump).grid(row=0,column=2, padx=(4,0))
+		UI.Button(f, text='Goto', command=self.jump).grid(row=0,column=2, padx=(4,0))
 		f.pack(padx=4,pady=4)
 
-		self.bind(Key.Return, self.jump)
+		self.bind(UI.Key.Return(), self.jump)
 
 		return self.gotoentry
 
-	def setup_complete(self):
-		self.parent.settings.windows.load_window_size('goto', self)
+	def setup_complete(self) -> None:
+		self.delegate.config_.windows.goto.load_size(self)
 
-	def jump(self, event=None):
-		s = self.goto.get(True)
-		if not s in self.parent.gotohistory:
-			self.parent.gotohistory.insert(0, s)
-		i = min(self.goto.get(), len(self.parent.tbl.strings)-1)
-		self.parent.listbox.select_clear(0,END)
-		self.parent.listbox.select_set(i)
-		self.parent.listbox.see(i)
-		self.parent.update()
+	def on_show(self) -> None:
+		self.gotoentry.focus_set(highlight=True)
 
-	def dismiss(self):
-		self.parent.settings.windows.save_window_size('goto', self)
-		PyMSDialog.dismiss(self)
+	def jump(self, _event: UI.Event | None = None) -> None:
+		if not self.delegate.tbl or not self.delegate.listbox.size():
+			return
+		index = self.goto.get()
+		self.gotohistory.record(str(index))
+		i = max(0, min(index, len(self.delegate.tbl.strings)-1))
+		self.delegate.listbox.select_clear(0,UI.END)
+		self.delegate.listbox.select_set(i)
+		self.delegate.listbox.see(i)
+		self.delegate.update()
+
+	def on_hide(self) -> None:
+		self.delegate.config_.windows.goto.save_size(self)

@@ -1,28 +1,138 @@
 
-try:
-	import Tkinter as _Tk
-except:
-	import tkinter as _Tk
+from ..Utils import remove_bind
+from ..EventPattern import WidgetEvent
+from ...utils import is_mac
 
-class Extensions(_Tk.Misc):
-	def remove_bind(self, sequence, funcid): # type: (str, str) -> None
+import tkinter as _Tk
+
+from typing import Any, Callable
+
+class MiscExtensions(_Tk.Misc):
+	def remove_bind(self, sequence: str, funcid: str) -> None:
 		"""Unbind for this widget for event SEQUENCE  the
 		function identified with FUNCID."""
-		bound = ''
-		if funcid:
-			self.deletecommand(funcid)
-			funcs = self.tk.call('bind', self._w, sequence, None).split('\n')
-			bound = '\n'.join([f for f in funcs if not f.startswith('if {{"[{0}'.format(funcid))])
-		self.tk.call('bind', self._w, sequence, bound)
+		remove_bind(self, sequence, funcid)
 
-	def apply_cursor(self, cursors): # type: (list[str]) -> (str | None)
+	def _register_managed_after(self, schedule: Callable[[Callable[[], None]], str], func: Callable[..., Any], args: tuple[Any, ...]) -> str:
+		if not hasattr(self, '_managed_after_ids'):
+			self._managed_after_ids: set[str] = set() # pylint: disable=attribute-defined-outside-init
+			self.bind(WidgetEvent.Destroy(), self._cancel_managed_afters, '+')
+		holder: list[str] = ['']
+		def wrapper() -> None:
+			self._managed_after_ids.discard(holder[0])
+			func(*args)
+		after_id = schedule(wrapper)
+		holder[0] = after_id
+		self._managed_after_ids.add(after_id)
+		return after_id
+
+	def after_managed(self, ms: int, func: Callable[..., Any], *args: Any) -> str:
+		"""Schedule `func` after `ms` milliseconds and auto-cancel if this widget is destroyed first."""
+		return self._register_managed_after(lambda wrapper: self.after(ms, wrapper), func, args)
+
+	def after_idle_managed(self, func: Callable[..., Any], *args: Any) -> str:
+		"""Schedule `func` to run at the next idle point and auto-cancel if this widget is destroyed first.
+
+		Idle callbacks are flushed by `update_idletasks()`, so a task scheduled here
+		runs before code that settles geometry inline (unlike a 0ms `after_managed`,
+		which only fires once the event loop runs)."""
+		return self._register_managed_after(self.after_idle, func, args)
+
+	def after_managed_cancel(self, after_id: str | None) -> None:
+		if after_id is None:
+			return
+		if hasattr(self, '_managed_after_ids'):
+			self._managed_after_ids.discard(after_id)
+		try:
+			self.after_cancel(after_id)
+		except Exception:
+			pass
+
+	def _cancel_managed_afters(self, event: Any = None) -> None:
+		# A root or toplevel's `<Destroy>` binding also fires for each of its
+		# descendants being destroyed; only this widget's own destruction cancels.
+		if event is not None and str(event.widget) != str(self):
+			return
+		for after_id in list(getattr(self, '_managed_after_ids', ())):
+			try:
+				self.after_cancel(after_id)
+			except Exception:
+				pass
+		self._managed_after_ids = set() # pylint: disable=attribute-defined-outside-init
+
+	def apply_cursor(self, cursors: list[str]) -> (str | None):
 		for cursor in reversed(cursors):
 			try:
-				self.config(cursor=cursor)
+				self.configure(cursor=cursor) # type: ignore[call-arg]
 				return cursor
-			except:
+			except Exception:
 				pass
+		return None
 
-	def clipboard_set(self, text):
+	def clipboard_not_empty(self) -> bool:
+		try:
+			return bool(self.clipboard_get())
+		except Exception:
+			return False
+
+	def clipboard_set(self, text: str) -> None:
 		self.clipboard_clear()
 		self.clipboard_append(text)
+
+class WindowExtensions(MiscExtensions, _Tk.Wm):
+	def make_active(self) -> None:
+		if self.state() == 'withdrawn':
+			self.deiconify()
+		self.lift()
+		self.focus_force()
+		if not self.grab_status():
+			self.grab_set()
+			self.grab_release()
+
+	def make_frameless(self, parent_toplevel: _Tk.Wm | None = None) -> None:
+		self.wm_overrideredirect(True)
+		if is_mac():
+			if parent_toplevel is not None:
+				self.wm_transient(parent_toplevel)
+			try:
+				# Tk 9.0 / macOS Big Sur+ renders borderless NSWindows with a 26pt
+				# rounded-corner mask and exposes no Tcl knob to disable it.
+				from ._macos_corners import disable_rounded_corners  # pylint: disable=cyclic-import
+				disable_rounded_corners(self)
+			except Exception:
+				pass
+
+	def maxsize(self, width: int | None = None, height: int | None = None) -> tuple[int, int]: # type: ignore[override]
+		if width and height and not hasattr(self, '_initial_max_size'):
+			self._initial_max_size: tuple[int, int] | None = _Tk.Toplevel.maxsize(self) # pylint: disable=attribute-defined-outside-init
+		return _Tk.Toplevel.maxsize(self, width, height) # type: ignore[arg-type]
+
+	# `wm_state` will be `'zoomed'` when `window.size == window.maxsize`, not just when it is maximized
+	def is_maximized(self) -> bool:
+		is_maximized = (self.wm_state() == 'zoomed')
+		if is_maximized and hasattr(self, '_initial_max_size') and self._initial_max_size is not None:
+			cur_max_width, cur_max_height = self.maxsize()
+			initial_max_width, initial_max_height = self._initial_max_size
+			is_maximized = (cur_max_width >= initial_max_width and cur_max_height >= initial_max_height)
+		return is_maximized
+
+	def conceal(self) -> None:
+		"""Make the window fully transparent — while staying mapped, so measurement,
+		geometry and grabs behave normally — until `reveal()`, so it doesn't flash at
+		the OS-chosen position/size before its config geometry is applied."""
+		try:
+			self.wm_attributes('-alpha', 0.0)
+		except Exception:
+			return # `-alpha` unsupported; window just shows normally
+		self._concealed = True # pylint: disable=attribute-defined-outside-init
+
+	def reveal(self) -> None:
+		if not getattr(self, '_concealed', False):
+			return
+		self._concealed = False # pylint: disable=attribute-defined-outside-init
+		self.update_idletasks() # settle any pending geometry change before becoming visible
+		self.wm_attributes('-alpha', 1.0)
+
+	def grab_wait(self) -> None:
+		self.grab_set()
+		self.wait_window(self)

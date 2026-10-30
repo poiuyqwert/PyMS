@@ -1,251 +1,255 @@
 
+from __future__ import annotations
+
 from .RichList import RichList
-from ..Widgets import *
+from ..Widgets import Button, Entry, Frame, Misc, PanedWindow, Scrollbar, Text
+from ..Constants import BOTH, DISABLED, END, EXTENDED, FLAT, HORIZONTAL, MOVETO, MULTIPLE, NONE, RIGHT, SINGLE, SOLID, SUNKEN, TOP, X, Y
+from ..Variables import StringVar
+from ..Event import Event
 from ..Font import Font
-from ..EventPattern import *
-from ...utils import isstr
+from ..EventPattern import Ctrl, Double, Focus, Key, Mouse, Shift
+from ..Types import SelectMode
+
+from typing import Literal, Sequence, Callable, Any
 
 class EditableReportSubList(RichList):
-	def __init__(self, parent, selectmode, report, **kwargs):
+	def __init__(self, parent: Misc, selectmode: SelectMode, report: ReportList, **kwargs: Any) -> None:
+		RichList.__init__(self, parent, {}, **kwargs)
+
 		self.report = report
-		self.lastsel = None
+		self.lastsel: str | None = None
 		self.selectmode = selectmode
-		self.checkedit = None
+		self.checkedit: str | None = None
 		self.edittext = StringVar()
-		self.entry = 0
-		self.entries = []
-		self.dctimer = None
+		self.dctimer: str | None = None
 		self.editing = False
 		self.lineselect = False
 
-		Frame.__init__(self, parent)
-		self.text = Text(self, cursor='arrow', height=1, width=1, font=Font.fixed(), wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, exportselection=0, **kwargs)
-		self.text.config(bd=0)
-		self.text.pack(fill=BOTH, expand=1)
-
-		self.text.orig = self.text._w + '_orig'
-		self.tk.call('rename', self.text._w, self.text.orig)
-		self.tk.createcommand(self.text._w, self.dispatch)
-		self.text.tag_config('Selection', background='lightblue')
-		self.text.tag_bind('Selection', Mouse.Click_Left, self.edit)
+		self.text.tag_bind('Selection', Mouse.Click_Left(), self.edit)
 		bind = [
-			(Mouse.Click_Left, self.deselect),
-			(Key.Up, lambda e: self.movesel(-1)),
-			(Key.Down, lambda e: self.movesel(1)),
-			(Shift.Up, lambda e: self.movesel(-1,True)),
-			(Shift.Down, lambda e: self.movesel(1,True)),
+			(Mouse.Click_Left(), self.deselect),
+			(Key.Up(), lambda e: self.movesel(-1)),
+			(Key.Down(), lambda e: self.movesel(1)),
+			(Shift.Up(), lambda e: self.movesel(-1,True)),
+			(Shift.Down(), lambda e: self.movesel(1,True)),
 		]
 		for b in bind:
 			self.text.bind(*b)
 
-		self.tag_bind = self.text.tag_bind
-		self.tag_cget = self.text.tag_cget
-		self.tag_config = self.text.tag_config
-		self.tag_delete = self.text.tag_delete
-		self.tag_lower = self.text.tag_lower
-		self.tag_names = self.text.tag_names
-		self.tag_raise = self.text.tag_raise
-		self.tag_ranges = self.text.tag_ranges
-		self.tag_unbind = self.text.tag_unbind
-		self.yview = self.text.yview
+	def setup_ui(self, **text_kwargs: Any) -> None:
+		self.text = Text(self, cursor='arrow', height=1, width=1, font=Font.fixed(), wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, exportselection=False, **text_kwargs)
+		self.text.config(bd=0)
+		self.text.pack(fill=BOTH, expand=1)
 
-	def insert(self, index, text, tags=None):
+	def insert(self, index: int | Literal['end'], text: str, tags: str | Sequence[str] | None = None) -> str:
 		if index == END:
 			index = -1
-		e = 'entry%s' % self.entry
-		self.text.tag_bind(e, Mouse.Click_Left, lambda e,i=e: self.doselect(i,0))
-		self.text.tag_bind(e, Double.Click_Left, self.doubleclick)
-		self.text.tag_bind(e, Mouse.Click_Right, lambda e,i=e: self.popup(e,i))
-		self.text.tag_bind(e, Shift.Click_Left, lambda e,i=e: self.doselect(i,1))
-		self.text.tag_bind(e, Ctrl.Click_Left, lambda e,i=e: self.doselect(i,2))
-		if tags == None:
+		e = f'entry{self.entry}'
+		def doselect_callback(tag_name: str, s: int) -> Callable[[Event], None]:
+			def doselect(_event: Event) -> None:
+				self.doselect(tag_name, s)
+			return doselect
+		def popup_callback(tag_name: str) -> Callable[[Event], None]:
+			def popup(event: Event) -> None:
+				self.popup(event, tag_name)
+			return popup
+		self.text.tag_bind(e, Mouse.Click_Left(), doselect_callback(e,0))
+		self.text.tag_bind(e, Double.Click_Left(), self.doubleclick)
+		self.text.tag_bind(e, Mouse.Click_Right(), popup_callback(e))
+		self.text.tag_bind(e, Shift.Click_Left(), doselect_callback(e,1))
+		self.text.tag_bind(e, Ctrl.Click_Left(), doselect_callback(e,2))
+		if tags is None:
 			tags = e
-		elif isstr(tags):
-			tags = '%s %s' % (e,tags)
+		elif isinstance(tags, str):
+			tags = f'{e} {tags}'
 		else:
-			tags = '%s %s' % (e,' '.join(tags))
+			tags = f'{e} {" ".join(tags)}'
 		if self.entries:
-			i = 'entry%s.last +1l' % self.entries[index]
+			i = f'entry{self.entries[index]}.last +1l'
 		else:
 			i = END
-		if index == -1 or index == len(self.entries)-1:
+		if index in (-1, len(self.entries)-1):
 			self.entries.append(self.entry)
 		else:
 			self.entries.insert(index+1, self.entry)
 		self.entry += 1
 		self.execute('insert',(i, text, tags))
-		self.execute('insert',(i + ' lineend', '\n'))
+		return self.execute('insert',(i + ' lineend', '\n'))
 
-	def doubleclick(self, e):
+	def doubleclick(self, event: Event) -> None:
 		if self.report.dcmd:
-			self.report.dcmd(e)
+			self.report.dcmd(event)
 
-	def popup(self, e, i):
+	def popup(self, event: Event, i: str) -> None:
 		if self.report.pcmd:
-			self.report.pcmd(e,i)
+			self.report.pcmd(event, i)
 
-	def selected(self, e):
-		if isinstance(e,int):
-			e = 'entry%s' % e
-		return not not [n for n in self.text.tag_names('%s.first' % e) if n == 'Selection']
+	def selected(self, entry: int | str) -> bool:
+		if isinstance(entry, int):
+			entry = f'entry{entry}'
+		return not not [n for n in self.text.tag_names(f'{entry}.first') if n == 'Selection']
 
-	def deselect(self, e):
+	def deselect(self, _event: Event) -> None:
 		if self.lineselect:
 			self.lineselect = False
 		else:
 			self.lastsel = None
 			self.text.tag_remove('Selection', '1.0', END)
 
-	def movesel(self, d, s=False):
+	def movesel(self, d: int, s: bool = False) -> None:
+		l = ''
 		if self.lastsel:
 			l = self.lastsel
 		elif self.entries:
-			l = self.entries[0]
-		if l:
-			if not s:
-				self.text.tag_remove('Selection', '1.0', END)
-			r = self.text.tag_names('%s.last %+dl lineend -1c' % (l,d))
-			for e in r:
-				if e.startswith('entry'):
-					self.text.tag_add('Selection', '%s.first' % e, '%s.last' % e)
-					self.lastsel = e
-					break
-			else:
-				self.text.tag_add('Selection', '%s.first' % self.lastsel, '%s.last' % self.lastsel)
+			l = str(self.entries[0])
+		if not l:
+			return
+		if not s:
+			self.text.tag_remove('Selection', '1.0', END)
+		r = self.text.tag_names(f'{l}.last +{d}l lineend -1c')
+		for e in r:
+			if e.startswith('entry'):
+				self.text.tag_add('Selection', f'{e}.first', f'{e}.last')
+				self.lastsel = e
+				break
+		else:
+			self.text.tag_add('Selection', f'{self.lastsel}.first', f'{self.lastsel}.last')
 
-	def doselect(self, i, t):
+	def doselect(self, i: str, t: int) -> None:
 		self.lineselect = True
 		if self.editing:
 			self.text.tag_remove('Selection', '1.0', END)
-			self.report.scmd()
+			if self.report.scmd:
+				self.report.scmd()
 			return
-		if t == 0 or (t == 1 and self.selectmode == EXTENDED and self.lastsel == None) or (t == 2 and self.selectmode != SINGLE):
+		is_basic_select = (t == 0)
+		is_extended_first = (t == 1 and self.selectmode == EXTENDED and self.lastsel is None)
+		is_multi_toggle = (t == 2 and self.selectmode != SINGLE)
+		if is_basic_select or is_extended_first or is_multi_toggle:
 			if self.selectmode != MULTIPLE and t != 2:
 				self.text.tag_remove('Selection', '1.0', END)
 			if self.selectmode == EXTENDED:
 				self.lastsel = i
 			if not self.selected(i):
-				self.text.tag_add('Selection',  '%s.first' % i, '%s.last' % i)
+				self.text.tag_add('Selection', f'{i}.first', f'{i}.last')
 		elif t == 1 and self.selectmode == EXTENDED:
-			if tuple(int(n) for n in self.text.index('%s.first' % self.lastsel).split('.')) > tuple(int(n) for n in self.text.index('%s.first' % i).split('.')):
+			if tuple(int(n) for n in self.text.index(f'{self.lastsel}.first').split('.')) > tuple(int(n) for n in self.text.index(f'{i}.first').split('.')):
 				d = '-1l'
 			else:
 				d = '+1l'
-			c,f = self.text.index('%s.last %s lineend -1c' % (self.lastsel,d)),self.text.index('%s.last %s lineend -1c' % (i,d))
+			c,f = self.text.index(f'{self.lastsel}.last {d} lineend -1c'),self.text.index(f'{i}.last {d} lineend -1c')
 			while d == '-1l' or c != f:
 				r = self.text.tag_names(c)
 				if not 'Selection' in r:
 					for e in r:
 						if e.startswith('entry'):
-							self.text.tag_add('Selection', '%s.first' % e, '%s.last' % e)
+							self.text.tag_add('Selection', f'{e}.first', f'{e}.last')
 							break
 				if d == '-1l' and c == f:
 					break
-				c = self.text.index('%s %s lineend -1c' % (c,d))
+				c = self.text.index(f'{c} {d} lineend -1c')
 			self.lastsel = i
-		self.dctimer = self.after(300, self.nodc)
+		self.dctimer = self.after_managed(300, self.nodc)
 		if self.report.scmd:
 			self.report.scmd()
 
-	def nodc(self):
+	def nodc(self) -> None:
 		self.dctimer = None
 
-	def edit(self, e=None):
+	def edit(self, _event_or_entry: Event | int | None = None) -> None:
 		if self.dctimer:
-			self.after_cancel(self.dctimer)
+			self.after_managed_cancel(self.dctimer)
 			self.dctimer = None
 			return
 		self.editing = True
-		if isinstance(e,int):
-			tag_name = 'entry%s' % self.entries[e]
-		elif e == None:
+		if isinstance(_event_or_entry, int):
+			tag_name = f'entry{self.entries[_event_or_entry]}'
+		elif _event_or_entry is None:
 			tag_name = [n for n in self.text.tag_names('Selection.first') if n.startswith('entry')][0]
 		else:
-			c = '@%s,%s' % (e.x,e.y)
+			c = f'@{_event_or_entry.x},{_event_or_entry.y}'
 			tag_name = [n for n in self.text.tag_names(c) if n.startswith('entry')][0]
 		index = self.text.index(tag_name + '.first')
-		self.checkedit = self.text.get(tag_name + '.first', tag_name + '.last')
-		self.edittext.set(self.checkedit)
-		e = Entry(self.text, width=len(self.checkedit) + 5, textvariable=self.edittext, bd=1, relief=SOLID)
-		e.select_range(0,END)
-		e.bind(Key.Return, lambda _,i=index,n=tag_name: self.endedit(i,n))
-		e.bind(Focus.Out, lambda _,i=index,n=tag_name: self.endedit(i,n))
-		self.text.window_create('%s.first' % tag_name, window=e)
-		e.focus_set()
+		text = self.text.get(tag_name + '.first', tag_name + '.last')
+		self.checkedit = text
+		self.edittext.set(text)
+		entry = Entry(self.text, width=len(text) + 5, textvariable=self.edittext, bd=1, relief=SOLID)
+		entry.select_range(0,END)
+		def endedit_callback(index: str, tag_name: str) -> Callable[[Event], None]:
+			def endedit(_event: Event) -> None:
+				self.endedit(index, tag_name)
+			return endedit
+		entry.bind(Key.Return(), endedit_callback(index,tag_name))
+		entry.bind(Focus.Out(), endedit_callback(index,tag_name))
+		self.text.window_create(f'{tag_name}.first', window=entry)
+		entry.focus_set()
 		self.execute('delete',(tag_name + '.first', tag_name + '.last'))
 		self.text.tag_remove('Selection', '1.0', END)
 
-	def endedit(self, i, n):
+	def endedit(self, i: str, n: str) -> None:
 		t = self.edittext.get()
-		if self.checkedit != t and self.report.rcmd and not self.report.rcmd(self.entries.index(int(n[5:])),t):
+		if self.checkedit is not None and self.checkedit != t and self.report.rcmd and not self.report.rcmd(self.entries.index(int(n[5:])),t):
 			t = self.checkedit
 		self.execute('delete',(i + ' linestart', i + ' lineend'))
 		self.execute('insert',(i, t, n + ' Selection'))
 		self.editing = False
 		self.checkedit = None
 
-	def cur_selection(self):
-		s = []
-		for i in self.text.tag_ranges('Selection')[::2]:
-			s.extend([self.entries.index(int(n[5:])) for n in self.text.tag_names(i) if n.startswith('entry')])
-		return s
-
-	def get(self, index):
+	def get(self, index: int) -> str:
 		if self.checkedit:
 			return self.checkedit
-		return self.text.get('entry%s.first' % self.entries[index],'entry%s.last' % self.entries[index])
+		return self.text.get(f'entry{self.entries[index]}.first', f'entry{self.entries[index]}.last')
+
+	def execute(self, cmd: str, args: tuple[str, ...]) -> str:
+		try:
+			return self.tk.call((self.text_orig, cmd) + args)
+		except Exception:
+			return ""
+
+	def dispatch(self, cmd: str, *args: str) -> str:
+		if not cmd in ['insert','delete'] and not 'sel' in args:
+			return self.execute(cmd, args)
+		return ''
 
 class ReportSubList(RichList):
-	def __init__(self, parent, **kwargs):
-		self.entry = 0
-		self.entries = []
-		Frame.__init__(self, parent)
-		self.text = Text(self, cursor='arrow', height=1, width=1, font=Font.fixed(), bd=0, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, exportselection=0, **kwargs)
+	def __init__(self, parent: Misc, **kwargs: Any) -> None:
+		RichList.__init__(self, parent, {}, **kwargs)
+
+	def setup_ui(self, **text_kwargs: Any) -> None:
+		self.text = Text(self, cursor='arrow', height=1, width=1, font=Font.fixed(), bd=0, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, exportselection=False, **text_kwargs)
 		self.text.pack(fill=BOTH, expand=1)
 
-		self.text.orig = self.text._w + '_orig'
-		self.tk.call('rename', self.text._w, self.text.orig)
-		self.tk.createcommand(self.text._w, self.dispatch)
-		self.text.tag_configure('RightAlign', justify=RIGHT)
-
-		self.tag_bind = self.text.tag_bind
-		self.tag_cget = self.text.tag_cget
-		self.tag_config = self.text.tag_config
-		self.tag_delete = self.text.tag_delete
-		self.tag_lower = self.text.tag_lower
-		self.tag_names = self.text.tag_names
-		self.tag_raise = self.text.tag_raise
-		self.tag_ranges = self.text.tag_ranges
-		self.tag_unbind = self.text.tag_unbind
-		self.yview = self.text.yview
-
-	def select(self, e):
+	def select(self, e: int | str | Literal['end']) -> None:
 		pass
 
-	def insert(self, index, text, tags='RightAlign'):
+	def insert(self, index: int | Literal['end'], text: str, tags: str | Sequence[str] | None = 'RightAlign') -> str:
 		if index == END:
 			index = -1
-		e = 'entry%s' % self.entry
-		self.text.tag_bind(e, Mouse.Click_Left, self.select)
-		if tags == None:
+		e = f'entry{self.entry}'
+		# def select_callback(tag: str) -> Callable[[Event], None]:
+		# 	def select(event: Event) -> None:
+		# 		self.select(tag)
+		# 	return select
+		# self.text.tag_bind(e, Mouse.Click_Left(), select_callback(e))
+		if tags is None:
 			tags = e
-		elif isstr(tags):
-			tags = '%s %s' % (e,tags)
+		elif isinstance(tags, str):
+			tags = f'{e} {tags}'
 		else:
-			tags = '%s %s' % (e,' '.join(tags))
+			tags = f'{e} {" ".join(tags)}'
 		if self.entries:
-			i = 'entry%s.last +1l' % self.entries[index]
+			i = f'entry{self.entries[index]}.last +1l'
 		else:
 			i = END
-		if index == -1 or index == len(self.entries)-1:
+		if index in (-1, len(self.entries)-1):
 			self.entries.append(self.entry)
 		else:
 			self.entries.insert(index+1, self.entry)
 		self.entry += 1
-		return self.execute('insert',(i, '%s\n' % text, tags))
+		return self.execute('insert',(i, f'{text}\n', tags))
 
 class ReportList(Frame):
-	def __init__(self, parent, columns=[''], selectmode=SINGLE, scmd=None, rcmd=None, pcmd=None, dcmd=None, min_widths=None, **conf):
+	def __init__(self, parent: Misc, columns: list[str | None] | None = None, selectmode: SelectMode = SINGLE, *, scmd: Callable[[], None] | None = None, rcmd: Callable[[int, str], bool] | None = None, pcmd: Callable[[Event, str], None] | None = None, dcmd: Callable[[Event], None] | None = None, min_widths: list[int] | None = None, **conf: Any) -> None:
 		self.scmd = scmd
 		self.rcmd = rcmd
 		self.pcmd = pcmd
@@ -254,17 +258,18 @@ class ReportList(Frame):
 		Frame.__init__(self, parent, bd=2, relief=SUNKEN)
 		self.selectmode = selectmode
 		self.panes = PanedWindow(self, orient=HORIZONTAL, borderwidth=0, sashpad=0, sashwidth=4, sashrelief=FLAT)
-		self.columns = []
+		self.columns: list[tuple[Button, RichList]] = []
 		self.vscroll = Scrollbar(self)
 		self.vscroll.config(command=self.yview)
 		self.vscroll.pack(side=RIGHT, fill=Y)
-		for n,title in enumerate(columns):
+		for n,title in enumerate(columns or ['']):
 			l = Frame(self.panes)
-			if title == None:
+			if title is None:
 				b = Button(l, text=' ', state=DISABLED)
 			else:
 				b = Button(l, text=title)
 			b.pack(side=TOP, fill=X)
+			lb: RichList
 			if n == 0:
 				lb = EditableReportSubList(l, selectmode, self, yscrollcommand=self.yscroll, **conf)
 			else:
@@ -278,34 +283,34 @@ class ReportList(Frame):
 			self.columns.append((b,lb))
 		self.panes.pack(fill=BOTH, expand=1)
 
-	def select_set(self, i):
+	def select_set(self, i: int | Literal['end']) -> None:
 		self.columns[0][1].select(i)
 
-	def bind(self, event, cb, col=None, btn=False):
-		if col != None:
+	def bind(self, event: str, cb: Callable[[Event], None], col: int | None = None, btn: bool = False) -> None: # type: ignore[override]
+		if col is not None:
 			self.columns[col][not btn].bind(event,cb,True)
 		else:
 			for c in self.columns:
 				c[not btn].bind(event,cb,True)
 
-	def yview(self, *a):
+	def yview(self, *a: float) -> None:
 		for c in self.columns:
 			c[1].yview(*a)
 
-	def yscroll(self, *a):
+	def yscroll(self, *a: float) -> None:
 		self.vscroll.set(*a)
 		for c in self.columns:
 			c[1].yview(MOVETO, a[0])
 
-	def select(self, e, l):
-		sel = l.curselection()
-		for c in self.columns:
-			c[1].select_clear(0,END)
-			for s in sel:
-				c[1].select_set(s)
+	# def select(self, _event: Event, l: RichList) -> None:
+	# 	sel = l.cur_selection()
+	# 	for c in self.columns:
+	# 		c[1].select_clear(0,END)
+	# 		for s in sel:
+	# 			c[1].select_set(s)
 
-	def insert(self, index, text):
-		if isstr(text):
+	def insert(self, index: int | Literal['end'], text: str | list[str]) -> None:
+		if isinstance(text, str):
 			text = [text]
 		if len(text) < len(self.columns):
 			for _ in range(len(self.columns) - len(text)):
@@ -313,23 +318,23 @@ class ReportList(Frame):
 		for c,t in zip(self.columns,text):
 			c[1].insert(index, t)
 
-	def delete(self, index):
+	def delete(self, index: int | Literal['all']) -> None:
 		for c in self.columns:
 			c[1].delete(index)
 
-	def cur_selection(self):
+	def cur_selection(self) -> list[int]:
 		return self.columns[0][1].cur_selection()
 
-	def get(self, index):
+	def get(self, index: int) -> list[str]:
 		return [c[1].get(index) for c in self.columns]
 
-	def size(self):
+	def size(self) -> int: # type: ignore[override]
 		return self.columns[0][1].size()
 
 
 # import TBL,DAT
 # class Test(Tk):
-	# def __init__(self):
+	# def __init__(self) -> None:
 		# Tk.__init__(self)
 		# self.title('ReportList Test')
 
@@ -337,7 +342,7 @@ class ReportList(Frame):
 		# self.rl.pack(fill=BOTH, expand=1)
 		# for n in range(50):
 			# self.rl.insert(END, [str(n+x) for x in range(3)])
-		# self.rl.bind('<ButtonRelease-1>', self.sel)
+		# self.rl.bind(ButtonRelease.Click_Left(), self.sel)
 
 	# def sel(self, e):
 		# s = self.rl.curselection()

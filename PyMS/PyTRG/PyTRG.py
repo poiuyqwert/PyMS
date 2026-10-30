@@ -1,145 +1,369 @@
 
-from .TRGCodeText import TRGCodeText
-from .FindReplaceDialog import FindReplaceDialog
-from .CodeColors import CodeColors
+from .Config import PyTRGConfig
+from .Delegates import MainDelegate
+from .SettingsUI.SettingsDialog import SettingsDialog
+from .Tooltips import ActionsTooltip, ConditionsTooltip
 
-from ..FileFormats import TRG
+from ..FileFormats.TRG import TRG, Conditions, Actions, BriefingActions, UnitProperties, Parameters
 from ..FileFormats import TBL
-from ..FileFormats import AIBIN
+from ..FileFormats.AIBIN import AIBIN
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
-from ..Utilities.UIKit import *
+from ..Utilities import registry
+from ..Utilities import UIKit as UI
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.Settings import Settings
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
-from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
+from ..Utilities.FindReplaceDialog import FindReplaceDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
+from ..Utilities.CheckSaved import CheckSaved
+from ..Utilities import IO
+from ..Utilities.EditedState import EditedState
+from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
+from ..Utilities.SponsorDialog import SponsorDialog
 
-# def customs(trg):
-	# trg.dynamic_actions[1] = ['MySetLocationTo',[TRG.new_location,TRG.new_x1,TRG.new_y1,TRG.new_x2,TRG.new_y2,TRG.new_flags,TRG.new_properties]]
-	# trg.dynamic_actions[2] = ['MySetLocationFromDeaths',[TRG.new_location,TRG.action_tunit]]
-	# trg.dynamic_actions[3] = ['MyRemoveUnit',[TRG.action_player,TRG.action_tunit,TRG.action_location]]
-	# trg.dynamic_actions[255] = ['StickUnit',[]]
-# TRG.REGISTER.append(customs)
+import re
 
-LONG_VERSION = 'v%s' % Assets.version('PyTRG')
+from typing import Sequence
 
-class PyTRG(MainWindow):
-	def __init__(self, guifile=None):
-		self.settings = Settings('PyTRG', '1')
-		self.settings.settings.files.set_defaults({
-			'stat_txt':'MPQ:rez\\stat_txt.tbl',
-			'aiscript':'MPQ:scripts\\aiscript.bin',
-		})
+LONG_VERSION = 'v' + Assets.version('PyTRG')
 
-		#Window
-		MainWindow.__init__(self)
+class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
+	def __init__(self, guifile: str | None = None) -> None:
+		UI.MainWindow.__init__(self)
+		self.guifile = guifile
+
 		self.set_icon('PyTRG')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyTRG', Assets.version('PyTRG'))
 		ga.track(GAScreen('PyTRG'))
 		setup_trace('PyTRG', self)
-		Theme.load_theme(self.settings.get('theme'), self)
 
-		self.trg = None
-		self.file = None
-		self.edited = False
-		self.tbl = None
-		self.aibin = None
-		self.findhistory = []
-		self.replacehistory = []
-		self.findwindow = None
+		self.config_ = PyTRGConfig()
+		UI.Theme.load_theme(self.config_.theme.value, self)
+
+		self.trg: TRG.TRG | None = None
+		self.file: str | None = None
+		self.tbl: TBL.TBL
+		self.aibin: AIBIN.AIBIN
+		self.findwindow: FindReplaceDialog | None = None
+
+		self.edited_state = EditedState()
+		self.edited_state.callback += self.update_edited
 
 		self.update_title()
 
-		#Toolbar
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
-		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import TRG', Ctrl.i)
-		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savegottrg'), self.savegottrg, 'Save *.got Compatable *.trg', Ctrl.g, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export TRG', Ctrl.e, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', Ctrl.t, enabled=False, tags='file_open')
-		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
-		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', Ctrl.f, enabled=False, tags='file_open')
-		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', Ctrl.Alt.c)
-		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.tblbin, 'Manage stat_txt.tbl and aiscript.bin files', Ctrl.m)
-		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.trg editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
-		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyTRG')
-		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
+		def save() -> None:
+			self.save()
+		def saveas() -> None:
+			self.saveas()
 
-		self.completing = False
-		self.complete = [None, 0]
-		self.autocomptext = list(TRG.keywords) + ['Trigger','Conditions','Actions']
-		self.autocompfuncs = []
-		self.autocompfuncs.extend(name for name in TRG.TRG.conditions[TRG.NORMAL_TRIGGERS] if name)
-		self.autocompfuncs.extend(name for name in TRG.TRG.conditions[TRG.MISSION_BRIEFING] if name)
-		self.autocompfuncs.extend(name for name in TRG.TRG.actions[TRG.NORMAL_TRIGGERS] if name)
-		self.autocompfuncs.extend(name for name in TRG.TRG.actions[TRG.MISSION_BRIEFING] if name)
-		self.autocompfuncs.extend(name for name in TRG.TRG.new_actions if name)
-		self.autocompfuncs.sort()
+		#Menu
+		self.menu = UI.Menu(self)
+		self.config(menu=self.menu)
+
+		file_menu = self.menu.add_cascade('File')
+		file_menu.add_command('New', self.new, UI.Ctrl.n)
+		file_menu.add_command('Open...', self.open, UI.Ctrl.o)
+		file_menu.add_separator()
+		file_menu.add_command('Save', save, UI.Ctrl.s, enabled=False, tags='file_open')
+		file_menu.add_command('Save As...', saveas, UI.Ctrl.Alt.a, enabled=False, tags='file_open', underline='As')
+		file_menu.add_command('Save GOT Compatible TRG...', self.savegottrg, UI.Ctrl.g, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Import Text...', self.iimport, UI.Ctrl.i)
+		file_menu.add_command('Export Text...', self.export, UI.Ctrl.e, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open')
+		file_menu.add_separator()
+		file_menu.add_command('Check for Updates...', self.check_for_updates, underline='u')
+		file_menu.add_separator()
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='x')
+
+		# The code editor's text widget already handles the clipboard/undo keys itself (`Ctrl+A` in
+		# `CodeText`, the rest are Tk built-ins), so these items only show their accelerators.
+		# Binding them on the window too would run each action twice.
+		edit_menu = self.menu.add_cascade('Edit')
+		edit_menu.config(postcommand=self.update_edit_menu)
+		edit_menu.add_command('Undo', self.undo, UI.Ctrl.z, tags='can_undo', bind_shortcut=False)
+		edit_menu.add_command('Redo', self.redo, UI.Ctrl.y, tags='can_redo', bind_shortcut=False)
+		edit_menu.add_separator()
+		edit_menu.add_command('Cut', self.cut, UI.Ctrl.x, tags='has_selection', bind_shortcut=False)
+		edit_menu.add_command('Copy', self.copy, UI.Ctrl.c, tags='has_selection', bind_shortcut=False)
+		edit_menu.add_command('Paste', self.paste, UI.Ctrl.v, tags='can_paste', bind_shortcut=False)
+		edit_menu.add_separator()
+		edit_menu.add_command('Select All', self.select_all, UI.Ctrl.a, bind_shortcut=False)
+		edit_menu.add_separator()
+		edit_menu.add_command('Find/Replace...', self.find, UI.Ctrl.f, enabled=False, tags='file_open')
+		edit_menu.add_command('Find Next', self.find_next, UI.Key.F3, enabled=False, tags='file_open', underline='Next')
+		edit_menu.add_separator()
+		edit_menu.add_command('Test Code', self.test, UI.Ctrl.t, enabled=False, tags='file_open')
+
+		settings_menu = self.menu.add_cascade('Settings')
+		settings_menu.add_command('Manage Settings...', self.settings, UI.Ctrl.m)
+		settings_menu.add_command('Syntax Highlighting...', self.colors, UI.Ctrl.Alt.c, underline='Syntax')
+		settings_menu.add_separator()
+		settings_menu.add_command('Set as Default *.trg Editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='Default')
+
+		help_menu = self.menu.add_cascade('Help')
+		help_menu.add_command('View Help', self.help, UI.Key.F1, underline='Help')
+		help_menu.add_separator()
+		help_menu.add_command('Donate...', self.sponsor, underline='Donate')
+		help_menu.add_command('About PyTRG', self.about, underline='About')
+
+		#Toolbar
+		# Shortcuts are bound by the menubar items above
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o, bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('savegottrg'), self.savegottrg, 'Save GOT Compatible TRG', UI.Ctrl.g, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Text', UI.Ctrl.i, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Text', UI.Ctrl.e, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', UI.Ctrl.f, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', UI.Ctrl.t, enabled=False, tags='file_open', bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Syntax Highlighting', UI.Ctrl.Alt.c, bind_shortcut=False)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as Default *.trg Editor (Windows Only)', enabled=registry.IS_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'View Help', UI.Key.F1, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyTRG')
+		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
+		self.toolbar.add_button(Assets.get_image('update'), self.check_for_updates, 'Check for Updates')
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit, bind_shortcut=False)
+		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
+
+		functions: set[str] = set()
+		for condition in Conditions.definitions_registry:
+			functions.add(condition.name)
+		for action in Actions.definitions_registry + BriefingActions.definitions_registry:
+			functions.add(action.name)
+		for unit_property in UnitProperties.properties_definitions:
+			functions.add(unit_property.name)
+		self.autocomptext = self.keywords()
+		self.autocompfuncs: list[str] = sorted(functions)
 
 		# Text editor
-		self.text = TRGCodeText(self, self.edit, highlights=self.settings.get('highlights'), state=DISABLED)
-		self.text.pack(fill=BOTH, expand=1, padx=1, pady=1)
-		self.text.icallback = self.statusupdate
-		self.text.scallback = self.statusupdate
-		self.text.acallback = self.autocomplete
+		self.text = UI.CodeText(self, self.edited_state, self)
+		self.text.pack(fill=UI.BOTH, expand=1, padx=1, pady=1)
+		self.text.bind(UI.CodeText.WidgetEvent.InsertCursorMoved(), self.statusupdate)
+		self.text.text.bind(UI.WidgetEvent.Text.Selection(), self.statusupdate)
+
+		self.setup_syntax_highlighting()
 
 		#Statusbar
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.status.set('Load or create a TRG.')
-		self.codestatus = StringVar()
+		self.codestatus = UI.StringVar()
 		self.codestatus.set('Line: 1  Column: 0  Selected: 0')
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, weight=0.4)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_label(self.codestatus)
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
-		self.settings.windows.load_window_size('main', self)
+		self.config_.windows.main.load_size(self)
 
-		self.mpqhandler = MPQHandler(self.settings.get('mpqs',[]))
-		if (not 'mpqs' in self.settings or not len(self.settings['mpqs'])) and self.mpqhandler.add_defaults():
-			self.settings['mpqs'] = self.mpqhandler.mpq_paths()
+		self.mpqhandler = MPQHandler(self.config_.settings.mpqs)
+
+	def initialize(self) -> None:
 		e = self.open_files()
-
-		if guifile:
-			self.open(file=guifile)
-
+		if e:
+			self.settings(err=e)
+		if self.guifile:
+			self.open(file=self.guifile)
 		UpdateDialog.check_update(self, 'PyTRG')
 
-		if e:
-			self.tblbin(err=e)
+	def keywords(self) -> list[str]:
+		keywords = set(('Trigger', 'BriefingTrigger', 'Conditions', 'Actions', 'String', 'UnitProperties'))
+		for condition in Conditions.definitions_registry:
+			for cparameter in condition.parameters:
+				if not isinstance(cparameter, Parameters.HasKeywords):
+					continue
+				for keyword in cparameter.keywords():
+					keywords.add(keyword)
+		for action in Actions.definitions_registry + BriefingActions.definitions_registry:
+			for aparameter in action.parameters:
+				if not isinstance(aparameter, Parameters.HasKeywords):
+					continue
+				for keyword in aparameter.keywords():
+					keywords.add(keyword)
+		return sorted(list(keywords))
 
-	def open_files(self):
+	def setup_syntax_highlighting(self) -> None:
+		condition_names = [condition.name for condition in Conditions.definitions_registry]
+		action_names = [action.name for action in Actions.definitions_registry]
+		keywords = self.keywords()
+		self.syntax_highlighting = UI.SyntaxHighlighting(
+			syntax_components=(
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Comment',
+							description='The style of a comment.',
+							highlight_style=self.config_.highlights.comment
+						),
+						pattern=r'#[^\n]*$'
+					),
+				)),
+				UI.SyntaxComponent((
+					r'^[ \t]*',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Header',
+							description='The style of a `script` header.',
+							highlight_style=self.config_.highlights.header
+						),
+						pattern=r'Trigger(?=\([^\n]+\):)|Conditions(?=(?: \w+)?:)|Actions(?=(?: \w+)?:)|Constant(?= \w+:)|String(?= \d+:)|Property(?= \d+:)'
+					),
+				)),
+				UI.SyntaxComponent((
+					r'\b',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Keyword',
+							description='The style of keywords.',
+							highlight_style=self.config_.highlights.keyword
+						),
+						pattern='|'.join(keywords)
+					),
+					r'\b'
+				)),
+				UI.SyntaxComponent((
+					r'\b',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Condition',
+							description='The style of condition names.',
+							highlight_style=self.config_.highlights.condition
+						),
+						pattern='|'.join(condition_names)
+					),
+					r'\b'
+				)),
+				UI.SyntaxComponent((
+					r'\b',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Action',
+							description='The style of action names.',
+							highlight_style=self.config_.highlights.action
+						),
+						pattern='|'.join(action_names)
+					),
+					r'\b'
+				)),
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Constant',
+							description='The style of constants.',
+							highlight_style=self.config_.highlights.constant
+						),
+						pattern=r'\{\w+\}'
+					),
+				)),
+				UI.SyntaxComponent((
+					r'(?<=Constant )',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Constant Definition',
+							description='The style of constant definitions.',
+							highlight_style=self.config_.highlights.constant_definition
+						),
+						pattern=r'\w+'
+					),
+					r'(?=:)'
+				)),
+				UI.SyntaxComponent((
+					r'\b',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Number',
+							description='The style of all numbers.',
+							highlight_style=self.config_.highlights.number
+						),
+						pattern=r'\d+|x(?:2|4|8|16|32)|0x[0-9a-fA-F]+'
+					),
+					r'\b'
+				)),
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='TBL Format',
+							description='The style of TBL formatted characters, like null: <0>',
+							highlight_style=self.config_.highlights.tbl_format
+						),
+						pattern=r'<0*(?:25[0-5]|2[0-4]\d|1?\d?\d)?>'
+					),
+				)),
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Operator',
+							description='The style of the operators:\n    ( ) , = { }',
+							highlight_style=self.config_.highlights.operator
+						),
+						pattern=r'[():,\-]'
+					),
+				)),
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Newline',
+							description='The style of newlines',
+							highlight_style=self.config_.highlights.newline
+						),
+						pattern=r'\n'
+					),
+				)),
+			),
+			highlight_components=(
+				UI.HighlightComponent(
+					name='Selection',
+					description='The style of selected text in the editor.',
+					highlight_style=self.config_.highlights.selection,
+					tag='sel'
+				),
+				UI.HighlightComponent(
+					name='Error',
+					description='The style of highlighted errors in the editor.',
+					highlight_style=self.config_.highlights.error
+				),
+				UI.HighlightComponent(
+					name='Warning',
+					description='The style of highlighted warnings in the editor.',
+					highlight_style=self.config_.highlights.warning
+				),
+			)
+		)
+		self.text.set_syntax_highlighting(self.syntax_highlighting)
+
+		ActionsTooltip(self.text.text)
+		ConditionsTooltip(self.text.text)
+
+	def open_files(self) -> (PyMSError | None):
 		self.mpqhandler.open_mpqs()
 		err = None
 		try:
 			tbl = TBL.TBL()
 			aibin = AIBIN.AIBIN()
-			tbl.load_file(self.mpqhandler.get_file(self.settings.settings.files['stat_txt']))
-			aibin.load_file(self.mpqhandler.get_file(self.settings.settings.files['aiscript']))
+			tbl.load(self.mpqhandler.load_file(self.config_.settings.files.stat_txt.file_path))
+			aibin.load(self.mpqhandler.load_file(self.config_.settings.files.aiscript.file_path), self.mpqhandler.load_file(self.config_.settings.files.bwscript.file_path))
 		except PyMSError as e:
 			err = e
 		else:
@@ -148,318 +372,331 @@ class PyTRG(MainWindow):
 		self.mpqhandler.close_mpqs()
 		return err
 
-	def unsaved(self):
-		if self.trg and self.edited:
-			file = self.file
-			if not file:
-				file = 'Unnamed.trg'
-			save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-			if save != MessageBox.NO:
-				if save == MessageBox.CANCEL:
-					return True
-				if self.file:
-					self.save()
-				else:
-					self.saveas()
+	def check_saved(self) -> CheckSaved:
+		if not self.trg or not self.edited_state.is_edited:
+			return CheckSaved.saved
+		file = self.file
+		if not file:
+			file = 'Unnamed.trg'
+		save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=UI.MessageBox.YES)
+		if save is None:
+			return CheckSaved.cancelled
+		if not save:
+			return CheckSaved.saved
+		if self.file:
+			return self.save()
+		return self.saveas()
 
-	def is_file_open(self):
+	def is_file_open(self) -> bool:
 		return not not self.trg
 
-	def action_states(self):
-		self.toolbar.tag_enabled('file_open', self.is_file_open())
-		self.text['state'] = NORMAL if self.is_file_open() else DISABLED
+	def action_states(self) -> None:
+		is_file_open = self.is_file_open()
+		self.toolbar.tag_enabled('file_open', is_file_open)
+		self.menu.tag_enabled('file_open', is_file_open)
+		self.text['state'] = UI.NORMAL if self.is_file_open() else UI.DISABLED
 
-	def statusupdate(self):
-		if not self.completing:
-			self.text.taboverride = False
-			self.complete = [None, 0]
-		i = self.text.index(INSERT).split('.') + [0]
-		item = self.text.tag_ranges('Selection')
+	def statusupdate(self, _event: UI.Event | None = None) -> None:
+		line,column = self.text.index(UI.INSERT).split('.')
+		selected = 0
+		item = self.text.tag_ranges('sel')
 		if item:
-			i[2] = len(self.text.get(*item))
-		self.codestatus.set('Line: %s  Column: %s  Selected: %s' % tuple(i))
+			selected = len(self.text.get(*item))
+		self.codestatus.set(f'Line: {line}  Column: {column}  Selected: {selected}')
 
-	def edit(self):
-		if not self.completing:
-			self.text.taboverride = False
-			self.complete = [None, 0]
-		self.mark_edited()
-
-	def update_title(self):
+	def update_title(self) -> None:
 		file_path = self.file
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.trg'
 		if not file_path:
-			self.title('PyTRG %s' % LONG_VERSION)
+			self.title(f'PyTRG {LONG_VERSION}')
 		else:
-			self.title('PyTRG %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyTRG {LONG_VERSION} ({file_path})')
 
-	def mark_edited(self, edited=True):
-		self.edited = edited
-		self.editstatus['state'] = NORMAL if edited else DISABLED
+	def update_edited(self, edited: bool = True) -> None:
+		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 
-	def new(self, key=None):
-		if not self.unsaved():
-			self.text.re = None
-			self.trg = TRG.TRG(self.tbl,self.aibin)
-			self.file = None
-			self.status.set('Editing new TRG.')
-			self.update_title()
-			self.action_states()
-			self.text.delete('1.0', END)
-			self.mark_edited(False)
+	def new(self) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		self.trg = TRG.TRG(self.tbl,self.aibin)
+		self.file = None
+		self.status.set('Editing new TRG.')
+		self.update_title()
+		self.action_states()
+		self.text.load('')
 
-	def open(self, key=None, file=None):
-		if not self.unsaved():
-			if file == None:
-				file = self.settings.lastpath.trg.select_open_file(self, title='Open TRG', filetypes=[FileType.trg()])
-				if not file:
-					return
-			trg = TRG.TRG()
-			try:
-				trg.load_file(file)
-				data = trg.decompile_data()
-			except PyMSError as e:
-				try:
-					trg.load_file(file, True)
-					data = trg.decompile_data()
-				except PyMSError as e:
-					ErrorDialog(self, e)
-					return
-			self.text.re = None
-			self.trg = trg
-			self.update_title()
-			self.file = file
-			self.status.set('Load Successful!')
-			self.action_states()
-			self.text.delete('1.0', END)
-			self.text.insert('1.0', data.rstrip('\n'))
-			self.text.edit_reset()
-			self.text.see('1.0')
-			self.mark_edited(False)
-
-	def iimport(self, key=None):
-		if not self.unsaved():
-			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
+	def open(self, file: str | None = None) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		if file is None:
+			file = self.config_.last_path.trg.select_open(self)
 			if not file:
 				return
+		trg = TRG.TRG(self.tbl, self.aibin)
+		try:
+			trg.load(file)
+			data = IO.output_to_text(trg.decompile)
+		except PyMSError:
 			try:
-				text = open(file,'r').read()
-			except:
-				ErrorDialog(self, PyMSError('Import','Could not open file "%s"' % file))
+				trg.load(file, TRG.Format.got)
+				data = IO.output_to_text(trg.decompile)
+			except PyMSError as e:
+				ErrorDialog(self, e)
 				return
-			self.text.re = None
-			self.trg = TRG.TRG()
-			self.file = file
-			self.update_title()
-			self.status.set('Import Successful!')
-			self.action_states()
-			self.text.delete('1.0', END)
-			self.text.insert('1.0', text.rstrip('\n'))
-			self.text.edit_reset()
-			self.mark_edited(False)
+		self.trg = trg
+		self.update_title()
+		self.file = file
+		self.status.set('Load Successful!')
+		self.action_states()
+		self.text.load(data.rstrip('\n'))
+		self.text.see('1.0')
 
-	def save(self, key=None):
-		self.saveas(file_path=self.file)
-
-	def saveas(self, key=None, file_path=None):
-		if not file_path:
-			file_path = self.settings.lastpath.trg.select_save_file(self, title='Save TRG As', filetypes=[FileType.trg()])
-			if not file_path:
-				return
-		elif not check_allow_overwrite_internal_file(file_path):
+	def iimport(self) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		file = self.config_.last_path.txt.select_open(self)
+		if not file:
 			return
 		try:
-			self.trg.interpret(self.text)
-			self.trg.compile(file_path)
+			with open(file, 'r', encoding='utf-8') as f:
+				text = f.read()
+		except Exception:
+			ErrorDialog(self, PyMSError('Import', f'Could not open file "{file}"'))
+			return
+		self.trg = TRG.TRG(self.tbl, self.aibin)
+		self.update_title()
+		self.status.set('Import Successful!')
+		self.action_states()
+		self.text.load(text.rstrip('\n'))
+		self.text.edit_modified(True)
+
+	def save(self) -> CheckSaved:
+		return self.saveas(file_path=self.file)
+
+	def saveas(self, file_path: str | None = None) -> CheckSaved:
+		if not self.trg:
+			return CheckSaved.saved
+		if not file_path:
+			file_path = self.config_.last_path.trg.select_save(self)
+			if not file_path:
+				return CheckSaved.cancelled
+		elif not check_allow_overwrite_internal_file(file_path):
+			return CheckSaved.cancelled
+		try:
+			text = self.text.get('1.0', UI.END)
+			self.trg.compile(text) # TODO: Warnings
+			self.trg.save(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-			return
+			return CheckSaved.cancelled
 		self.status.set('Save Successful!')
-		self.mark_edited(False)
+		self.text.edit_modified(False)
 		self.file = file_path
 		self.update_title()
+		return CheckSaved.saved
 
-	def savegottrg(self, key=None):
-		file = self.settings.lastpath.trg.select_save_file(self, title='Save *.got Compatable *.trg As', filetypes=[FileType.trg()])
+	def savegottrg(self) -> None:
+		if not self.trg:
+			return
+		file = self.config_.last_path.trg.select_save(self, title='Save GOT Compatable TRG')
 		if not file:
-			return True
+			return
 		try:
-			self.trg.interpret(self.text)
-			self.trg.compile(file, True)
+			text = self.text.get('1.0', UI.END)
+			self.trg.compile(text) # TODO: Warnings
+			self.trg.save(file, TRG.Format.got)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		self.status.set('*.got Compatable *.trg Saved Successfully!')
+		self.status.set('GOT Compatable TRG Saved Successfully!')
 
-	def export(self, key=None):
-		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
+	def export(self) -> None:
+		file = self.config_.last_path.txt.select_save(self)
 		if not file:
-			return True
+			return
 		try:
-			f = open(file,'w')
-			f.write(self.text.get('1.0',END))
-			f.close()
+			with open(file, 'w', encoding='utf-8') as f:
+				f.write(self.text.get('1.0',UI.END))
 			self.status.set('Export Successful!')
 		except PyMSError as e:
 			ErrorDialog(self, e)
+		except Exception:
+			ErrorDialog(self, PyMSError('Export', f'Could not save file "{file}"'))
 
-	def test(self, key=None):
-		i = TRG.TRG()
+	def test(self) -> None:
+		i = TRG.TRG(self.tbl, self.aibin)
 		try:
-			warnings = i.interpret(self)
+			text = self.text.get('1.0', UI.END)
+			warnings = i.compile(text)
 		except PyMSError as e:
-			if e.line != None:
-				self.text.see('%s.0' % e.line)
-				self.text.tag_add('Error', '%s.0' % e.line, '%s.end' % e.line)
+			if e.line is not None:
+				self.text.see(f'{e.line}.0')
+				self.text.tag_add('Error', f'{e.line}.0', f'{e.line}.end')
 			if e.warnings:
 				for w in e.warnings:
-					if w.line != None:
-						self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
+					if w.line is not None:
+						self.text.tag_add('Warning', f'{w.line}.0', f'{w.line}.end')
 			ErrorDialog(self, e)
 			return
 		if warnings:
 			c = False
 			for w in warnings:
-				if w.line != None:
+				if w.line is not None:
 					if not c:
-						self.text.see('%s.0' % w.line)
+						self.text.see(f'{w.line}.0')
 						c = True
-					self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
+					self.text.tag_add('Warning', f'{w.line}.0', f'{w.line}.end')
 			WarningDialog(self, warnings, True)
 		else:
-			MessageBox.showinfo(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.')
+			UI.MessageBox.showinfo(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.')
 
-	def close(self, key=None):
-		if not self.unsaved():
-			self.trg = None
-			self.file = None
-			self.update_title()
-			self.status.set('Load or create a TRG.')
-			self.text.delete('1.0', END)
-			self.mark_edited(False)
-			self.action_states()
+	def close(self) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		self.trg = None
+		self.file = None
+		self.update_title()
+		self.status.set('Load or create a TRG.')
+		self.text.load('')
+		self.action_states()
 
-	def find(self, key=None):
+	def find(self) -> None:
 		if not self.findwindow:
-			self.findwindow = FindReplaceDialog(self)
-			self.bind(Key.F3, self.findwindow.findnext)
+			self.findwindow = FindReplaceDialog(self, self.text, self.config_.windows.find_replace)
 		else:
-			self.findwindow.make_active()
-			self.findwindow.findentry.focus_set(highlight=True)
+			self.findwindow.show()
 
-	def colors(self, key=None):
-		c = CodeColors(self)
-		if c.cont:
-			self.text.setup(c.cont)
-			self.highlights = c.cont
+	def find_next(self) -> None:
+		# Without a search term there is nothing to find yet, so open the dialog to enter one
+		if not self.findwindow or not self.findwindow.find.get():
+			self.find()
+			return
+		self.findwindow.findnext(from_parent=True)
 
-	def tblbin(self, key=None, err=None):
-		data = [
-			('File Settings',[
-				('stat_txt.tbl', 'Contains Unit and AI Script names', 'stat_txt', 'TBL'),
-				('aiscript.bin', "Contains AI ID's and references to names in stat_txt.tbl", 'aiscript', 'AIBIN'),
-			]),
-			('Theme',)
-		]
-		SettingsDialog(self, data, (550,380), err, mpqhandler=self.mpqhandler)
+	def update_edit_menu(self) -> None:
+		self.menu.tag_enabled('can_undo', bool(self.text.edit_canundo()))
+		self.menu.tag_enabled('can_redo', bool(self.text.edit_canredo()))
+		self.menu.tag_enabled('has_selection', self.text.has_selection())
+		self.menu.tag_enabled('can_paste', self.text.clipboard_not_empty())
 
-	def register(self, e=None):
+	def undo(self) -> None:
+		if self.text.edit_canundo():
+			self.text.edit_undo()
+
+	def redo(self) -> None:
+		if self.text.edit_canredo():
+			self.text.edit_redo()
+
+	def cut(self) -> None:
+		if self.text.has_selection():
+			self.text.copy(cut=True)
+
+	def copy(self) -> None:
+		if self.text.has_selection():
+			self.text.copy()
+
+	def paste(self) -> None:
+		self.text.paste()
+
+	def select_all(self) -> None:
+		self.text.selectall()
+
+	def colors(self) -> None:
+		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())
+		if dialog.updated:
+			self.text.update_highlight_styles()
+
+	def settings(self, err: PyMSError | None = None) -> None:
+		SettingsDialog(parent=self, config=self.config_, delegate=self, err=err, mpq_handler=self.mpqhandler)
+
+	def register_registry(self) -> None:
 		try:
-			register_registry('PyTRG', 'trg', '')
+			registry.register('PyTRG', 'trg', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def help(self, e=None):
-		HelpDialog(self, self.settings, 'Help/Programs/PyTRG.md')
+	def help(self) -> None:
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyTRG.md')
 
-	def about(self, key=None):
+	def about(self) -> None:
 		AboutDialog(self, 'PyTRG', LONG_VERSION, [('FaRTy1billion','For creating TrigPlug and giving me the specs!')])
 
-	def exit(self, e=None):
-		if not self.unsaved():
-			self.settings.windows.save_window_size('main', self)
-			self.settings['highlights'] = self.text.highlights
-			self.settings.save()
-			self.destroy()
+	def sponsor(self) -> None:
+		SponsorDialog(self)
 
-	def readlines(self):
-		return self.text.get('1.0', END).split('\n')
+	def check_for_updates(self) -> None:
+		UpdateDialog(self, 'PyTRG')
 
-	def autocomplete(self):
-		i = self.text.tag_ranges('Selection')
-		if i and '\n' in self.text.get(*i):
-			return False
-		self.completing = True
-		self.text.taboverride = ' (,):'
-		def docomplete(s, e, v, t):
-			ss = '%s+%sc' % (s,len(t))
-			se = '%s+%sc' % (s,len(v))
-			self.text.delete(s, ss)
-			self.text.insert(s, v)
-			self.text.tag_remove('Selection', '1.0', END)
-			self.text.tag_add('Selection', ss, se)
-			if self.complete[0] == None:
-				self.complete = [t, 1, s, se]
-			else:
-				self.complete[1] += 1
-				self.complete[3] = se
-		if self.complete[0] != None:
-			t,f,s,e = self.complete
-		else:
-			s,e = self.text.index('%s -1c wordstart' % INSERT),self.text.index('%s -1c wordend' % INSERT)
-			t,f = self.text.get(s,e),0
-		if t and t[0].lower() in 'abcdefghijklmnopqrstuvwxyz{':
-			ac = list(self.autocomptext)
-			m = re.match('\\A\\s*[a-z\\{]+\\Z',t)
-			if not m:
-				ac.extend(self.autocompfuncs)
-			for id,ai in self.aibin.ais.iteritems():
-				if not id in ac:
-					ac.append(id)
-				cs = TBL.decompile_string(self.tbl.strings[ai[1]][:-1], '\x0A\x28\x29\x2C')
-				if not cs in ac:
-					ac.append(cs)
-			for ns in self.tbl.strings[:228]:
-				cs = ns.split('\x00')
-				if cs[1] != '*':
-					cs = TBL.decompile_string('\x00'.join(cs[:2]), '\x0A\x28\x29\x2C')
-				else:
-					cs = TBL.decompile_string(cs[0], '\x0A\x28\x29\x2C')
-				if not cs in ac:
-					ac.append(cs)
-			head = '1.0'
-			while True:
-				item = self.text.tag_nextrange('ConstDef', head)
-				if not item:
-					break
-				var = '{%s}' % self.text.get(*item)
-				if not var in ac:
-					ac.append(var)
-				head = item[1]
-			ac.sort()
-			if m:
-				ac = self.autocompfuncs + ac
-			r = False
-			matches = []
-			for v in ac:
-				if v and v.lower().startswith(t.lower()):
-					matches.append(v)
-			if matches:
-				if f < len(matches):
-					docomplete(s,e,matches[f],t)
-					self.text.taboverride = ' (,):'
-				elif self.complete[0] != None:
-					docomplete(s,e,t,t)
-					self.complete[1] = 0
-				r = True
-			self.after(1, self.completed)
-			return r
+	def exit(self) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		self.config_.windows.main.save_size(self)
+		self.config_.save()
+		self.destroy()
 
-	def completed(self):
-		self.completing = False
-
-	def destroy(self):
+	def destroy(self) -> None:
 		if self.findwindow:
-			Toplevel.destroy(self.findwindow)
-		MainWindow.destroy(self)
+			self.findwindow.destroy()
+		UI.MainWindow.destroy(self)
+
+	# MainDelegate
+	def get_trg(self) -> TRG.TRG:
+		assert self.trg is not None
+		return self.trg
+
+	# CodeTextDelegate
+	def comment_symbols(self) -> list[str]:
+		return ['#']
+
+	def comment_symbol(self) -> str:
+		return '#'
+
+	def autocomplete_override_keys(self) -> str:
+		return ' (,):'
+
+	RE_LOWERCASE_WORD = re.compile(r'\A\s*[a-z\{]+\Z')
+	def get_autocomplete_options(self, line: str) -> list[str] | None:
+		text = line.split(' ')[-1]
+		if not text or not text[0].lower() in 'abcdefghijklmnopqrstuvwxyz{':
+			return None
+		options = list(self.autocomptext)
+		is_lowercase_word = PyTRG.RE_LOWERCASE_WORD.match(text) is not None
+		if not is_lowercase_word:
+			options.extend(self.autocompfuncs)
+		for header in self.aibin.list_scripts():
+			if not header.id in options:
+				options.append(header.id)
+			script_name = TBL.decompile_string(self.tbl.strings[header.string_id][:-1], '\x0A\x28\x29\x2C')
+			if not script_name in options:
+				options.append(script_name)
+		for ns in self.tbl.strings[:228]:
+			components = ns.split('\x00')
+			if components[1] != '*':
+				name = TBL.decompile_string('\x00'.join(components[:2]), '\x0A\x28\x29\x2C')
+			else:
+				name = TBL.decompile_string(components[0], '\x0A\x28\x29\x2C')
+			if not name in options:
+				options.append(name)
+		head = '1.0'
+		while True:
+			item = self.text.tag_nextrange('ConstantDefinition', head)
+			if not item:
+				break
+			constant = f'{{{self.text.get(*item)}}}'
+			if not constant in options:
+				options.append(constant)
+			head = item[1]
+		options.sort()
+		if is_lowercase_word:
+			options = self.autocompfuncs + options
+		return options
+
+	def jump_highlights(self) -> Sequence[str] | None:
+		return ('Error', 'Warning')
+
+	def jump_sections(self) -> Sequence[str] | None:
+		return ('Header',)
+
+	def find_definition(self, name: str) -> str | None:
+		return None

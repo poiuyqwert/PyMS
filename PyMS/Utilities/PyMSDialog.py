@@ -1,76 +1,57 @@
 
-from .UIKit import *
-
-class PyMSDialog(Toplevel):
-	def __init__(self, parent, title, center=True, grabwait=True, hidden=False, escape=False, resizable=(True,True), set_min_size=(False,False)):
-		self._initial_max_size = None # type: tuple[int, int]
-		Toplevel.__init__(self, parent)
+from . import UIKit as UI
+#
+class PyMSDialog(UI.Toplevel):
+	def __init__(self, parent: UI.Misc, title: str, *, center: bool = True, grabwait: bool = True, escape: bool = False, resizable: tuple[bool, bool] = (True,True), set_min_size: tuple[bool, bool] = (False,False)) -> None:
+		UI.Toplevel.__init__(self, parent)
+		self.conceal()
 		self.title(title)
 		self.protocol('WM_DELETE_WINDOW', self.cancel)
 		if escape:
-			self.bind(Shortcut.Close, self.cancel)
-		#self.transient(parent)
+			self.bind(UI.Shortcut.Close(), self.cancel)
+			# `Shortcut.Close` is the platform close shortcut (`Cmd+W` on Mac), so `Escape` is
+			# bound separately to dismiss the dialog consistently across platforms
+			if UI.Shortcut.Close is not UI.Key.Escape:
+				self.bind(UI.Key.Escape(), self.cancel)
 		self.parent = parent
-		focus = self.widgetize()
-		self.update_idletasks()
+		try:
+			focus: UI.Misc | None = self.widgetize()
+			self.update_idletasks()
+			required_size = UI.Size(self.winfo_reqwidth(), self.winfo_reqheight())
+			if set_min_size[0] or set_min_size[1]:
+				self.minsize(required_size.width if set_min_size[0] else 0, required_size.height if set_min_size[1] else 0)
+			if center:
+				self.recenter()
+			self.resizable(*resizable)
+			self.setup_complete()
+		finally:
+			self.reveal()
 		if not focus:
 			focus = self
 		focus.focus_set()
-		w,h,_,_,_ = parse_geometry(self.winfo_geometry())
-		screen_w = self.winfo_screenwidth()
-		screen_h = self.winfo_screenheight()
-		if center:
-			self.geometry('+%d+%d' % ((screen_w-w)/2,(screen_h-h)/2))
-		self.resizable(*resizable)
-		min_w = 0
-		max_w = screen_w
-		min_h = 0
-		max_h = screen_h
-		if not resizable[0]:
-			min_w = max_w = w
-		elif set_min_size[0]:
-			min_w = w
-		if not resizable[1]:
-			min_h = max_h = h
-		elif set_min_size[1]:
-			min_h = h
-		self.minsize(min_w, min_h)
-		self.maxsize(max_w, max_h)
-		self.setup_complete()
 		if grabwait:
 			self.grab_wait()
 
-	def grab_wait(self):
-		self.grab_set()
-		self.wait_window(self)
+	def recenter(self) -> None:
+		"""Center the dialog on screen at its current required size (e.g. after its contents change)."""
+		self.update_idletasks()
+		required_size = UI.Size(self.winfo_reqwidth(), self.winfo_reqheight())
+		screen_size = UI.Size(self.winfo_screenwidth(), self.winfo_screenheight())
+		self.geometry(UI.GeometryAdjust(pos=required_size.centered_in(screen_size)).text)
 
-	def widgetize(self):
-		pass
-	def setup_complete(self):
+	def widgetize(self) -> UI.Misc | None:
+		return None
+	def setup_complete(self) -> None:
 		pass
 
-	def dismiss(self):
+	def dismiss(self) -> None:
 		self.withdraw()
 		self.update_idletasks()
 		self.master.focus_set()
 		self.destroy()
 
-	def ok(self, event=None):
+	def ok(self, _event: UI.Event | None = None) -> None:
 		self.dismiss()
 
-	def cancel(self, event=None):
+	def cancel(self, _event: UI.Event | None = None) -> None:
 		self.dismiss()
-
-	def maxsize(self, width=None, height=None):
-		if width and height and self._initial_max_size == None:
-			self._initial_max_size = Toplevel.maxsize(self)
-		return Toplevel.maxsize(self, width, height)
-
-	# `wm_state` will be `'zoomed'` when `window.size == window.maxsize`, not just when it is maximized
-	def is_maximized(self):
-		is_maximized = (self.wm_state() == 'zoomed')
-		if is_maximized and self._initial_max_size != None:
-			cur_max_width, cur_max_height = self.maxsize()
-			initial_max_width, initial_max_height = self._initial_max_size
-			is_maximized = (cur_max_width >= initial_max_width and cur_max_height >= initial_max_height)
-		return is_maximized

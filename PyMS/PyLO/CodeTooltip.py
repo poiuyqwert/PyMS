@@ -1,42 +1,47 @@
 
 from .Constants import RE_COORDINATES
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
+from ..Utilities.trace import get_tracer
 
-class CodeTooltip(Tooltip):
+class SelectionTooltip(UI.Tooltip):
 	tag = 'Selection'
 
-	def __init__(self, parent):
-		Tooltip.__init__(self, parent)
+	def __init__(self, parent: UI.Text) -> None:
+		self.text_widget = parent
+		UI.Tooltip.__init__(self, parent)
 
-	def setupbinds(self, press):
+	def setupbinds(self, press: bool) -> None:
 		if self.tag:
-			self.parent.tag_bind(self.tag, Cursor.Enter, self.enter, '+')
-			self.parent.tag_bind(self.tag, Cursor.Leave, self.leave, '+')
-			self.parent.tag_bind(self.tag, Mouse.Motion, self.motion, '+')
-			self.parent.tag_bind(self.tag, Mouse.Click_Left, self.leave, '+')
-			self.parent.tag_bind(self.tag, Mouse.ButtonPress, self.leave)
+			self.text_widget.tag_bind(self.tag, UI.Cursor.Enter(), self.enter, '+')
+			self.text_widget.tag_bind(self.tag, UI.Cursor.Leave(), self.leave, '+')
+			self.text_widget.tag_bind(self.tag, UI.Mouse.Motion(), self.motion, '+')
+			self.text_widget.tag_bind(self.tag, UI.Mouse.Click_Left(), self.leave, '+')
+			self.text_widget.tag_bind(self.tag, UI.Mouse.ButtonPress(), self.leave)
 
-	def showtip(self):
+	def showtip(self) -> None:
 		if self.tip:
 			return
-		pos = list(self.parent.winfo_pointerxy())
-		head,tail = self.parent.tag_prevrange(self.tag,self.parent.index('@%s,%s+1c' % (pos[0] - self.parent.winfo_rootx(),pos[1] - self.parent.winfo_rooty())))
-		m = RE_COORDINATES.match(self.parent.get(head,tail))
+		pos = list(self.text_widget.winfo_pointerxy())
+		tag_range = self.text_widget.tag_prevrange(self.tag,self.text_widget.index(f'@{pos[0] - self.text_widget.winfo_rootx()},{pos[1] - self.text_widget.winfo_rooty()}+1c'))
+		if not tag_range:
+			return
+		head,tail = tag_range
+		m = RE_COORDINATES.match(self.text_widget.get(head,tail))
 		if not m:
 			return
 		try:
-			self.tip = Toplevel(self.parent, relief=SOLID, borderwidth=1)
-			self.tip.wm_overrideredirect(1)
-			c = Canvas(self.tip, borderwidth=0, width=255, height=255, background='#FFFFC8', highlightthickness=0, takefocus=False)
+			self.tip = UI.TooltipWindow(self.text_widget, relief=UI.SOLID, borderwidth=1)
+			self.tip.make_frameless(self.text_widget.winfo_toplevel())
+			c = UI.Canvas(self.tip, borderwidth=0, width=255, height=255, background='#FFFFC8', highlightthickness=0, takefocus=False)
 			c.pack()
-			c.create_line(123,128,134,128,fill='#00FF00')
-			c.create_line(128,123,128,134,fill='#00FF00')
+			c.create_line((123,128),(134,128),fill='#00FF00')
+			c.create_line((128,123),(128,134),fill='#00FF00')
 			x,y = int(m.group(1)),int(m.group(2))
-			c.create_line(-x+123,y+128,-x+134,y+128,fill='#0000FF')
-			c.create_line(-x+128,y+123,-x+128,y+134,fill='#0000FF')
-			pos = list(self.parent.winfo_pointerxy())
-			self.tip.wm_geometry('+%d+%d' % (pos[0],pos[1]+22))
+			c.create_line((-x+123,y+128),(-x+134,y+128),fill='#0000FF')
+			c.create_line((-x+128,y+123),(-x+128,y+134),fill='#0000FF')
+			pos = list(self.text_widget.winfo_pointerxy())
+			self.tip.wm_geometry(f'+{pos[0]}+{pos[1]+22}')
 			self.tip.update_idletasks()
 			move = False
 			if pos[0] + self.tip.winfo_reqwidth() > self.tip.winfo_screenwidth():
@@ -46,13 +51,15 @@ class CodeTooltip(Tooltip):
 				move = True
 				pos[1] -= self.tip.winfo_reqheight() + 44
 			if move:
-				self.tip.wm_geometry('+%d+%d' % (pos[0],pos[1]+22))
+				self.tip.wm_geometry(f'+{pos[0]}+{pos[1]+22}')
 			self.tip['background'] = '#FF0000'
-		except:
+		except Exception:
+			if tracer := get_tracer():
+				tracer.trace_error()
 			if self.tip:
 				try:
 					self.tip.destroy()
-				except:
+				except Exception:
 					pass
 				self.tip = None
 			return

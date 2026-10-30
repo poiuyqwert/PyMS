@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ..CHKSection import CHKSection
 from ..CHKRequirements import CHKRequirements
 
@@ -6,8 +8,12 @@ from ....Utilities.utils import pad, named_flags
 
 import struct
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..CHK import CHK
+
 class CHKUnitProperties:
-	def __init__(self, chk):
+	def __init__(self, chk: CHK) -> None:
 		self.chk = chk
 		self.validAbilities = 0
 		self.validProperties = 0
@@ -19,22 +25,22 @@ class CHKUnitProperties:
 		self.hangerUnits = 0
 		self.abilityStates = 0
 
-	def load_data(self, data):
+	def load_data(self, data: bytes) -> None:
 		self.validAbilities,self.validProperties,self.owner,self.health,self.shields,self.energy,self.resources,self.hangerUnits,self.abilityStates = \
-			struct.unpack('<2H4BL2H4x', data[:20])
+			tuple(int(v) for v in struct.unpack('<2H4BL2H4x', data[:20]))
 
-	def save_data(self):
+	def save_data(self) -> bytes:
 		return struct.pack('<2H4BL2H4x', self.validAbilities,self.validProperties,self.owner,self.health,self.shields,self.energy,self.resources,self.hangerUnits,self.abilityStates)
 
-	def decompile(self):
+	def decompile(self) -> str:
 		result = '\t#\n'
 		data = {
 			'ValidAbilities': named_flags(self.validAbilities, ["Cloak", "Burrow", "In Transit", "Hullucinated", "Invincible"], 16),
 			'ValidProperties': named_flags(self.validProperties, ["Owner", "Health", "Shields", "Energy", "Resources", "Hanger"], 16),
 			'Owner': self.owner + 1,
-			'Health': '%s%%' % self.health,
-			'Shields': '%s%%' % self.shields,
-			'Energy': '%s%%' % self.energy,
+			'Health': f'{self.health}%%',
+			'Shields': f'{self.shields}%%',
+			'Energy': f'{self.energy}%%',
 			'Resources': self.resources,
 			'HangerUnits': self.hangerUnits,
 			'AbilityStates': named_flags(self.validAbilities, ["Cloaked", "Burrowed", "In Transit", "Hullucinated", "Invincible"], 16),
@@ -42,20 +48,20 @@ class CHKUnitProperties:
 		for key in ['ValidAbilities','ValidProperties','Owner','Health','Shields','Energy','Resources','HangerUnits','AbilityStates']:
 			value = data[key]
 			if isinstance(value, tuple):
-				result += '\t%s%s\n' % (pad('#'), value[0])
+				result += f'\t{pad("#")}{value[0]}\n'
 				value = value[1]
-			result += '\t%s\n' % pad(key, value)
+			result += f'\t{pad(key, str(value))}\n'
 		return result
 
 class CHKSectionUPRP(CHKSection):
-	NAME = 'UPRP'
+	NAME = b'UPRP'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
-	
-	def __init__(self, chk):
+
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
-		self.properties = []
-	
-	def load_data(self, data):
+		self.properties: list[CHKUnitProperties] = []
+
+	def load_data(self, data: bytes) -> None:
 		self.properties = []
 		o = 0
 		while o+20 <= len(data):
@@ -63,15 +69,15 @@ class CHKSectionUPRP(CHKSection):
 			properties.load_data(data[o:o+20])
 			self.properties.append(properties)
 			o += 20
-	
-	def save_data(self):
-		result = ''
+
+	def save_data(self) -> bytes:
+		result = b''
 		for properties in self.properties:
 			result += properties.save_data()
 		return result
-	
-	def decompile(self):
-		result = '%s:\n' % (self.NAME)
+
+	def decompile(self) -> str:
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for properties in self.properties:
 			result += properties.decompile()
 		return result

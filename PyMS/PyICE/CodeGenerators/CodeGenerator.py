@@ -1,34 +1,68 @@
 
-from ...Utilities.UIKit import Frame
+from __future__ import annotations
 
-class CodeGeneratorEditor(Frame):
-	def __init__(self, parent, generator):
-		self.generator = generator
-		Frame.__init__(self, parent)
+from ..Config import PyICEConfig
 
-	def save(self):
-		raise NotImplementedError(self.__class__.__name__ + '.save()')
+from ...Utilities import UIKit as UI
+from ...Utilities import JSON
+from ...Utilities.PyMSError import PyMSError
+from ...Utilities import Config
 
-class CodeGeneratorType(object):
-	TYPES = {}
-	TYPE = None
+from typing import Self, Type, Callable, TypeVar, Generic
+
+class CodeGeneratorType(JSON.Codable):
+	@classmethod
+	def type_name(cls) -> str:
+		raise NotImplementedError(cls.__name__ + '.type_name()')
 
 	@classmethod
-	def validate(cls, save):
-		raise NotImplementedError(cls.__name__ + '.validate()')
+	def from_json(cls, json: JSON.Object) -> Self:
+		raise NotImplementedError(cls.__name__ + '.from_json()')
 
-	def __init__(self, save=None):
-		pass
+	def to_json(self) -> JSON.Object:
+		return {
+			'type': self.type_name()
+		}
 
 	# None for infinite
-	def count(self):
+	def count(self) -> int | None:
 		raise NotImplementedError(self.__class__.__name__ + '.count()')
 
-	def value(self, lookup_value):
+	def value(self, lookup_value: Callable[[str], str]) -> str:
 		raise NotImplementedError(self.__class__.__name__ + '.value()')
 
-	def description(self):
+	def description(self) -> str:
 		raise NotImplementedError(self.__class__.__name__ + '.description()')
 
-	def save(self):
-		return {'type': self.TYPE}
+	def build_editor(self, parent: UI.Misc, config: PyICEConfig) -> CodeGeneratorEditor:
+		raise NotImplementedError(self.__class__.__name__ + '.editor()')
+
+T = TypeVar('T', bound=CodeGeneratorType)
+class CodeGeneratorEditor(UI.Frame, Generic[T]):
+	def __init__(self, parent: UI.Misc, generator: T, window_geometry_config: Config.WindowGeometry):
+		self.generator = generator
+		self.window_geometry_config = window_geometry_config
+		UI.Frame.__init__(self, parent)
+
+	def save(self) -> None:
+		raise NotImplementedError(self.__class__.__name__ + '.save()')
+
+	def is_resizable(self) -> tuple[bool, bool]:
+		raise NotImplementedError(self.__class__.__name__ + '.is_resizable()')
+
+_REGISTRY: dict[str, Type[CodeGeneratorType]] = {}
+
+def register_type(gen_type: Type[CodeGeneratorType]) -> None:
+	_REGISTRY[gen_type.type_name()] = gen_type
+
+def lookup_type(name: str) -> Type[CodeGeneratorType] | None:
+	return _REGISTRY.get(name)
+
+def discriminate_type(json: JSON.Object) -> Type[CodeGeneratorType]:
+	name = json.get('type')
+	if not isinstance(name, str):
+		raise PyMSError('JSON', 'Invalid JSON format (object missing discriminator type)')
+	gen_type = lookup_type(name)
+	if not gen_type:
+		raise PyMSError('JSON', f'Invalid JSON format (object has invalid discriminator type `{name}`)')
+	return gen_type

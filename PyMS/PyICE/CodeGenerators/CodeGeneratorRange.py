@@ -1,68 +1,84 @@
 
-from .CodeGenerator import CodeGeneratorEditor, CodeGeneratorType
+from __future__ import annotations
 
-from ...Utilities.UIKit import *
+from . import CodeGenerator
+from ..Config import PyICEConfig
 
-class CodeGeneratorEditorRange(CodeGeneratorEditor):
-	RESIZABLE = (False,False)
+from ...Utilities import UIKit as UI
+from ...Utilities import JSON
+from ...Utilities.PyMSError import PyMSError
+from ...Utilities import Config
 
-	def __init__(self, parent, generator):
-		CodeGeneratorEditor.__init__(self, parent, generator)
+from dataclasses import dataclass
 
-		self.start = IntegerVar(0,[0,None])
+from typing import Self, Callable
+
+@dataclass
+class CodeGeneratorTypeRange(CodeGenerator.CodeGeneratorType):
+	start: int = 0
+	stop: int = 0
+	step: int = 1
+
+	@classmethod
+	def type_name(cls) -> str:
+		return 'range'
+
+	@classmethod
+	def from_json(cls, json: JSON.Object) -> Self:
+		start = JSON.get(json, 'start', int)
+		stop = JSON.get(json, 'stop', int)
+		step = JSON.get(json, 'step', int)
+		if step == 0:
+			raise PyMSError('JSON', 'Invalid JSON (`step` has invalid value 0)')
+		return cls(start, stop, step)
+
+	def to_json(self) -> JSON.Object:
+		json = CodeGenerator.CodeGeneratorType.to_json(self)
+		json['start'] = self.start
+		json['stop'] = self.stop
+		json['step'] = self.step
+		return json
+
+	def count(self) -> int:
+		return len(list(range(self.start,self.stop+1,self.step)))
+
+	def value(self, lookup_value: Callable[[str], str]) -> str:
+		n = int(lookup_value('n'))
+		r = list(range(self.start,self.stop+1,self.step))
+		if n >= len(r):
+			return ''
+		return str(r[n])
+
+	def description(self) -> str:
+		return f'{self.start} to {self.stop}, by adding {self.step}'
+
+	def build_editor(self, parent: UI.Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
+		return CodeGeneratorEditorRange(parent, self, config.windows.generator.editor.range)
+
+class CodeGeneratorEditorRange(CodeGenerator.CodeGeneratorEditor[CodeGeneratorTypeRange]):
+	def __init__(self, parent: UI.Misc, generator: CodeGeneratorTypeRange, window_geometry_config: Config.WindowGeometry) -> None:
+		CodeGenerator.CodeGeneratorEditor.__init__(self, parent, generator, window_geometry_config)
+
+		self.start = UI.IntegerVar(0,[0,None])
 		self.start.set(self.generator.start)
-		self.stop = IntegerVar(0,[0,None])
+		self.stop = UI.IntegerVar(0,[0,None])
 		self.stop.set(self.generator.stop)
-		self.step = IntegerVar(1,[1,None])
+		self.step = UI.IntegerVar(1,[1,None])
 		self.step.set(self.generator.step)
 
-		Label(self, text='From ').pack(side=LEFT)
-		Entry(self, textvariable=self.start, width=5).pack(side=LEFT)
-		Label(self, text=' to ').pack(side=LEFT)
-		Entry(self, textvariable=self.stop, width=5).pack(side=LEFT)
-		Label(self, text=', by adding ').pack(side=LEFT)
-		Entry(self, textvariable=self.step, width=5).pack(side=LEFT)
+		UI.Label(self, text='From ').pack(side=UI.LEFT)
+		UI.Entry(self, textvariable=self.start, width=5).pack(side=UI.LEFT)
+		UI.Label(self, text=' to ').pack(side=UI.LEFT)
+		UI.Entry(self, textvariable=self.stop, width=5).pack(side=UI.LEFT)
+		UI.Label(self, text=', by adding ').pack(side=UI.LEFT)
+		UI.Entry(self, textvariable=self.step, width=5).pack(side=UI.LEFT)
 
-	def save(self):
+	def save(self) -> None:
 		self.generator.start = self.start.get()
 		self.generator.stop = self.stop.get()
 		self.generator.step = self.step.get()
 
-class CodeGeneratorTypeRange(CodeGeneratorType):
-	TYPE = 'range'
-	EDITOR = CodeGeneratorEditorRange
+	def is_resizable(self) -> tuple[bool, bool]:
+		return (False, False)
 
-	@classmethod
-	def validate(cls, save):
-		return 'start' in save and isinstance(save['start'], int) \
-			and 'stop' in save and isinstance(save['stop'], int) \
-			and 'step' in save and isinstance(save['step'], int) and save['step'] != 0
-
-	def __init__(self, save={}):
-		self.start = save.get('start',0)
-		self.stop = save.get('stop',0)
-		self.step = save.get('step',1)
-
-	def count(self):
-		return len(range(self.start,self.stop+1,self.step))
-
-	def value(self, lookup_value):
-		n = lookup_value('n')
-		r = range(self.start,self.stop+1,self.step)
-		if n >= len(r):
-			return ''
-		return r[n]
-
-	def description(self):
-		return '%d to %d, by adding %d' % (self.start,self.stop,self.step)
-
-	def save(self):
-		save = CodeGeneratorType.save(self)
-		save.update({
-			'start': self.start,
-			'stop': self.stop,
-			'step': self.step
-		})
-		return save
-
-CodeGeneratorType.TYPES[CodeGeneratorTypeRange.TYPE] = CodeGeneratorTypeRange
+CodeGenerator.register_type(CodeGeneratorTypeRange)

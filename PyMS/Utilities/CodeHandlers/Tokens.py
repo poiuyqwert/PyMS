@@ -1,0 +1,100 @@
+
+import re
+
+from typing import Self, Sequence
+
+class Token:
+	def __init__(self, raw_value: str) -> None:
+		self.raw_value = raw_value
+
+	@classmethod
+	def match(cls, code: str, offset: int) -> (Self | None):
+		raise NotImplementedError(cls.__name__ + '.match()')
+
+	def __repr__(self) -> str:
+		return f'<{self.__class__.__name__} {self.raw_value!r}>'
+
+class EOFToken(Token):
+	def __init__(self) -> None:
+		Token.__init__(self, '')
+
+	@classmethod
+	def match(cls, code: str, offset: int) -> (Self | None):
+		return None
+
+	def __repr__(self) -> str:
+		return f'<{self.__class__.__name__}>'
+
+class RegexToken(Token):
+	_regexp: re.Pattern[str]
+
+	@classmethod
+	def match(cls, code: str, offset: int) -> (Self | None):
+		match = cls._regexp.match(code, offset)
+		if not match:
+			return None
+		return cls(match.group(0))
+
+class IdentifierToken(RegexToken):
+	_regexp = re.compile(r'[a-zA-Z_][a-zA-Z_0-9]*')
+
+class IntegerToken(RegexToken):
+	_regexp = re.compile(r'-?[0-9]+')
+
+class HexToken(RegexToken):
+	_regexp = re.compile(r'-?0x[0-9a-fA-F]+')
+
+class FloatToken(RegexToken):
+	_regexp = re.compile(r'-?[0-9]+\.[0-9]+')
+
+class StringToken(RegexToken):
+	_regexp = re.compile(r'"([^\\"]|\\.)*"|\'([^\\\']|\\.)*\'')
+
+class SymbolToken(Token):
+	_literals: Sequence[str]
+	__regexp: re.Pattern[str] | None = None
+
+	@classmethod
+	def match(cls, code: str, offset: int) -> (Self | None):
+		if cls.__regexp is None:
+			cls.__regexp = re.compile('|'.join(re.escape(literal) for literal in sorted(cls._literals, key=len, reverse=True)))
+		match = cls.__regexp.match(code, offset)
+		if not match:
+			return None
+		return cls(match.group(0))
+
+class KeywordToken(Token):
+	_keywords: Sequence[str]
+	__regexp: re.Pattern[str] | None = None
+
+	@classmethod
+	def match(cls, code: str, offset: int) -> (Self | None):
+		if cls.__regexp is None:
+			alternatives = '|'.join(re.escape(keyword) for keyword in sorted(cls._keywords, key=len, reverse=True))
+			cls.__regexp = re.compile(rf'\b(?:{alternatives})\b')
+		match = cls.__regexp.match(code, offset)
+		if not match:
+			return None
+		return cls(match.group(0))
+
+class WhitespaceToken(RegexToken):
+	_regexp = re.compile(r'[ \t]+')
+
+class NewlineToken(RegexToken):
+	_regexp = re.compile(r'[\r\n]+')
+
+	def newline_count(self) -> int:
+		newlines = self.raw_value.replace('\r\n', '\n')
+		return len(newlines)
+
+class CommentToken(RegexToken):
+	_regexp = re.compile(r'(?:#|;)[^\r\n]*')
+
+class UnknownToken(RegexToken):
+	# A single character, so an unmatched character can't absorb registered tokens after it (like `)` or `,`)
+	_regexp = re.compile(r'\s|\S')
+
+class BooleanToken(RegexToken):
+	# The trailing word boundary stops a longer identifier (e.g. `truebox`) from
+	# being lexed as the boolean `true` plus a leftover token.
+	_regexp = re.compile(r'(?:true|false|1|0)\b')

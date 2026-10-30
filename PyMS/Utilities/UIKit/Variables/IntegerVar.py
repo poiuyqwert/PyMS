@@ -1,8 +1,7 @@
 
-try: # Python 2
-	from Tkinter import StringVar
-except: # Python 3
-	from tkinter import StringVar
+from tkinter import StringVar
+
+from typing import overload, Literal
 
 class IntegerVar(StringVar):
 	class UpdateCase:
@@ -11,11 +10,11 @@ class IntegerVar(StringVar):
 		user = 2
 		both = (programmatic | user)
 
-	def __init__(self, val=0, range=[None,None], exclude=[], callback=None, allow_hex=False, maxout=None, callback_when=UpdateCase.both, limit_when=UpdateCase.user):#, _tag=None):
+	def __init__(self, val=0, val_range=None, exclude=None, callback=None, *, allow_hex=False, maxout=None, callback_when=UpdateCase.both, limit_when=UpdateCase.user):#, _tag=None):
 		self.defaultval = val
 		self.lastvalid = val
-		self.range = range
-		self.exclude = exclude
+		self.range = val_range if val_range is not None else [None, None]
+		self.exclude = exclude if exclude is not None else []
 		self.callback = callback
 		self.allow_hex = allow_hex
 		self.maxout = maxout
@@ -25,7 +24,7 @@ class IntegerVar(StringVar):
 		StringVar.__init__(self, value=val)
 		# self.set(val)
 		self.is_hex = False
-		self.trace('w', self.editvalue)
+		self.trace_add('write', self.editvalue)
 		self.update_case = IntegerVar.UpdateCase.user
 
 	def editvalue(self, *_):
@@ -45,28 +44,28 @@ class IntegerVar(StringVar):
 					s = self.get()
 					# if self._tag:
 					# 	print(s, self.range)
-					if self.range[0] != None and self.range[0] >= 0 and self.get(True).startswith('-'):
+					if self.range[0] is not None and self.range[0] >= 0 and self.get(True).startswith('-'):
 						# if self._tag:
 						# 	print('at 1')
-						raise Exception()
+						raise ValueError('Negative value not allowed')
 					if s in self.exclude:
 						# if self._tag:
 						#	 print('at 2')
-						raise Exception()
+						raise ValueError('Value is excluded')
 					refresh = False
-				except:
+				except Exception:
 					#raise
 					s = self.lastvalid
 				else:
-					if self.range[0] != None and s < self.range[0]:
+					if self.range[0] is not None and s < self.range[0]:
 						# if self._tag:
 						# 	print('at 3')
 						s = self.range[0]
 						refresh = True
-					elif self.range[1] != None and s > self.range[1]:
+					elif self.range[1] is not None and s > self.range[1]:
 						# if self._tag:
 						# 	print('at 4')
-						if self.maxout != None:
+						if self.maxout is not None:
 							s = self.maxout
 						else:
 							s = self.range[1]
@@ -83,7 +82,7 @@ class IntegerVar(StringVar):
 						self.set(s, update_case=IntegerVar.UpdateCase.internal)
 				if self.callback and self.callback_when & self.update_case:
 					self.callback(s)
-			elif self.range[0] != None:
+			elif self.range[0] is not None:
 				s = self.range[0]
 			else:
 				s = self.defaultval
@@ -98,7 +97,7 @@ class IntegerVar(StringVar):
 		# 	print('Set %s %s' % (value, update_case))
 		self.update_case = update_case
 		if self.limit_when & update_case & IntegerVar.UpdateCase.programmatic:
-			value = self.apply_limits(value)[1]
+			value = self.apply_limits(value)
 			# if self._tag:
 			# 	print('Setting %s %s' % (value, update_case))
 		StringVar.set(self, value)
@@ -106,10 +105,14 @@ class IntegerVar(StringVar):
 		# if self._tag:
 		# 	print('Set %s done' % value)
 
-	def get(self, s=False):
+	@overload # type: ignore[override]
+	def get(self, s: Literal[False] = False) -> int: ...
+	@overload
+	def get(self, s: Literal[True] = True) -> str: ...
+	def get(self, s: bool = False) -> int | str:
 		try:
 			string = StringVar.get(self)
-		except:
+		except Exception:
 			string = ''
 		if s:
 			return string
@@ -119,16 +122,16 @@ class IntegerVar(StringVar):
 				return 0
 			try:
 				return int(string, 16)
-			except:
+			except Exception:
 				return 0
 		self.is_hex = False
 		try:
 			return int(string or 0)
-		except:
+		except Exception:
 			return 0
 
-	def setrange(self, range):
-		self.range = list(range)
+	def setrange(self, val_range):
+		self.range = list(val_range)
 		value = self.get()
 		new_value = self.apply_limits(value)
 		if new_value != value:
@@ -138,8 +141,8 @@ class IntegerVar(StringVar):
 	def apply_limits(self, value):
 		# if self._tag:
 		# 	print(value, self.range)
-		min,max = self.range
-		if min != None and min >= 0 and self.get(True).startswith('-'):
+		min_value, max_value = self.range
+		if min_value is not None and min_value >= 0 and self.get(True).startswith('-'):
 			# if self._tag:
 			# 	print('Invalid negative')
 			value = self.lastvalid
@@ -147,15 +150,15 @@ class IntegerVar(StringVar):
 			# if self._tag:
 			# 	print('Exclude')
 			value = self.lastvalid
-		elif min != None and value < min:
+		elif min_value is not None and value < min_value:
 			# if self._tag:
 			# 	print('Minimum')
-			value = min
-		elif max != None and value > max:
+			value = min_value
+		elif max_value is not None and value > max_value:
 			# if self._tag:
 			# 	print('Maximum')
-			if self.maxout != None:
+			if self.maxout is not None:
 				value = self.maxout
 			else:
-				value = max
+				value = max_value
 		return value

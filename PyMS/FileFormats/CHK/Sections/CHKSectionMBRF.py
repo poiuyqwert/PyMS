@@ -1,28 +1,33 @@
 
-from ....FileFormats import TRG
-
 from ..CHKSection import CHKSection
 from ..CHKRequirements import CHKRequirements
 
+from ....FileFormats.TRG import TRG
+
+from ....Utilities import IO
+
+import io
+
 class CHKSectionMBRF(CHKSection):
-	NAME = 'MBRF'
+	NAME = b'MBRF'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
-	
-	def __init__(self, chk):
-		CHKSection.__init__(self, chk)
-		self.trg = None
-	
-	def load_data(self, data):
+
+	trg: TRG.TRG
+
+	def load_data(self, data: bytes) -> None:
 		self.trg = TRG.TRG(self.chk.stat_txt, self.chk.aiscript)
-		self.trg.load_data(data, True, True)
-	
-	def save_data(self):
+		self.trg.load(data, TRG.Format.briefing)
+
+	def save_data(self) -> bytes:
 		if self.trg:
-			return self.trg.compile_data(True)
-		return ''
-	
-	def decompile(self):
-		result = '%s:\n' % (self.NAME)
+			f = io.BytesIO()
+			# TODO: Deal with warnings?
+			_ = self.trg.save(f)
+			return f.getvalue()
+		return b''
+
+	def decompile(self) -> str:
+		result = f'{self.NAME.decode("ascii")}:\n'
 		if self.trg:
-			result += self.trg.decompile_data()
+			result += IO.output_to_text(self.trg.decompile)
 		return result

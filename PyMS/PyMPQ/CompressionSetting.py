@@ -1,37 +1,54 @@
 
+from __future__ import annotations
+
 from ..FileFormats.MPQ.SFmpq import Z_BEST_SPEED, Z_DEFAULT_COMPRESSION, Z_NO_COMPRESSION, Z_BEST_COMPRESSION, MAWA_QUALITY_LOW, MAWA_QUALITY_MEDIUM, MAWA_QUALITY_HIGH
 from ..FileFormats.MPQ.MPQ import MPQCompressionFlag
 
-class CompressionOption(object):
-	def __init__(self, type):
-		self.type = type
+from ..Utilities.PyMSError import PyMSError
 
-	def name(self):
-		if self == CompressionOption.NoCompression:
-			return 'None'
-		elif self == CompressionOption.Standard:
-			return 'Standard'
-		elif self == CompressionOption.Deflate:
-			return 'Deflate'
-		elif self == CompressionOption.Audio:
-			return 'Audio'
-		elif self == CompressionOption.Auto:
-			return 'Auto'
+from enum import Enum
 
-	def compression_type(self):
-		if self == CompressionOption.Standard:
-			return MPQCompressionFlag.pkware
-		elif self == CompressionOption.Deflate:
-			return MPQCompressionFlag.zlib
-		elif self == CompressionOption.Audio:
-			return MPQCompressionFlag.huffman | MPQCompressionFlag.wav_mono
-		else:
-			return MPQCompressionFlag.none
+from typing import assert_never
 
-	def level_count(self):
+class CompressionOption(Enum):
+	NoCompression = 'none'
+	Standard = 'standard'
+	Deflate = 'deflate'
+	Audio = 'audio'
+	Auto = 'auto'
+
+	def display_name(self) -> str:
+		match self:
+			case CompressionOption.NoCompression:
+				return 'None'
+			case CompressionOption.Standard:
+				return 'Standard'
+			case CompressionOption.Deflate:
+				return 'Deflate'
+			case CompressionOption.Audio:
+				return 'Audio'
+			case CompressionOption.Auto:
+				return 'Auto'
+			case _:
+				assert_never(self)
+
+	def compression_type(self) -> int:
+		match self:
+			case CompressionOption.Standard:
+				return MPQCompressionFlag.pkware
+			case CompressionOption.Deflate:
+				return MPQCompressionFlag.zlib
+			case CompressionOption.Audio:
+				return MPQCompressionFlag.huffman | MPQCompressionFlag.wav_mono
+			case CompressionOption.NoCompression | CompressionOption.Auto:
+				return MPQCompressionFlag.none
+			case _:
+				assert_never(self)
+
+	def level_count(self) -> int:
 		return len(self.compression_levels())
 
-	def compression_levels(self):
+	def compression_levels(self) -> tuple[int, ...]:
 		if self == CompressionOption.Deflate:
 			return tuple(range(min(Z_DEFAULT_COMPRESSION, Z_NO_COMPRESSION, Z_BEST_COMPRESSION), max(Z_DEFAULT_COMPRESSION, Z_NO_COMPRESSION, Z_BEST_COMPRESSION)+1))
 		elif self == CompressionOption.Audio:
@@ -39,79 +56,68 @@ class CompressionOption(object):
 		else:
 			return ()
 
-	def setting(self, level=0):
+	def setting(self, level: int = 0) -> CompressionSetting:
 		return CompressionSetting(self, max(0, min(level, self.level_count()-1)))
 
-	def __eq__(self, other):
-		if not isinstance(other, CompressionOption):
-			return False
-		return self.type == other.type
-
-	def __str__(self):
-		return self.type
-
-CompressionOption.NoCompression = CompressionOption('none')
-CompressionOption.Standard = CompressionOption('standard')
-CompressionOption.Deflate = CompressionOption('deflate')
-CompressionOption.Audio = CompressionOption('audio')
-CompressionOption.Auto = CompressionOption('auto')
-
-class CompressionSetting(object):
-	def __init__(self, type, level):
-		self.type = type
+class CompressionSetting:
+	def __init__(self, compression_type: CompressionOption, level: int) -> None:
+		self.type = compression_type
 		self.level = level
 
-	def compression_level(self):
+	def compression_level(self) -> int:
 		compression_levels = self.type.compression_levels()
 		if not compression_levels:
 			return 0
 		return compression_levels[self.level]
 
-	def level_name(self):
+	def level_name(self) -> str:
 		compression_level = self.compression_level()
-		if self == CompressionOption.Deflate:
-			name = '%d' % compression_level
-			if compression_level == Z_DEFAULT_COMPRESSION:
-				name = 'Default'
-			elif compression_level == Z_NO_COMPRESSION:
-				name += ' (None)'
-			elif compression_level == Z_BEST_SPEED:
-				name += ' (Best Speed)'
-			elif compression_level == Z_BEST_COMPRESSION:
-				name += ' (Best Compression)'
-			return name
-		elif self == CompressionOption.Audio:
-			if compression_level == MAWA_QUALITY_LOW:
-				return 'Lowest (Best Quality)'
-			elif compression_level == MAWA_QUALITY_MEDIUM:
-				return 'Medium'
-			elif compression_level == MAWA_QUALITY_HIGH:
-				return 'Highest (Least Space)'
-		else:
-			return ''
+		match self.type:
+			case CompressionOption.Deflate:
+				name = str(compression_level)
+				if compression_level == Z_DEFAULT_COMPRESSION:
+					name = 'Default'
+				elif compression_level == Z_NO_COMPRESSION:
+					name += ' (None)'
+				elif compression_level == Z_BEST_SPEED:
+					name += ' (Best Speed)'
+				elif compression_level == Z_BEST_COMPRESSION:
+					name += ' (Best Compression)'
+				return name
+			case CompressionOption.Audio:
+				if compression_level == MAWA_QUALITY_LOW:
+					return 'Lowest (Best Quality)'
+				elif compression_level == MAWA_QUALITY_MEDIUM:
+					return 'Medium'
+				else: #if compression_level == MAWA_QUALITY_HIGH:
+					return 'Highest (Least Space)'
+			case CompressionOption.NoCompression | CompressionOption.Standard | CompressionOption.Auto:
+				return ''
+			case _:
+				assert_never(self.type)
 
 	@staticmethod
-	def parse_value(menu_value):
-		type = menu_value
+	def parse_value(menu_value: str) -> CompressionSetting:
+		type_name,_,level_str = menu_value.partition(':')
+		try:
+			compression_type = CompressionOption(type_name)
+		except ValueError as exc:
+			raise PyMSError('Compression', f"Invalid compression type '{type_name}'") from exc
 		level = 0
-		if ':' in menu_value:
-			type,level = menu_value.split(':')
-			type = CompressionOption(type)
-			level = max(0, min(int(level), type.level_count()-1))
-		else:
-			type = CompressionOption(type)
-		return type.setting(level)
+		if level_str:
+			try:
+				level = int(level_str)
+			except ValueError as exc:
+				raise PyMSError('Compression', f"Invalid compression level '{level_str}' for compression type '{type_name}'") from exc
+		return compression_type.setting(level)
 
-	def __eq__(self, other):
+	def __eq__(self, other: object) -> bool:
 		if isinstance(other, CompressionSetting):
 			return self.type == other.type and self.level == other.level
-		elif isinstance(other, CompressionOption):
-			return self.type == other
-		else:
-			return False
+		return NotImplemented
 
-	def __str__(self):
+	def __str__(self) -> str:
 		if self.type.level_count() > 0:
-			return '%s:%d' % (self.type, self.level)
+			return f'{self.type.value}:{self.level}'
 		else:
-			return str(self.type)
+			return self.type.value

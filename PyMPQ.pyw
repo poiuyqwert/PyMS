@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat, Requirement
 check_compat('PyMPQ', Requirement.MPQ)
 
-def main():
+def main(): # type: () -> None
 	from PyMS.PyMPQ.PyMPQ import PyMPQ, LONG_VERSION
 
 	import os, optparse, sys
@@ -12,7 +12,7 @@ def main():
 		gui = PyMPQ()
 		gui.startup()
 	else:
-		p = optparse.OptionParser(usage='usage: PyMPQ [options] <inp> [out]', version='PyMPQ %s' % LONG_VERSION)
+		p = optparse.OptionParser(usage='usage: PyMPQ [options] <inp> [out]', version='PyMPQ ' + LONG_VERSION)
 		p.add_option('--gui', help="Opens a file with the GUI", default='')
 		opt, _ = p.parse_args()
 		if opt.gui:

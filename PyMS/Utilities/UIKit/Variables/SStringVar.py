@@ -1,8 +1,5 @@
 
-try: # Python 2
-	from Tkinter import StringVar
-except: # Python 3
-	from tkinter import StringVar
+from tkinter import StringVar
 
 class SStringVar(StringVar):
 	def __init__(self, val='', length=0, callback=None):
@@ -12,7 +9,7 @@ class SStringVar(StringVar):
 		self.lastvalid = val
 		self.set(val)
 		self.callback = callback
-		self.trace('w', self.editvalue)
+		self.trace_add('write', self.editvalue)
 
 	def editvalue(self, *_):
 		if self.check:

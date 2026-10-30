@@ -1,13 +1,21 @@
 
+from __future__ import annotations
+
 from .CHKSectionSTR import CHKSectionSTR
 from .CHKSectionVER import CHKSectionVER
 
 from ..CHKSection import CHKSection
 from ..CHKRequirements import CHKRequirements
 
+from ...TBL import decompile_string
+
 from ....Utilities.utils import pad, named_flags
 
 import struct
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..CHK import CHK
 
 class CHKLocation:
 	NO_ELEVATION = 0
@@ -21,59 +29,66 @@ class CHKLocation:
 	ALL_AIR = (LOW_AIR | MEDIUM_AIR | HIGH_AIR)
 	ALL_ELEVATIONS = (ALL_GROUND | ALL_AIR)
 
-	def __init__(self, chk):
+	def __init__(self, chk: CHK) -> None:
 		self.chk = chk
+
+		self.start = [0,0]
+		self.end = [0,0]
+		self.name = 0
+		self.elevation = CHKLocation.NO_ELEVATION
+
 		self.clear()
 
-	def load_data(self, data):
-		startX,startY,endX,endY,self.name,self.elevation = struct.unpack('<4L2H', data[:20])
+	def load_data(self, data: bytes) -> None:
+		startX,startY,endX,endY,self.name,self.elevation = tuple(int(v) for v in struct.unpack('<4L2H', data[:20]))
 		self.start = [startX,startY]
 		self.end = [endX,endY]
 
-	def save_data(self):
+	def save_data(self) -> bytes:
 		return struct.pack('<4L2H', self.start[0],self.start[1],self.end[0],self.end[1],self.name,self.elevation)
 
-	def decompile(self):
+	def decompile(self) -> str:
 		result = '\t#\n'
 		string = ''
-		strings = self.chk.get_section(CHKSectionSTR.NAME)
+		strings = self.chk.get_section(CHKSectionSTR)
+		assert strings is not None
 		if strings and self.name > -1 and self.name < len(strings.strings):
-			string = ' # ' + strings.strings[self.name].text
+			string = ' # ' + decompile_string(strings.strings[self.name].text)
 		data = {
-			'Start': pad('%s,%s' % (self.start[0],self.start[1])),
-			'End': pad('%s,%s' % (self.end[0],self.end[1])),
-			'Name': '%s%s' % (self.name, string),
+			'Start': pad(f'{self.start[0]},{self.start[1]}'),
+			'End': pad(f'{self.end[0]},{self.end[1]}'),
+			'Name': f'{self.name}{string}',
 			'Elevation': named_flags(self.elevation, ["Low Ground", "Med. Ground", "High Ground", "Low Air", "Med. Air", "High Air"], 16),
 		}
 		for key in ['Start','End','Name','Elevation']:
 			value = data[key]
 			if isinstance(value, tuple):
-				result += '\t%s%s\n' % (pad('#'), value[0])
+				result += f'\t{pad("#")}{value[0]}\n'
 				value = value[1]
-			result += '\t%s\n' % pad(key, value)
+			result += f'\t{pad(key, str(value))}\n'
 		return result
 
-	def in_use(self):
+	def in_use(self) -> bool:
 		return self.name > 0 or self.start[0] != 0 or self.start[1] != 0 or self.end[0] != 0 or self.end[1] != 0 # or self.elevation != 0
 
-	def normalized_coords(self):
+	def normalized_coords(self) -> tuple[int, int, int, int]:
 		return (min(self.start[0],self.end[0]), min(self.start[1],self.end[1]), max(self.start[0],self.end[0]), max(self.start[1],self.end[1]))
 
-	def clear(self):
+	def clear(self) -> None:
 		self.start = [0,0]
 		self.end = [0,0]
 		self.name = 0
 		self.elevation = CHKLocation.NO_ELEVATION
 
 class CHKSectionMRGN(CHKSection):
-	NAME = 'MRGN'
+	NAME = b'MRGN'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
-	
-	def __init__(self, chk):
+
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
-		self.locations = []
-	
-	def load_data(self, data):
+		self.locations: list[CHKLocation] = []
+
+	def load_data(self, data: bytes) -> None:
 		self.locations = []
 		o = 0
 		while o+20 <= len(data):
@@ -82,20 +97,24 @@ class CHKSectionMRGN(CHKSection):
 			self.locations.append(location)
 			o += 20
 
-	def process_data(self):
-		ver = self.chk.get_section(CHKSectionVER.NAME)
+	def requires_post_processing(self) -> bool:
+		return True
+
+	def process_data(self) -> None:
+		ver = self.chk.get_section(CHKSectionVER)
+		assert ver is not None
 		count = 255 if ver.version >= CHKSectionVER.SC104 else 64
 		while len(self.locations) < count:
 			self.locations.append(CHKLocation(self.chk))
 
-	def save_data(self):
-		result = ''
+	def save_data(self) -> bytes:
+		result = b''
 		for location in self.locations:
 			result += location.save_data()
 		return result
 
-	def decompile(self):
-		result = '%s:\n' % (self.NAME)
+	def decompile(self) -> str:
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for location in self.locations:
 			result += location.decompile()
 		return result

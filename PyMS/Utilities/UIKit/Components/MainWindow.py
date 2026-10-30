@@ -1,8 +1,21 @@
 
-from ..Widgets import *
+from ..Widgets import Tk
+from ..Widgets.Extensions import WindowExtensions
 
-class MainWindow(Tk):
-	def startup(self):
+from typing import Any
+
+class MainWindow(Tk, WindowExtensions):
+	def __init__(self, *args: Any, **kwargs: Any) -> None:
+		Tk.__init__(self, *args, **kwargs)
+		# Stay invisible until `startup()` so the window doesn't flash at the
+		# OS-chosen position/size before its config geometry is loaded.
+		self.conceal()
+
+	def initialize(self) -> None:
+		pass
+
+	def startup(self) -> None:
+		self.reveal()
 		self.lift()
 		self.call('wm', 'attributes', '.', '-topmost', True)
 		self.after_idle(self.call, 'wm', 'attributes', '.', '-topmost', False)
@@ -10,57 +23,45 @@ class MainWindow(Tk):
 		# On Mac the main window doesn't get focused, so we use Cocoa to focus it
 		try:
 			from os import getpid
-			from Cocoa import NSRunningApplication, NSApplicationActivateIgnoringOtherApps # pylint: disable=no-name-in-module
+			from Cocoa import NSRunningApplication, NSApplicationActivateIgnoringOtherApps # type: ignore[import] # pylint: disable=import-error
 
 			app = NSRunningApplication.runningApplicationWithProcessIdentifier_(getpid())
 			app.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
-		except:
+		except Exception:
 			pass
+		self.after_managed(1, self.initialize)
 		self.mainloop()
 
-	def maxsize(self, width=None, height=None):
-		if width and height and not hasattr(self, '_initial_max_size'):
-			self._initial_max_size = Tk.maxsize(self)
-		return Tk.maxsize(self, width, height)
-
-	# `wm_state` will be `'zoomed'` when `window.size == window.maxsize`, not just when it is maximized
-	def is_maximized(self):
-		is_maximized = (self.wm_state() == 'zoomed')
-		if is_maximized and hasattr(self, '_initial_max_size'):
-			cur_max_width, cur_max_height = self.maxsize()
-			initial_max_width, initial_max_height = self._initial_max_size
-			is_maximized = (cur_max_width >= initial_max_width and cur_max_height >= initial_max_height)
-		return is_maximized
-
-	def set_icon(self, name): # type: (str) -> None
-		from ... import Assets
+	def set_icon(self, name: str) -> None:
+		from ... import Assets  # pylint: disable=cyclic-import
 		import os
 		try:
-			icon = Assets.get_image('%s.ico' % name)
+			icon = Assets.lookup_image(f'{name}.ico')
 			if not icon:
-				icon = Assets.get_image(name)
+				icon = Assets.lookup_image(name)
 			if not icon:
-				icon = Assets.get_image('PyMS.ico')
+				icon = Assets.lookup_image('PyMS.ico')
 			if not icon:
-				icon = Assets.get_image('PyMS')
-			try:
-				self.tk.call('wm', 'iconphoto', self._w, '-default', icon) # Python3: self.wm_iconphoto(True, icon)
-			except:
-				self.wm_iconbitmap(default=icon)
-			return
-		except:
+				icon = Assets.lookup_image('PyMS')
+			if icon:
+				try:
+					self.tk.call('wm', 'iconphoto', getattr(self, '_w'), '-default', icon) # Python3: self.wm_iconphoto(True, icon)
+					return
+				except Exception:
+					self.wm_iconbitmap(default=icon)
+					return
+		except Exception:
 			pass
 		try:
-			icon_path = Assets.image_path('%s.xbm' % name)
+			icon_path = Assets.image_path(f'{name}.xbm')
 			if not os.path.exists(icon_path):
 				icon_path = Assets.image_path('PyMS.xbm')
-			icon_path = '@%s' % icon_path
+			icon_path = f'@{icon_path}'
 			self.wm_iconbitmap(default=icon_path)
-			return
-		except:
+		except Exception:
 			pass
 
-	def destroy(self):
-		from ... import Assets
+	def destroy(self) -> None:
+		from ... import Assets  # pylint: disable=cyclic-import
 		Assets.clear_image_cache()
 		return Tk.destroy(self)

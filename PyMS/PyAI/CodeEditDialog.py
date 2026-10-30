@@ -1,28 +1,241 @@
 
-from .HelpContent import TYPE_HELP, CMD_HELP
-from .AICodeText import AICodeText
-from .FindReplaceDialog import FindReplaceDialog
-from .CodeColors import CodeColors
+from .Config import PyAIConfig
+from .Delegates import MainDelegate
+from .CodeTooltip import CommandCodeTooltip, AISECommandCodeTooltip, TypeCodeTooltip, DirectiveTooltip
 
-from ..FileFormats import AIBIN
-from ..FileFormats import TBL
+from ..FileFormats.AIBIN import AIBIN
+from ..FileFormats.AIBIN.CodeHandlers import CodeCommands, AISECodeCommands, CodeTypes, AISECodeTypes, CodeDirectives
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
+from ..Utilities.FindReplaceDialog import FindReplaceDialog
 from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
+from ..Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
+from ..Utilities.CodeHandlers import CodeType
+from ..Utilities import ItemSelectDialog
+from ..Utilities.EditedState import EditedState
+from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
 
-class CodeEditDialog(PyMSDialog):
-	def __init__(self, parent, settings, ids):
-		self.settings = settings
+import re, io
+
+from typing import Iterator, Sequence
+
+class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, UI.CodeTextDelegate):
+	@staticmethod
+	def build_syntax_highlighting(highlights_config: PyAIConfig.Code.Highlights) -> UI.SyntaxHighlighting:
+		cmd_names = [cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands]
+		aise_cmd_names = [cmd.name for cmd in AISECodeCommands.all_commands]
+		type_names = [type.name for type in CodeTypes.all_basic_types]
+		directive_names = [directive.name for directive in CodeDirectives.all_basic_directives + CodeDirectives.all_defs_directives]
+		keywords: list[str] = []
+		for code_type in CodeTypes.all_basic_types + CodeTypes.all_header_types:
+			if isinstance(code_type, CodeType.HasKeywords):
+				keywords.extend(code_type.keywords())
+		aise_keywords: list[str] = []
+		for code_type in AISECodeTypes.all_types:
+			if isinstance(code_type, CodeType.HasKeywords):
+				aise_keywords.extend(code_type.keywords())
+		return UI.SyntaxHighlighting(
+			syntax_components=(
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Comment',
+							description='The style of a comment.',
+							highlight_style=highlights_config.comment
+						),
+						pattern=r'(?:#|;)[^\n]*$'
+					),
+				)),
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='String',
+							description='The style of quoted strings.',
+							highlight_style=highlights_config.string
+						),
+						pattern=r'"(?:[^\\"\n]|\\.)*"|\'(?:[^\\\'\n]|\\.)*\'',
+						nested=(
+							UI.HighlightPattern(
+								highlight=UI.HighlightComponent(
+									name='TBL Format',
+									description='The style of TBL formatted characters in strings, like null: <0>',
+									highlight_style=highlights_config.tbl_format
+								),
+								pattern=r'<0*(?:25[0-5]|2[0-4]\d|1?\d?\d)?>'
+							),
+						)
+					),
+				)),
+				UI.SyntaxComponent((
+					r'^[ \t]*',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Header',
+							description='The style of a `script` header.',
+							highlight_style=highlights_config.header
+						),
+						pattern=r'script'
+					),
+					r'[ \t]+',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='AI ID',
+							description='The style of the AI ID in the AI header.',
+							highlight_style=highlights_config.ai_id
+						),
+						pattern=r'[^\n\x00,():]{4}'
+					),
+					r'(?=[ \t]+\{)',
+				)),
+				UI.SyntaxComponent((
+					r'^[ \t]*',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Block',
+							description='The style of a --block-- or :block in the code.',
+							highlight_style=highlights_config.block
+						),
+						pattern=r'--\w+--|:\w+'
+					)
+				)),
+				UI.SyntaxComponent((
+					r'\b',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Command',
+							description='The style of command names.',
+							highlight_style=highlights_config.command
+						),
+						pattern='|'.join(cmd_names)
+					),
+					r'\b'
+				)),
+				UI.SyntaxComponent((
+					r'\b',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='AISE Command',
+							description='The style of command names for the AISE plugin.',
+							highlight_style=highlights_config.aise_command
+						),
+						pattern='|'.join(aise_cmd_names)
+					),
+					r'\b'
+				)),
+				UI.SyntaxComponent((
+					r'\b',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Type',
+							description='The style of type names.',
+							highlight_style=highlights_config.type
+						),
+						pattern='|'.join(type_names)
+					),
+					r'\b'
+				)),
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Directive',
+							description='The style of @directive names.',
+							highlight_style=highlights_config.directive
+						),
+						pattern=f'@(?:{"|".join(directive_names)})'
+					),
+					r'\b'
+				)),
+				UI.SyntaxComponent((
+					r'\b',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Number',
+							description='The style of all numbers.',
+							highlight_style=highlights_config.number
+						),
+						pattern=r'\d+'
+					),
+					r'\b'
+				)),
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Operator',
+							description='The style of the operators:\n    ( ) , = { } . | ~',
+							highlight_style=highlights_config.operator
+						),
+						pattern=r'[(),={}.|~]'
+					),
+				)),
+				UI.SyntaxComponent((
+					r'\b',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Keyword',
+							description='The style of keywords.',
+							highlight_style=highlights_config.keyword
+						),
+						pattern='|'.join(keywords)
+					),
+					r'\b'
+				)),
+				UI.SyntaxComponent((
+					r'\b',
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='AISE Keyword',
+							description='The style of AISE keywords.',
+							highlight_style=highlights_config.aise_keyword
+						),
+						pattern='|'.join(aise_keywords)
+					),
+					r'\b'
+				)),
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
+							name='Newline',
+							description='The style of newlines',
+							highlight_style=highlights_config.newline
+						),
+						pattern=r'\n'
+					),
+				)),
+			),
+			highlight_components=(
+				UI.HighlightComponent(
+					name='Selection',
+					description='The style of selected text in the editor.',
+					highlight_style=highlights_config.selection,
+					tag='sel'
+				),
+				UI.HighlightComponent(
+					name='Error',
+					description='The style of highlighted errors in the editor.',
+					highlight_style=highlights_config.error
+				),
+				UI.HighlightComponent(
+					name='Warning',
+					description='The style of highlighted warnings in the editor.',
+					highlight_style=highlights_config.warning
+				),
+			)
+		)
+
+	def __init__(self, parent: UI.AnyWindow, delegate: MainDelegate, config: PyAIConfig, ids: list[str]):
+		self.delegate = delegate
+		self.config_ = config
 		self.ids = ids
+
+		self.edited_state = EditedState()
+		self.edited_state.callback += self.update_edited
+
 		self.decompile = ''
-		self.file = None
-		self.autocomptext = TYPE_HELP.keys()
-		self.completing = False
-		self.complete = [None, 0]
+		self.file: str | None = None
 		t = ''
 		if ids:
 			t = ', '.join(ids[:5])
@@ -31,334 +244,234 @@ class CodeEditDialog(PyMSDialog):
 			t += ' - '
 		t += 'AI Script Editor'
 		PyMSDialog.__init__(self, parent, t, grabwait=False)
-		self.findwindow = None
+		self.findwindow: FindReplaceDialog | None = None
 
-	def widgetize(self):
-		self.bind(Alt.Left, lambda e,i=0: self.gotosection(e,i))
-		self.bind(Alt.Right, lambda e,i=1: self.gotosection(e,i))
-		self.bind(Alt.Up, lambda e,i=2: self.gotosection(e,i))
-		self.bind(Alt.Down, lambda e,i=3: self.gotosection(e,i))
+		self.syntax_highlighting: UI.SyntaxHighlighting
 
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s)
-		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', Ctrl.t)
+	def widgetize(self) -> UI.Widget:
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', UI.Ctrl.s)
+		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', UI.Ctrl.t)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Code', Ctrl.e)
-		self.toolbar.add_button(Assets.get_image('saveas'), self.exportas, 'Export As...', Ctrl.Alt.a)
-		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Code', Ctrl.i)
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Code', UI.Ctrl.e)
+		self.toolbar.add_button(Assets.get_image('saveas'), self.exportas, 'Export As...', UI.Ctrl.Alt.a)
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Code', UI.Ctrl.i)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', Ctrl.f)
+		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', UI.Ctrl.f)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', Ctrl.Alt.c)
+		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', UI.Ctrl.Alt.c)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.asc3topyai, 'Compile ASC3 to PyAI', Ctrl.Alt.p)
-		self.toolbar.add_button(Assets.get_image('debug'), self.debuggerize, 'Debuggerize your code', Ctrl.d)
-		self.toolbar.pack(fill=X, padx=2, pady=2)
+		self.toolbar.add_button(Assets.get_image('insert'), self.insert_string_id, 'Insert String ID', UI.Ctrl.Alt.i, enabled=self.delegate.get_data_context().stattxt_tbl is not None)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.transpile_to_pyai, 'Transpile to PyAI code', UI.Ctrl.Alt.p)
+		self.toolbar.add_button(Assets.get_image('debug'), self.debuggerize, 'Debuggerize your code', UI.Ctrl.d)
+		self.toolbar.pack(fill=UI.X, padx=2, pady=2)
 
-		self.text = AICodeText(self, self.parent.ai, self.edited, highlights=self.parent.highlights)
-		self.text.pack(fill=BOTH, expand=1, padx=1, pady=1)
-		self.text.icallback = self.statusupdate
-		self.text.scallback = self.statusupdate
-		self.text.acallback = self.autocomplete
+		self.text = UI.CodeText(self, self.edited_state, self)
+		self.text.pack(fill=UI.BOTH, expand=1, padx=1, pady=1)
+		self.text.bind(UI.CodeText.WidgetEvent.InsertCursorMoved(), self.statusupdate)
+		self.text.text.bind(UI.WidgetEvent.Text.Selection(), self.statusupdate)
 
-		self.status = StringVar()
+		self.setup_syntax_highlighting()
+
+		self.status = UI.StringVar()
 		if self.ids:
 			self.status.set("Original ID's: " + ', '.join(self.ids))
-		self.scriptstatus = StringVar()
+		self.scriptstatus = UI.StringVar()
 		self.scriptstatus.set('Line: 1  Column: 0  Selected: 0')
 
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, weight=1)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save.gif'))
 		statusbar.add_label(self.scriptstatus, weight=1)
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 		if self.ids:
-			self.after(1, self.load)
+			self.after_managed(1, self.load)
 
 		return self.text
 
-	def setup_complete(self):
-		self.settings.windows.load_window_size('code_edit', self)
+	def setup_complete(self) -> None:
+		self.config_.windows.code_edit.load_size(self)
 
-	# TODO: Cleanup
-	def gotosection(self, e, i):
-		c = [self.text.tag_prevrange, self.text.tag_nextrange][i % 2]
-		t = [('Error','Warning'),('AIID','Block')][i > 1]
-		a = c(t[0], INSERT)
-		b = c(t[1], INSERT)
-		s = None
-		if a:
-			if not b or self.text.compare(a[0], ['>','<'][i % 2], b[0]):
-				s = a
-			else:
-				s = b
-		elif b:
-			s = b
-		if s:
-			self.text.see(s[0])
-			self.text.mark_set(INSERT, s[0])
+	def setup_syntax_highlighting(self) -> None:
+		self.syntax_highlighting = CodeEditDialog.build_syntax_highlighting(self.config_.code.highlights)
+		self.text.set_syntax_highlighting(self.syntax_highlighting)
 
-	def autocomplete(self):
-		i = self.text.tag_ranges('Selection')
-		if i and '\n' in self.text.get(*i):
-			return False
-		self.completing = True
-		self.text.taboverride = ' (,)'
-		def docomplete(s, e, v, t):
-			ss = '%s+%sc' % (s,len(t))
-			se = '%s+%sc' % (s,len(v))
-			self.text.delete(s, ss)
-			self.text.insert(s, v)
-			self.text.tag_remove('Selection', '1.0', END)
-			self.text.tag_add('Selection', ss, se)
-			if self.complete[0] == None:
-				self.complete = [t, 1, s, se]
-			else:
-				self.complete[1] += 1
-				self.complete[3] = se
-		if self.complete[0] != None:
-			t,f,s,e = self.complete
-		else:
-			s,e = self.text.index('%s -1c wordstart' % INSERT),self.text.index('%s -1c wordend' % INSERT)
-			t,f = self.text.get(s,e),0
-			prefix = self.text.get('%s -1c' % s, s)
-			if prefix == '@':
-				s = self.text.index('%s -1c' % s)
-				t = prefix + t
-		if t and t[0].lower() in 'abcdefghijklmnopqrstuvwxyz@':
-			ac = list(self.autocomptext)
-			m = re.match('\\A\\s*[a-z\\{]+\\Z',t)
-			if not m:
-				for _,c in CMD_HELP.iteritems():
-					ac.extend(c.keys())
-				ac.extend(('extdef','aiscript','bwscript','LessThan','GreaterThan'))
-			for ns in self.parent.tbl.strings[:228]:
-				cs = ns.split('\x00')
-				if cs[1] != '*':
-					cs = TBL.decompile_string('\x00'.join(cs[:2]), '\x0A\x28\x29\x2C')
-				else:
-					cs = TBL.decompile_string(cs[0], '\x0A\x28\x29\x2C')
-				if not cs in ac:
-					ac.append(cs)
-			for i in range(61):
-				cs = TBL.decompile_string(self.parent.tbl.strings[self.parent.upgradesdat.get_entry(i).label - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
-				if not cs in ac:
-					ac.append(cs)
-			for i in range(44):
-				cs = TBL.decompile_string(self.parent.tbl.strings[self.parent.techdat.get_entry(i).label - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
-				if not cs in ac:
-					ac.append(cs)
-			aiid = ''
-			item = self.text.tag_prevrange('AIID', INSERT)
-			if item:
-				aiid = self.text.get(*item)
-			head = '1.0'
-			while True:
-				item = self.text.tag_nextrange('Block', head)
-				if not item:
-					break
-				head,tail = item
-				block = ''
-				if aiid:
-					item = self.text.tag_prevrange('AIID', head)
-					if item:
-						id = self.text.get(*item)
-						if id != aiid:
-							block = id + ':'
-				block += self.text.get('%s +2c' % head,'%s -2c' % tail)
-				if not block in ac:
-					ac.append(block)
-				head = tail
-			ac.extend(('@spellcaster','@supress_all','@suppress_next_line'))
-			ac.sort()
-			if m:
-				x = []
-				for _,c in CMD_HELP.iteritems():
-					x.extend(c.keys())
-				x.sort()
-				ac = x + ac
-			r = False
-			matches = []
-			for v in ac:
-				if v and v.lower().startswith(t.lower()):
-					matches.append(v)
-			if matches:
-				if f < len(matches):
-					docomplete(s,e,matches[f],t)
-					self.text.taboverride = ' (,)'
-				elif self.complete[0] != None:
-					docomplete(s,e,t,t)
-					self.complete[1] = 0
-				r = True
-			self.after(1, self.completed)
-			return r
+		CommandCodeTooltip(self.text.text)
+		AISECommandCodeTooltip(self.text.text)
+		TypeCodeTooltip(self.text.text)
+		DirectiveTooltip(self.text.text)
 
-	def completed(self):
-		self.completing = False
+	def statusupdate(self, _event: UI.Event | None = None) -> None:
+		line, column = self.text.index(UI.INSERT).split('.')
+		selected = 0
+		sel_range = self.text.tag_ranges('sel')
+		if sel_range:
+			selected = len(self.text.get(*sel_range))
+		self.scriptstatus.set(f'Line: {line}  Column: {column}  Selected: {selected}')
 
-	def statusupdate(self):
-		if not self.completing:
-			self.text.taboverride = False
-			self.complete = [None, 0]
-		i = self.text.index(INSERT).split('.') + [0]
-		item = self.text.tag_ranges('Selection')
-		if item:
-			i[2] = len(self.text.get(*item))
-		self.scriptstatus.set('Line: %s  Column: %s  Selected: %s' % tuple(i))
-
-	def edited(self):
-		if not self.completing:
-			self.text.taboverride = False
-			self.complete = [None, 0]
-		self.editstatus['state'] = NORMAL
+	def update_edited(self, edited: bool) -> None:
+		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 		if self.file:
-			self.title('AI Script Editor [*%s*]' % self.file)
+			self.title(f'AI Script Editor [*{self.file}*]')
 
-	def cancel(self):
-		if self.text.edited:
-			save = MessageBox.askquestion(parent=self, title='Save Code?', message="Would you like to save the code?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-			if save != MessageBox.NO:
-				if save == MessageBox.CANCEL:
-					return
-				self.save()
+	def cancel(self, _: UI.Event | None = None) -> None:
+		if self.edited_state.is_edited:
+			save = UI.MessageBox.askyesnocancel(parent=self, title='Save Code?', message="Would you like to save the code?", default=UI.MessageBox.YES)
+			if save is None:
+				return
+			if save and not self._save():
+				return
 		self.ok()
 
-	def save(self, e=None):
-		if self.parent.iimport(iimport=self, parent=self):
-			self.text.edited = False
-			self.editstatus['state'] = DISABLED
+	def save(self, _: UI.Event | None = None) -> None:
+		self._save()
 
-	def ok(self):
-		PyMSDialog.ok(self)
+	def _save(self) -> bool:
+		code = self.text.get('1.0', UI.END)
+		if not self.delegate.save_code(code, self):
+			return False
+		self.text.edit_modified(False)
+		return True
 
-	def test(self, e=None):
-		i = AIBIN.AIBIN(False, self.parent.unitsdat, self.parent.upgradesdat, self.parent.techdat, self.parent.tbl)
-		i.bwscript = AIBIN.BWBIN(self.parent.unitsdat, self.parent.upgradesdat, self.parent.techdat, self.parent.tbl)
+	def test(self, _: UI.Event | None = None) -> None:
+		code = self.text.get('1.0', UI.END)
+		parse_context = self.delegate.get_parse_context(code)
 		try:
-			warnings = i.interpret(self, self.parent.extdefs)
-			for id in i.ais.keys():
-				if id in self.parent.ai.externaljumps[0]:
-					for _,l in self.parent.ai.externaljumps[0].iteritems():
-						for cid in l:
-							if not cid in i.ais:
-								raise PyMSError('Interpreting',"You can't edit scripts (%s) that are referenced externally with out editing the scripts with the external references (%s) at the same time." % (id,cid))
+			AIBIN.AIBIN.compile(parse_context)
 		except PyMSError as e:
-			if e.line != None:
-				self.text.see('%s.0' % e.line)
-				self.text.tag_add('Error', '%s.0' % e.line, '%s.end' % e.line)
-			if e.warnings:
-				for w in e.warnings:
-					if w.line != None:
-						self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
+			self.text.highlight_error(e)
 			ErrorDialog(self, e)
 			return
-		if warnings:
-			c = False
-			for w in warnings:
-				if w.line != None:
-					if not c:
-						self.text.see('%s.0' % w.line)
-						c = True
-					self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
-			WarningDialog(self, warnings, True)
+		# TODO: Plugins
+		# ai = self.delegate.get_ai_bin()
+		# new_active_plugins = parse_context.language_context.active_plugins()
+		# if new_active_plugins:
+		# 	added_plugins = new_active_plugins.difference(ai.active_plugins)
+		# 	if added_plugins:
+		# 		pass
+		# 	removed_plugins = ai.active_plugins.difference(new_active_plugins)
+		# 	if removed_plugins:
+		# 		pass
+		if parse_context.warnings:
+			self.text.highlight_warnings(parse_context.warnings)
+			WarningDialog(self, parse_context.warnings, True)
 		else:
-			MessageBox.askquestion(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.', type=MessageBox.OK)
+			UI.MessageBox.showinfo(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.')
 
-	def export(self, e=None):
+	def export(self, _: UI.Event | None = None) -> None:
 		if not self.file:
 			self.exportas()
 		else:
-			f = open(self.file, 'w')
-			f.write(self.text.get('1.0', END))
-			f.close()
-			self.title('AI Script Editor [%s]' % self.file)
+			with open(self.file, 'w', encoding='utf-8') as f:
+				f.write(self.text.get('1.0', UI.END))
+			self.title(f'AI Script Editor [{self.file}]')
 
-	def exportas(self, e=None):
-		file = self.settings.lastpath.ai_txt.select_save_file(self, key='export', title='Export Code', filetypes=[FileType.txt()])
+	def exportas(self, _: UI.Event | None = None) -> None:
+		file = self.config_.last_path.txt.ai.select_save(self)
 		if not file:
 			return
 		self.file = file
 		self.export()
 
-	def iimport(self, e=None):
-		iimport = self.settings.lastpath.ai_txt.select_open_file(self, key='import', title='Import From', filetypes=[FileType.txt()])
+	def iimport(self, _: UI.Event | None = None) -> None:
+		iimport = self.config_.last_path.txt.ai.select_open(self)
 		if iimport:
 			try:
-				f = open(iimport, 'r')
-				self.text.delete('1.0', END)
-				self.text.insert('1.0', f.read())
+				with open(iimport, 'r', encoding='utf-8') as f:
+					contents = f.read()
+				self.text.delete('1.0', UI.END)
+				self.text.insert('1.0', contents)
 				self.text.edit_reset()
-				f.close()
-			except:
-				ErrorDialog(self, PyMSError('Import',"Could not import file '%s'" % iimport))
+			except Exception as e: # pylint: disable=broad-exception-caught
+				ErrorDialog(self, PyMSError('Import', f"Could not import file '{iimport}'", cause=e))
 
-	def find(self, e=None):
+	def find(self, _: UI.Event | None = None) -> None:
 		if not self.findwindow:
-			self.findwindow = FindReplaceDialog(self)
-			self.bind(Key.F3, self.findwindow.findnext)
-		elif self.findwindow.state() == 'withdrawn':
-			self.findwindow.deiconify()
-		self.findwindow.focus_set()
+			self.findwindow = FindReplaceDialog(self, self.text, self.config_.windows.find.find_replace, find_history=self.delegate.get_find_history(), replace_history=self.delegate.get_replace_history())
+			self.bind(UI.Key.F3(), self.findwindow.findnext)
+		else:
+			self.findwindow.show()
 
-	def colors(self, e=None):
-		c = CodeColors(self)
-		if c.cont:
-			self.text.setup(c.cont)
-			self.parent.highlights = c.cont
+	def colors(self, _: UI.Event | None = None) -> None:
+		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())
+		if dialog.updated:
+			self.text.update_highlight_styles()
 
-	def asc3topyai(self, e=None):
-		beforeheader = ''
-		header = '### NOTE: There is no way to determine the scripts flags or if it is a BW script or not!\n###       please update the header below appropriately!\n%s(%s, 111, %s): # Script Name: %s'
-		headerinfo = [None,None,None,None]
-		data = ''
-		for line in self.text.text.get('1.0',END).split('\n'):
-			if line.lstrip().startswith(';'):
-				if not None in headerinfo:
-					data += line.replace(';','#',1) + '\n'
-				else:
-					beforeheader += line.replace(';','#',1) + '\n'
-			elif line.lstrip().startswith(':'):
-				data += '        --%s--\n' % line.split('#',1)[0].strip()[1:]
-			elif line.lstrip().startswith('script_name ') and headerinfo[3] == None:
-				headerinfo[3] = line.lstrip()[12:]
-				if re.match('bw|brood ?war',headerinfo[3],re.I):
-					headerinfo[2] = 'bwscript'
-				else:
-					headerinfo[2] = 'aiscript'
-				for n,string in enumerate(self.parent.tbl.strings):
-					if headerinfo[3] + '\x00' == string:
-						headerinfo[1] = n
-						break
-				else:
-					headerinfo[1] = 0
-			elif line.lstrip().startswith('script_id ') and headerinfo[0] == None:
-				headerinfo[0] = line.lstrip()[10:]
-			elif line.strip():
-				d = line.lstrip().split(';',1)[0].strip().split(' ')
-				if d[0] in AIBIN.AIBIN.short_labels:
-					if d[0] == 'debug' and len(d) >= 3:
-						d = [d[0], d[1], '"%s"' % ' '.join(d[2:])]
-					data += '    %s(%s)' % (d[0], ', '.join(d[1:]))
-					if ';' in line:
-						data += ' # ' + line.split(';',1)[1]
-				else:
-					if not None in headerinfo:
-						data += '# ' + line
-					else:
-						beforeheader += '# ' + line + '\n'
-				data += '\n'
+	RE_ASC3_HEADER = re.compile(r'^\s*script_name\s+([^;\n]+)\s*(?:;[^\n]+)?$.+?^\s*script_id\s+(....)', re.MULTILINE | re.DOTALL)
+	RE_OLD_PYAI_HEADER = re.compile(r'^(?:\s*# stat_txt.tbl entry \d+:\s*(.+?))?\s*(....)\(\s*(\d+)\s*,\s*([01])([01])([01])\s*,\s*((?:bw|ai)script)\s*\):', re.MULTILINE)
+	RE_OLD_PYAI_BLOCK = re.compile(r'^(\s*--)([^-]+)--', re.MULTILINE)
+	RE_OLD_PYAI_COMMAND = re.compile(r'^(\s*)([\w]+)\(([^)]*)\)(.*)', re.MULTILINE)
+	RE_COMMA = re.compile(r'\s*,\s*')
+	def transpile_to_pyai(self, _: UI.Event | None = None) -> None:
+		code = self.text.text.get('1.0',UI.END)
+
+		def replace_asc3_header(match: re.Match) -> str:
+			header_string = match.group(1)
+			if re.match('bw|brood ?war', header_string, re.I):
+				header_bin_file = 'bwscript'
 			else:
-				data += '\n'
-		if None in headerinfo:
-			MessageBox.askquestion(parent=self, title='Invalid Header', message='The script is either missing a script_name or a script_id.', type=MessageBox.OK)
-			return
-		self.text.delete('1.0', END)
-		self.text.insert(END, beforeheader + '\n' + header % tuple(headerinfo) + data)
-		self.text.edited = True
-		self.editstatus['state'] = NORMAL
+				header_bin_file = 'aiscript'
+			header_string_index = self.delegate.get_data_context().stattxt_id(header_string) or 0
+			header_id = match.group(2)
+			return f"""### NOTE: There is no way to determine the scripts flags or if it is a BW script or not!
+###       please update the header below appropriately!
+script {header_id} {{
+    name_string {header_string_index} # {header_string}
+    bin_file {header_bin_file}
+    broodwar_only 1
+    staredit_hidden 1
+    requires_location 1
+    entry_point {header_id}_entry_point
+}}
 
-	def debuggerize(self):
+:{header_id}_entry_point"""
+		code = CodeEditDialog.RE_ASC3_HEADER.sub(replace_asc3_header, code)
+
+		def replace_old_pyai_header(match: re.Match) -> str:
+			return f"""script {match.group(2)} {{
+    name_string {match.group(3)} # {match.group(1)}
+    bin_file {match.group(7)}
+    broodwar_only {match.group(4)}
+    staredit_hidden {match.group(5)}
+    requires_location {match.group(6)}
+    entry_point {match.group(2)}_entry_point
+}}
+
+--{match.group(2)}_entry_point--"""
+		code = CodeEditDialog.RE_OLD_PYAI_HEADER.sub(replace_old_pyai_header, code)
+
+		def replace_old_pyai_block(match: re.Match) -> str:
+			return match.group(1) + str(match.group(2)).replace(' ', '_') + '--'
+		code = CodeEditDialog.RE_OLD_PYAI_BLOCK.sub(replace_old_pyai_block, code)
+
+		def replace_old_pyai_command(match: re.Match) -> str:
+			cmd_name = match.group(2)
+			for cmd_def in CodeCommands.all_basic_commands:
+				if cmd_def.name == cmd_name:
+					params_str = match.group(3).strip()
+					params = CodeEditDialog.RE_COMMA.split(params_str) if params_str else []
+					# Only rewrite when the argument count matches the definition;
+					# otherwise leave the line untouched rather than emit a malformed command.
+					if len(params) != len(cmd_def.param_types):
+						return match.group(0)
+					result = match.group(1) + match.group(2) + '('
+					for n,(param,param_type) in enumerate(zip(params, cmd_def.param_types)):
+						if n > 0:
+							result += ', '
+						if isinstance(param_type, CodeTypes.BlockCodeType):
+							result += str(param).replace(' ', '_')
+						else:
+							result += param
+					return result + ')' + match.group(4)
+			return match.group(0)
+		code = CodeEditDialog.RE_OLD_PYAI_COMMAND.sub(replace_old_pyai_command, code)
+
+		with self.text.undo_group():
+			self.text.delete('1.0', UI.END)
+			self.text.insert(UI.END, code)
+
+	def debuggerize(self, _: UI.Event | None = None) -> None:
 		d = 0
 		data = ''
 		debug = {
@@ -384,10 +497,10 @@ class CodeEditDialog(PyMSDialog):
 			#'try_townpoint':('',),
 		}
 		header = re.compile(r'\A([^(]{4})\([^)]+\):\s*(?:\{.+\})?(?:\s*#.*)?\Z')
-		label = re.compile(r'\A\s*--\s*(.+)\s*--(?:\s*\{(.+)\})?(?:\s*#.*)?\\Z')
-		jump = re.compile(r'\A(\s*)(%s)\((.+)\)(\s*#.*)?\Z' % '|'.join(debug.keys()))
+		label = re.compile(r'\A\s*--\s*(.+)\s*--(?:\s*\{(.+)\})?(?:\s*#.*)?\Z')
+		jump = re.compile(fr'\A(\s*)({"|".join(list(debug.keys()))})\((.+)\)(\s*#.*)?\Z')
 		script,block = '',''
-		for n,line in enumerate(self.text.text.get('1.0',END).split('\n')):
+		for n,line in enumerate(self.text.text.get('1.0',UI.END).split('\n')):
 			m = header.match(line)
 			if m:
 				script = m.group(1)
@@ -403,61 +516,161 @@ class CodeEditDialog(PyMSDialog):
 			if m and m.group(2) in debug:
 				inblock = ''
 				if block:
-					inblock = ' block "%s"' % block
+					inblock = f' block "{block}"'
 				rep = {
-					'debug1':'== Debug %s ==' % d,
-					'debug2':'== Debug %s ==' % (d+1),
-					'debug3':'== Debug %s ==' % (d+2),
-					's':'[Line: %s | Inside script "%s"%s]' % (n, script, inblock),
+					'debug1':f'== Debug {d} ==',
+					'debug2':f'== Debug {d+1} ==',
+					'debug3':f'== Debug {d+2} ==',
+					's':f'[Line: {n+1} | Inside script "{script}"{inblock}]',
 					'c':m.group(4) or '',
 				}
-				params = self.parent.ai.parameters[self.parent.ai.short_labels.index(m.group(2))]
-				if params:
-					p = re.match('\\A%s\\Z' % ','.join(['\\s*(.+)\\s*'] * len(params)), m.group(3))
+				cmd_def = CodeCommandDefinition.find_by_name(m.group(2), CodeCommands.all_basic_commands)
+				if cmd_def is not None and cmd_def.param_types:
+					params_pattern = ','.join([r'\s*(.+)\s*'] * len(cmd_def.param_types))
+					p = re.match(rf'\A{params_pattern}\Z', m.group(3))
 					if not p:
 						data += line + '\n'
 						continue
 					for g,param in enumerate(p.groups()):
-						rep['param%s' % (g+1)] = param
+						rep[f'param{(g+1)}'] = param
 				data += m.group(1) + (debug[m.group(2)][0] % rep).replace('\n','\n' + m.group(1)) + '\n'
 				d += debug[m.group(2)][1]
 				continue
 			data += line + '\n'
-		self.text.delete('1.0', END)
-		self.text.insert(END, data)
-		self.text.edited = True
-		self.editstatus['state'] = NORMAL
+		with self.text.undo_group():
+			self.text.delete('1.0', UI.END)
+			self.text.insert(UI.END, data)
 
-	def load(self):
+	def load(self) -> None:
 		try:
-			warnings = self.parent.ai.decompile(self, self.parent.extdefs, self.parent.reference.get(), 1, self.ids)
+			output = io.StringIO()
+			serialize_context = self.delegate.get_serialize_context(output)
+			self.delegate.get_ai_bin().decompile(serialize_context, self.ids)
+			code = output.getvalue()
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		if warnings:
-			WarningDialog(self, warnings)
+		self.text.load(code)
+		# TODO: Warnings?
+		# if warnings:
+		# 	WarningDialog(self, warnings)
 
-	def write(self, text):
-		self.decompile += text
-
-	def readlines(self):
-		return self.text.get('1.0', END).split('\n')
-
-	def close(self):
-		if self.decompile:
-			self.text.insert('1.0', self.decompile.strip())
-			self.decompile = ''
-			self.text.text.mark_set(INSERT, '1.0')
-			self.text.text.see(INSERT)
-			self.text.edit_reset()
-			self.text.edited = False
-			self.editstatus['state'] = DISABLED
-
-	def destroy(self):
+	def destroy(self) -> None:
 		if self.findwindow:
-			Toplevel.destroy(self.findwindow)
-		Toplevel.destroy(self)
+			self.findwindow.destroy()
+		UI.Toplevel.destroy(self)
 
-	def dismiss(self):
-		self.settings.windows.save_window_size('code_edit', self)
+	def dismiss(self) -> None:
+		self.config_.windows.code_edit.save_size(self)
 		PyMSDialog.dismiss(self)
+
+	RE_NAME_STRING_COMMAND: re.Pattern | None = None
+	def re_name_string_command(self) -> re.Pattern:
+		if CodeEditDialog.RE_NAME_STRING_COMMAND is None:
+			CodeEditDialog.RE_NAME_STRING_COMMAND = re.compile(rf'(\s*{CodeCommands.HeaderNameString.name}\s+)(\d+)')
+		return CodeEditDialog.RE_NAME_STRING_COMMAND
+
+	def insert_string_id(self) -> None:
+		initial_selection = []
+		line = self.text.get(f'{UI.INSERT} linestart', f'{UI.INSERT} lineend')
+		if match := self.re_name_string_command().match(line):
+			initial_selection.append(int(match.group(2)))
+		ItemSelectDialog.ItemSelectDialog(parent=self, title='Select String', delegate=self, selected=initial_selection)
+
+	# ItemSelectDialog.Delegate
+	def get_items(self) -> Sequence[ItemSelectDialog.Item]:
+		strings = self.delegate.get_data_context().stattxt_strings()
+		if not strings:
+			return []
+		# return [ItemSelectDialog.DisplayItem(string, f'{index}: {string}') for index, string in enumerate(strings)]
+		return strings
+
+	def item_selected(self, index: int) -> bool:
+		with self.text.undo_group():
+			line = self.text.get(f'{UI.INSERT} linestart', f'{UI.INSERT} lineend')
+			insert_index: str = self.text.index(UI.INSERT)
+			if match := self.re_name_string_command().match(line):
+				insert_index = f'{UI.INSERT} linestart +{len(match.group(1))}c'
+				self.text.delete(insert_index, f'{UI.INSERT} lineend')
+			str_index = str(index)
+			comment = ''
+			if string := self.delegate.get_data_context().stattxt_string(index):
+				comment = self.delegate.get_formatters().comment.serialize([string])
+			self.text.insert(insert_index, str_index + comment)
+			self.text.mark_set(UI.INSERT, f'{insert_index} +{len(str_index)}c')
+		return True
+
+	def items_selected(self, indexes: list[int]) -> bool:
+		return True
+
+	# CodeTextDelegate
+	def comment_symbols(self) -> list[str]:
+		return ['#', ';']
+
+	def comment_symbol(self) -> str:
+		return self.delegate.get_formatters().comment.symbol()
+
+	def autocomplete_override_keys(self) -> str:
+		return ' (,)'
+
+	RE_FIRST_IDENTIFIER = re.compile(r'^\s*[a-z]')
+	RE_BLOCK_NAME = re.compile(r'(?:--|:)(\w+)')
+	def _block_definitions(self) -> Iterator[tuple[str, str]]:
+		head = '1.0'
+		while True:
+			block_range = self.text.tag_nextrange('Block', head)
+			if not block_range:
+				break
+			block_text = self.text.get(*block_range)
+			match = CodeEditDialog.RE_BLOCK_NAME.match(block_text)
+			if match:
+				yield (match.group(1), str(block_range[0]))
+			head = block_range[1]
+
+	def get_autocomplete_options(self, line: str) -> list[str] | None:
+		autocomplete_options = list(type.name for type in CodeTypes.all_basic_types)
+		autocomplete_options.extend(keyword for type in CodeTypes.all_basic_types + AISECodeTypes.all_types if isinstance(type, CodeType.HasKeywords) for keyword in type.keywords())
+
+		data_context = self.delegate.get_data_context()
+		for unit_id in range(228):
+			unit_name = data_context.unit_name(unit_id)
+			if unit_name and not unit_name in autocomplete_options:
+				autocomplete_options.append(unit_name)
+		for upgrade_id in range(61):
+			upgrade_name = data_context.upgrade_name(upgrade_id)
+			if upgrade_name and not upgrade_name in autocomplete_options:
+				autocomplete_options.append(upgrade_name)
+		for tech_id in range(44):
+			tech_name = data_context.technology_name(tech_id)
+			if tech_name and not tech_name in autocomplete_options:
+				autocomplete_options.append(tech_name)
+
+		for block_name, _ in self._block_definitions():
+			if not block_name in autocomplete_options:
+				autocomplete_options.append(block_name)
+		autocomplete_options.sort()
+
+		main_identifiers = list(cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands + AISECodeCommands.all_commands)
+		main_identifiers.sort()
+		main_identifiers.extend(f'@{directive.name}' for directive in CodeDirectives.all_basic_directives + CodeDirectives.all_defs_directives)
+		main_identifiers.append('script')
+
+		is_first_identifier = not not CodeEditDialog.RE_FIRST_IDENTIFIER.match(line)
+		if is_first_identifier:
+			autocomplete_options = main_identifiers + autocomplete_options
+		else:
+			autocomplete_options.extend(main_identifiers)
+
+		return autocomplete_options
+
+	def jump_highlights(self) -> Sequence[str] | None:
+		return ('Error', 'Warning')
+
+	def jump_sections(self) -> Sequence[str] | None:
+		return ('AIID', 'Block')
+
+	def find_definition(self, name: str) -> str | None:
+		for block_name, block_index in self._block_definitions():
+			if block_name == name:
+				return block_index
+		return None

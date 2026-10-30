@@ -3,7 +3,11 @@ from . import AbstractDAT
 from . import DATFormat
 from . import DATCoders
 
-class Order(AbstractDAT.AbstractDATEntry):
+from collections import OrderedDict
+
+from typing import cast, Any
+
+class DATOrder(AbstractDAT.AbstractDATEntry):
 	class Property:
 		label = 'label'
 		use_weapon_targeting = 'use_weapon_targeting'
@@ -25,28 +29,28 @@ class Order(AbstractDAT.AbstractDATEntry):
 		requirements = 'requirements'
 		obscured_order = 'obscured_order'
 
-	def __init__(self):
-		self.label = 0
-		self.use_weapon_targeting = 0
-		self.unused_is_secondary = 0
-		self.unused_allow_non_subunits = 0
-		self.changes_subunit_order = 0
-		self.unused_allow_subunits = 0
-		self.interruptable = 0
-		self.waypoints_slowdown = 0
-		self.queueable = 0
-		self.disabled_maintain_unit_target = 0
-		self.obstructable = 0
-		self.flee_unreturnable_damage = 0
-		self.unused_requires_movable_unit = 0
-		self.weapon_targeting = 0
-		self.technology_energy = 0
-		self.iscript_animation = 0
-		self.highlight_icon = 0
-		self.requirements = 65535
-		self.obscured_order = 0
+	def __init__(self) -> None:
+		self.label: int = 0
+		self.use_weapon_targeting: int = 0
+		self.unused_is_secondary: int = 0
+		self.unused_allow_non_subunits: int = 0
+		self.changes_subunit_order: int = 0
+		self.unused_allow_subunits: int = 0
+		self.interruptable: int = 0
+		self.waypoints_slowdown: int = 0
+		self.queueable: int = 0
+		self.disabled_maintain_unit_target: int = 0
+		self.obstructable: int = 0
+		self.flee_unreturnable_damage: int = 0
+		self.unused_requires_movable_unit: int = 0
+		self.weapon_targeting: int = 0
+		self.technology_energy: int = 0
+		self.iscript_animation: int = 0
+		self.highlight_icon: int = 0
+		self.requirements: int = 65535
+		self.obscured_order: int = 0
 
-	def load_values(self, values):
+	def load_values(self, values: tuple[int | DATFormat.DATType | None, ...]) -> None:
 		self.label,\
 		self.use_weapon_targeting,\
 		self.unused_is_secondary,\
@@ -66,9 +70,9 @@ class Order(AbstractDAT.AbstractDATEntry):
 		self.highlight_icon,\
 		self.requirements,\
 		self.obscured_order\
-			= values
+			= values # type: ignore[assignment]
 
-	def save_values(self):
+	def save_values(self) -> tuple[int | DATFormat.DATType | None, ...]:
 		return (
 			self.label,
 			self.use_weapon_targeting,
@@ -92,85 +96,85 @@ class Order(AbstractDAT.AbstractDATEntry):
 		)
 
 	EXPORT_NAME = 'Order'
-	def _export_data(self, export_properties, data):
-		self._export_property_value(export_properties, Order.Property.label, self.label, data)
-		self._export_property_value(export_properties, Order.Property.use_weapon_targeting, self.use_weapon_targeting, data, _OrderPropertyCoder.use_weapon_targeting)
-		self._export_property_value(export_properties, Order.Property.unused_is_secondary, self.unused_is_secondary, data, _OrderPropertyCoder.unused_is_secondary)
-		self._export_property_value(export_properties, Order.Property.unused_allow_non_subunits, self.unused_allow_non_subunits, data, _OrderPropertyCoder.unused_allow_non_subunits)
-		self._export_property_value(export_properties, Order.Property.changes_subunit_order, self.changes_subunit_order, data, _OrderPropertyCoder.changes_subunit_order)
-		self._export_property_value(export_properties, Order.Property.unused_allow_subunits, self.unused_allow_subunits, data, _OrderPropertyCoder.unused_allow_subunits)
-		self._export_property_value(export_properties, Order.Property.interruptable, self.interruptable, data, _OrderPropertyCoder.interruptable)
-		self._export_property_value(export_properties, Order.Property.waypoints_slowdown, self.waypoints_slowdown, data, _OrderPropertyCoder.waypoints_slowdown)
-		self._export_property_value(export_properties, Order.Property.queueable, self.queueable, data, _OrderPropertyCoder.queueable)
-		self._export_property_value(export_properties, Order.Property.disabled_maintain_unit_target, self.disabled_maintain_unit_target, data, _OrderPropertyCoder.disabled_maintain_unit_target)
-		self._export_property_value(export_properties, Order.Property.obstructable, self.obstructable, data, _OrderPropertyCoder.obstructable)
-		self._export_property_value(export_properties, Order.Property.flee_unreturnable_damage, self.flee_unreturnable_damage, data, _OrderPropertyCoder.flee_unreturnable_damage)
-		self._export_property_value(export_properties, Order.Property.unused_requires_movable_unit, self.unused_requires_movable_unit, data, _OrderPropertyCoder.unused_requires_movable_unit)
-		self._export_property_value(export_properties, Order.Property.weapon_targeting, self.weapon_targeting, data)
-		self._export_property_value(export_properties, Order.Property.technology_energy, self.technology_energy, data)
-		self._export_property_value(export_properties, Order.Property.iscript_animation, self.iscript_animation, data)
-		self._export_property_value(export_properties, Order.Property.highlight_icon, self.highlight_icon, data)
-		self._export_property_value(export_properties, Order.Property.requirements, self.requirements, data)
-		self._export_property_value(export_properties, Order.Property.obscured_order, self.obscured_order, data)
+	def _export_data(self, export_properties: list[str] | None, data: OrderedDict[str, Any]) -> None:
+		self._export_property_value(export_properties, DATOrder.Property.label, self.label, data)
+		self._export_property_value(export_properties, DATOrder.Property.use_weapon_targeting, self.use_weapon_targeting, data, property_encoder=_OrderPropertyCoder.use_weapon_targeting)
+		self._export_property_value(export_properties, DATOrder.Property.unused_is_secondary, self.unused_is_secondary, data, property_encoder=_OrderPropertyCoder.unused_is_secondary)
+		self._export_property_value(export_properties, DATOrder.Property.unused_allow_non_subunits, self.unused_allow_non_subunits, data, property_encoder=_OrderPropertyCoder.unused_allow_non_subunits)
+		self._export_property_value(export_properties, DATOrder.Property.changes_subunit_order, self.changes_subunit_order, data, property_encoder=_OrderPropertyCoder.changes_subunit_order)
+		self._export_property_value(export_properties, DATOrder.Property.unused_allow_subunits, self.unused_allow_subunits, data, property_encoder=_OrderPropertyCoder.unused_allow_subunits)
+		self._export_property_value(export_properties, DATOrder.Property.interruptable, self.interruptable, data, property_encoder=_OrderPropertyCoder.interruptable)
+		self._export_property_value(export_properties, DATOrder.Property.waypoints_slowdown, self.waypoints_slowdown, data, property_encoder=_OrderPropertyCoder.waypoints_slowdown)
+		self._export_property_value(export_properties, DATOrder.Property.queueable, self.queueable, data, property_encoder=_OrderPropertyCoder.queueable)
+		self._export_property_value(export_properties, DATOrder.Property.disabled_maintain_unit_target, self.disabled_maintain_unit_target, data, property_encoder=_OrderPropertyCoder.disabled_maintain_unit_target)
+		self._export_property_value(export_properties, DATOrder.Property.obstructable, self.obstructable, data, property_encoder=_OrderPropertyCoder.obstructable)
+		self._export_property_value(export_properties, DATOrder.Property.flee_unreturnable_damage, self.flee_unreturnable_damage, data, property_encoder=_OrderPropertyCoder.flee_unreturnable_damage)
+		self._export_property_value(export_properties, DATOrder.Property.unused_requires_movable_unit, self.unused_requires_movable_unit, data, property_encoder=_OrderPropertyCoder.unused_requires_movable_unit)
+		self._export_property_value(export_properties, DATOrder.Property.weapon_targeting, self.weapon_targeting, data)
+		self._export_property_value(export_properties, DATOrder.Property.technology_energy, self.technology_energy, data)
+		self._export_property_value(export_properties, DATOrder.Property.iscript_animation, self.iscript_animation, data)
+		self._export_property_value(export_properties, DATOrder.Property.highlight_icon, self.highlight_icon, data)
+		self._export_property_value(export_properties, DATOrder.Property.requirements, self.requirements, data)
+		self._export_property_value(export_properties, DATOrder.Property.obscured_order, self.obscured_order, data)
 
-	def _import_data(self, data):
-		label = self._import_property_value(data, Order.Property.label)
-		use_weapon_targeting = self._import_property_value(data, Order.Property.use_weapon_targeting, _OrderPropertyCoder.use_weapon_targeting)
-		unused_is_secondary = self._import_property_value(data, Order.Property.unused_is_secondary, _OrderPropertyCoder.unused_is_secondary)
-		unused_allow_non_subunits = self._import_property_value(data, Order.Property.unused_allow_non_subunits, _OrderPropertyCoder.unused_allow_non_subunits)
-		changes_subunit_order = self._import_property_value(data, Order.Property.changes_subunit_order, _OrderPropertyCoder.changes_subunit_order)
-		unused_allow_subunits = self._import_property_value(data, Order.Property.unused_allow_subunits, _OrderPropertyCoder.unused_allow_subunits)
-		interruptable = self._import_property_value(data, Order.Property.interruptable, _OrderPropertyCoder.interruptable)
-		waypoints_slowdown = self._import_property_value(data, Order.Property.waypoints_slowdown, _OrderPropertyCoder.waypoints_slowdown)
-		queueable = self._import_property_value(data, Order.Property.queueable, _OrderPropertyCoder.queueable)
-		disabled_maintain_unit_target = self._import_property_value(data, Order.Property.disabled_maintain_unit_target, _OrderPropertyCoder.disabled_maintain_unit_target)
-		obstructable = self._import_property_value(data, Order.Property.obstructable, _OrderPropertyCoder.obstructable)
-		flee_unreturnable_damage = self._import_property_value(data, Order.Property.flee_unreturnable_damage, _OrderPropertyCoder.flee_unreturnable_damage)
-		unused_requires_movable_unit = self._import_property_value(data, Order.Property.unused_requires_movable_unit, _OrderPropertyCoder.unused_requires_movable_unit)
-		weapon_targeting = self._import_property_value(data, Order.Property.weapon_targeting)
-		technology_energy = self._import_property_value(data, Order.Property.technology_energy)
-		iscript_animation = self._import_property_value(data, Order.Property.iscript_animation)
-		highlight_icon = self._import_property_value(data, Order.Property.highlight_icon)
-		requirements = self._import_property_value(data, Order.Property.requirements)
-		obscured_order = self._import_property_value(data, Order.Property.obscured_order)
+	def _import_data(self, data: dict[str, Any]) -> None:
+		label = self._import_property_value(data, DATOrder.Property.label)
+		use_weapon_targeting = self._import_property_value(data, DATOrder.Property.use_weapon_targeting, _OrderPropertyCoder.use_weapon_targeting)
+		unused_is_secondary = self._import_property_value(data, DATOrder.Property.unused_is_secondary, _OrderPropertyCoder.unused_is_secondary)
+		unused_allow_non_subunits = self._import_property_value(data, DATOrder.Property.unused_allow_non_subunits, _OrderPropertyCoder.unused_allow_non_subunits)
+		changes_subunit_order = self._import_property_value(data, DATOrder.Property.changes_subunit_order, _OrderPropertyCoder.changes_subunit_order)
+		unused_allow_subunits = self._import_property_value(data, DATOrder.Property.unused_allow_subunits, _OrderPropertyCoder.unused_allow_subunits)
+		interruptable = self._import_property_value(data, DATOrder.Property.interruptable, _OrderPropertyCoder.interruptable)
+		waypoints_slowdown = self._import_property_value(data, DATOrder.Property.waypoints_slowdown, _OrderPropertyCoder.waypoints_slowdown)
+		queueable = self._import_property_value(data, DATOrder.Property.queueable, _OrderPropertyCoder.queueable)
+		disabled_maintain_unit_target = self._import_property_value(data, DATOrder.Property.disabled_maintain_unit_target, _OrderPropertyCoder.disabled_maintain_unit_target)
+		obstructable = self._import_property_value(data, DATOrder.Property.obstructable, _OrderPropertyCoder.obstructable)
+		flee_unreturnable_damage = self._import_property_value(data, DATOrder.Property.flee_unreturnable_damage, _OrderPropertyCoder.flee_unreturnable_damage)
+		unused_requires_movable_unit = self._import_property_value(data, DATOrder.Property.unused_requires_movable_unit, _OrderPropertyCoder.unused_requires_movable_unit)
+		weapon_targeting = self._import_property_value(data, DATOrder.Property.weapon_targeting)
+		technology_energy = self._import_property_value(data, DATOrder.Property.technology_energy)
+		iscript_animation = self._import_property_value(data, DATOrder.Property.iscript_animation)
+		highlight_icon = self._import_property_value(data, DATOrder.Property.highlight_icon)
+		requirements = self._import_property_value(data, DATOrder.Property.requirements)
+		obscured_order = self._import_property_value(data, DATOrder.Property.obscured_order)
 
-		if label != None:
+		if label is not None:
 			self.label = label
-		if use_weapon_targeting != None:
+		if use_weapon_targeting is not None:
 			self.use_weapon_targeting = use_weapon_targeting
-		if unused_is_secondary != None:
+		if unused_is_secondary is not None:
 			self.unused_is_secondary = unused_is_secondary
-		if unused_allow_non_subunits != None:
+		if unused_allow_non_subunits is not None:
 			self.unused_allow_non_subunits = unused_allow_non_subunits
-		if changes_subunit_order != None:
+		if changes_subunit_order is not None:
 			self.changes_subunit_order = changes_subunit_order
-		if unused_allow_subunits != None:
+		if unused_allow_subunits is not None:
 			self.unused_allow_subunits = unused_allow_subunits
-		if interruptable != None:
+		if interruptable is not None:
 			self.interruptable = interruptable
-		if waypoints_slowdown != None:
+		if waypoints_slowdown is not None:
 			self.waypoints_slowdown = waypoints_slowdown
-		if queueable != None:
+		if queueable is not None:
 			self.queueable = queueable
-		if disabled_maintain_unit_target != None:
+		if disabled_maintain_unit_target is not None:
 			self.disabled_maintain_unit_target = disabled_maintain_unit_target
-		if obstructable != None:
+		if obstructable is not None:
 			self.obstructable = obstructable
-		if flee_unreturnable_damage != None:
+		if flee_unreturnable_damage is not None:
 			self.flee_unreturnable_damage = flee_unreturnable_damage
-		if unused_requires_movable_unit != None:
+		if unused_requires_movable_unit is not None:
 			self.unused_requires_movable_unit = unused_requires_movable_unit
-		if weapon_targeting != None:
+		if weapon_targeting is not None:
 			self.weapon_targeting = weapon_targeting
-		if technology_energy != None:
+		if technology_energy is not None:
 			self.technology_energy = technology_energy
-		if iscript_animation != None:
+		if iscript_animation is not None:
 			self.iscript_animation = iscript_animation
-		if highlight_icon != None:
+		if highlight_icon is not None:
 			self.highlight_icon = highlight_icon
-		if requirements != None:
+		if requirements is not None:
 			self.requirements = requirements
-		if obscured_order != None:
+		if obscured_order is not None:
 			self.obscured_order = obscured_order
 
 class _OrderPropertyCoder:
@@ -271,8 +275,8 @@ class OrdersDAT(AbstractDAT.AbstractDAT):
 				}
 			]
 		})
-	ENTRY_STRUCT = Order
+	ENTRY_STRUCT = DATOrder
 	FILE_NAME = "orders.dat"
 
-	def get_entry(self, index): # type: (int) -> Order
-		return super(OrdersDAT, self).get_entry(index)
+	def get_entry(self, index: int) -> DATOrder:
+		return cast(DATOrder, super().get_entry(index))

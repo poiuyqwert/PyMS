@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ..CHKSection import CHKSection
 from ..CHKRequirements import CHKRequirements
 
@@ -6,10 +8,14 @@ from ....Utilities.utils import pad
 
 import struct
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..CHK import CHK
+
 class CHKSectionCOLR(CHKSection):
-	NAME = 'COLR'
+	NAME = b'COLR'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_BROODWAR, CHKRequirements.MODE_ALL)
-	
+
 	RED = 0
 	BLUE = 1
 	TEAL = 2
@@ -31,7 +37,7 @@ class CHKSectionCOLR(CHKSection):
 	DEFAULT_COLORS = [RED,BLUE,TEAL,PURPLE,ORANGE,BROWN,WHITE,YELLOW]
 
 	@staticmethod
-	def COLOR_NAME(c):
+	def COLOR_NAME(c: int) -> str:
 		names = {
 			CHKSectionCOLR.RED:'Red',
 			CHKSectionCOLR.BLUE:'Blue',
@@ -54,7 +60,7 @@ class CHKSectionCOLR(CHKSection):
 		return names.get(c,'Unknown')
 
 	@staticmethod
-	def PALETTE_INDICES(c):
+	def PALETTE_INDICES(c: int) -> int:
 		names = {
 			CHKSectionCOLR.RED:111,
 			CHKSectionCOLR.BLUE:165,
@@ -76,18 +82,18 @@ class CHKSectionCOLR(CHKSection):
 		}
 		return names.get(c,0)
 
-	def __init__(self, chk):
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
-		self.colors = CHKSectionCOLR.DEFAULT_COLORS
-	
-	def load_data(self, data):
-		self.colors = list(struct.unpack('<8B', data[:8]))
-	
-	def save_data(self):
+		self.colors = list(CHKSectionCOLR.DEFAULT_COLORS)
+
+	def load_data(self, data: bytes) -> None:
+		self.colors = list(int(c) for c in struct.unpack('<8B', data[:8]))
+
+	def save_data(self) -> bytes:
 		return struct.pack('<8B', *self.colors)
-	
-	def decompile(self):
-		result = '%s:\n' % (self.NAME)
+
+	def decompile(self) -> str:
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for p,c in enumerate(self.colors):
-			result += '\t%s # %s\n' % (pad('Player%d' % (p+1), c), CHKSectionCOLR.COLOR_NAME(c))
+			result += f'\t{pad(f"Player{p+1}", str(c))} # {CHKSectionCOLR.COLOR_NAME(c)}\n'
 		return result
