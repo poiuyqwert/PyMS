@@ -37,6 +37,9 @@ PyMS is a cross platform BroodWar modding suite written using [Python](http://ww
 2. **Download PyMS.** Always get the most up to date PyMS from [github](https://github.com/poiuyqwert/pyms) ([direct link](https://github.com/poiuyqwert/PyMS/archive/master.zip)). If you are updating PyMS, you can keep your settings files located in the Settings folder.
 3. **Install Dependencies.** Install all dependencies of PyMS by opening the command line, navigating to the PyMS folder, and running `python -m pip install -r requirements.txt`. If you have multiple versions of python install, make sure you are using PIP that is installed with the correct Python version and not another verson of Python on your machine.
 
+## Change Log
+See the [Change Log](/Help/Programs/Change_Log.md) for what's new in each version of PyMS and its programs. When a program finds an update, its update dialog also has a **Change Log** button to view it.
+
 ## Issues/Feedback
 If you run into any issues with the programs, or have any feedback to improve the programs, please do one of the following:
 1. Create an issue [on github](https://github.com/poiuyqwert/PyMS/issues)
@@ -70,9 +73,6 @@ At the moment PyMS only tracks the launch of PyMS programs, anonamously and with
 ```
 
 Even though the analytics is anonamous and has no sensitive information, you can still disable analytics by editing "Settings/PyMS.txt", and setting the "allow" key under "analytics" to be False.
-
-## Change Log
-See the [Change Log](/Help/Programs/Change_Log.md) for what's new in each version of PyMS and its programs. When a program finds an update, its update dialog also has a **Change Log** button to view it.
 
 ## Programs
 PyMS contains 16 programs to edit most of the file types you will encounter while modding.
