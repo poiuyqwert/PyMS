@@ -1,0 +1,98 @@
+Replay: Paused
+Replay: Playing
+Cancel
+Cancel Place Building/Add-on/Land
+Cancel Construction
+Cancel Construction + Rally
+Cancel Mutation
+Cancel Mutation + Rally
+Cancel Infestation
+Hatchery{Morphing}
+Cancel Nuke Strike
+Mixed Group
+Basic Commands
+Peon Group
+Transport
+Attacking Buildings
+Larva
+Egg/Cocoon
+Drone
+Basic Zerg Buildings
+Advanced Zerg Buildings
+Basic Burrower
+Hydralisk
+Mutalisk
+Lurker
+Queen + Heroes
+Defiler + Heroes
+Infested Terran
+Infested Kerrigan
+Infested Duran
+Hatchery
+Lair
+Hive
+Nydus Canal
+Spire
+Greater Spire
+Spawning Pool
+Creep Colony
+Hydralisk Den
+Queen's Nest
+Defiler Mound
+Evolution Chamber
+Ultralisk Cavern
+Nexus
+Probe
+Basic Protoss Buildings
+Advanced Protoss Buildings
+High Templar
+Dark Templar
+Carrier + Heroes
+Reaver + Heroes
+Arbiter + Heroes
+High Templar Heroes
+Corsair + Heroes
+Dark Archon
+Robotics Facility
+Gateway
+Stargate
+Citadel of Adun
+Cybernetics Core
+Templar Archives
+Forge
+Fleet Beacon
+Arbiter Tribunal
+Robotics Support Bay
+Shield Battery
+Observatory
+Cloak Group
+Marine/Firebat + Heroes
+Medic
+SCV
+Basic Terran Buildings
+Advanced Terran Buildings
+Ghost
+Ghost Heroes
+Vulture
+Siege Tank + Heroes
+Wraith
+Science Vessel + Heroes
+Battlecruiser + Heroes
+Vulture Heroes
+Command Center
+Comsat Station
+Nuclear Silo
+Bunker
+Barracks
+Factory
+Science Facility
+Starport
+Control Tower
+Engineering Bay
+Covert Ops
+Physics Lab
+Armory
+Academy
+Machine Shop
+Infested Command Center
+Flag Beacon

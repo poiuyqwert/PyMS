@@ -4,6 +4,7 @@ from .CodeHandlers import CodeCommands
 
 from ...Utilities.CodeHandlers.CodeCommand import CodeCommand
 from ...Utilities.CodeHandlers.CodeHeader import CodeHeader
+from ...Utilities.CodeHandlers.CodeStruct import StructBlock
 from ...Utilities.CodeHandlers.CodeType import CodeBlock
 from ...Utilities.CodeHandlers.SerializeContext import SerializeContext
 
@@ -30,13 +31,12 @@ class AIScript(CodeHeader):
 		return [(self.entry_point, 'EntryPoint')]
 
 	def serialize(self, serialize_context: SerializeContext) -> None:
-		serialize_context.write(f'\nscript {self.id} {{\n')
-		serialize_context.indent()
-		CodeCommand(CodeCommands.HeaderNameString, [self.string_id]).serialize(serialize_context)
-		CodeCommand(CodeCommands.HeaderBinFile, [self.in_bwscript]).serialize(serialize_context)
-		CodeCommand(CodeCommands.BroodwarOnly, [1 if self.flags & AIFlag.broodwar_only else 0]).serialize(serialize_context)
-		CodeCommand(CodeCommands.StarEditHidden, [1 if self.flags & AIFlag.staredit_hidden else 0]).serialize(serialize_context)
-		CodeCommand(CodeCommands.RequiresLocation, [1 if self.flags & AIFlag.requires_location else 0]).serialize(serialize_context)
-		CodeCommand(CodeCommands.EntryPoint, [self.entry_point]).serialize(serialize_context)
-		serialize_context.dedent()
-		serialize_context.write('}\n')
+		serialize_context.write('\n')
+		StructBlock(CodeCommands.ScriptHeader, [self.id], [
+			CodeCommand(CodeCommands.HeaderNameString, [self.string_id]),
+			CodeCommand(CodeCommands.HeaderBinFile, [self.in_bwscript]),
+			CodeCommand(CodeCommands.BroodwarOnly, [1 if self.flags & AIFlag.broodwar_only else 0]),
+			CodeCommand(CodeCommands.StarEditHidden, [1 if self.flags & AIFlag.staredit_hidden else 0]),
+			CodeCommand(CodeCommands.RequiresLocation, [1 if self.flags & AIFlag.requires_location else 0]),
+			CodeCommand(CodeCommands.EntryPoint, [self.entry_point]),
+		]).serialize(serialize_context)

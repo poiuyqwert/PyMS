@@ -3,6 +3,7 @@ from . import CodeTypes
 from . import AISECodeTypes
 
 from ....Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
+from ....Utilities.CodeHandlers.CodeStruct import StructBlockDefinition, StructField
 
 # Note: The standard Goto command has to have a bit of pollution from AISE to manage long jump blocks
 Goto = CodeCommandDefinition('goto', 'Jump to {1}.', 0, (AISECodeTypes.LongBlockCodeType(),), ends_flow=True)
@@ -261,3 +262,6 @@ all_header_commands: list[CodeCommandDefinition] = [
 	RequiresLocation,
 	EntryPoint
 ]
+
+# The `script ID { ... }` header, with each header command as a required field
+ScriptHeader = StructBlockDefinition('script', 'script header', "Script with ID '{0}'", (CodeTypes.ScriptIDCodeType(),), fields=tuple(StructField(cmd_def.name, (cmd_def,)) for cmd_def in all_header_commands))

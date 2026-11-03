@@ -112,6 +112,7 @@ class DataReference:
 	DamTypes        = 'DamTypes' # Damage Types
 	Mapdata         = 'Mapdata' # Campaign Names
 	Units           = 'Units' # Default Units
+	ButtonSets      = 'ButtonSets' # Button Sets (Graft)
 	Remapping       = 'Remapping' # Remapping
 	DrawList        = 'DrawList' # Draw Types
 	FlingyControl   = 'FlingyControl' # Flingy Controlers

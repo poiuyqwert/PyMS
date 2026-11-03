@@ -116,6 +116,14 @@ class Test_ErrorLines(unittest.TestCase):
 		self.assertEqual(cm.exception.line, 7)
 		self.assertEqual(cm.exception.code, '    broodwar_only 0')
 
+	def test_text_after_header_is_reported_on_its_line(self) -> None:
+		code = ':S\nstop\n' + HEADER.replace('}\n', '} :T\n')
+		with self.assertRaises(PyMSError) as cm:
+			_compile(code)
+		self.assertIn("Unexpected token ':' (expected end of line or file)", str(cm.exception))
+		self.assertEqual(cm.exception.line, 10)
+		self.assertEqual(cm.exception.code, '} :T')
+
 	def test_mid_line_errors_are_reported_on_their_line(self) -> None:
 		self.assert_error_line(':S\nwait 1\nwait abc\nstop\n', 3, 'Invalid value `abc` for `word`')
 		self.assert_error_line(':S\nwait 1\nbogus_cmd 5\nstop\n', 3, "Unexpected token 'bogus_cmd'")

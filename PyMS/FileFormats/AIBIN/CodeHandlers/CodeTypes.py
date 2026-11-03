@@ -3,6 +3,7 @@ from . import WarningID
 from .AISerializeContext import AISerializeContext
 from .AIParseContext import AIParseContext
 from .AIDecompileContext import AIDecompileContext
+from .AILexer import AILexer
 
 from ....FileFormats.DAT.UnitsDAT import UnitsDAT, DATUnit
 from ....FileFormats.DAT.UpgradesDAT import UpgradesDAT
@@ -38,6 +39,7 @@ __all__ = [
 	'TBLStringCodeType',
 	'BinFileCodeType',
 	'BoolCodeType',
+	'ScriptIDCodeType',
 ]
 
 class ByteCodeType(CodeType.IntCodeType):
@@ -502,6 +504,19 @@ all_basic_types: list[CodeType.CodeType] = [
 ]
 
 # Types used by header
+
+class ScriptIDCodeType(CodeType.CodeType[str, str]):
+	def __init__(self) -> None:
+		CodeType.CodeType.__init__(self, 'script_id', 'A 4 character script ID', Struct.l_str(4), False)
+
+	def serialize(self, value: str, context: SerializeContext) -> str:
+		return value
+
+	def lex(self, parse_context: ParseContext) -> str:
+		token = parse_context.lexer.check_token(AILexer.ScriptIDToken)
+		if not isinstance(token, AILexer.ScriptIDToken):
+			raise parse_context.error('Parse', f"Expected script ID, got '{token.raw_value}' instead")
+		return token.raw_value
 
 class TBLStringCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
