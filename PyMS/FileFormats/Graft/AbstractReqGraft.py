@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from .Definitions import ParamKind, OPCODE_MIN, END_OF_LIST
-from .CodeHandlers import CodeCommands
+from .Definitions import OPCODE_MIN, END_OF_LIST
+from .CodeHandlers import RequirementCodeCommands
 from .CodeHandlers.GraftLanguage import GraftLanguage
+from .CodeHandlers.DataContext import DataContext
 from .CodeHandlers.GraftParseContext import GraftParseContext
 from .CodeHandlers.GraftSerializeContext import GraftSerializeContext
 from .CodeHandlers import SourceParsing
@@ -46,8 +47,6 @@ class AbstractReqGraft:
 	DESCRIPTION: str
 	# Keyword for the header of each script in the source code
 	HEADER_KEYWORD: str
-	# What the ID of each script is for
-	ID_KIND: ParamKind
 	# The language of the file's scripts (which has the requirement opcodes that are available for the file)
 	LANGUAGE: type[GraftLanguage]
 
@@ -55,6 +54,11 @@ class AbstractReqGraft:
 		# The first word of the file (always 0 in vanilla, unknown purpose)
 		self.header_word = 0
 		self._scripts: OrderedDict[int, ReqScript] = OrderedDict()
+
+	@staticmethod
+	def entry_name(data_context: DataContext, entry_id: int) -> str | None:
+		# The name of what the script with ID `entry_id` is for
+		raise NotImplementedError()
 
 	@classmethod
 	def default_path(cls) -> str:
@@ -75,13 +79,13 @@ class AbstractReqGraft:
 				if not in_sublist:
 					break
 				in_sublist = False
-				commands.append(CodeCommand(CodeCommands.EndSublist, []))
+				commands.append(CodeCommand(RequirementCodeCommands.EndSublist, []))
 			elif word < OPCODE_MIN:
-				commands.append(CodeCommand(CodeCommands.Has, [word]))
+				commands.append(CodeCommand(RequirementCodeCommands.Has, [word]))
 			elif cmd_def := cls.LANGUAGE.lookup_opcode(word):
 				params = [_scan_word(scanner) for _ in cmd_def.param_types]
 				commands.append(CodeCommand(cmd_def, params))
-				if cmd_def in CodeCommands.sublist_commands:
+				if cmd_def in RequirementCodeCommands.sublist_commands:
 					in_sublist = True
 			else:
 				raise PyMSError('Scan', f'script {entry_id} has the word 0x{word:04X}, which is not an opcode for {cls.DESCRIPTION.lower()}')
@@ -94,14 +98,14 @@ class AbstractReqGraft:
 			definition = command.definition
 			if not cls.LANGUAGE.has_command(definition):
 				raise PyMSError('Validate', f'`{definition.name}` is not available for {cls.DESCRIPTION.lower()} in script {script.entry_id}')
-			if definition == CodeCommands.EndSublist:
+			if definition == RequirementCodeCommands.EndSublist:
 				if not in_sublist:
 					raise PyMSError('Validate', f'`end_sublist` used outside of an `upgrade_level_1` or `upgrade_level_2` sub-list in script {script.entry_id}')
 				in_sublist = False
-			elif definition == CodeCommands.Has:
+			elif definition == RequirementCodeCommands.Has:
 				if command.params[0] >= OPCODE_MIN:
 					raise PyMSError('Validate', f'`has` unit ID {command.params[0]} is too large (must be below {OPCODE_MIN}) in script {script.entry_id}')
-			elif definition in CodeCommands.sublist_commands:
+			elif definition in RequirementCodeCommands.sublist_commands:
 				in_sublist = True
 		if in_sublist:
 			raise PyMSError('Validate', f'An `upgrade_level_1` or `upgrade_level_2` sub-list is not ended with `end_sublist` in script {script.entry_id}')
@@ -113,9 +117,9 @@ class AbstractReqGraft:
 		words: list[int] = []
 		for command in script.commands:
 			definition = command.definition
-			if definition == CodeCommands.EndSublist:
+			if definition == RequirementCodeCommands.EndSublist:
 				words.append(END_OF_LIST)
-			elif definition == CodeCommands.Has:
+			elif definition == RequirementCodeCommands.Has:
 				words.append(command.params[0])
 			else:
 				assert definition.byte_code_id is not None
@@ -222,7 +226,7 @@ class AbstractReqGraft:
 				serialize_context.write('\n')
 			first = False
 			serialize_context.write(f'{self.HEADER_KEYWORD} {entry_id}:')
-			if data_context and (name := data_context.name(self.ID_KIND, entry_id)):
+			if data_context and (name := self.entry_name(data_context, entry_id)):
 				serialize_context.write(serialize_context.formatters.comment.serialize([name]))
 			serialize_context.write('\n')
 			serialize_context.indent()
@@ -255,7 +259,7 @@ class AbstractReqGraft:
 				continue
 			cmd_def = parse_context.language.lookup_command(token.raw_value, parse_context.language_context)
 			if cmd_def is None:
-				if any(other.name == token.raw_value for other in CodeCommands.all_opcode_commands + [CodeCommands.EndSublist]):
+				if any(other.name == token.raw_value for other in RequirementCodeCommands.all_opcode_commands + [RequirementCodeCommands.EndSublist]):
 					raise parse_context.error('Parse', f'`{token.raw_value}` is not available for {cls.DESCRIPTION.lower()}')
 				raise parse_context.error('Parse', f'Unknown command `{token.raw_value}`')
 			if script is None:

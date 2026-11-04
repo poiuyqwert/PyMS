@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from .AbstractReqGraft import AbstractReqGraft
-from .Definitions import ParamKind
+from .CodeHandlers.DataContext import DataContext
 from .CodeHandlers.GraftLanguage import OtherRequirementsLanguage
 
 class UpgradesGraft(AbstractReqGraft):
@@ -9,5 +9,8 @@ class UpgradesGraft(AbstractReqGraft):
 	MPQ_PATH = 'datreq\\Upgrades.graft'
 	DESCRIPTION = 'Upgrade Requirements'
 	HEADER_KEYWORD = 'Upgrade'
-	ID_KIND = ParamKind.upgrade
 	LANGUAGE = OtherRequirementsLanguage
+
+	@staticmethod
+	def entry_name(data_context: DataContext, entry_id: int) -> str | None:
+		return data_context.upgrade_name(entry_id)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from .DataContext import DataContext
-from ..Definitions import ParamKind, StatFunction, NO_CONNECTED_UNIT
+from ..Definitions import NO_CONNECTED_UNIT
 
 from ....Utilities.CodeHandlers import CodeType
 from ....Utilities.CodeHandlers import Tokens
@@ -25,21 +25,28 @@ def _lex_int(token: Tokens.Token) -> int | None:
 		pass
 	return None
 
-class IDCodeType(CodeType.IntCodeType):
+class _DATCodeType(CodeType.IntCodeType):
 	# A DAT entry ID, written as its name (when that name is unique) or as an integer
-	def __init__(self, name: str, help_text: str, kind: ParamKind, bytecode_type: Struct.IntField = Struct.l_u16, *, limits: tuple[int, int] | None = None) -> None:
-		super().__init__(name, help_text, bytecode_type, limits=limits, allow_hex=True)
-		self.kind = kind
+	KIND: str # What the IDs are for, used in errors
+
+	def __init__(self, name: str, help_text: str, *, limits: tuple[int, int] | None = None) -> None:
+		super().__init__(name, help_text, Struct.l_u16, limits=limits, allow_hex=True)
+
+	def _entry_name(self, data_context: DataContext, entry_id: int, unique: bool = False) -> str | None:
+		raise NotImplementedError()
+
+	def _entry_ids(self, data_context: DataContext, name: str) -> tuple[int, ...]:
+		raise NotImplementedError()
 
 	def serialize(self, value: int, context: SerializeContext) -> str:
-		if (data_context := _data_context(context)) and (name := data_context.unique_name(self.kind, value)):
+		if (data_context := _data_context(context)) and (name := self._entry_name(data_context, value, unique=True)):
 			return CodeType.StrCodeType.serialize_string(name)
 		return super().serialize(value, context)
 
 	def comment(self, value: int, context: SerializeContext) -> str | None:
 		# Only comment when the value couldn't be written as a name
-		if (data_context := _data_context(context)) and data_context.unique_name(self.kind, value) is None:
-			return data_context.name(self.kind, value)
+		if (data_context := _data_context(context)) and self._entry_name(data_context, value, unique=True) is None:
+			return self._entry_name(data_context, value)
 		return None
 
 	def lex(self, parse_context: ParseContext) -> int:
@@ -48,19 +55,89 @@ class IDCodeType(CodeType.IntCodeType):
 			_ = parse_context.lexer.next_token()
 			name = CodeType.StrCodeType.parse_string(token.raw_value)
 			data_context = _data_context(parse_context)
-			entry_id = data_context.id(self.kind, name) if data_context else None
-			if entry_id is None:
-				raise parse_context.error('Parse', f'`{name}` is not a known (or unique) {self.kind.value} name for `{self.name}`')
-			return entry_id
+			entry_ids = self._entry_ids(data_context, name) if data_context else ()
+			if not entry_ids:
+				raise parse_context.error('Parse', f'`{name}` is not a known {self.KIND} name for `{self.name}`')
+			if len(entry_ids) > 1:
+				raise parse_context.error('Parse', f'`{name}` is the name of multiple {self.KIND} IDs ({", ".join(str(entry_id) for entry_id in entry_ids)}) for `{self.name}`, use the ID instead')
+			return entry_ids[0]
 		return super().lex(parse_context)
 
-def unit_id_type(name: str = 'unit', help_text: str = 'A unit ID, or its quoted name') -> IDCodeType:
-	return IDCodeType(name, help_text, ParamKind.unit, limits=(0, 0xFEFF))
+class UnitCodeType(_DATCodeType):
+	KIND = 'unit'
 
-def id_type(kind: ParamKind, name: str | None = None) -> CodeType.IntCodeType:
-	if kind == ParamKind.none:
-		return CodeType.IntCodeType(name or 'value', 'A raw value', Struct.l_u16, allow_hex=True)
-	return IDCodeType(name or kind.value, f'A {kind.value} ID, or its quoted name', kind)
+	def __init__(self, name: str = 'unit', help_text: str = 'A unit ID, or its quoted name', *, limits: tuple[int, int] | None = None) -> None:
+		super().__init__(name, help_text, limits=limits)
+
+	def _entry_name(self, data_context: DataContext, entry_id: int, unique: bool = False) -> str | None:
+		return data_context.unit_name(entry_id, unique)
+
+	def _entry_ids(self, data_context: DataContext, name: str) -> tuple[int, ...]:
+		return data_context.unit_ids(name)
+
+class UpgradeCodeType(_DATCodeType):
+	KIND = 'upgrade'
+
+	def __init__(self) -> None:
+		super().__init__('upgrade', 'An upgrade ID, or its quoted name')
+
+	def _entry_name(self, data_context: DataContext, entry_id: int, unique: bool = False) -> str | None:
+		return data_context.upgrade_name(entry_id, unique)
+
+	def _entry_ids(self, data_context: DataContext, name: str) -> tuple[int, ...]:
+		return data_context.upgrade_ids(name)
+
+class TechCodeType(_DATCodeType):
+	KIND = 'tech'
+
+	def __init__(self) -> None:
+		super().__init__('tech', 'A tech ID, or its quoted name')
+
+	def _entry_name(self, data_context: DataContext, entry_id: int, unique: bool = False) -> str | None:
+		return data_context.tech_name(entry_id, unique)
+
+	def _entry_ids(self, data_context: DataContext, name: str) -> tuple[int, ...]:
+		return data_context.tech_ids(name)
+
+class QueueSlotCodeType(CodeType.CodeType[int, int], CodeType.HasKeywords):
+	# A training queue slot, written 1-based (stored 0-based), or `last` for the last queued unit
+	LAST = 'last'
+	LAST_VALUE = 0xFE
+	SLOTS = 5
+
+	def __init__(self) -> None:
+		CodeType.CodeType.__init__(self, 'queue_slot', f'A training queue slot (1 to {QueueSlotCodeType.SLOTS}), or `{QueueSlotCodeType.LAST}`', Struct.l_u16, False)
+
+	def serialize(self, value: int, _context: SerializeContext) -> str:
+		if value == QueueSlotCodeType.LAST_VALUE:
+			return QueueSlotCodeType.LAST
+		return str(value + 1)
+
+	def lex(self, parse_context: ParseContext) -> int:
+		token = parse_context.lexer.next_token()
+		if isinstance(token, Tokens.IdentifierToken) and token.raw_value == QueueSlotCodeType.LAST:
+			return QueueSlotCodeType.LAST_VALUE
+		value = _lex_int(token)
+		if value is None:
+			raise parse_context.error('Parse', f'Invalid value `{token.raw_value}` for `{self.name}` (expected 1 to {QueueSlotCodeType.SLOTS}, or `{QueueSlotCodeType.LAST}`)')
+		return value - 1
+
+	def validate(self, value: int, parse_context: ParseContext, token: str | None = None) -> None:
+		if value != QueueSlotCodeType.LAST_VALUE and not 0 <= value < QueueSlotCodeType.SLOTS:
+			raise PyMSError('Parse', f'Invalid value `{token or value + 1}` for `{self.name}` (expected 1 to {QueueSlotCodeType.SLOTS}, or `{QueueSlotCodeType.LAST}`)')
+
+	def keywords(self) -> Sequence[str]:
+		return (QueueSlotCodeType.LAST,)
+
+class ButtonCardCodeType(UnitCodeType):
+	# The ID of a button card whose buttons are shown: a unit ID, or a special button card after the units
+	def __init__(self) -> None:
+		super().__init__('button_card', 'A unit ID (or its quoted name) whose buttons are shown, or a special button card ID after the units')
+
+	def comment(self, value: int, context: SerializeContext) -> str | None:
+		if (data_context := _data_context(context)) and (name := data_context.special_button_card_name(value)):
+			return name
+		return super().comment(value, context)
 
 class IconCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
@@ -72,8 +149,8 @@ class IconCodeType(CodeType.IntCodeType):
 		return None
 
 class StringIDCodeType(CodeType.IntCodeType):
-	def __init__(self, name: str) -> None:
-		super().__init__(name, 'A stat_txt.tbl string ID (0 for no string)', Struct.l_u16, allow_hex=True)
+	def __init__(self) -> None:
+		super().__init__('string_id', 'A stat_txt.tbl string ID (0 for no string)', Struct.l_u16, allow_hex=True)
 
 	def comment(self, value: int, context: SerializeContext) -> str | None:
 		if data_context := _data_context(context):
@@ -91,81 +168,25 @@ class ButtonPositionCodeType(CodeType.IntCodeType):
 			return ButtonPositionCodeType.NAMES[value - 1]
 		return None
 
-class UnitHeaderCodeType(CodeType.IntCodeType):
+class UnitIDCodeType(CodeType.IntCodeType):
 	# A unit ID written as an integer (with its name as a comment)
 	def __init__(self) -> None:
 		super().__init__('unit', 'A unit ID', Struct.l_u16)
 
 	def comment(self, value: int, context: SerializeContext) -> str | None:
-		if (data_context := _data_context(context)) and value < data_context.entry_count(ParamKind.unit):
-			return data_context.name(ParamKind.unit, value)
+		if data_context := _data_context(context):
+			return data_context.unit_name(value)
 		return None
 
-class FunctionCodeType(CodeType.CodeType[int, int], CodeType.HasKeywords):
-	# A function referenced by its index, written as its name (or an integer if unknown)
-	def __init__(self, name: str, help_text: str, functions: Sequence[StatFunction]) -> None:
-		CodeType.CodeType.__init__(self, name, help_text, Struct.l_u32, False)
-		self.functions = functions
-		self._lookup = {function.name: index for index, function in enumerate(functions)}
+class ButtonCardIDCodeType(CodeType.IntCodeType):
+	# A button card ID written as an integer (with its unit or special button card name as a comment)
+	def __init__(self) -> None:
+		super().__init__('button_card', 'A button card ID (a unit ID, or a special button card ID after the units)', Struct.l_u16)
 
-	def serialize(self, value: int, context: SerializeContext) -> str:
-		if 0 <= value < len(self.functions):
-			return self.functions[value].name
-		return str(value)
-
-	def comment(self, value: int, _context: SerializeContext) -> str | None:
-		if 0 <= value < len(self.functions):
-			return None
-		return f'Unknown {self.name}'
-
-	def lex(self, parse_context: ParseContext) -> int:
-		token = parse_context.lexer.next_token()
-		if isinstance(token, Tokens.IdentifierToken):
-			if token.raw_value in self._lookup:
-				return self._lookup[token.raw_value]
-			raise parse_context.error('Parse', f'`{token.raw_value}` is not a valid `{self.name}`')
-		value = _lex_int(token)
-		if value is None:
-			raise parse_context.error('Parse', f'Expected a `{self.name}` name or integer but got `{token.raw_value}`')
-		return value
-
-	def validate(self, value: int, parse_context: ParseContext, token: str | None = None) -> None:
-		if value < 0 or value > Struct.l_u32.max:
-			raise PyMSError('Parse', f'Value `{value}` is out of range for `{self.name}`')
-
-	def keywords(self) -> Sequence[str]:
-		return tuple(self._lookup.keys())
-
-class OptionalCodeType(CodeType.CodeType[int | None, int | None], CodeType.HasKeywords):
-	# Wraps an int type to also accept `None`
-	NONE = 'None'
-
-	def __init__(self, base: CodeType.IntCodeType) -> None:
-		CodeType.CodeType.__init__(self, base.name, f'{base.help_text}, or `None`', Struct.l_u16, False)
-		self.base = base
-
-	def serialize(self, value: int | None, context: SerializeContext) -> str:
-		if value is None:
-			return OptionalCodeType.NONE
-		return self.base.serialize(value, context)
-
-	def comment(self, value: int | None, context: SerializeContext) -> str | None:
-		if value is None:
-			return None
-		return self.base.comment(value, context)
-
-	def parse(self, parse_context: ParseContext) -> int | None:
-		token = parse_context.lexer.next_token(peek=True)
-		if isinstance(token, Tokens.IdentifierToken) and token.raw_value == OptionalCodeType.NONE:
-			_ = parse_context.lexer.next_token()
-			return None
-		return self.base.parse(parse_context)
-
-	def lex(self, parse_context: ParseContext) -> int | None:
-		return self.base.lex(parse_context)
-
-	def keywords(self) -> Sequence[str]:
-		return (OptionalCodeType.NONE,)
+	def comment(self, value: int, context: SerializeContext) -> str | None:
+		if data_context := _data_context(context):
+			return data_context.special_button_card_name(value) or data_context.unit_name(value)
+		return None
 
 class ButtonSetCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
@@ -176,10 +197,44 @@ class ButtonSetCodeType(CodeType.IntCodeType):
 			return data_context.button_set_name(value)
 		return None
 
-class ConnectedUnitCodeType(OptionalCodeType):
-	# `None` is stored as 0xFFFF
+class UnitButtonSetCodeType(CodeType.CodeType[int | None, int | None], CodeType.HasKeywords):
+	# The button set a button card uses, or `None` for no buttons
+	NONE = 'None'
+
 	def __init__(self) -> None:
-		super().__init__(IDCodeType('connected_unit', 'A unit ID, or its quoted name', ParamKind.unit, limits=(0, NO_CONNECTED_UNIT - 1)))
+		CodeType.CodeType.__init__(self, 'button_set', 'A button set ID, or `None`', Struct.l_u32, False)
+		self._button_set = ButtonSetCodeType()
+
+	def serialize(self, value: int | None, context: SerializeContext) -> str:
+		if value is None:
+			return UnitButtonSetCodeType.NONE
+		return self._button_set.serialize(value, context)
+
+	def comment(self, value: int | None, context: SerializeContext) -> str | None:
+		if value is None:
+			return None
+		return self._button_set.comment(value, context)
+
+	def parse(self, parse_context: ParseContext) -> int | None:
+		token = parse_context.lexer.next_token(peek=True)
+		if isinstance(token, Tokens.IdentifierToken) and token.raw_value == UnitButtonSetCodeType.NONE:
+			_ = parse_context.lexer.next_token()
+			return None
+		return self._button_set.parse(parse_context)
+
+	def lex(self, parse_context: ParseContext) -> int | None:
+		return self._button_set.lex(parse_context)
+
+	def keywords(self) -> Sequence[str]:
+		return (UnitButtonSetCodeType.NONE,)
+
+class ConnectedUnitCodeType(CodeType.CodeType[int | None, int | None], CodeType.HasKeywords):
+	# The unit a button card is connected to, or `None` (stored as 0xFFFF)
+	NONE = 'None'
+
+	def __init__(self) -> None:
+		CodeType.CodeType.__init__(self, 'connected_unit', 'A unit ID (or its quoted name), or `None`', Struct.l_u16, False)
+		self._unit = UnitCodeType('connected_unit', limits=(0, NO_CONNECTED_UNIT - 1))
 
 	@staticmethod
 	def to_value(value: int | None) -> int:
@@ -188,3 +243,26 @@ class ConnectedUnitCodeType(OptionalCodeType):
 	@staticmethod
 	def from_value(value: int) -> int | None:
 		return None if value == NO_CONNECTED_UNIT else value
+
+	def serialize(self, value: int | None, context: SerializeContext) -> str:
+		if value is None:
+			return ConnectedUnitCodeType.NONE
+		return self._unit.serialize(value, context)
+
+	def comment(self, value: int | None, context: SerializeContext) -> str | None:
+		if value is None:
+			return None
+		return self._unit.comment(value, context)
+
+	def parse(self, parse_context: ParseContext) -> int | None:
+		token = parse_context.lexer.next_token(peek=True)
+		if isinstance(token, Tokens.IdentifierToken) and token.raw_value == ConnectedUnitCodeType.NONE:
+			_ = parse_context.lexer.next_token()
+			return None
+		return self._unit.parse(parse_context)
+
+	def lex(self, parse_context: ParseContext) -> int | None:
+		return self._unit.lex(parse_context)
+
+	def keywords(self) -> Sequence[str]:
+		return (ConnectedUnitCodeType.NONE,)

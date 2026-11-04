@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from .AbstractReqGraft import AbstractReqGraft
-from .Definitions import ParamKind
+from .CodeHandlers.DataContext import DataContext
 from .CodeHandlers.GraftLanguage import UnitRequirementsLanguage
 
 class UnitsGraft(AbstractReqGraft):
@@ -9,5 +9,8 @@ class UnitsGraft(AbstractReqGraft):
 	MPQ_PATH = 'datreq\\Units.graft'
 	DESCRIPTION = 'Unit Requirements'
 	HEADER_KEYWORD = 'Unit'
-	ID_KIND = ParamKind.unit
 	LANGUAGE = UnitRequirementsLanguage
+
+	@staticmethod
+	def entry_name(data_context: DataContext, entry_id: int) -> str | None:
+		return data_context.unit_name(entry_id)

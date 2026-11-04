@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from . import CodeTypes
-from ..Definitions import ParamKind, stat_preset
-
 from ....Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition, CodeCommand
 from ....Utilities.CodeHandlers.CodeType import CodeType
 from ....Utilities.CodeHandlers.ParseContext import ParseContext
@@ -89,29 +86,30 @@ class GraftCodeCommand(CodeCommand):
 			context.write(context.formatters.comment.serialize(comments))
 		context.write('\n')
 
-class ButtonFunctionCommandDefinition(GraftCommandDefinition):
-	# A button condition or action function, with the function's parameter.
-	# Functions without a parameter still store a value, which can be given as an optional raw value.
-	KIND: str
-
-	def __init__(self, address: int, name: str, display_name: str, param_kind: ParamKind) -> None:
-		kind = self.KIND
-		param_type = CodeTypes.id_type(param_kind, f'{kind}_param')
-		if param_kind == ParamKind.none:
-			help_text = f'{kind.capitalize()} `{display_name}` (with the optional unused value {{1}})'
-			required_params = 0
-		else:
-			help_text = f'{kind.capitalize()} `{display_name}` for {param_kind.value} {{1}}'
-			required_params = 1
-		super().__init__(name, help_text, (param_type,), required_params=required_params)
-		self.address = address # Vanilla StarCraft 1.16.1 function address
-		self.display_name = display_name # Name used by FireGraft
-		self.param_kind = param_kind
+class FunctionCommandDefinition(GraftCommandDefinition):
+	# A game function, stored in Buttons.graft as its index in its list of functions
+	def __init__(self, name: str, display_name: str, help_text: str, *, param_types: Sequence[CodeType] = ()) -> None:
+		super().__init__(name, help_text, param_types)
+		self.display_name = display_name # Readable name (the name FireGraft uses, for button conditions and actions)
 		self.function_index = -1 # Index stored in Buttons.graft, set by `number_functions`
 
+class ButtonFunctionCommandDefinition(FunctionCommandDefinition):
+	# A button condition or action function, with the function's parameter (if it uses one)
+	KIND: str
+
+	def __init__(self, name: str, display_name: str, param_type: CodeType | None = None) -> None:
+		kind = self.KIND
+		if param_type is None:
+			help_text = f'{kind.capitalize()} `{display_name}`'
+			param_types: tuple[CodeType, ...] = ()
+		else:
+			help_text = f'{kind.capitalize()} `{display_name}` for {param_type.name} {{1}}'
+			param_types = (param_type,)
+		super().__init__(name, display_name, help_text, param_types=param_types)
+
 	def create_with_param(self, param: int) -> GraftCodeCommand:
-		# The unused value of a function without a parameter is only written when it is set
-		if self.required_params == 0 and param == 0:
+		# The stored value of a function without a parameter is unused, so it isn't written
+		if not self.param_types:
 			return self.create([])
 		return self.create([param])
 
@@ -124,15 +122,9 @@ class ButtonConditionCommandDefinition(ButtonFunctionCommandDefinition):
 class ButtonActionCommandDefinition(ButtonFunctionCommandDefinition):
 	KIND = 'action'
 
-F = TypeVar('F', bound=ButtonFunctionCommandDefinition)
+F = TypeVar('F', bound=FunctionCommandDefinition)
 def number_functions(functions: list[F]) -> list[F]:
 	# Sets each function's index to its position in its list
 	for index, function in enumerate(functions):
 		function.function_index = index
 	return functions
-
-class StatInfoCommandDefinition(GraftCommandDefinition):
-	def comments(self, params: list[Any], _context: SerializeContext) -> list[str]:
-		if preset := stat_preset(params[0], params[1]):
-			return [f'Stat preset: {preset.name}']
-		return []

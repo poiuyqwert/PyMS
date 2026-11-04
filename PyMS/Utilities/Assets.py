@@ -113,6 +113,7 @@ class DataReference:
 	Mapdata         = 'Mapdata' # Campaign Names
 	Units           = 'Units' # Default Units
 	ButtonSets      = 'ButtonSets' # Button Sets (Graft)
+	ButtonCards     = 'ButtonCards' # Special Button Cards after the units (Graft)
 	Remapping       = 'Remapping' # Remapping
 	DrawList        = 'DrawList' # Draw Types
 	FlingyControl   = 'FlingyControl' # Flingy Controlers

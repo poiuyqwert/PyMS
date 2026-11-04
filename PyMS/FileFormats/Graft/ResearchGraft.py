@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from .AbstractReqGraft import AbstractReqGraft
-from .Definitions import ParamKind
+from .CodeHandlers.DataContext import DataContext
 from .CodeHandlers.GraftLanguage import OtherRequirementsLanguage
 
 # Requirements to research a tech (`TechGraft` is the requirements to use a tech)
@@ -10,5 +10,8 @@ class ResearchGraft(AbstractReqGraft):
 	MPQ_PATH = 'datreq\\Research.graft'
 	DESCRIPTION = 'Tech Research Requirements'
 	HEADER_KEYWORD = 'Research'
-	ID_KIND = ParamKind.tech
 	LANGUAGE = OtherRequirementsLanguage
+
+	@staticmethod
+	def entry_name(data_context: DataContext, entry_id: int) -> str | None:
+		return data_context.tech_name(entry_id)

@@ -1,0 +1,22 @@
+Blank
+Cancel Target
+Cancel Place
+Cancel Build
+Cancel Build + Rally
+Cancel Zerg Build
+Cancel Zerg Build + Rally
+Cancel Infestation
+Cancel Build (Larva)
+Cancel Nuke
+Zerg Basic Buildings
+Terran Basic Buildings
+Protoss Basic Buildings
+Zerg Advanced Buildings
+Terran Advanced Buildings
+Protoss Advanced Buildings
+Weird Combat Unit
+No-Build Worker
+Cloakable Hero
+Burrowable Turret
+Replay Paused
+Replay Playing

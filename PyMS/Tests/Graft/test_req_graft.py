@@ -1,6 +1,8 @@
 from .utils import words, decompile_req, compile_req, parse_context
 from ...FileFormats.Graft import AbstractReqGraft, ReqScript, UnitsGraft, UpgradesGraft, ResearchGraft, TechGraft, OrdersGraft, FGP
-from ...FileFormats.Graft.CodeHandlers import CodeCommands
+from ...FileFormats.Graft.CodeHandlers import RequirementCodeCommands, DataContext
+from ...FileFormats.TBL import TBL
+from ...FileFormats.DAT import DataNamesUsage
 from ...Utilities.CodeHandlers.CodeCommand import CodeCommand
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import IO
@@ -33,6 +35,12 @@ INFANTRY_ARMOR_TEXT = """Upgrade 0:	# Terran Infantry Armor
 """
 
 REQ_GRAFT_TYPES: tuple[type[AbstractReqGraft], ...] = (UnitsGraft, UpgradesGraft, ResearchGraft, TechGraft, OrdersGraft)
+
+def _duplicate_names_context() -> DataContext:
+	# Units 0 and 1 are both named `Same`, unit 2 is named `Other`
+	stat_txt = TBL()
+	stat_txt.strings = ['Same\x00', 'Same\x00', 'Other\x00']
+	return DataContext(stat_txt_tbl=stat_txt, data_names_usage=DataNamesUsage.ignore)
 
 def _load(graft_type: type[AbstractReqGraft], data: bytes) -> AbstractReqGraft:
 	graft = graft_type()
@@ -88,7 +96,7 @@ class Test_Load(unittest.TestCase):
 		graft = _load(OrdersGraft, data)
 		script = graft.get_script(46)
 		assert script is not None
-		self.assertEqual([command.definition for command in script.commands], [CodeCommands.CurrentUnitIs, CodeCommands.DoesNotHaveExit])
+		self.assertEqual([command.definition for command in script.commands], [RequirementCodeCommands.CurrentUnitIs, RequirementCodeCommands.DoesNotHaveExit])
 		self.assertIn("\tcurrent_unit_is 'Zerg Nydus Canal'\n\tdoes_not_have_exit\n", decompile_req(graft))
 		self.assertEqual(IO.output_to_bytes(graft.save), data)
 
@@ -96,7 +104,7 @@ class Test_Load(unittest.TestCase):
 		graft = _load(UnitsGraft, words(0, 1, 0x0070, 0xFFFF, 0xFFFF))
 		script = graft.get_script(1)
 		assert script is not None
-		self.assertEqual(script.commands[0].definition, CodeCommands.Has)
+		self.assertEqual(script.commands[0].definition, RequirementCodeCommands.Has)
 		self.assertEqual(script.commands[0].params, [0x70])
 
 	def test_header_word_is_preserved(self) -> None:
@@ -143,14 +151,14 @@ class Test_Load(unittest.TestCase):
 class Test_Save(unittest.TestCase):
 	def test_unended_sub_list_fails(self) -> None:
 		graft = UpgradesGraft()
-		graft.set_script(ReqScript(0, [CodeCommand(CodeCommands.UpgradeLevel1, [])]))
+		graft.set_script(ReqScript(0, [CodeCommand(RequirementCodeCommands.UpgradeLevel1, [])]))
 		with self.assertRaises(PyMSError) as cm:
 			IO.output_to_bytes(graft.save)
 		self.assertIn('sub-list is not ended', str(cm.exception))
 
 	def test_unavailable_command_fails(self) -> None:
 		graft = UnitsGraft()
-		graft.set_script(ReqScript(0, [CodeCommand(CodeCommands.UpgradeLevel1, []), CodeCommand(CodeCommands.EndSublist, [])]))
+		graft.set_script(ReqScript(0, [CodeCommand(RequirementCodeCommands.UpgradeLevel1, []), CodeCommand(RequirementCodeCommands.EndSublist, [])]))
 		with self.assertRaises(PyMSError) as cm:
 			IO.output_to_bytes(graft.save)
 		self.assertIn('`upgrade_level_1` is not available for unit requirements in script 0', str(cm.exception))
@@ -164,7 +172,7 @@ class Test_Scripts(unittest.TestCase):
 	def test_set_script_inserts_new_ids_in_order(self) -> None:
 		graft = _load(UnitsGraft, words(0, 9, 0xFFFF, 2, 0xFFFF, 20, 0xFFFF, 0xFFFF))
 		graft.set_script(ReqScript(15))
-		graft.set_script(ReqScript(2, [CodeCommand(CodeCommands.Has, [7])]))
+		graft.set_script(ReqScript(2, [CodeCommand(RequirementCodeCommands.Has, [7])]))
 		self.assertEqual(graft.list_ids(), [9, 2, 15, 20])
 
 	def test_set_script_without_replace(self) -> None:
@@ -196,9 +204,9 @@ class Test_Compile(unittest.TestCase):
 		scripts = compile_req('Order 4:\nOrder 7:\n', OrdersGraft)
 		self.assertEqual([(script.entry_id, script.commands) for script in scripts], [(4, []), (7, [])])
 
-	def assertCompileError(self, code: str, graft_type: type[AbstractReqGraft], message: str, line: int | None = None) -> None:
+	def assertCompileError(self, code: str, graft_type: type[AbstractReqGraft], message: str, line: int | None = None, data_context: DataContext | None = None) -> None:
 		with self.assertRaises(PyMSError) as cm:
-			compile_req(code, graft_type)
+			compile_req(code, graft_type, data_context)
 		self.assertIn(message, str(cm.exception))
 		if line is not None:
 			self.assertEqual(cm.exception.line, line)
@@ -245,7 +253,22 @@ class Test_Compile(unittest.TestCase):
 		self.assertCompileError('Unit 0:\n\thas 0xFF00\n', UnitsGraft, 'Value is too large for `unit`')
 
 	def test_unknown_name(self) -> None:
-		self.assertCompileError("Unit 0:\n\thas 'Not A Unit'\n", UnitsGraft, '`Not A Unit` is not a known (or unique) unit name')
+		self.assertCompileError("Unit 0:\n\thas 'Not A Unit'\n", UnitsGraft, '`Not A Unit` is not a known unit name')
+
+	def test_name_of_multiple_ids(self) -> None:
+		self.assertCompileError("Unit 0:\n\thas 'Same'\n", UnitsGraft, '`Same` is the name of multiple unit IDs (0, 1)', data_context=_duplicate_names_context())
+
+	def test_unique_name_beside_duplicate_names(self) -> None:
+		scripts = compile_req("Unit 0:\n\thas 'Other'\n", UnitsGraft, _duplicate_names_context())
+		self.assertEqual(scripts[0].commands[0].params, [2])
+
+class Test_Decompile(unittest.TestCase):
+	def test_duplicate_names_are_written_as_ids(self) -> None:
+		graft = _load(UnitsGraft, words(0, 2, 0, 1, 2, 0xFFFF, 0xFFFF))
+		text = decompile_req(graft, _duplicate_names_context())
+		self.assertEqual(text, "Unit 2:\t# Other\n\thas 0\t# Same\n\thas 1\t# Same\n\thas 'Other'\n")
+		graft.replace_scripts(compile_req(text, UnitsGraft, _duplicate_names_context()))
+		self.assertEqual(IO.output_to_bytes(graft.save), words(0, 2, 0, 1, 2, 0xFFFF, 0xFFFF))
 
 class Test_ImportFGP(unittest.TestCase):
 	def test_replaces_adds_and_removes_scripts(self) -> None:

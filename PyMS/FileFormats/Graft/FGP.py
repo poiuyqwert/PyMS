@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from .Definitions import ParamKind
 from .AbstractReqGraft import AbstractReqGraft
 from .UnitsGraft import UnitsGraft
 from .UpgradesGraft import UpgradesGraft
@@ -16,6 +15,7 @@ from ...Utilities import Struct
 from ...Utilities import IO
 
 from dataclasses import dataclass
+from enum import Enum
 
 # FireGraft project (.fgp) files, as saved by FireGraft 1.16.1 (in the `Firegraft\` folder of its MPQ).
 # Only the button, unit, and requirement data is read (EXE edits and plugins are not supported).
@@ -57,6 +57,14 @@ class _NameNode(Struct.Struct):
 		('depth', Struct.t_u32),
 	)
 
+# The chunks of custom names from the FireGraft project
+class FGPNames(Enum):
+	units = 'SUni'
+	technologies = 'SRes'
+	upgrades = 'SUpg'
+	orders = 'SOrd'
+	button_sets = 'SBut'
+
 @dataclass
 class FGPUnit:
 	unit_id: int
@@ -77,21 +85,14 @@ class FGP:
 		TechGraft: 'TecU',
 		OrdersGraft: 'OrdR',
 	}
-	CHUNK_NAMES = {
-		ParamKind.unit: 'SUni',
-		ParamKind.tech: 'SRes',
-		ParamKind.upgrade: 'SUpg',
-		ParamKind.order: 'SOrd',
-		ParamKind.none: 'SBut', # Button sets
-	}
 
 	def __init__(self) -> None:
 		self.button_sets: dict[int, list[Button]] = {}
 		self.units: list[FGPUnit] = []
 		# Requirement scripts as raw words, `None` for a removed script
 		self.requirements: dict[type[AbstractReqGraft], dict[int, list[int] | None]] = {}
-		# Custom names from the FireGraft project (`ParamKind.none` is button set names)
-		self.names: dict[ParamKind, dict[int, str]] = {}
+		# Custom names from the FireGraft project
+		self.names: dict[FGPNames, dict[int, str]] = {}
 		self.warnings: list[PyMSWarning] = []
 
 	@staticmethod
@@ -126,9 +127,9 @@ class FGP:
 			for graft_type, tag in FGP.CHUNK_REQUIREMENTS.items():
 				if (chunk := chunks.get(tag)) is not None:
 					requirements[graft_type] = FGP._load_requirements(chunk, graft_type, warnings)
-			names: dict[ParamKind, dict[int, str]] = {}
-			for kind, tag in FGP.CHUNK_NAMES.items():
-				if (chunk := chunks.get(tag)) is not None:
+			names: dict[FGPNames, dict[int, str]] = {}
+			for kind in FGPNames:
+				if (chunk := chunks.get(kind.value)) is not None:
 					names[kind] = FGP._load_names(chunk)
 		except Exception as exc:
 			raise PyMSError('Load', 'Unsupported FireGraft project, could possibly be invalid or corrupt') from exc
