@@ -7,7 +7,7 @@ from .CodeHandlers import StatInfoCodeCommands
 from .CodeHandlers.GraftLanguage import ButtonsLanguage
 from .CodeHandlers.GraftParseContext import GraftParseContext
 from .CodeHandlers.GraftSerializeContext import GraftSerializeContext
-from .CodeHandlers.GraftCommandDefinitions import FunctionCommandDefinition, ButtonFunctionCommandDefinition
+from .CodeHandlers.GraftCommandDefinition import GraftCommandDefinition
 
 from ...Utilities.CodeHandlers.CodeCommand import CodeCommand
 from ...Utilities.CodeHandlers.CodeStruct import StructBlock, StructField, parse_struct_blocks
@@ -272,25 +272,28 @@ class ButtonsGraft:
 
 	@staticmethod
 	def _button_block(button: Button) -> StructBlock:
-		commands: list[CodeCommand] = [ButtonCodeCommands.Icon.create([button.icon])]
-		commands.append(ButtonCodeCommands.condition_commands[button.condition].create_with_param(button.condition_param))
-		commands.append(ButtonCodeCommands.action_commands[button.action].create_with_param(button.action_param))
-		commands.append(ButtonCodeCommands.EnabledStr.create([button.enabled_string]))
-		commands.append(ButtonCodeCommands.DisabledStr.create([button.disabled_string]))
+		commands: list[CodeCommand] = [CodeCommand(ButtonCodeCommands.Icon, [button.icon])]
+		# The stored value of a function without a parameter is unused, so it isn't written
+		condition = ButtonCodeCommands.condition_commands[button.condition]
+		commands.append(CodeCommand(condition, [button.condition_param] if condition.param_types else []))
+		action = ButtonCodeCommands.action_commands[button.action]
+		commands.append(CodeCommand(action, [button.action_param] if action.param_types else []))
+		commands.append(CodeCommand(ButtonCodeCommands.EnabledStr, [button.enabled_string]))
+		commands.append(CodeCommand(ButtonCodeCommands.DisabledStr, [button.disabled_string]))
 		return StructBlock(ButtonCodeCommands.ButtonBlock, [button.position], commands)
 
 	@staticmethod
 	def _function_value(block: StructBlock, field: StructField) -> tuple[int, int]:
 		# The function index and parameter of a condition or action
 		command = block.get(field)
-		assert command is not None and isinstance(command.definition, ButtonFunctionCommandDefinition)
-		return (command.definition.function_index, command.definition.param_value(command))
+		assert command is not None and isinstance(command.definition, GraftCommandDefinition)
+		return (command.definition.function_index, command.params[0] if command.params else 0)
 
 	@staticmethod
 	def _function_index(block: StructBlock, field: StructField) -> int:
 		# The function index of a status or display function
 		command = block.get(field)
-		assert command is not None and isinstance(command.definition, FunctionCommandDefinition)
+		assert command is not None and isinstance(command.definition, GraftCommandDefinition)
 		return command.definition.function_index
 
 	@staticmethod
@@ -314,15 +317,15 @@ class ButtonsGraft:
 			serialize_context.write('\n')
 		for card_id, card in enumerate(self.button_cards):
 			StructBlock(ButtonCodeCommands.ButtonCardBlock, [card_id], [
-				ButtonCodeCommands.UseButtonSet.create([card.button_set]),
-				ButtonCodeCommands.ConnectedUnit.create([card.connected_unit]),
+				CodeCommand(ButtonCodeCommands.UseButtonSet, [card.button_set]),
+				CodeCommand(ButtonCodeCommands.ConnectedUnit, [card.connected_unit]),
 			]).serialize(serialize_context)
 			serialize_context.write('\n')
 		for unit_id, info in enumerate(self.stat_info):
 			StructBlock(StatInfoCodeCommands.UnitStatInfoBlock, [unit_id], [
-				StatInfoCodeCommands.UnitUnused.create([info.debug_unit_id]),
-				StatInfoCodeCommands.status_function_commands[info.status_function].create([]),
-				StatInfoCodeCommands.display_function_commands[info.display_function].create([]),
+				CodeCommand(StatInfoCodeCommands.UnitUnused, [info.debug_unit_id]),
+				CodeCommand(StatInfoCodeCommands.status_function_commands[info.status_function], []),
+				CodeCommand(StatInfoCodeCommands.display_function_commands[info.display_function], []),
 			]).serialize(serialize_context)
 			serialize_context.write('\n')
 

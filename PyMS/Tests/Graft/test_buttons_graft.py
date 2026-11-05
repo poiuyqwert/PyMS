@@ -113,7 +113,7 @@ class Test_Decompile(unittest.TestCase):
 
 	def test_function_parameters_are_named(self) -> None:
 		text = self._round_trip(Button.unpack(TRAIN_MARINE))
-		self.assertIn("\t\tcan_create 'Terran Marine'\n\t\ttrain 'Terran Marine'\n", text)
+		self.assertIn("\t\tcan_create_or_morph 'Terran Marine'\n\t\ttrain 'Terran Marine'\n", text)
 
 	def test_values_of_functions_without_params_are_not_written(self) -> None:
 		graft = ButtonsGraft()
@@ -289,7 +289,7 @@ MOVE_BODY = 'icon 0\nalways\nmove\nenabled_str 0\ndisabled_str 0'
 class Test_Compile(unittest.TestCase):
 	def test_names_and_defaults(self) -> None:
 		graft = compile_buttons(f"""button_set 0 {{
-{_button("icon 0\ncan_create 'Terran Marine'\ntrain 'Terran Marine'\nenabled_str 1\ndisabled_str 0")}{_button('icon 0x10\nalways\nupgrade "Terran Infantry Armor"\nenabled_str 2\ndisabled_str 3', 2)}}}
+{_button("icon 0\ncan_create_or_morph 'Terran Marine'\ntrain 'Terran Marine'\nenabled_str 1\ndisabled_str 0")}{_button('icon 0x10\nalways\nupgrade "Terran Infantry Armor"\nenabled_str 2\ndisabled_str 3', 2)}}}
 button_set 2 {{
 }}
 button_card 1 {{
