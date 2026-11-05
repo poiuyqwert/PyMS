@@ -10,7 +10,7 @@ from ....Utilities import Struct
 # Unit stat info. The stat panel of a single selected unit is redrawn by its display function whenever its
 # status function finds that what the panel shows has changed.
 
-UnitUnused = CodeCommandDefinition('unit_unused', 'The unused unit {1} (defaults to the unit itself)', None, (CodeTypes.UnitCodeType(limits=(0, Struct.l_u32.max)),))
+DebugID = CodeCommandDefinition('debug_id', 'The debug unit ID {1} (unused by the game, defaults to the unit itself)', None, (CodeTypes.UnitCodeType(limits=(0, Struct.l_u32.max)),))
 
 ChangedNever = GraftCommandDefinition('changed_never', 'Never Changes', 'Never redraws the stat panel (it is only drawn when the unit is selected)')
 ChangedUnit = GraftCommandDefinition('changed_unit', 'Unit Stats Changed', "Redraws the stat panel when the unit's HP, shields, energy, hangar count, remaining time, supply or resources change")
@@ -57,7 +57,7 @@ display_function_commands: list[GraftCommandDefinition] = number_functions([
 	DrawNone,
 ])
 
-unit_stat_info_commands: list[CodeCommandDefinition] = [UnitUnused, *status_function_commands, *display_function_commands]
+unit_stat_info_commands: list[CodeCommandDefinition] = [DebugID, *status_function_commands, *display_function_commands]
 
 # Buttons.graft unit stat info struct block
 
@@ -65,7 +65,7 @@ UnitStatusFunctionField = StructField('status_function', tuple(status_function_c
 UnitDisplayFunctionField = StructField('display_function', tuple(display_function_commands))
 
 UnitStatInfoBlock = StructBlockDefinition('unit_stat_info', 'unit stat info', 'Unit stat info {0}', (CodeTypes.UnitIDCodeType(),), fields=(
-	StructField(UnitUnused.name, (UnitUnused,), required=False),
+	StructField(DebugID.name, (DebugID,), required=False),
 	UnitStatusFunctionField,
 	UnitDisplayFunctionField,
 ))

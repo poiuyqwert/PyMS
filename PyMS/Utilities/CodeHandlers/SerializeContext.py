@@ -17,21 +17,24 @@ class SerializeContext:
 		self.formatters = formatters if formatters is not None else Formatters()
 		self.strategy = DecompileStrategy.empty()
 		self._indent_level = 0
-		self._indent_next = False
+		self._at_line_start = True
 
-	RE_INDENT_NEWLINE = re.compile(r'\n(?=\s*\S)')
-	def write(self, text: str, force_indent: bool = False) -> None:
-		indent = self.formatters.indent * self._indent_level
-		if force_indent or (self._indent_next and self._indent_level):
-			self._output.write(indent)
+	# Blank (or whitespace-only) lines are never indented
+	RE_CONTENT_LINE = re.compile(r'[^\S\n]*\S')
+	RE_INDENT_NEWLINE = re.compile(r'\n(?=[^\S\n]*\S)')
+	def write(self, text: str) -> None:
+		if not text:
+			return
 		if self._indent_level:
+			indent = self.formatters.indent * self._indent_level
+			if self._at_line_start and SerializeContext.RE_CONTENT_LINE.match(text):
+				self._output.write(indent)
 			text = SerializeContext.RE_INDENT_NEWLINE.sub('\n' + indent, text)
 		self._output.write(text)
-		self._indent_next = text.endswith('\n')
+		self._at_line_start = text.endswith('\n')
 
 	def indent(self, levels: int = 1) -> None:
 		self._indent_level += levels
 
 	def dedent(self, levels: int = 1) -> None:
 		self._indent_level = max(0, self._indent_level - levels)
-		self._indent_next = False # Should this be cleared or not?

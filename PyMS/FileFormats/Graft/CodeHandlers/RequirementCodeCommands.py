@@ -10,7 +10,7 @@ from ....Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
 
 Or = CodeCommandDefinition('or', 'Or', 0xFF01)
 CurrentUnitIs = CodeCommandDefinition('current_unit_is', 'Current unit is {1}', 0xFF02, (CodeTypes.UnitCodeType(),))
-MustHave = CodeCommandDefinition('must_have', 'Must have {1}', 0xFF03, (CodeTypes.UnitCodeType(),))
+MustHave = CodeCommandDefinition('must_have', 'Must have {1}, counting units that are still being built or morphed', 0xFF03, (CodeTypes.UnitCodeType(),))
 MustHaveAddon = CodeCommandDefinition('must_have_addon', 'Must have add-on', 0xFF04)
 IsNotLiftedOff = CodeCommandDefinition('is_not_lifted_off', 'Is not lifted off', 0xFF05)
 IsLiftedOff = CodeCommandDefinition('is_lifted_off', 'Is lifted off', 0xFF06)
@@ -51,7 +51,7 @@ IsBurrowed = CodeCommandDefinition('is_burrowed', 'Is burrowed', 0xFF26)
 sublist_commands = (UpgradeLevel1, UpgradeLevel2)
 
 # A requirement word below 0xFF00 checks that the player has the given unit
-Has = CodeCommandDefinition('has', 'Must have {1}', None, (CodeTypes.UnitCodeType(limits=(0, OPCODE_MIN - 1)),))
+Has = CodeCommandDefinition('has', 'Must have {1}, counting only completed units', None, (CodeTypes.UnitCodeType(limits=(0, OPCODE_MIN - 1)),))
 # 0xFFFF after an `upgrade_level_1`/`upgrade_level_2` sub-list
 EndSublist = CodeCommandDefinition('end_sublist', 'Ends an `upgrade_level_1` or `upgrade_level_2` sub-list', None)
 

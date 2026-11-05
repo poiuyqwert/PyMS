@@ -323,7 +323,7 @@ class ButtonsGraft:
 			serialize_context.write('\n')
 		for unit_id, info in enumerate(self.stat_info):
 			StructBlock(StatInfoCodeCommands.UnitStatInfoBlock, [unit_id], [
-				CodeCommand(StatInfoCodeCommands.UnitUnused, [info.debug_unit_id]),
+				CodeCommand(StatInfoCodeCommands.DebugID, [info.debug_unit_id]),
 				CodeCommand(StatInfoCodeCommands.status_function_commands[info.status_function], []),
 				CodeCommand(StatInfoCodeCommands.display_function_commands[info.display_function], []),
 			]).serialize(serialize_context)
@@ -351,7 +351,7 @@ class ButtonsGraft:
 			else:
 				status_function = ButtonsGraft._function_index(block, StatInfoCodeCommands.UnitStatusFunctionField)
 				display_function = ButtonsGraft._function_index(block, StatInfoCodeCommands.UnitDisplayFunctionField)
-				stat_info[entry_id] = StatInfo(block.param(StatInfoCodeCommands.UnitUnused, entry_id), status_function, display_function)
+				stat_info[entry_id] = StatInfo(block.param(StatInfoCodeCommands.DebugID, entry_id), status_function, display_function)
 
 		buttons_graft = ButtonsGraft()
 		set_count = max(button_sets.keys()) + 1 if button_sets else 0

@@ -26,12 +26,12 @@ INFANTRY_ARMOR_TEXT = """Upgrade 0:	# Terran Infantry Armor
 	is_not_lifted_off
 	is_not_training_or_morphing
 	upgrade_level_1
-	end_sublist
+		end_sublist
 	upgrade_level_2
-	has 'Terran Science Facility'
-	end_sublist
+		has 'Terran Science Facility'
+		end_sublist
 	upgrade_level_3
-	has 'Terran Science Facility'
+		has 'Terran Science Facility'
 """
 
 REQ_GRAFT_TYPES: tuple[type[AbstractReqGraft], ...] = (UnitsGraft, UpgradesGraft, ResearchGraft, TechGraft, OrdersGraft)
@@ -80,6 +80,12 @@ class Test_Load(unittest.TestCase):
 		graft = _load(UpgradesGraft, INFANTRY_ARMOR)
 		self.assertEqual(graft.list_ids(), [0])
 		self.assertEqual(decompile_req(graft), INFANTRY_ARMOR_TEXT)
+		self.assertEqual(IO.output_to_bytes(graft.save), INFANTRY_ARMOR)
+
+	def test_sub_list_indentation_is_optional(self) -> None:
+		flat_text = INFANTRY_ARMOR_TEXT.replace('\t\t', '\t')
+		graft = UpgradesGraft()
+		graft.replace_scripts(compile_req(flat_text, UpgradesGraft))
 		self.assertEqual(IO.output_to_bytes(graft.save), INFANTRY_ARMOR)
 
 	def test_unavailable_opcodes_fail(self) -> None:

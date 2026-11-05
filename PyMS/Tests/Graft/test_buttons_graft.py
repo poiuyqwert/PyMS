@@ -42,15 +42,15 @@ class Test_Defaults(unittest.TestCase):
 		graft.new()
 		text = decompile_buttons(graft)
 		self.assertIn('button_card 0 {\t# Terran Marine\n\tuse_button_set 68\t# Marine/Firebat + Heroes\n\tconnected_unit None\n}\n', text)
-		self.assertIn("unit_stat_info 0 {\t# Terran Marine\n\tunit_unused 'Terran Marine'\n\tchanged_unit\n\tdraw_unit\n}\n", text)
+		self.assertIn("unit_stat_info 0 {\t# Terran Marine\n\tdebug_id 'Terran Marine'\n\tchanged_unit\n\tdraw_unit\n}\n", text)
 
 	def test_vanilla_stat_info_units(self) -> None:
 		graft = ButtonsGraft()
 		graft.new()
 		text = decompile_buttons(graft)
 		# The vanilla game leaves the unused unit as 0 for unused units
-		self.assertIn("unit_stat_info 91 {\t# Cargo Ship (Unused) (Unused)\n\tunit_unused 'Terran Marine'\n\tchanged_never\n\tdraw_none\n}\n", text)
-		self.assertIn("unit_stat_info 120 {\t# Terran Machine Shop\n\tunit_unused 'Terran Machine Shop'\n\tchanged_building\n\tdraw_building\n}\n", text)
+		self.assertIn("unit_stat_info 91 {\t# Cargo Ship (Unused) (Unused)\n\tdebug_id 'Terran Marine'\n\tchanged_never\n\tdraw_none\n}\n", text)
+		self.assertIn("unit_stat_info 120 {\t# Terran Machine Shop\n\tdebug_id 'Terran Machine Shop'\n\tchanged_building\n\tdraw_building\n}\n", text)
 
 	def test_vanilla_function_params(self) -> None:
 		graft = ButtonsGraft()
@@ -146,7 +146,7 @@ class Test_Decompile(unittest.TestCase):
 		graft.button_cards = [ButtonCard(None, None)]
 		graft.stat_info = [StatInfo(0, 1, 0), StatInfo(5, 1, 0)]
 		text = decompile_buttons(graft)
-		self.assertEqual(text, "button_card 0 {\t# Terran Marine\n\tuse_button_set None\n\tconnected_unit None\n}\n\nunit_stat_info 0 {\t# Terran Marine\n\tunit_unused 'Terran Marine'\n\tchanged_unit\n\tdraw_unit\n}\n\nunit_stat_info 1 {\t# Terran Ghost\n\tunit_unused 'Terran Siege Tank<0>Tank Mode'\n\tchanged_unit\n\tdraw_unit\n}\n\n")
+		self.assertEqual(text, "button_card 0 {\t# Terran Marine\n\tuse_button_set None\n\tconnected_unit None\n}\n\nunit_stat_info 0 {\t# Terran Marine\n\tdebug_id 'Terran Marine'\n\tchanged_unit\n\tdraw_unit\n}\n\nunit_stat_info 1 {\t# Terran Ghost\n\tdebug_id 'Terran Siege Tank<0>Tank Mode'\n\tchanged_unit\n\tdraw_unit\n}\n\n")
 		recompiled = compile_buttons(text)
 		self.assertEqual((recompiled.button_cards, recompiled.stat_info), (graft.button_cards, graft.stat_info))
 
@@ -305,7 +305,7 @@ unit_stat_info 0 {{
 }}
 unit_stat_info 1 {{
 	draw_building
-	unit_unused 'Terran Goliath'
+	debug_id 'Terran Goliath'
 	changed_never
 }}
 """)
@@ -339,11 +339,11 @@ unit_stat_info 1 {{
 		graft.button_cards = []
 		graft.stat_info = [StatInfo(0x10000, 1, 0)]
 		text = decompile_buttons(graft)
-		self.assertIn('\tunit_unused 65536\n', text)
+		self.assertIn('\tdebug_id 65536\n', text)
 		self.assertEqual(compile_buttons(text).stat_info, graft.stat_info)
 
 	def test_missing_status_function(self) -> None:
-		self.assertCompileError('unit_stat_info 0 {\n\tunit_unused 0\n\tdraw_unit\n}\n', "Unit stat info 0 is missing 'status_function'", 4)
+		self.assertCompileError('unit_stat_info 0 {\n\tdebug_id 0\n\tdraw_unit\n}\n', "Unit stat info 0 is missing 'status_function'", 4)
 
 	def test_missing_display_function(self) -> None:
 		self.assertCompileError('unit_stat_info 0 {\n\tchanged_unit\n}\n', "Unit stat info 0 is missing 'display_function'", 3)
@@ -398,7 +398,7 @@ unit_stat_info 1 {{
 		self.assertCompileError('unit_stat_info 0 {\n\tbutton_set 0\n}\n', "Unknown unit stat info command 'button_set'", 2)
 
 	def test_parens_and_flat_forms(self) -> None:
-		graft = compile_buttons("button_set 0 {\n" + _button("icon(0)\nalways()\ntrain('Terran Marine')\nenabled_str 0\ndisabled_str 0") + "}\nbutton_card 0 {\n\tuse_button_set(0)\n\tconnected_unit(None)\n}\nunit_stat_info 0 {\n\tunit_unused(7)\n\tchanged_unit()\n\tdraw_unit()\n}\n")
+		graft = compile_buttons("button_set 0 {\n" + _button("icon(0)\nalways()\ntrain('Terran Marine')\nenabled_str 0\ndisabled_str 0") + "}\nbutton_card 0 {\n\tuse_button_set(0)\n\tconnected_unit(None)\n}\nunit_stat_info 0 {\n\tdebug_id(7)\n\tchanged_unit()\n\tdraw_unit()\n}\n")
 		self.assertEqual(graft.button_sets, [[Button(position=1, condition=3, action=3)]])
 		self.assertEqual(graft.button_cards, [ButtonCard(0)])
 		self.assertEqual(graft.stat_info, [StatInfo(7, 1, 0)])
@@ -419,7 +419,7 @@ unit_stat_info 1 {{
 
 	def test_language_has_the_commands(self) -> None:
 		language = ButtonsLanguage()
-		for name in ('icon', 'always', 'move', 'enabled_str', 'disabled_str', 'use_button_set', 'connected_unit', 'unit_unused', 'changed_never', 'draw_none'):
+		for name in ('icon', 'always', 'move', 'enabled_str', 'disabled_str', 'use_button_set', 'connected_unit', 'debug_id', 'changed_never', 'draw_none'):
 			with self.subTest(name=name):
 				self.assertIsNotNone(language.lookup_command(name, LanguageContext()))
 

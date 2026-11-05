@@ -22,24 +22,31 @@ class Test_Write(unittest.TestCase):
 
 
 class Test_Indent(unittest.TestCase):
+	def test_first_write_is_indented(self) -> None:
+		ctx, output = make_context()
+		ctx.indent()
+		ctx.write('a')
+		self.assertEqual(output.getvalue(), '    a')
+
 	def test_indents_following_lines(self) -> None:
 		ctx, output = make_context()
 		ctx.indent()
-		# The first write after a newline gets the indent; interior newlines too.
 		ctx.write('a\nb\n')
-		self.assertEqual(output.getvalue(), 'a\n    b\n')
+		ctx.write('c')
+		self.assertEqual(output.getvalue(), '    a\n    b\n    c')
 
-	def test_force_indent_indents_first_line(self) -> None:
+	def test_write_continuing_a_line_is_not_indented(self) -> None:
 		ctx, output = make_context()
 		ctx.indent()
-		ctx.write('x', force_indent=True)
-		self.assertEqual(output.getvalue(), '    x')
+		ctx.write('a')
+		ctx.write('b\n')
+		self.assertEqual(output.getvalue(), '    ab\n')
 
 	def test_nested_indent_levels(self) -> None:
 		ctx, output = make_context()
 		ctx.indent(2)
 		ctx.write('a\nb')
-		self.assertEqual(output.getvalue(), 'a\n        b')
+		self.assertEqual(output.getvalue(), '        a\n        b')
 
 	def test_trailing_newline_is_not_indented(self) -> None:
 		# A trailing newline with no following content must not leave dangling
@@ -47,7 +54,36 @@ class Test_Indent(unittest.TestCase):
 		ctx, output = make_context()
 		ctx.indent()
 		ctx.write('a\n')
-		self.assertEqual(output.getvalue(), 'a\n')
+		self.assertEqual(output.getvalue(), '    a\n')
+
+	def test_blank_line_write_is_not_indented(self) -> None:
+		ctx, output = make_context()
+		ctx.indent()
+		ctx.write('a\n')
+		ctx.write('\n')
+		ctx.write('b\n')
+		self.assertEqual(output.getvalue(), '    a\n\n    b\n')
+
+	def test_whitespace_only_line_write_is_not_indented(self) -> None:
+		ctx, output = make_context()
+		ctx.indent()
+		ctx.write(' \n')
+		ctx.write('b')
+		self.assertEqual(output.getvalue(), ' \n    b')
+
+	def test_interior_blank_lines_are_not_indented(self) -> None:
+		ctx, output = make_context()
+		ctx.indent()
+		ctx.write('a\n\n \nb')
+		self.assertEqual(output.getvalue(), '    a\n\n \n    b')
+
+	def test_empty_write_keeps_line_start(self) -> None:
+		ctx, output = make_context()
+		ctx.indent()
+		ctx.write('a\n')
+		ctx.write('')
+		ctx.write('b')
+		self.assertEqual(output.getvalue(), '    a\n    b')
 
 
 class Test_Dedent(unittest.TestCase):
@@ -56,7 +92,15 @@ class Test_Dedent(unittest.TestCase):
 		ctx.indent(2)
 		ctx.dedent()
 		ctx.write('a\nb')
-		self.assertEqual(output.getvalue(), 'a\n    b')
+		self.assertEqual(output.getvalue(), '    a\n    b')
+
+	def test_line_after_dedent_is_indented_at_new_level(self) -> None:
+		ctx, output = make_context()
+		ctx.indent(2)
+		ctx.write('a\n')
+		ctx.dedent()
+		ctx.write('b')
+		self.assertEqual(output.getvalue(), '        a\n    b')
 
 	def test_dedent_does_not_go_below_zero(self) -> None:
 		ctx, output = make_context()

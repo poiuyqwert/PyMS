@@ -146,7 +146,7 @@ class StructBlock:
 		for child in self.children:
 			child.serialize(context)
 		context.dedent()
-		context.write('}\n', force_indent=True)
+		context.write('}\n')
 
 def parse_end_of_line(parse_context: ParseContext) -> None:
 	token = parse_context.lexer.next_token()

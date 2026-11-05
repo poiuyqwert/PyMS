@@ -230,9 +230,17 @@ class AbstractReqGraft:
 				serialize_context.write(serialize_context.formatters.comment.serialize([name]))
 			serialize_context.write('\n')
 			serialize_context.indent()
+			# Sub-list commands and their `end_sublist` are indented an extra level, as is the rest of the script after `upgrade_level_3`
+			in_sublist = False
 			for command in script.commands:
 				command.serialize(serialize_context)
-			serialize_context.dedent()
+				if (command.definition in RequirementCodeCommands.sublist_commands or command.definition is RequirementCodeCommands.UpgradeLevel3) and not in_sublist:
+					serialize_context.indent()
+					in_sublist = True
+				elif command.definition is RequirementCodeCommands.EndSublist and in_sublist:
+					serialize_context.dedent()
+					in_sublist = False
+			serialize_context.dedent(2 if in_sublist else 1)
 
 	@classmethod
 	def compile(cls, parse_context: GraftParseContext) -> list[ReqScript]:
