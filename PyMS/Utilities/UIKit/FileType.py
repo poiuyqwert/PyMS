@@ -130,6 +130,14 @@ class FileType(tuple[str, str]):
 		return FileType(name, 'got')
 
 	@staticmethod
+	def graft(name: str = 'Graft Files') -> FileType:
+		return FileType(name, 'graft')
+
+	@staticmethod
+	def fgp(name: str = 'FireGraft Projects') -> FileType:
+		return FileType(name, 'fgp')
+
+	@staticmethod
 	def trg(name: str = 'StarCraft Triggers') -> FileType:
 		return FileType(name, 'trg')
 

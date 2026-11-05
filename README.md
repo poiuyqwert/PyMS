@@ -1,5 +1,5 @@
 # PyMS
-PyMS is a cross platform BroodWar modding suite written using [Python](http://www.python.org). PyMS contains 15 programs to edit most of the file types you will encounter while modding.
+PyMS is a cross platform BroodWar modding suite written using [Python](http://www.python.org). PyMS contains 16 programs to edit most of the file types you will encounter while modding.
 
 ## Table of Contents
 1. [Installation](https://github.com/poiuyqwert/PyMS#installation)
@@ -12,6 +12,7 @@ PyMS is a cross platform BroodWar modding suite written using [Python](http://ww
    * [PyDAT](https://github.com/poiuyqwert/PyMS#PyDAT)
    * [PyFNT](https://github.com/poiuyqwert/PyMS#PyFNT)
    * [PyGOT](https://github.com/poiuyqwert/PyMS#PyGOT)
+   * [PyGRAFT](https://github.com/poiuyqwert/PyMS#PyGRAFT)
    * [PyGRP](https://github.com/poiuyqwert/PyMS#PyGRP)
    * [PyICE](https://github.com/poiuyqwert/PyMS#PyICE)
    * [PyLO](https://github.com/poiuyqwert/PyMS#PyLO)
@@ -91,6 +92,9 @@ PyMS contains 16 programs to edit most of the file types you will encounter whil
 
 ### PyGOT
 [PyGOT](/Help/Programs/PyGOT.md) is used for editing the Game Template [.got](/Help/Files/GOT.md) files.
+
+### PyGRAFT
+[PyGRAFT](/Help/Programs/PyGRAFT.md) is used for editing the `.graft` files of the GPTP Graft Hook, which hold the unit, upgrade, research, tech, and order requirements, and the unit buttons.
 
 ### PyGRP
 [PyGRP](/Help/Programs/PyGRP.md) is used for editing various graphics in [.grp](/Help/Files/GRP.md) files.

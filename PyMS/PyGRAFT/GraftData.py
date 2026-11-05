@@ -1,0 +1,139 @@
+
+from ..FileFormats.Graft import AbstractReqGraft, ButtonsGraft, FGP
+from ..FileFormats.Graft.CodeHandlers import GraftLexer, GraftParseContext, GraftSerializeContext
+
+from ..Utilities.DataContext import DataContext
+from ..Utilities.PyMSWarning import PyMSWarning
+from ..Utilities import IO
+
+from typing import Generic, TypeVar
+
+ReqGraftT = TypeVar('ReqGraftT', bound=AbstractReqGraft)
+
+# An open requirements .graft file (units, upgrades, research, tech, or orders)
+class ReqGraftData(Generic[ReqGraftT]):
+	def __init__(self, graft_type: type[ReqGraftT]) -> None:
+		self.graft_type = graft_type
+		self.graft = graft_type()
+		self.file_path: str | None = None
+		self.edited = False
+
+	@property
+	def file_name(self) -> str:
+		return self.graft_type.FILE_NAME
+
+	@property
+	def mpq_path(self) -> str:
+		return self.graft_type.MPQ_PATH
+
+	@property
+	def display_name(self) -> str:
+		return self.file_path or self.file_name
+
+	def new(self) -> None:
+		graft = self.graft_type()
+		graft.new()
+		self.graft = graft
+		self.file_path = None
+		self.edited = False
+
+	def load(self, any_input: IO.AnyInputBytes) -> list[PyMSWarning]:
+		graft = self.graft_type()
+		warnings = graft.load(any_input)
+		self.graft = graft
+		self.file_path = any_input if isinstance(any_input, str) else None
+		self.edited = False
+		return warnings
+
+	def save(self, output: IO.AnyOutputBytes) -> None:
+		self.graft.save(output)
+
+	def save_bytes(self) -> bytes:
+		return IO.output_to_bytes(self.graft.save)
+
+	def export_text(self, output: IO.AnyOutputText, data_context: DataContext | None) -> None:
+		with IO.OutputText(output) as f:
+			self.graft.decompile(GraftSerializeContext(f, data_context))
+
+	def import_text(self, any_input: IO.AnyInputText, data_context: DataContext | None) -> None:
+		# Replaces the scripts of the open file, so it's marked edited but still saves to the same place
+		with IO.InputText(any_input) as f:
+			code = f.read()
+		scripts = self.graft_type.compile(GraftParseContext(GraftLexer(code), data_context, self.graft_type.LANGUAGE()))
+		self.graft.replace_scripts(scripts)
+		self.edited = True
+
+	def import_fgp(self, fgp: FGP) -> list[PyMSWarning]:
+		# Projects don't have to include every file, so only mark edited if it changed
+		before = self.save_bytes()
+		warnings = self.graft.import_fgp(fgp)
+		if self.save_bytes() != before:
+			self.edited = True
+		return warnings
+
+	def entry_ids(self) -> list[int]:
+		return sorted(self.graft.list_ids())
+
+	def entry_name(self, data_context: DataContext, entry_id: int) -> str | None:
+		return self.graft_type.entry_name(data_context, entry_id)
+
+# The open Buttons.graft file
+class ButtonsGraftData:
+	def __init__(self) -> None:
+		self.graft = ButtonsGraft()
+		self.file_path: str | None = None
+		self.edited = False
+
+	@property
+	def file_name(self) -> str:
+		return ButtonsGraft.FILE_NAME
+
+	@property
+	def mpq_path(self) -> str:
+		return ButtonsGraft.MPQ_PATH
+
+	@property
+	def display_name(self) -> str:
+		return self.file_path or self.file_name
+
+	def new(self) -> None:
+		graft = ButtonsGraft()
+		graft.new()
+		self.graft = graft
+		self.file_path = None
+		self.edited = False
+
+	def load(self, any_input: IO.AnyInputBytes) -> list[PyMSWarning]:
+		graft = ButtonsGraft()
+		warnings = graft.load(any_input)
+		self.graft = graft
+		self.file_path = any_input if isinstance(any_input, str) else None
+		self.edited = False
+		return warnings
+
+	def save(self, output: IO.AnyOutputBytes) -> None:
+		self.graft.save(output)
+
+	def save_bytes(self) -> bytes:
+		return IO.output_to_bytes(self.graft.save)
+
+	def export_text(self, output: IO.AnyOutputText, data_context: DataContext | None) -> None:
+		with IO.OutputText(output) as f:
+			self.graft.decompile(GraftSerializeContext(f, data_context))
+
+	def import_text(self, any_input: IO.AnyInputText, data_context: DataContext | None) -> None:
+		# Replaces the contents of the open file, so it's marked edited but still saves to the same place
+		with IO.InputText(any_input) as f:
+			code = f.read()
+		self.graft = ButtonsGraft.compile(GraftParseContext(GraftLexer(code), data_context))
+		self.edited = True
+
+	def import_fgp(self, fgp: FGP) -> list[PyMSWarning]:
+		# Projects don't have to include every file, so only mark edited if it changed
+		before = self.save_bytes()
+		warnings = self.graft.import_fgp(fgp)
+		if self.save_bytes() != before:
+			self.edited = True
+		return warnings
+
+AnyGraftData = ReqGraftData | ButtonsGraftData
