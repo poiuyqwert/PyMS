@@ -57,7 +57,7 @@ class ListboxTooltip(UI.Tooltip):
 			special = f'Special ID (*)    : {players.value}\n'
 		text = f"Script ID         : {script.id}\n{special}In bwscript.bin   : {in_bwbin}\n{flags}String ID         : {script.string_id}\n"
 		data_context = self.delegate.get_data_context()
-		if (string := data_context.stattxt_string(script.string_id)):
+		if (string := data_context.stat_txt_string(script.string_id)):
 			text += fit('String            : ', string, end=True)
 		# if id in ai.aiinfo and ai.aiinfo[id][0]:
 		# 	text += 'Extra Information : %s' % ai.aiinfo[id][0].replace('\n','\n                    ')

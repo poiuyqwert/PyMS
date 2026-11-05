@@ -8,7 +8,8 @@ from .SettingsUI.SettingsDialog import SettingsDialog
 
 from ..FileFormats.IScriptBIN import IScriptBIN
 from ..FileFormats.IScriptBIN.IScript import IScript
-from ..FileFormats.IScriptBIN.CodeHandlers import DataContext, ICEParseContext, ICESerializeContext, ICELexer
+from ..FileFormats.IScriptBIN.CodeHandlers import ICEParseContext, ICESerializeContext, ICELexer
+from ..Utilities.DataContext import DataContext
 from ..FileFormats import TBL
 from ..FileFormats import DAT
 
@@ -252,9 +253,9 @@ class PyICE(UI.MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDi
 
 	def update_dat_lists(self) -> None:
 		updates = (
-			(self.data_context.get_image_names(), ColumnID.Images, self.imageslist),
-			(self.data_context.get_sprite_names(), ColumnID.Sprites, self.spriteslist),
-			(self.data_context.get_flingy_names(), ColumnID.Flingys, self.flingylist),
+			(self.data_context.image_display_names(), ColumnID.Images, self.imageslist),
+			(self.data_context.sprite_display_names(), ColumnID.Sprites, self.spriteslist),
+			(self.data_context.flingy_display_names(), ColumnID.Flingys, self.flingylist),
 			(self.get_unit_names(), ColumnID.Units, self.unitlist)
 		)
 		for names, column, listbox in updates:

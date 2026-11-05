@@ -25,7 +25,7 @@ class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 		self.string.set(str(string_index))
 		self.string.trace_add('write', lambda _a,_b,_c: self.editstring())
 		self.actualstring = UI.StringVar()
-		self.actualstring.set(delegate.get_data_context().stattxt_string(string_index) or '')
+		self.actualstring.set(delegate.get_data_context().stat_txt_string(string_index) or '')
 
 		PyMSDialog.__init__(self, parent, title)
 
@@ -105,12 +105,12 @@ class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 			except Exception:
 				string_index = self.validstring
 			else:
-				if (stattxt_tbl := self.delegate.get_data_context().stattxt_tbl):
-					strs = len(stattxt_tbl.strings)-1
+				if (stat_txt_tbl := self.delegate.get_data_context().stat_txt_tbl):
+					strs = len(stat_txt_tbl.strings)-1
 					string_index = min(string_index, strs)
 			self.string.set(str(string_index))
 		self.validstring = string_index
-		self.actualstring.set(self.delegate.get_data_context().stattxt_string(string_index) or '')
+		self.actualstring.set(self.delegate.get_data_context().stat_txt_string(string_index) or '')
 		return True
 
 	def browse(self) -> None:
@@ -122,7 +122,7 @@ class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 
 	# ItemSelectDialog.Delegate
 	def get_items(self) -> Sequence[ItemSelectDialog.Item]:
-		strings = self.delegate.get_data_context().stattxt_strings()
+		strings = self.delegate.get_data_context().stat_txt_strings()
 		if not strings:
 			return []
 		return strings

@@ -138,7 +138,7 @@ class PreviewerDialog(ReusablePyMSDialog):
 			cur = []
 			images_dat = self.delegate.get_data_context().images_dat
 			assert images_dat is not None
-			for i in range(self.delegate.get_data_context().images_entry_count):
+			for i in range(self.delegate.get_data_context().image_entry_count):
 				if images_dat.get_entry(i).iscript_id == iscript_id:
 					cur.append('['.join(self.delegate.imageslist.get(i).split('[')[:-1]))
 			self.curdd.setentries(cur)
@@ -150,8 +150,8 @@ class PreviewerDialog(ReusablePyMSDialog):
 		left = UI.Frame(self)
 		entry_details: list[tuple[EntryType, str, UI.IntVar, UI.IntVar, list[str], UI.WidgetState]] = [
 			(EntryType.iscript, "Current IScript's images", self.curid, self.curcmd, [], UI.DISABLED),
-			(EntryType.images_dat, 'Images.dat entries', self.image, self.imagecmd, self.getlist(self.delegate.imageslist,self.delegate.get_data_context().images_entry_count), UI.NORMAL),
-			(EntryType.sprites_dat, 'Sprites.dat entries', self.sprites, self.spritescmd, self.getlist(self.delegate.spriteslist,self.delegate.get_data_context().sprites_entry_count), UI.NORMAL),
+			(EntryType.images_dat, 'Images.dat entries', self.image, self.imagecmd, self.getlist(self.delegate.imageslist,self.delegate.get_data_context().image_entry_count), UI.NORMAL),
+			(EntryType.sprites_dat, 'Sprites.dat entries', self.sprites, self.spritescmd, self.getlist(self.delegate.spriteslist,self.delegate.get_data_context().sprite_entry_count), UI.NORMAL),
 			(EntryType.flingy_dat, 'Flingy.dat entries', self.flingys, self.flingyscmd, self.getlist(self.delegate.flingylist,self.delegate.get_data_context().flingy_entry_count), UI.NORMAL),
 		]
 		for entry_type,name,id_variable,cmd_var,entries,state in entry_details:

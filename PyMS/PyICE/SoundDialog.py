@@ -27,7 +27,7 @@ class SoundDialog(PyMSDialog):
 		# TODO: Missing soundsdat?
 		sounds_dat = self.delegate.get_data_context().sounds_dat
 		assert sounds_dat is not None
-		self.dd = UI.DropDown(f, self.id, [f'{n:03} {self.delegate.get_data_context().sound_name(n)}' for n in range(self.delegate.get_data_context().sounds_entry_count)], width=30)
+		self.dd = UI.DropDown(f, self.id, [f'{n:03} {self.delegate.get_data_context().sound_display_name(n)}' for n in range(self.delegate.get_data_context().sound_entry_count)], width=30)
 		self.dd.pack(side=UI.LEFT, padx=1)
 		UI.Button(f, image=Assets.get_image('fwp'), width=20, height=20, command=self.play, state=UI.NORMAL if MPQ.supported() else UI.DISABLED).pack(side=UI.LEFT, padx=1)
 		f.pack(padx=5,pady=5)

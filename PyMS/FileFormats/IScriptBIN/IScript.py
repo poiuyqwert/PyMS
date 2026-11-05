@@ -132,7 +132,7 @@ class IScript(CodeHeader):
 				if not found:
 					serialize_context.write('# This header is used by images.dat entries:\n')
 					found = True
-				serialize_context.write(f'# {entry_id:>3} {serialize_context.data_context.image_name(entry_id)}\n')
+				serialize_context.write(f'# {entry_id:>3} {serialize_context.data_context.image_display_name(entry_id)}\n')
 		serialize_context.write('.headerstart\n')
 		CodeCommand(CodeCommands.IsId, [self.id]).serialize(serialize_context)
 		CodeCommand(CodeCommands.Type, [self.type]).serialize(serialize_context)

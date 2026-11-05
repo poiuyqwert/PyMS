@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from .GraftLanguage import GraftLanguage, ButtonsLanguage
-from .DataContext import DataContext
+from ....Utilities.DataContext import DataContext
 
 from ....Utilities.CodeHandlers.ParseContext import ParseContext, ParseSettings
 from ....Utilities.CodeHandlers.Lexer import Lexer

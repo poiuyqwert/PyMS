@@ -8,7 +8,8 @@ def main(): # type: () -> None
 	from PyMS.PyICE.PyICE import PyICE, LONG_VERSION
 
 	from PyMS.FileFormats.IScriptBIN import IScriptBIN
-	from PyMS.FileFormats.IScriptBIN.CodeHandlers import DataContext, ICESerializeContext, ICEParseContext, ICELexer
+	from PyMS.FileFormats.IScriptBIN.CodeHandlers import ICESerializeContext, ICEParseContext, ICELexer
+	from PyMS.Utilities.DataContext import DataContext
 	from PyMS.FileFormats import TBL, DAT
 
 	from PyMS.Utilities import Assets, IO

@@ -1,5 +1,6 @@
 
-from ...FileFormats.AIBIN.CodeHandlers import AIParseContext, AIParseSettings, AILexer, DataContext, AISerializeContext
+from ...FileFormats.AIBIN.CodeHandlers import AIParseContext, AIParseSettings, AILexer, AISerializeContext
+from ...Utilities.DataContext import DataContext
 
 from ...Utilities.CodeHandlers.DefinitionsHandler import DefinitionsHandler
 from ...Utilities.CodeHandlers.Formatters import Formatters

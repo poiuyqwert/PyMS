@@ -115,12 +115,12 @@ class ImageIDCodeType(CodeType.IntCodeType):
 
 	def comment(self, value: int, context: SerializeContext) -> str | None:
 		if isinstance(context, ICESerializeContext):
-			return context.data_context.image_name(value)
+			return context.data_context.image_display_name(value)
 		return super().comment(value, context)
 
 	def get_limits(self, parse_context: ParseContext) -> tuple[int, int]:
 		if isinstance(parse_context, ICEParseContext):
-			return (0, parse_context.data_context.images_entry_count - 1)
+			return (0, parse_context.data_context.image_entry_count - 1)
 		return super().get_limits(parse_context)
 
 class SpriteIDCodeType(CodeType.IntCodeType):
@@ -129,12 +129,12 @@ class SpriteIDCodeType(CodeType.IntCodeType):
 
 	def comment(self, value: int, context: SerializeContext) -> str | None:
 		if isinstance(context, ICESerializeContext):
-			return context.data_context.sprite_name(value)
+			return context.data_context.sprite_display_name(value)
 		return super().comment(value, context)
 
 	def get_limits(self, parse_context: ParseContext) -> tuple[int, int]:
 		if isinstance(parse_context, ICEParseContext) and parse_context.data_context.sprites_dat is not None:
-			return (0, parse_context.data_context.sprites_entry_count - 1)
+			return (0, parse_context.data_context.sprite_entry_count - 1)
 		return super().get_limits(parse_context)
 
 class FlingyIDCodeType(CodeType.IntCodeType):
@@ -143,7 +143,7 @@ class FlingyIDCodeType(CodeType.IntCodeType):
 
 	def comment(self, value: int, context: SerializeContext) -> str | None:
 		if isinstance(context, ICESerializeContext):
-			return context.data_context.flingy_name(value)
+			return context.data_context.flingy_display_name(value)
 		return super().comment(value, context)
 
 	def get_limits(self, parse_context: ParseContext) -> tuple[int, int]:
@@ -166,12 +166,12 @@ class SoundIDCodeType(CodeType.IntCodeType):
 
 	def comment(self, value: int, context: SerializeContext) -> str | None:
 		if isinstance(context, ICESerializeContext):
-			return context.data_context.sound_name(value)
+			return context.data_context.sound_display_name(value)
 		return super().comment(value, context)
 
 	def get_limits(self, parse_context: ParseContext) -> tuple[int, int]:
 		if isinstance(parse_context, ICEParseContext) and parse_context.data_context.sounds_dat is not None:
-			return (0, parse_context.data_context.sounds_entry_count - 1)
+			return (0, parse_context.data_context.sound_entry_count - 1)
 		return super().get_limits(parse_context)
 
 class SoundsCodeType(CodeType.IntCodeType):
@@ -192,12 +192,12 @@ class WeaponIDCodeType(CodeType.IntCodeType):
 
 	def comment(self, value: int, context: SerializeContext) -> str | None:
 		if isinstance(context, ICESerializeContext):
-			return context.data_context.weapon_name(value)
+			return context.data_context.weapon_display_name(value)
 		return super().comment(value, context)
 
 	def get_limits(self, parse_context: ParseContext) -> tuple[int, int]:
 		if isinstance(parse_context, ICEParseContext) and parse_context.data_context.weapons_dat is not None:
-			return (0, parse_context.data_context.weapons_entry_count - 1)
+			return (0, parse_context.data_context.weapon_entry_count - 1)
 		return super().get_limits(parse_context)
 
 class SpeedCodeType(CodeType.IntCodeType):

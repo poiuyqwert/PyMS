@@ -1,19 +1,39 @@
 from ...FileFormats.Graft import AbstractReqGraft, ReqScript, ButtonsGraft
-from ...FileFormats.Graft.CodeHandlers import DataContext, GraftLexer, GraftParseContext, GraftSerializeContext, GraftLanguage
+from ...FileFormats.Graft.CodeHandlers import GraftLexer, GraftParseContext, GraftSerializeContext, GraftLanguage
+from ...Utilities.DataContext import DataContext
+from ...FileFormats.TBL import TBL
+from ...FileFormats.DAT import UnitsDAT, UpgradesDAT, TechDAT, OrdersDAT
+from ...Utilities import Assets
 from ...Utilities import Struct
 
 import io
 import struct
+from functools import cache
 
 def words(*values: int) -> bytes:
 	return Struct.l_au16(len(values)).pack(list(values))
 
+@cache
+def vanilla_data_context() -> DataContext:
+	# The bundled vanilla stat_txt.tbl and DAT files, so names match the game (shared, so must not be modified)
+	stat_txt = TBL()
+	stat_txt.load(Assets.mpq_file_path('rez', 'stat_txt.tbl'))
+	units_dat = UnitsDAT()
+	units_dat.load(Assets.mpq_file_path('arr', 'units.dat'))
+	upgrades_dat = UpgradesDAT()
+	upgrades_dat.load(Assets.mpq_file_path('arr', 'upgrades.dat'))
+	techdata_dat = TechDAT()
+	techdata_dat.load(Assets.mpq_file_path('arr', 'techdata.dat'))
+	orders_dat = OrdersDAT()
+	orders_dat.load(Assets.mpq_file_path('arr', 'orders.dat'))
+	return DataContext(stat_txt_tbl=stat_txt, units_dat=units_dat, upgrades_dat=upgrades_dat, techdata_dat=techdata_dat, orders_dat=orders_dat)
+
 def parse_context(code: str, data_context: DataContext | None = None, language: GraftLanguage | None = None) -> GraftParseContext:
-	return GraftParseContext(GraftLexer(code), data_context if data_context is not None else DataContext(), language)
+	return GraftParseContext(GraftLexer(code), data_context if data_context is not None else vanilla_data_context(), language)
 
 def decompile_req(graft: AbstractReqGraft, data_context: DataContext | None = None) -> str:
 	output = io.StringIO()
-	graft.decompile(GraftSerializeContext(output, data_context if data_context is not None else DataContext()))
+	graft.decompile(GraftSerializeContext(output, data_context if data_context is not None else vanilla_data_context()))
 	return output.getvalue()
 
 def compile_req(code: str, graft_type: type[AbstractReqGraft], data_context: DataContext | None = None) -> list[ReqScript]:
@@ -21,7 +41,7 @@ def compile_req(code: str, graft_type: type[AbstractReqGraft], data_context: Dat
 
 def decompile_buttons(graft: ButtonsGraft, data_context: DataContext | None = None) -> str:
 	output = io.StringIO()
-	graft.decompile(GraftSerializeContext(output, data_context if data_context is not None else DataContext()))
+	graft.decompile(GraftSerializeContext(output, data_context if data_context is not None else vanilla_data_context()))
 	return output.getvalue()
 
 def compile_buttons(code: str, data_context: DataContext | None = None) -> ButtonsGraft:

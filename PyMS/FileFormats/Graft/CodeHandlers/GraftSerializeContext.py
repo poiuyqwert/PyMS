@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .DataContext import DataContext
+from ....Utilities.DataContext import DataContext
 
 from ....Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ....Utilities.CodeHandlers import Formatters

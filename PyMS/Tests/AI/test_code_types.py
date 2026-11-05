@@ -3,7 +3,7 @@ from . import utils
 
 from ...FileFormats.AIBIN.CodeHandlers import CodeTypes
 from ...FileFormats.AIBIN.CodeHandlers.AIParseContext import AIParseContext
-from ...FileFormats.AIBIN.CodeHandlers.DataContext import DataContext
+from ...Utilities.DataContext import DataContext
 from ...FileFormats.AIBIN.CodeHandlers.AIByteCodeCompiler import AIByteCodeCompiler
 from ...FileFormats.AIBIN.CodeHandlers.AIDecompileContext import AIDecompileContext
 
@@ -30,10 +30,10 @@ def _units_parse_context(units_dat: UnitsDAT, spellcasters: list[int] | None = N
 		parse_context.spellcasters = spellcasters
 	return parse_context
 
-def _stattxt_data_context(strings: list[str], **kwargs) -> DataContext:
+def _stat_txt_data_context(strings: list[str], **kwargs) -> DataContext:
 	tbl = TBL()
 	tbl.strings = strings
-	return DataContext(stattxt_tbl=tbl, **kwargs)
+	return DataContext(stat_txt_tbl=tbl, **kwargs)
 
 
 class Test_ByteCodeType(unittest.TestCase):
@@ -157,7 +157,7 @@ class Test_UnitCodeType_accepts(unittest.TestCase):
 
 class Test_UnitCodeType_serialize(unittest.TestCase):
 	def test_serialize_uses_unit_name(self) -> None:
-		data_context = _stattxt_data_context(['Marine', 'Ghost', 'Vulture'])
+		data_context = _stat_txt_data_context(['Marine', 'Ghost', 'Vulture'])
 		_, serialize_context = utils.serialize_context(data_context=data_context)
 		unit = CodeTypes.UnitCodeType()
 		self.assertEqual(unit.serialize(1, serialize_context), CodeTypes.StringCodeType.serialize_string('Ghost'))
@@ -167,26 +167,62 @@ class Test_UnitCodeType_serialize(unittest.TestCase):
 		unit = CodeTypes.UnitCodeType()
 		self.assertEqual(unit.serialize(1, serialize_context), '1')
 
+	def test_serialize_name_of_multiple_ids_as_number(self) -> None:
+		data_context = _stat_txt_data_context(['Same\x00*\x00', 'Same\x00*\x00', 'Other\x00*\x00'])
+		_, serialize_context = utils.serialize_context(data_context=data_context)
+		unit = CodeTypes.UnitCodeType()
+		self.assertEqual(unit.serialize(1, serialize_context), '1')
+		self.assertEqual(unit.serialize(2, serialize_context), CodeTypes.StringCodeType.serialize_string('Other'))
+
+	def test_serialize_hero_name_keeps_subtitle_separator(self) -> None:
+		data_context = _stat_txt_data_context(['Jim Raynor\x00Marine\x00'])
+		_, serialize_context = utils.serialize_context(data_context=data_context)
+		unit = CodeTypes.UnitCodeType()
+		self.assertEqual(unit.serialize(0, serialize_context), CodeTypes.StringCodeType.serialize_string('Jim Raynor<0>Marine'))
+
 
 class Test_UnitCodeType_lex(unittest.TestCase):
 	def test_lex_quoted_unit_name(self) -> None:
-		data_context = _stattxt_data_context(['Marine', 'Ghost', 'Vulture'])
+		data_context = _stat_txt_data_context(['Marine', 'Ghost', 'Vulture'])
 		parse_context = utils.parse_context('"Ghost"', data_context=data_context)
 		unit = CodeTypes.UnitCodeType()
 		self.assertEqual(unit.parse(parse_context), 1)
 
 	def test_lex_open_string_unit_name_in_parens(self) -> None:
-		data_context = _stattxt_data_context(['Marine', 'Ghost', 'Vulture'])
+		data_context = _stat_txt_data_context(['Marine', 'Ghost', 'Vulture'])
 		parse_context = utils.parse_context('Ghost)', data_context=data_context)
 		parse_context.command_in_parens = True
 		unit = CodeTypes.UnitCodeType()
 		self.assertEqual(unit.parse(parse_context), 1)
 
 	def test_lex_falls_back_to_integer(self) -> None:
-		data_context = _stattxt_data_context(['Marine', 'Ghost', 'Vulture'])
+		data_context = _stat_txt_data_context(['Marine', 'Ghost', 'Vulture'])
 		parse_context = utils.parse_context('2', data_context=data_context)
 		unit = CodeTypes.UnitCodeType()
 		self.assertEqual(unit.parse(parse_context), 2)
+
+	def test_lex_hero_name_with_subtitle_separator(self) -> None:
+		data_context = _stat_txt_data_context(['Marine\x00*\x00', 'Jim Raynor\x00Marine\x00'])
+		parse_context = utils.parse_context('"Jim Raynor<0>Marine"', data_context=data_context)
+		unit = CodeTypes.UnitCodeType()
+		self.assertEqual(unit.parse(parse_context), 1)
+
+	def test_lex_name_of_multiple_ids_is_an_error(self) -> None:
+		data_context = _stat_txt_data_context(['Same\x00*\x00', 'Same\x00*\x00', 'Other\x00*\x00'])
+		parse_context = utils.parse_context('"Same"', data_context=data_context)
+		unit = CodeTypes.UnitCodeType()
+		with self.assertRaises(PyMSError) as cm:
+			unit.parse(parse_context)
+		self.assertIn('`Same` is the name of multiple unit IDs (0, 1)', str(cm.exception))
+
+	def test_lex_open_string_name_of_multiple_ids_is_an_error(self) -> None:
+		data_context = _stat_txt_data_context(['Same\x00*\x00', 'Same\x00*\x00', 'Other\x00*\x00'])
+		parse_context = utils.parse_context('Same)', data_context=data_context)
+		parse_context.command_in_parens = True
+		unit = CodeTypes.UnitCodeType()
+		with self.assertRaises(PyMSError) as cm:
+			unit.parse(parse_context)
+		self.assertIn('`Same` is the name of multiple unit IDs (0, 1)', str(cm.exception))
 
 
 class Test_UnitCodeType_limits(unittest.TestCase):
@@ -448,7 +484,7 @@ class Test_UpgradeCodeType(unittest.TestCase):
 		upgrades_dat = UpgradesDAT()
 		upgrades_dat.new_file()
 		upgrades_dat.get_entry(3).label = 2  # stat_txt index 1 -> 'One'
-		data_context = _stattxt_data_context(['Zero', 'One', 'Two'], upgrades_dat=upgrades_dat)
+		data_context = _stat_txt_data_context(['Zero', 'One', 'Two'], upgrades_dat=upgrades_dat)
 		_, serialize_context = utils.serialize_context(data_context=data_context)
 		self.assertEqual(CodeTypes.UpgradeCodeType().serialize(3, serialize_context), CodeTypes.StringCodeType.serialize_string('One'))
 
@@ -460,7 +496,7 @@ class Test_UpgradeCodeType(unittest.TestCase):
 		upgrades_dat = UpgradesDAT()
 		upgrades_dat.new_file()
 		upgrades_dat.get_entry(3).label = 2
-		data_context = _stattxt_data_context(['Zero', 'One', 'Two'], upgrades_dat=upgrades_dat)
+		data_context = _stat_txt_data_context(['Zero', 'One', 'Two'], upgrades_dat=upgrades_dat)
 		parse_context = utils.parse_context('"One"', data_context=data_context)
 		self.assertEqual(CodeTypes.UpgradeCodeType().parse(parse_context), 3)
 
@@ -469,11 +505,18 @@ class Test_UpgradeCodeType(unittest.TestCase):
 			CodeTypes.UpgradeCodeType().validate(99999, utils.parse_context(''))
 		self.assertIn('is not a valid upgrade', str(cm.exception))
 
+	def test_validate_boundary(self) -> None:
+		parse_context = utils.parse_context('')
+		CodeTypes.UpgradeCodeType().validate(UpgradesDAT.FORMAT.entries - 1, parse_context)
+		with self.assertRaises(PyMSError) as cm:
+			CodeTypes.UpgradeCodeType().validate(UpgradesDAT.FORMAT.entries, parse_context)
+		self.assertIn('is not a valid upgrade', str(cm.exception))
+
 	def test_get_limits(self) -> None:
-		self.assertEqual(CodeTypes.UpgradeCodeType().get_limits(utils.parse_context('')), (0, UpgradesDAT.FORMAT.entries))
+		self.assertEqual(CodeTypes.UpgradeCodeType().get_limits(utils.parse_context('')), (0, UpgradesDAT.FORMAT.entries - 1))
 		parse_context = utils.parse_context('')
 		parse_context.settings.expanded_upgrades = 100
-		self.assertEqual(CodeTypes.UpgradeCodeType().get_limits(parse_context), (0, 100))
+		self.assertEqual(CodeTypes.UpgradeCodeType().get_limits(parse_context), (0, 99))
 
 
 class Test_TechnologyCodeType(unittest.TestCase):
@@ -488,7 +531,7 @@ class Test_TechnologyCodeType(unittest.TestCase):
 		techdata_dat = TechDAT()
 		techdata_dat.new_file()
 		techdata_dat.get_entry(4).label = 3  # stat_txt index 2 -> 'Two'
-		data_context = _stattxt_data_context(['Zero', 'One', 'Two'], techdata_dat=techdata_dat)
+		data_context = _stat_txt_data_context(['Zero', 'One', 'Two'], techdata_dat=techdata_dat)
 		_, serialize_context = utils.serialize_context(data_context=data_context)
 		self.assertEqual(CodeTypes.TechnologyCodeType().serialize(4, serialize_context), CodeTypes.StringCodeType.serialize_string('Two'))
 
@@ -501,11 +544,18 @@ class Test_TechnologyCodeType(unittest.TestCase):
 			CodeTypes.TechnologyCodeType().validate(99999, utils.parse_context(''))
 		self.assertIn('is not a valid technology', str(cm.exception))
 
+	def test_validate_boundary(self) -> None:
+		parse_context = utils.parse_context('')
+		CodeTypes.TechnologyCodeType().validate(TechDAT.FORMAT.entries - 1, parse_context)
+		with self.assertRaises(PyMSError) as cm:
+			CodeTypes.TechnologyCodeType().validate(TechDAT.FORMAT.entries, parse_context)
+		self.assertIn('is not a valid technology', str(cm.exception))
+
 	def test_get_limits(self) -> None:
-		self.assertEqual(CodeTypes.TechnologyCodeType().get_limits(utils.parse_context('')), (0, TechDAT.FORMAT.entries))
+		self.assertEqual(CodeTypes.TechnologyCodeType().get_limits(utils.parse_context('')), (0, TechDAT.FORMAT.entries - 1))
 		parse_context = utils.parse_context('')
 		parse_context.settings.expanded_tech = 80
-		self.assertEqual(CodeTypes.TechnologyCodeType().get_limits(parse_context), (0, 80))
+		self.assertEqual(CodeTypes.TechnologyCodeType().get_limits(parse_context), (0, 79))
 
 
 class Test_StringCodeType(unittest.TestCase):
@@ -558,12 +608,12 @@ class Test_CompareCodeType(unittest.TestCase):
 
 class Test_TBLStringCodeType(unittest.TestCase):
 	def test_comment_returns_stattxt_string(self) -> None:
-		data_context = _stattxt_data_context(['Zero\x00', 'One\x00', 'Two\x00'])
+		data_context = _stat_txt_data_context(['Zero\x00', 'One\x00', 'Two\x00'])
 		_, serialize_context = utils.serialize_context(data_context=data_context)
 		self.assertEqual(CodeTypes.TBLStringCodeType().comment(1, serialize_context), 'One')
 
 	def test_comment_out_of_range_is_none(self) -> None:
-		data_context = _stattxt_data_context(['Zero\x00'])
+		data_context = _stat_txt_data_context(['Zero\x00'])
 		_, serialize_context = utils.serialize_context(data_context=data_context)
 		self.assertIsNone(CodeTypes.TBLStringCodeType().comment(99, serialize_context))
 
@@ -614,21 +664,3 @@ class Test_BoolCodeType(unittest.TestCase):
 
 	def test_keywords(self) -> None:
 		self.assertEqual(CodeTypes.BoolCodeType().keywords(), ('true', 'false'))
-
-
-class Test_DataContext_stattxt_string(unittest.TestCase):
-	def test_valid_id_returns_string(self) -> None:
-		data_context = _stattxt_data_context(['Marine\x00', 'Ghost\x00', 'Vulture\x00'])
-		self.assertEqual(data_context.stattxt_string(0), 'Marine')
-		self.assertEqual(data_context.stattxt_string(2), 'Vulture')
-
-	def test_out_of_upper_bound_returns_none(self) -> None:
-		data_context = _stattxt_data_context(['Marine\x00'])
-		self.assertIsNone(data_context.stattxt_string(1))
-
-	def test_negative_id_returns_none(self) -> None:
-		data_context = _stattxt_data_context(['Marine\x00', 'Ghost\x00', 'Vulture\x00'])
-		self.assertIsNone(data_context.stattxt_string(-1))
-
-	def test_no_tbl_returns_none(self) -> None:
-		self.assertIsNone(DataContext().stattxt_string(0))

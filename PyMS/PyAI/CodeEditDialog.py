@@ -261,7 +261,7 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, UI.CodeTextDelegate)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', UI.Ctrl.Alt.c)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('insert'), self.insert_string_id, 'Insert String ID', UI.Ctrl.Alt.i, enabled=self.delegate.get_data_context().stattxt_tbl is not None)
+		self.toolbar.add_button(Assets.get_image('insert'), self.insert_string_id, 'Insert String ID', UI.Ctrl.Alt.i, enabled=self.delegate.get_data_context().stat_txt_tbl is not None)
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.transpile_to_pyai, 'Transpile to PyAI code', UI.Ctrl.Alt.p)
 		self.toolbar.add_button(Assets.get_image('debug'), self.debuggerize, 'Debuggerize your code', UI.Ctrl.d)
 		self.toolbar.pack(fill=UI.X, padx=2, pady=2)
@@ -412,7 +412,7 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, UI.CodeTextDelegate)
 				header_bin_file = 'bwscript'
 			else:
 				header_bin_file = 'aiscript'
-			header_string_index = self.delegate.get_data_context().stattxt_id(header_string) or 0
+			header_string_index = self.delegate.get_data_context().stat_txt_id(header_string) or 0
 			header_id = match.group(2)
 			return f"""### NOTE: There is no way to determine the scripts flags or if it is a BW script or not!
 ###       please update the header below appropriately!
@@ -579,7 +579,7 @@ script {header_id} {{
 
 	# ItemSelectDialog.Delegate
 	def get_items(self) -> Sequence[ItemSelectDialog.Item]:
-		strings = self.delegate.get_data_context().stattxt_strings()
+		strings = self.delegate.get_data_context().stat_txt_strings()
 		if not strings:
 			return []
 		# return [ItemSelectDialog.DisplayItem(string, f'{index}: {string}') for index, string in enumerate(strings)]
@@ -594,7 +594,7 @@ script {header_id} {{
 				self.text.delete(insert_index, f'{UI.INSERT} lineend')
 			str_index = str(index)
 			comment = ''
-			if string := self.delegate.get_data_context().stattxt_string(index):
+			if string := self.delegate.get_data_context().stat_txt_string(index):
 				comment = self.delegate.get_formatters().comment.serialize([string])
 			self.text.insert(insert_index, str_index + comment)
 			self.text.mark_set(UI.INSERT, f'{insert_index} +{len(str_index)}c')
@@ -632,16 +632,16 @@ script {header_id} {{
 		autocomplete_options.extend(keyword for type in CodeTypes.all_basic_types + AISECodeTypes.all_types if isinstance(type, CodeType.HasKeywords) for keyword in type.keywords())
 
 		data_context = self.delegate.get_data_context()
-		for unit_id in range(228):
+		for unit_id in range(data_context.unit_entry_count):
 			unit_name = data_context.unit_name(unit_id)
 			if unit_name and not unit_name in autocomplete_options:
 				autocomplete_options.append(unit_name)
-		for upgrade_id in range(61):
+		for upgrade_id in range(data_context.upgrade_entry_count):
 			upgrade_name = data_context.upgrade_name(upgrade_id)
 			if upgrade_name and not upgrade_name in autocomplete_options:
 				autocomplete_options.append(upgrade_name)
-		for tech_id in range(44):
-			tech_name = data_context.technology_name(tech_id)
+		for tech_id in range(data_context.tech_entry_count):
+			tech_name = data_context.tech_name(tech_id)
 			if tech_name and not tech_name in autocomplete_options:
 				autocomplete_options.append(tech_name)
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .DataContext import DataContext
+from ....Utilities.DataContext import DataContext
 from ..Definitions import NO_CONNECTED_UNIT
 
 from ....Utilities.CodeHandlers import CodeType
@@ -32,21 +32,24 @@ class _DATCodeType(CodeType.IntCodeType):
 	def __init__(self, name: str, help_text: str, *, limits: tuple[int, int] | None = None) -> None:
 		super().__init__(name, help_text, Struct.l_u16, limits=limits, allow_hex=True)
 
-	def _entry_name(self, data_context: DataContext, entry_id: int, unique: bool = False) -> str | None:
+	def _entry_name(self, data_context: DataContext, entry_id: int) -> str | None:
 		raise NotImplementedError()
 
 	def _entry_ids(self, data_context: DataContext, name: str) -> tuple[int, ...]:
 		raise NotImplementedError()
 
+	def _entry_display_name(self, data_context: DataContext, entry_id: int) -> str | None:
+		raise NotImplementedError()
+
 	def serialize(self, value: int, context: SerializeContext) -> str:
-		if (data_context := _data_context(context)) and (name := self._entry_name(data_context, value, unique=True)):
+		if (data_context := _data_context(context)) and (name := self._entry_name(data_context, value)):
 			return CodeType.StrCodeType.serialize_string(name)
 		return super().serialize(value, context)
 
 	def comment(self, value: int, context: SerializeContext) -> str | None:
 		# Only comment when the value couldn't be written as a name
-		if (data_context := _data_context(context)) and self._entry_name(data_context, value, unique=True) is None:
-			return self._entry_name(data_context, value)
+		if (data_context := _data_context(context)) and self._entry_name(data_context, value) is None:
+			return self._entry_display_name(data_context, value)
 		return None
 
 	def lex(self, parse_context: ParseContext) -> int:
@@ -69,11 +72,14 @@ class UnitCodeType(_DATCodeType):
 	def __init__(self, name: str = 'unit', help_text: str = 'A unit ID, or its quoted name', *, limits: tuple[int, int] | None = None) -> None:
 		super().__init__(name, help_text, limits=limits)
 
-	def _entry_name(self, data_context: DataContext, entry_id: int, unique: bool = False) -> str | None:
-		return data_context.unit_name(entry_id, unique)
+	def _entry_name(self, data_context: DataContext, entry_id: int) -> str | None:
+		return data_context.unit_name(entry_id)
 
 	def _entry_ids(self, data_context: DataContext, name: str) -> tuple[int, ...]:
 		return data_context.unit_ids(name)
+
+	def _entry_display_name(self, data_context: DataContext, entry_id: int) -> str | None:
+		return data_context.unit_display_name(entry_id)
 
 class UpgradeCodeType(_DATCodeType):
 	KIND = 'upgrade'
@@ -81,11 +87,14 @@ class UpgradeCodeType(_DATCodeType):
 	def __init__(self) -> None:
 		super().__init__('upgrade', 'An upgrade ID, or its quoted name')
 
-	def _entry_name(self, data_context: DataContext, entry_id: int, unique: bool = False) -> str | None:
-		return data_context.upgrade_name(entry_id, unique)
+	def _entry_name(self, data_context: DataContext, entry_id: int) -> str | None:
+		return data_context.upgrade_name(entry_id)
 
 	def _entry_ids(self, data_context: DataContext, name: str) -> tuple[int, ...]:
 		return data_context.upgrade_ids(name)
+
+	def _entry_display_name(self, data_context: DataContext, entry_id: int) -> str | None:
+		return data_context.upgrade_display_name(entry_id)
 
 class TechCodeType(_DATCodeType):
 	KIND = 'tech'
@@ -93,11 +102,14 @@ class TechCodeType(_DATCodeType):
 	def __init__(self) -> None:
 		super().__init__('tech', 'A tech ID, or its quoted name')
 
-	def _entry_name(self, data_context: DataContext, entry_id: int, unique: bool = False) -> str | None:
-		return data_context.tech_name(entry_id, unique)
+	def _entry_name(self, data_context: DataContext, entry_id: int) -> str | None:
+		return data_context.tech_name(entry_id)
 
 	def _entry_ids(self, data_context: DataContext, name: str) -> tuple[int, ...]:
 		return data_context.tech_ids(name)
+
+	def _entry_display_name(self, data_context: DataContext, entry_id: int) -> str | None:
+		return data_context.tech_display_name(entry_id)
 
 class QueueSlotCodeType(CodeType.CodeType[int, int], CodeType.HasKeywords):
 	# A training queue slot, written 1-based (stored 0-based), or `last` for the last queued unit
@@ -135,9 +147,10 @@ class ButtonCardCodeType(UnitCodeType):
 		super().__init__('button_card', 'A unit ID (or its quoted name) whose buttons are shown, or a special button card ID after the units')
 
 	def comment(self, value: int, context: SerializeContext) -> str | None:
-		if (data_context := _data_context(context)) and (name := data_context.special_button_card_name(value)):
-			return name
-		return super().comment(value, context)
+		# Only comment when the value couldn't be written as a unit name
+		if (data_context := _data_context(context)) and self._entry_name(data_context, value) is None:
+			return data_context.button_card_name(value)
+		return None
 
 class IconCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
@@ -153,8 +166,9 @@ class StringIDCodeType(CodeType.IntCodeType):
 		super().__init__('string_id', 'A stat_txt.tbl string ID (0 for no string)', Struct.l_u16, allow_hex=True)
 
 	def comment(self, value: int, context: SerializeContext) -> str | None:
-		if data_context := _data_context(context):
-			return data_context.stat_txt_string(value)
+		# String IDs are 1-based (0 is no string)
+		if (data_context := _data_context(context)) and value >= 1:
+			return data_context.stat_txt_string(value - 1)
 		return None
 
 class ButtonPositionCodeType(CodeType.IntCodeType):
@@ -175,7 +189,7 @@ class UnitIDCodeType(CodeType.IntCodeType):
 
 	def comment(self, value: int, context: SerializeContext) -> str | None:
 		if data_context := _data_context(context):
-			return data_context.unit_name(value)
+			return data_context.unit_display_name(value)
 		return None
 
 class ButtonCardIDCodeType(CodeType.IntCodeType):
@@ -185,7 +199,7 @@ class ButtonCardIDCodeType(CodeType.IntCodeType):
 
 	def comment(self, value: int, context: SerializeContext) -> str | None:
 		if data_context := _data_context(context):
-			return data_context.special_button_card_name(value) or data_context.unit_name(value)
+			return data_context.button_card_name(value)
 		return None
 
 class ButtonSetCodeType(CodeType.IntCodeType):

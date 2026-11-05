@@ -1,6 +1,7 @@
 from .utils import button_bytes, buttons_file, decompile_buttons, compile_buttons, parse_context
 from ...FileFormats.Graft import ButtonsGraft, Button, StatInfo, ButtonCard, UnitsGraft, FGP, FGPUnit
-from ...FileFormats.Graft.CodeHandlers import ButtonsLanguage, DataContext, ButtonCodeCommands
+from ...FileFormats.Graft.CodeHandlers import ButtonsLanguage, ButtonCodeCommands
+from ...Utilities.DataContext import DataContext
 from ...FileFormats.TBL import TBL
 from ...Utilities.CodeHandlers.LanguageDefinition import LanguageContext
 from ...Utilities.PyMSError import PyMSError
@@ -48,7 +49,7 @@ class Test_Defaults(unittest.TestCase):
 		graft.new()
 		text = decompile_buttons(graft)
 		# The vanilla game leaves the unused unit as 0 for unused units
-		self.assertIn("unit_stat_info 91 {\t# Cargo Ship (Unused)\n\tunit_unused 'Terran Marine'\n\tchanged_never\n\tdraw_none\n}\n", text)
+		self.assertIn("unit_stat_info 91 {\t# Cargo Ship (Unused) (Unused)\n\tunit_unused 'Terran Marine'\n\tchanged_never\n\tdraw_none\n}\n", text)
 		self.assertIn("unit_stat_info 120 {\t# Terran Machine Shop\n\tunit_unused 'Terran Machine Shop'\n\tchanged_building\n\tdraw_building\n}\n", text)
 
 	def test_vanilla_function_params(self) -> None:
@@ -145,7 +146,7 @@ class Test_Decompile(unittest.TestCase):
 		graft.button_cards = [ButtonCard(None, None)]
 		graft.stat_info = [StatInfo(0, 1, 0), StatInfo(5, 1, 0)]
 		text = decompile_buttons(graft)
-		self.assertEqual(text, "button_card 0 {\t# Terran Marine\n\tuse_button_set None\n\tconnected_unit None\n}\n\nunit_stat_info 0 {\t# Terran Marine\n\tunit_unused 'Terran Marine'\n\tchanged_unit\n\tdraw_unit\n}\n\nunit_stat_info 1 {\t# Terran Ghost\n\tunit_unused 'Terran Siege Tank (Tank Mode)'\n\tchanged_unit\n\tdraw_unit\n}\n\n")
+		self.assertEqual(text, "button_card 0 {\t# Terran Marine\n\tuse_button_set None\n\tconnected_unit None\n}\n\nunit_stat_info 0 {\t# Terran Marine\n\tunit_unused 'Terran Marine'\n\tchanged_unit\n\tdraw_unit\n}\n\nunit_stat_info 1 {\t# Terran Ghost\n\tunit_unused 'Terran Siege Tank<0>Tank Mode'\n\tchanged_unit\n\tdraw_unit\n}\n\n")
 		recompiled = compile_buttons(text)
 		self.assertEqual((recompiled.button_cards, recompiled.stat_info), (graft.button_cards, graft.stat_info))
 

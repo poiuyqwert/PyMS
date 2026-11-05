@@ -8,7 +8,8 @@ if TYPE_CHECKING:
 
 	from ..FileFormats import DAT
 	from ..FileFormats.IScriptBIN import IScriptBIN
-	from ..FileFormats.IScriptBIN.CodeHandlers import ICESerializeContext, ICEParseContext, DataContext
+	from ..FileFormats.IScriptBIN.CodeHandlers import ICESerializeContext, ICEParseContext
+	from ..Utilities.DataContext import DataContext
 
 	from ..Utilities import IO
 	from ..Utilities.MPQHandler import MPQHandler

@@ -3,7 +3,7 @@ from __future__ import annotations
 from .Definitions import OPCODE_MIN, END_OF_LIST
 from .CodeHandlers import RequirementCodeCommands
 from .CodeHandlers.GraftLanguage import GraftLanguage
-from .CodeHandlers.DataContext import DataContext
+from ...Utilities.DataContext import DataContext
 from .CodeHandlers.GraftParseContext import GraftParseContext
 from .CodeHandlers.GraftSerializeContext import GraftSerializeContext
 from .CodeHandlers import SourceParsing

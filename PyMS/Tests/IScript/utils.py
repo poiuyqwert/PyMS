@@ -1,5 +1,6 @@
 
-from ...FileFormats.IScriptBIN.CodeHandlers import ICEParseContext, ICELexer, DataContext, ICESerializeContext
+from ...FileFormats.IScriptBIN.CodeHandlers import ICEParseContext, ICELexer, ICESerializeContext
+from ...Utilities.DataContext import DataContext
 
 import io
 

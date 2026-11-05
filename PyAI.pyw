@@ -8,7 +8,7 @@ def main(): # type: () -> None
 	from PyMS.PyAI.PyAI import PyAI, LONG_VERSION
 
 	from PyMS.FileFormats.AIBIN import AIBIN
-	from PyMS.FileFormats.AIBIN.CodeHandlers.DataContext import DataContext
+	from PyMS.Utilities.DataContext import DataContext
 	from PyMS.FileFormats.AIBIN.CodeHandlers.AISourceCodeHandlers import AIDefsSourceCodeHandler
 	from PyMS.FileFormats.AIBIN.CodeHandlers.AILexer import AILexer
 	from PyMS.FileFormats.AIBIN.CodeHandlers.AISerializeContext import AISerializeContext
@@ -91,7 +91,7 @@ def main(): # type: () -> None
 				tbl = TBL.TBL()
 				tbl.load(opt.stattxt)
 				print('- Loading finished successfully')
-				data_context = DataContext(stattxt_tbl=tbl, units_dat=unitsdat, upgrades_dat=upgradesdat, techdata_dat=techdat)
+				data_context = DataContext(stat_txt_tbl=tbl, units_dat=unitsdat, upgrades_dat=upgradesdat, techdata_dat=techdat)
 				definitions_handler = DefinitionsHandler.DefinitionsHandler()
 				parse_settings = AIParseSettings()
 				if opt.deffile:

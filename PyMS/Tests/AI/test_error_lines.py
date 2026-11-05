@@ -2,7 +2,7 @@ from . import utils
 
 from ...FileFormats.AIBIN import AIBIN
 from ...FileFormats.AIBIN.CodeHandlers.AIParseContext import AIParseContext
-from ...FileFormats.AIBIN.CodeHandlers.DataContext import DataContext
+from ...Utilities.DataContext import DataContext
 from ...FileFormats.TBL import TBL
 
 from ...Utilities.PyMSError import PyMSError
@@ -31,7 +31,7 @@ def _commands(parse_context: AIParseContext, block_name: str = 'S') -> list[tupl
 def _unit_names(names: list[str]) -> DataContext:
 	tbl = TBL()
 	tbl.strings = names
-	return DataContext(stattxt_tbl=tbl)
+	return DataContext(stat_txt_tbl=tbl)
 
 
 class Test_UnquotedParenStrings(unittest.TestCase):

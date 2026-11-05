@@ -1,8 +1,8 @@
 from .utils import words, decompile_req, compile_req, parse_context
 from ...FileFormats.Graft import AbstractReqGraft, ReqScript, UnitsGraft, UpgradesGraft, ResearchGraft, TechGraft, OrdersGraft, FGP
-from ...FileFormats.Graft.CodeHandlers import RequirementCodeCommands, DataContext
+from ...FileFormats.Graft.CodeHandlers import RequirementCodeCommands
+from ...Utilities.DataContext import DataContext
 from ...FileFormats.TBL import TBL
-from ...FileFormats.DAT import DataNamesUsage
 from ...Utilities.CodeHandlers.CodeCommand import CodeCommand
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import IO
@@ -39,8 +39,8 @@ REQ_GRAFT_TYPES: tuple[type[AbstractReqGraft], ...] = (UnitsGraft, UpgradesGraft
 def _duplicate_names_context() -> DataContext:
 	# Units 0 and 1 are both named `Same`, unit 2 is named `Other`
 	stat_txt = TBL()
-	stat_txt.strings = ['Same\x00', 'Same\x00', 'Other\x00']
-	return DataContext(stat_txt_tbl=stat_txt, data_names_usage=DataNamesUsage.ignore)
+	stat_txt.strings = ['Same\x00*\x00', 'Same\x00*\x00', 'Other\x00*\x00']
+	return DataContext(stat_txt_tbl=stat_txt)
 
 def _load(graft_type: type[AbstractReqGraft], data: bytes) -> AbstractReqGraft:
 	graft = graft_type()
@@ -266,7 +266,7 @@ class Test_Decompile(unittest.TestCase):
 	def test_duplicate_names_are_written_as_ids(self) -> None:
 		graft = _load(UnitsGraft, words(0, 2, 0, 1, 2, 0xFFFF, 0xFFFF))
 		text = decompile_req(graft, _duplicate_names_context())
-		self.assertEqual(text, "Unit 2:\t# Other\n\thas 0\t# Same\n\thas 1\t# Same\n\thas 'Other'\n")
+		self.assertEqual(text, "Unit 2:\t# Terran Vulture (Other)\n\thas 0\t# Terran Marine (Same)\n\thas 1\t# Terran Ghost (Same)\n\thas 'Other'\n")
 		graft.replace_scripts(compile_req(text, UnitsGraft, _duplicate_names_context()))
 		self.assertEqual(IO.output_to_bytes(graft.save), words(0, 2, 0, 1, 2, 0xFFFF, 0xFFFF))
 

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from .ICELanguage import ICELanguage
-from .DataContext import DataContext
+from ....Utilities.DataContext import DataContext
 
 from ....Utilities.CodeHandlers.ParseContext import ParseContext, ParseSettings
 from ....Utilities.CodeHandlers.Lexer import Lexer

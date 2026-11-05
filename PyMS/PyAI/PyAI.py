@@ -18,7 +18,8 @@ from .FixIssuesUI.FixIssuesDialog import FixIssuesDialog
 
 from ..FileFormats.AIBIN import AIBIN
 from ..FileFormats.AIBIN.SpecialScripts import special_script_players
-from ..FileFormats.AIBIN.CodeHandlers import AISerializeContext, AIParseContext, AIParseSettings, AILexer, AIDefsSourceCodeHandler, DataContext
+from ..FileFormats.AIBIN.CodeHandlers import AISerializeContext, AIParseContext, AIParseSettings, AILexer, AIDefsSourceCodeHandler
+from ..Utilities.DataContext import DataContext
 from ..FileFormats import TBL
 from ..FileFormats import DAT
 from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
@@ -268,7 +269,7 @@ class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, Errorab
 		except PyMSError as e:
 			err = e
 		else:
-			self.data_context.set_stattxt_tbl(tbl)
+			self.data_context.set_stat_txt_tbl(tbl)
 			self.data_context.set_units_dat(unitsdat)
 			self.data_context.set_upgrades_dat(upgradesdat)
 			self.data_context.set_techdata_dat(techdat)
@@ -287,7 +288,7 @@ class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, Errorab
 
 	def entry_text(self, script: AIBIN.AIScript) -> str:
 		string = f'String {script.string_id}'
-		if (tbl_string := self.data_context.stattxt_string(script.string_id)):
+		if (tbl_string := self.data_context.stat_txt_string(script.string_id)):
 			string = tbl_string
 		if len(string) > 50:
 			string = string[:47] + '...'
@@ -309,7 +310,7 @@ class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, Errorab
 		self.listbox.delete(0, UI.END)
 		if not self.ai:
 			return
-		self.script_list = self.get_sortby().sort(self.ai.list_scripts(), self.data_context.stattxt_tbl)
+		self.script_list = self.get_sortby().sort(self.ai.list_scripts(), self.data_context.stat_txt_tbl)
 		for header in self.script_list:
 			self.listbox.insert(UI.END, self.entry_text(header))
 			if header in was_selected:
@@ -731,7 +732,7 @@ class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, Errorab
 			ErrorDialog(self, e)
 			return
 
-		self.data_context.set_stattxt_tbl(tbl)
+		self.data_context.set_stat_txt_tbl(tbl)
 		self.data_context.set_units_dat(unitsdat)
 		self.data_context.set_upgrades_dat(upgradesdat)
 		self.data_context.set_techdata_dat(techdat)

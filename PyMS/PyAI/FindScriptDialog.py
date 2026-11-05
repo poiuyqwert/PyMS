@@ -62,7 +62,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 		frame = UI.Frame(self)
 		self.stringidentry = UI.Entry(frame, textvariable=self.stringid)
 		self.stringidentry.pack(side=UI.LEFT, fill=UI.X, expand=1)
-		UI.Button(frame, text='Browse...', width=10, command=self.browse, state=UI.ACTIVE if self.delegate.get_data_context().stattxt_tbl is not None else UI.DISABLED).pack(side=UI.RIGHT)
+		UI.Button(frame, text='Browse...', width=10, command=self.browse, state=UI.ACTIVE if self.delegate.get_data_context().stat_txt_tbl is not None else UI.DISABLED).pack(side=UI.RIGHT)
 		frame.pack(fill=UI.X)
 
 		UI.Label(self, text='String', anchor=UI.W).pack(fill=UI.X)
@@ -120,7 +120,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 		self.listbox.delete(0, UI.END)
 		data_context = self.delegate.get_data_context()
 		for script in self.matching_scripts:
-			self.listbox.insert(UI.END, f"{script.id} {'*' if special_script_players(script.id) else ' '}   {'BW' if script.in_bwscript else '  '}     {binary(script.flags, 3)}     {script.string_id}: {data_context.stattxt_string(script.string_id)}")
+			self.listbox.insert(UI.END, f"{script.id} {'*' if special_script_players(script.id) else ' '}   {'BW' if script.in_bwscript else '  '}     {binary(script.flags, 3)}     {script.string_id}: {data_context.stat_txt_string(script.string_id)}")
 
 	def find(self, _: UI.Event | None = None) -> None:
 		self.updatecolor()
@@ -166,7 +166,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 				continue
 			if stringid_matcher and not stringid_matcher.match(str(script.string_id)):
 				continue
-			string = data_context.stattxt_string(script.string_id)
+			string = data_context.stat_txt_string(script.string_id)
 			if string_matcher and (string is None or not string_matcher.match(string)):
 				continue
 			matches.append(script)
@@ -184,7 +184,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 
 	# ItemSelectDialog.Delegate
 	def get_items(self) -> Sequence[ItemSelectDialog.Item]:
-		strings = self.delegate.get_data_context().stattxt_strings()
+		strings = self.delegate.get_data_context().stat_txt_strings()
 		if not strings:
 			return []
 		# return [ItemSelectDialog.DisplayItem(string, f'{index}: {string}') for index, string in enumerate(strings)]

@@ -122,9 +122,11 @@ class UnitCodeType(CodeType.IntCodeType):
 				token = parse_context.lexer.read_open_string(CodeType.StrCodeType.open_string_stop)
 				unit_name = token.raw_value
 			if unit_name is not None:
-				unit_id = parse_context.data_context.unit_id(unit_name)
-				if unit_id is not None:
-					return unit_id
+				unit_ids = parse_context.data_context.unit_ids(unit_name)
+				if len(unit_ids) > 1:
+					raise parse_context.error('Parse', f'`{unit_name}` is the name of multiple unit IDs ({", ".join(str(unit_id) for unit_id in unit_ids)}), use the ID instead')
+				if unit_ids:
+					return unit_ids[0]
 			parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)
 
@@ -387,9 +389,11 @@ class UpgradeCodeType(CodeType.IntCodeType):
 				token = parse_context.lexer.read_open_string(CodeType.StrCodeType.open_string_stop)
 				upgrade_name = token.raw_value
 			if upgrade_name is not None:
-				upgrade_id = parse_context.data_context.upgrade_id(upgrade_name)
-				if upgrade_id is not None:
-					return upgrade_id
+				upgrade_ids = parse_context.data_context.upgrade_ids(upgrade_name)
+				if len(upgrade_ids) > 1:
+					raise parse_context.error('Parse', f'`{upgrade_name}` is the name of multiple upgrade IDs ({", ".join(str(upgrade_id) for upgrade_id in upgrade_ids)}), use the ID instead')
+				if upgrade_ids:
+					return upgrade_ids[0]
 			parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)
 
@@ -406,7 +410,7 @@ class UpgradeCodeType(CodeType.IntCodeType):
 				entry_count = max(entry_count, parse_context.data_context.upgrades_dat.entry_count())
 			if parse_context.settings.expanded_upgrades is not None:
 				entry_count = max(entry_count, parse_context.settings.expanded_upgrades)
-		return (0, entry_count)
+		return (0, entry_count - 1)
 
 class TechnologyCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
@@ -424,7 +428,7 @@ class TechnologyCodeType(CodeType.IntCodeType):
 			if variable:
 				return variable.name
 		if isinstance(context, AISerializeContext) and context.data_context:
-			name = context.data_context.technology_name(value)
+			name = context.data_context.tech_name(value)
 			if name:
 				return StringCodeType.serialize_string(name)
 		return str(value)
@@ -440,9 +444,11 @@ class TechnologyCodeType(CodeType.IntCodeType):
 				token = parse_context.lexer.read_open_string(CodeType.StrCodeType.open_string_stop)
 				technology_name = token.raw_value
 			if technology_name is not None:
-				technology_id = parse_context.data_context.technology_id(technology_name)
-				if technology_id is not None:
-					return technology_id
+				technology_ids = parse_context.data_context.tech_ids(technology_name)
+				if len(technology_ids) > 1:
+					raise parse_context.error('Parse', f'`{technology_name}` is the name of multiple technology IDs ({", ".join(str(technology_id) for technology_id in technology_ids)}), use the ID instead')
+				if technology_ids:
+					return technology_ids[0]
 			parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)
 
@@ -459,7 +465,7 @@ class TechnologyCodeType(CodeType.IntCodeType):
 				entry_count = max(entry_count, parse_context.data_context.techdata_dat.entry_count())
 			if parse_context.settings.expanded_tech is not None:
 				entry_count = max(entry_count, parse_context.settings.expanded_tech)
-		return (0, entry_count)
+		return (0, entry_count - 1)
 
 class StringCodeType(CodeType.StrCodeType):
 	def __init__(self) -> None:
@@ -525,7 +531,7 @@ class TBLStringCodeType(CodeType.IntCodeType):
 	def comment(self, value: int, context: SerializeContext) -> str | None:
 		if not isinstance(context, AISerializeContext):
 			return None
-		return context.data_context.stattxt_string(value)
+		return context.data_context.stat_txt_string(value)
 
 class BinFileCodeType(CodeType.EnumCodeType):
 	def __init__(self) -> None:
