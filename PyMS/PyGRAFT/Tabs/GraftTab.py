@@ -4,6 +4,7 @@ from __future__ import annotations
 from ..GraftData import AnyGraftData
 
 from ...Utilities import UIKit as UI
+from ...Utilities.utils import fit
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -16,7 +17,10 @@ class GraftTab(UI.NotebookTab):
 		# Index of the selected entry in `entry_names()`
 		self.selected = 0
 		super().__init__(parent)
+		self.build_editor()
 
+	def build_editor(self) -> None:
+		# Tabs without an editor yet show a placeholder of the selected entry
 		self.placeholder = UI.StringVar()
 		UI.Label(self, textvariable=self.placeholder, justify=UI.CENTER).pack(expand=1)
 
@@ -25,6 +29,19 @@ class GraftTab(UI.NotebookTab):
 
 	def entry_names(self) -> list[str]:
 		raise NotImplementedError(self.__class__.__name__ + '.entry_names()')
+
+	def dimmed_entries(self) -> set[int]:
+		# Indexes in `entry_names()` that the main window's list shows dimmed
+		return set()
+
+	@staticmethod
+	def tip(widget: UI.Widget, name: str, text: str) -> UI.Tooltip:
+		return UI.Tooltip(widget, GraftTab.tip_text(name, text))
+
+	@staticmethod
+	def tip_text(name: str, text: str) -> str:
+		# The field's name, followed by its wrapped description
+		return f'{name}:\n{fit("  ", text, end=True)[:-1]}'
 
 	@staticmethod
 	def format_entry(entry_id: int, max_id: int, name: str) -> str:

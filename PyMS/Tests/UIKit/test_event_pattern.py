@@ -10,14 +10,14 @@ from typing import Any
 IS_MAC = 'PyMS.Utilities.UIKit.EventPattern.is_mac'
 
 
-def _load_event_pattern(is_mac_value: bool) -> Any:
-	# Re-execute the module as a throwaway copy with `is_mac` forced, so the
-	# import-time platform constants can be checked for both platforms without
-	# disturbing the canonical (already-imported) module.
+def _load_event_pattern(is_mac_value: bool, tk_version: float = 9.0) -> Any:
+	# Re-execute the module as a throwaway copy with `is_mac` and the Tk version
+	# forced, so the import-time platform constants can be checked for each
+	# platform without disturbing the canonical (already-imported) module.
 	spec = importlib.util.find_spec('PyMS.Utilities.UIKit.EventPattern')
 	assert spec is not None and spec.loader is not None
 	module = importlib.util.module_from_spec(spec)
-	with mock.patch('PyMS.Utilities.utils.is_mac', return_value=is_mac_value):
+	with mock.patch('PyMS.Utilities.utils.is_mac', return_value=is_mac_value), mock.patch('tkinter.TkVersion', tk_version):
 		spec.loader.exec_module(module)
 	return module
 
@@ -285,12 +285,16 @@ class Test_Events_modify(unittest.TestCase):
 
 class Test_platform_specifics(unittest.TestCase):
 	mac: Any
+	legacy_mac: Any
 	non_mac: Any
+	legacy_non_mac: Any
 
 	@classmethod
 	def setUpClass(cls) -> None:
 		cls.mac = _load_event_pattern(True)
+		cls.legacy_mac = _load_event_pattern(True, tk_version=8.6)
 		cls.non_mac = _load_event_pattern(False)
+		cls.legacy_non_mac = _load_event_pattern(False, tk_version=8.6)
 
 	def test_shift_modifier(self) -> None:
 		mac_shift = self.mac.Modifier.Shift
@@ -323,16 +327,42 @@ class Test_platform_specifics(unittest.TestCase):
 		self.assertEqual((non_mac_ctrl.value, non_mac_ctrl.description, non_mac_ctrl.state), ('Control', 'Ctrl', 0x04))
 
 	def test_right_click_button_number(self) -> None:
-		self.assertEqual(self.mac.Modifier.Click_Right.value, 'B2')
+		# Tk 8.7+ numbers the right button 3 on every platform, older Tk used 2 on macOS
+		self.assertEqual(self.mac.Modifier.Click_Right.value, 'B3')
+		self.assertEqual(self.legacy_mac.Modifier.Click_Right.value, 'B2')
 		self.assertEqual(self.non_mac.Modifier.Click_Right.value, 'B3')
+		self.assertEqual(self.legacy_non_mac.Modifier.Click_Right.value, 'B3')
 
 	def test_mouse_right_click_event(self) -> None:
-		self.assertEqual(self.mac.Mouse.Click_Right.name(), 'Button-2')
+		self.assertEqual(self.mac.Mouse.Click_Right.name(), 'Button-3')
+		self.assertEqual(self.legacy_mac.Mouse.Click_Right.name(), 'Button-2')
 		self.assertEqual(self.non_mac.Mouse.Click_Right.name(), 'Button-3')
+		self.assertEqual(self.legacy_non_mac.Mouse.Click_Right.name(), 'Button-3')
 
 	def test_button_release_right_click_event(self) -> None:
-		self.assertEqual(self.mac.ButtonRelease.Click_Right.name(), 'ButtonRelease-2')
+		self.assertEqual(self.mac.ButtonRelease.Click_Right.name(), 'ButtonRelease-3')
+		self.assertEqual(self.legacy_mac.ButtonRelease.Click_Right.name(), 'ButtonRelease-2')
 		self.assertEqual(self.non_mac.ButtonRelease.Click_Right.name(), 'ButtonRelease-3')
+		self.assertEqual(self.legacy_non_mac.ButtonRelease.Click_Right.name(), 'ButtonRelease-3')
+
+	def test_middle_click_button_number(self) -> None:
+		# Tk 8.7+ numbers the middle button 2 on every platform, older Tk used 3 on macOS
+		self.assertEqual(self.mac.Modifier.Click_Middle.value, 'B2')
+		self.assertEqual(self.legacy_mac.Modifier.Click_Middle.value, 'B3')
+		self.assertEqual(self.non_mac.Modifier.Click_Middle.value, 'B2')
+		self.assertEqual(self.legacy_non_mac.Modifier.Click_Middle.value, 'B2')
+
+	def test_mouse_middle_click_event(self) -> None:
+		self.assertEqual(self.mac.Mouse.Click_Middle.name(), 'Button-2')
+		self.assertEqual(self.legacy_mac.Mouse.Click_Middle.name(), 'Button-3')
+		self.assertEqual(self.non_mac.Mouse.Click_Middle.name(), 'Button-2')
+		self.assertEqual(self.legacy_non_mac.Mouse.Click_Middle.name(), 'Button-2')
+
+	def test_button_release_middle_click_event(self) -> None:
+		self.assertEqual(self.mac.ButtonRelease.Click_Middle.name(), 'ButtonRelease-2')
+		self.assertEqual(self.legacy_mac.ButtonRelease.Click_Middle.name(), 'ButtonRelease-3')
+		self.assertEqual(self.non_mac.ButtonRelease.Click_Middle.name(), 'ButtonRelease-2')
+		self.assertEqual(self.legacy_non_mac.ButtonRelease.Click_Middle.name(), 'ButtonRelease-2')
 
 	def test_shortcut_exit(self) -> None:
 		self.assertEqual(self.mac.Shortcut.Exit.event(), '<Command-q>')
@@ -344,9 +374,6 @@ class Test_platform_specifics(unittest.TestCase):
 
 
 class Test_event_groups(unittest.TestCase):
-	def test_mouse_middle_click(self) -> None:
-		self.assertEqual(Mouse.Click_Middle.event(), '<Button-2>')
-
 	def test_mouse_motion(self) -> None:
 		self.assertEqual(Mouse.Motion.event(), '<Motion>')
 

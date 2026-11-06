@@ -243,7 +243,7 @@ class UnitButtonSetCodeType(CodeType.CodeType[int | None, int | None], CodeType.
 		return (UnitButtonSetCodeType.NONE,)
 
 class ConnectedUnitCodeType(CodeType.CodeType[int | None, int | None], CodeType.HasKeywords):
-	# The unit a button card is connected to, or `None` (stored as 0xFFFF)
+	# The unit whose button card a mixed selection falls back to, or `None` (stored as 0xFFFF)
 	NONE = 'None'
 
 	def __init__(self) -> None:

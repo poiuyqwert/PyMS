@@ -46,10 +46,12 @@ class UITestCase(unittest.TestCase):
 
 	def setUp(self) -> None:
 		# Fail the test if, while it ran, anything wrote to disk, waited on a modal,
-		# or reported an error through the tracer (see `isolation.py`). Registered
-		# first so it runs last, after the window is destroyed.
+		# reported an error through the tracer, or raised out of a Tk callback (see
+		# `isolation.py`). Registered first so it runs last, after the window is
+		# destroyed.
 		self._traced_errors_mark = isolation.TRACED_ERRORS.mark()
-		marks = (isolation.DISK_WRITES.mark(), isolation.MODALS.mark(), self._traced_errors_mark)
+		self._callback_exceptions_mark = isolation.CALLBACK_EXCEPTIONS.mark()
+		marks = (isolation.DISK_WRITES.mark(), isolation.MODALS.mark(), self._traced_errors_mark, self._callback_exceptions_mark)
 		self.addCleanup(self._assert_isolated, *marks)
 
 	def take_traced_errors(self) -> list[str]:
@@ -57,11 +59,17 @@ class UITestCase(unittest.TestCase):
 		# longer fail it. For tests that deliberately exercise a swallowed error.
 		return isolation.TRACED_ERRORS.take(self._traced_errors_mark)
 
-	def _assert_isolated(self, disk_writes_mark: int, modals_mark: int, traced_errors_mark: int) -> None:
+	def take_callback_exceptions(self) -> list[str]:
+		# The tracebacks of exceptions raised out of Tk callbacks so far in this
+		# test, which no longer fail it. For tests that deliberately raise one.
+		return isolation.CALLBACK_EXCEPTIONS.take(self._callback_exceptions_mark)
+
+	def _assert_isolated(self, disk_writes_mark: int, modals_mark: int, traced_errors_mark: int, callback_exceptions_mark: int) -> None:
 		problems: list[str] = []
 		problems.extend(f'Wrote to disk: {entry}' for entry in isolation.DISK_WRITES.take(disk_writes_mark))
 		problems.extend(f'Waited on a modal: {entry}' for entry in isolation.MODALS.take(modals_mark))
 		problems.extend(f'Traced error:\n{entry}' for entry in isolation.TRACED_ERRORS.take(traced_errors_mark))
+		problems.extend(f'Exception in Tk callback:\n{entry}' for entry in isolation.CALLBACK_EXCEPTIONS.take(callback_exceptions_mark))
 		if problems:
 			self.fail('\n'.join(problems))
 

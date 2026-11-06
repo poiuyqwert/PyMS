@@ -26,7 +26,7 @@ class Test_PyGRAFT_tabs(PyGRAFTTestCase):
 		assert isinstance(tab, ReqGraftTab)
 		self.assertIs(tab.get_graft_data(), gui.units_data)
 		entries = self.list_entries(gui)
-		self.assertEqual(len(entries), len(gui.units_data.entry_ids()))
+		self.assertEqual(len(entries), len(gui.units_data.entry_ids(gui.data_context)))
 		self.assertIn('Terran Marine', entries[0])
 		self.assertEqual(self.list_selection(gui), [0])
 
@@ -39,11 +39,27 @@ class Test_PyGRAFT_tabs(PyGRAFTTestCase):
 		self.display_tab(gui, 'Unit Stat Info')
 		self.assertEqual(len(self.list_entries(gui)), len(gui.buttons_data.graft.stat_info))
 		self.display_tab(gui, 'Order Reqs.')
-		self.assertEqual(len(self.list_entries(gui)), len(gui.orders_data.entry_ids()))
+		self.assertEqual(len(self.list_entries(gui)), len(gui.orders_data.entry_ids(gui.data_context)))
+
+	def test_req_list_shows_every_dat_entry_dimming_ones_without_scripts(self) -> None:
+		gui = self.open_pygraft()
+		self.display_tab(gui, 'Order Reqs.')
+		entry_ids = gui.orders_data.entry_ids(gui.data_context)
+		self.assertEqual(entry_ids, list(range(gui.data_context.order_entry_count)))
+		self.assertEqual(len(self.list_entries(gui)), len(entry_ids))
+		dimmed_foreground = gui.listbox.listbox.cget('disabledforeground')
+		for index, entry_id in enumerate(entry_ids):
+			foreground = gui.listbox.itemcget(index, 'foreground')
+			if gui.orders_data.has_script(entry_id):
+				self.assertEqual(foreground, '')
+			else:
+				self.assertEqual(foreground, dimmed_foreground)
+		self.display_tab(gui, 'Button Cards')
+		self.assertTrue(all(gui.listbox.itemcget(index, 'foreground') == '' for index in range(len(self.list_entries(gui)))))
 
 	def test_list_selection_selects_entry_in_tab(self) -> None:
 		gui = self.open_pygraft()
-		tab = self.display_tab(gui, 'Button Cards')
+		tab = self.display_tab(gui, 'Button Sets')
 		self.select_in_list(gui, 7)
 		self.assertEqual(tab.selected, 7)
 		self.assertIn(self.list_entries(gui)[7].strip(), tab.placeholder.get())

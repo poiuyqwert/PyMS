@@ -53,10 +53,6 @@ class Test_UpdateDialog(UITestCase):
 			patcher.start()
 			self.addCleanup(patcher.stop)
 		self.window = self.make_window(_Host)
-		# Tk reports callback exceptions and carries on, which would hide failures in the result poll
-		callback_errors: list[BaseException] = []
-		self.window.report_callback_exception = lambda _type, error, _tb: callback_errors.append(error) # type: ignore[method-assign]
-		self.addCleanup(lambda: self.assertEqual(callback_errors, []))
 
 	def fetch_returns(self, *results: dict[str, str] | Exception) -> None:
 		# Each fetch consumes the next result

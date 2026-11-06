@@ -1,7 +1,7 @@
 # PyGRAFT
 PyGRAFT is a tool used for editing the `.graft` files of the GPTP Graft Hook, a replacement for FireGraft. The Graft Hook loads six files from the `datreq` folder of your mod's MPQ: the requirements for training or building units (`Units.graft`), researching upgrades (`Upgrades.graft`), researching technologies (`Research.graft`), using technologies (`Tech.graft`), and using orders (`Orders.graft`), along with the command card buttons (`Buttons.graft`).
 
-PyGRAFT is in early development: the tabs don't edit their entries yet. To make changes, use **Export to TXT**, edit the text, then **Import from TXT**.
+PyGRAFT is in early development: only the **Button Cards** and **Unit Stat Info** tabs edit their entries so far. To change anything else, use **Export to TXT**, edit the text, then **Import from TXT**.
 
 ## Main Window
 The menubar holds every command, in the **File**, **Settings**, and **Help** menus, and the toolbar under it has buttons for the file actions and settings (hover over a button to see its name and shortcut).
@@ -19,9 +19,23 @@ The right side of the window has a tab for each part of the Graft files:
 
 The **Button Sets**, **Button Cards**, and **Unit Stat Info** tabs all edit the same `Buttons.graft` file.
 
-The list on the left shows the entries of the active tab, and selecting an entry in the list selects it in the tab. Each tab remembers its selected entry when you switch between tabs.
+The list on the left shows the entries of the active tab, and selecting an entry in the list selects it in the tab. The requirement tabs list every entry of their `.dat` file, and entries without a requirements script are greyed out. Each tab remembers its selected entry when you switch between tabs.
 
 The status bar shows the path of the active tab's file, an indicator for unsaved changes, and how many entries the active tab has.
+
+## Button Cards
+Each button card picks what the command card shows for its unit (or, for the cards after the units, for groups, builder pages, replays, and so on):
+
+- **Button Set**: The button set the card shows, or **None** for no buttons.
+- **Connected Unit**: When units with this card are selected together with the connected unit, the group uses the connected unit's button card instead of the generic group card (such as Kerrigan connected to the Ghost), or **None**. Choose a unit from the dropdown, or type a unit ID in the entry (anything that isn't a unit, or `65535` for **None**, is undone). A card connected to a unit ID past the units that are loaded keeps it, shown as **Unit** followed by its ID.
+
+## Unit Stat Info
+Each unit's stat info picks the functions the game uses for that unit's stat panel when it's the only unit selected:
+
+- **Status Func.**: Checks whether what the stat panel shows has changed, so it gets redrawn.
+- **Display Func.**: Draws the stat panel.
+- **Presets**: Shows a menu of the function pairs most units use (such as **Building**, **Normal Unit**, or **Transport**). Choosing one sets both functions.
+- **Unit ID** (under **Debug**): A debug unit ID that the game doesn't use (it defaults to the unit itself). Choose a unit from the dropdown, or type any number in the entry (numbers that aren't a unit show as **Unknown**).
 
 ## Managing Files
 These commands are in the **File** menu and on the toolbar. Unless noted otherwise, they act on the file of the active tab:

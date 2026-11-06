@@ -14,6 +14,9 @@
 #   leaving a window waiting for a click.
 # - The tracer is a recording stand-in, so errors the program reports through
 #   `trace_error()` (and otherwise swallows) aren't silently lost.
+# - Exceptions raised inside Tk callbacks (bindings, `after` callbacks, widget
+#   commands), which Tk reports and carries on from, are recorded rather than only
+#   printed.
 #
 # `harness.UITestCase` fails any test during which something was recorded.
 
@@ -56,6 +59,7 @@ class Recorder:
 DISK_WRITES = Recorder()
 MODALS = Recorder()
 TRACED_ERRORS = Recorder()
+CALLBACK_EXCEPTIONS = Recorder()
 
 
 class RecordingTracer:
@@ -69,6 +73,12 @@ class RecordingTracer:
 
 
 TRACER = RecordingTracer()
+
+
+def _record_callback_exception(_self: tkinter.Tk, exc: type[BaseException], val: BaseException, tb: types.TracebackType | None) -> None:
+	# Stand-in for `Tk.report_callback_exception`, which would only print the
+	# traceback to stderr and let the event loop (and the test) carry on.
+	CALLBACK_EXCEPTIONS.record(''.join(traceback.format_exception(exc, val, tb)))
 
 
 def _block_write(kind: str, target: Any) -> NoReturn:
@@ -135,6 +145,7 @@ def install() -> None:
 		mock.patch.object(tkinter.Misc, 'wait_variable', _blocked_modal('wait_variable')),
 		# Every tkinter message box, file dialog, and color chooser shows through this.
 		mock.patch.object(tkinter.commondialog.Dialog, 'show', _blocked_modal('native dialog')),
+		mock.patch.object(tkinter.Tk, 'report_callback_exception', _record_callback_exception),
 	]
 	for name in ('makedirs', 'mkdir', 'remove', 'unlink', 'rename', 'renames', 'replace', 'rmdir', 'removedirs'):
 		patches.append(mock.patch.object(os, name, _blocked_write(f'os.{name}')))

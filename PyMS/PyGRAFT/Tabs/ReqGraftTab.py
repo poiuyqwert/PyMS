@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
 	from ..Delegates import MainDelegate
 
-# Tab for a requirements .graft file, listing the IDs that have a script
+# Tab for a requirements .graft file, listing every entry of its dat file (entries without a script are dimmed)
 class ReqGraftTab(GraftTab):
 	def __init__(self, parent: UI.Misc, delegate: MainDelegate, graft_data: ReqGraftData[Any]) -> None:
 		self.graft_data = graft_data
@@ -20,7 +20,7 @@ class ReqGraftTab(GraftTab):
 		return self.graft_data
 
 	def entry_ids(self) -> list[int]:
-		return self.graft_data.entry_ids()
+		return self.graft_data.entry_ids(self.delegate.data_context)
 
 	def entry_names(self) -> list[str]:
 		entry_ids = self.entry_ids()
@@ -30,8 +30,17 @@ class ReqGraftTab(GraftTab):
 		keyword = self.graft_data.graft_type.HEADER_KEYWORD
 		return [GraftTab.format_entry(entry_id, max_id, self.graft_data.entry_name(self.delegate.data_context, entry_id) or f'{keyword} {entry_id}') for entry_id in entry_ids]
 
+	def dimmed_entries(self) -> set[int]:
+		return {index for index, entry_id in enumerate(self.entry_ids()) if not self.graft_data.has_script(entry_id)}
+
 	def selected_entry_id(self) -> int | None:
 		entry_ids = self.entry_ids()
 		if 0 <= self.selected < len(entry_ids):
 			return entry_ids[self.selected]
 		return None
+
+	def load_selected(self) -> None:
+		super().load_selected()
+		entry_id = self.selected_entry_id()
+		if entry_id is not None and not self.graft_data.has_script(entry_id):
+			self.placeholder.set(self.placeholder.get() + '\n(No script)')

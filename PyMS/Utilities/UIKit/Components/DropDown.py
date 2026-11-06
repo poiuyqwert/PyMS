@@ -81,7 +81,7 @@ class DropDown(Frame):
 			if self.variable.get() == self.none_value:
 				self.text.set(self.none_name)
 			else:
-				self.text.set(self.entries[self.variable.get()])
+				self.text.set(self.entries[min(self.variable.get(), len(self.entries) - 1)])
 		else:
 			self.text.set('')
 

@@ -1,5 +1,5 @@
 
-from ..FileFormats.Graft import AbstractReqGraft, ButtonsGraft, FGP
+from ..FileFormats.Graft import AbstractReqGraft, UnitsGraft, UpgradesGraft, ResearchGraft, TechGraft, OrdersGraft, ButtonsGraft, FGP
 from ..FileFormats.Graft.CodeHandlers import GraftLexer, GraftParseContext, GraftSerializeContext
 
 from ..Utilities.DataContext import DataContext
@@ -10,7 +10,7 @@ from typing import Generic, TypeVar
 
 ReqGraftT = TypeVar('ReqGraftT', bound=AbstractReqGraft)
 
-# An open requirements .graft file (units, upgrades, research, tech, or orders)
+# An open requirements .graft file (subclassed for units, upgrades, research, tech, and orders)
 class ReqGraftData(Generic[ReqGraftT]):
 	def __init__(self, graft_type: type[ReqGraftT]) -> None:
 		self.graft_type = graft_type
@@ -71,11 +71,54 @@ class ReqGraftData(Generic[ReqGraftT]):
 			self.edited = True
 		return warnings
 
-	def entry_ids(self) -> list[int]:
-		return sorted(self.graft.list_ids())
+	def entry_count(self, data_context: DataContext) -> int:
+		# The number of entries in the dat file the scripts are for
+		raise NotImplementedError(self.__class__.__name__ + '.entry_count()')
+
+	def entry_ids(self, data_context: DataContext) -> list[int]:
+		# Every dat entry, plus any scripts for IDs past the end of the dat file
+		return sorted(set(range(self.entry_count(data_context))) | set(self.graft.list_ids()))
+
+	def has_script(self, entry_id: int) -> bool:
+		return self.graft.get_script(entry_id) is not None
 
 	def entry_name(self, data_context: DataContext, entry_id: int) -> str | None:
 		return self.graft_type.entry_name(data_context, entry_id)
+
+class UnitsGraftData(ReqGraftData[UnitsGraft]):
+	def __init__(self) -> None:
+		super().__init__(UnitsGraft)
+
+	def entry_count(self, data_context: DataContext) -> int:
+		return data_context.unit_entry_count
+
+class UpgradesGraftData(ReqGraftData[UpgradesGraft]):
+	def __init__(self) -> None:
+		super().__init__(UpgradesGraft)
+
+	def entry_count(self, data_context: DataContext) -> int:
+		return data_context.upgrade_entry_count
+
+class ResearchGraftData(ReqGraftData[ResearchGraft]):
+	def __init__(self) -> None:
+		super().__init__(ResearchGraft)
+
+	def entry_count(self, data_context: DataContext) -> int:
+		return data_context.tech_entry_count
+
+class TechGraftData(ReqGraftData[TechGraft]):
+	def __init__(self) -> None:
+		super().__init__(TechGraft)
+
+	def entry_count(self, data_context: DataContext) -> int:
+		return data_context.tech_entry_count
+
+class OrdersGraftData(ReqGraftData[OrdersGraft]):
+	def __init__(self) -> None:
+		super().__init__(OrdersGraft)
+
+	def entry_count(self, data_context: DataContext) -> int:
+		return data_context.order_entry_count
 
 # The open Buttons.graft file
 class ButtonsGraftData:

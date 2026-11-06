@@ -280,7 +280,7 @@ action_commands: list[GraftCommandDefinition] = number_functions([
 button_commands: list[CodeCommandDefinition] = [Icon, *condition_commands, *action_commands, EnabledStr, DisabledStr]
 
 UseButtonSet = CodeCommandDefinition('use_button_set', 'The button card uses button set {1}', None, (CodeTypes.UnitButtonSetCodeType(),))
-ConnectedUnit = CodeCommandDefinition('connected_unit', 'The button card is connected to {1}', None, (CodeTypes.ConnectedUnitCodeType(),))
+ConnectedUnit = CodeCommandDefinition('connected_unit', 'When selected together with {1}, the group uses the button card of {1} instead of the generic group card', None, (CodeTypes.ConnectedUnitCodeType(),))
 
 button_card_commands: list[CodeCommandDefinition] = [UseButtonSet, ConnectedUnit]
 

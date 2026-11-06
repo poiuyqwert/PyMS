@@ -5,8 +5,14 @@ from __future__ import annotations
 from ..utils import is_mac
 
 import inspect
+import tkinter
 
 from typing import Type
+
+# Tk before 8.7 numbered the right button 2 and the middle button 3 on macOS, Tk 8.7+ numbers them 3 and 2 on every platform (TIP 474)
+_LEGACY_MAC_BUTTONS = is_mac() and tkinter.TkVersion < 8.7
+_MIDDLE_BUTTON = '3' if _LEGACY_MAC_BUTTONS else '2'
+_RIGHT_BUTTON = '2' if _LEGACY_MAC_BUTTONS else '3'
 
 __all__ = [
 	'EventPattern',
@@ -115,8 +121,8 @@ class Modifier:
 	ButtonRelease = Field('ButtonRelease')
 
 	Click_Left = Field('B1', 'Left-Click')
-	Click_Middle = Field('B2', 'Middle-Click')
-	Click_Right = Field('B2' if is_mac() else 'B3', 'Right-Click')
+	Click_Middle = Field(f'B{_MIDDLE_BUTTON}', 'Middle-Click')
+	Click_Right = Field(f'B{_RIGHT_BUTTON}', 'Right-Click')
 
 class Keysym(Field):
 	# When using the Shift modifier, something like `Shift-c` does not work, it would need to be `Shift-C`
@@ -226,8 +232,8 @@ class Key(Events):
 
 class Mouse(Events):
 	Click_Left = EventPattern(Field('Button-1', 'Left-Click'))
-	Click_Middle = EventPattern(Field('Button-2', 'Middle-Click'))
-	Click_Right = EventPattern(Field('Button-2' if is_mac() else 'Button-3', 'Right-Click'))
+	Click_Middle = EventPattern(Field(f'Button-{_MIDDLE_BUTTON}', 'Middle-Click'))
+	Click_Right = EventPattern(Field(f'Button-{_RIGHT_BUTTON}', 'Right-Click'))
 	# 4
 	# 5
 
@@ -243,8 +249,8 @@ class Mouse(Events):
 
 class ButtonRelease(Events):
 	Click_Left = EventPattern(Field('1', 'Left-Click'))
-	Click_Middle = EventPattern(Field('2', 'Middle-Click'))
-	Click_Right = EventPattern(Field('2' if is_mac() else '3', 'Right-Click'))
+	Click_Middle = EventPattern(Field(_MIDDLE_BUTTON, 'Middle-Click'))
+	Click_Right = EventPattern(Field(_RIGHT_BUTTON, 'Right-Click'))
 ButtonRelease.modify(Modifier.ButtonRelease)
 
 # Control

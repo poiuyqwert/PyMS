@@ -1,6 +1,7 @@
 
-from ...PyGRAFT.GraftData import ReqGraftData, ButtonsGraftData, AnyGraftData
-from ...FileFormats.Graft import AbstractReqGraft, UnitsGraft, UpgradesGraft, ResearchGraft, TechGraft, OrdersGraft, ButtonsGraft, FGP
+from ...PyGRAFT.GraftData import ReqGraftData, UnitsGraftData, UpgradesGraftData, ResearchGraftData, TechGraftData, OrdersGraftData, ButtonsGraftData, AnyGraftData
+from ...FileFormats.Graft import ReqScript, ButtonsGraft, FGP
+from ...Utilities.DataContext import DataContext
 from ...Utilities.PyMSError import PyMSError
 
 from ..Graft.utils import vanilla_data_context
@@ -8,10 +9,12 @@ from ..Graft.utils import vanilla_data_context
 import io
 import unittest
 
-REQ_GRAFT_TYPES: tuple[type[AbstractReqGraft], ...] = (UnitsGraft, UpgradesGraft, ResearchGraft, TechGraft, OrdersGraft)
+from typing import Callable
+
+REQ_GRAFT_DATA_TYPES: tuple[Callable[[], ReqGraftData], ...] = (UnitsGraftData, UpgradesGraftData, ResearchGraftData, TechGraftData, OrdersGraftData)
 
 def all_graft_data() -> list[AnyGraftData]:
-	return [ReqGraftData(graft_type) for graft_type in REQ_GRAFT_TYPES] + [ButtonsGraftData()]
+	return [graft_data_type() for graft_data_type in REQ_GRAFT_DATA_TYPES] + [ButtonsGraftData()]
 
 def vanilla_bytes(graft_data: AnyGraftData) -> bytes:
 	if isinstance(graft_data, ReqGraftData):
@@ -91,10 +94,34 @@ class Test_GraftData(unittest.TestCase):
 				self.assertEqual(graft_data.import_fgp(FGP()), [])
 				self.assertFalse(graft_data.edited)
 
-	def test_req_entry_ids_are_sorted(self) -> None:
-		graft_data = ReqGraftData(UnitsGraft)
+	def test_req_entry_ids_are_every_dat_entry(self) -> None:
+		expected_counts: dict[Callable[[], ReqGraftData], int] = {UnitsGraftData: 228, UpgradesGraftData: 61, ResearchGraftData: 44, TechGraftData: 44, OrdersGraftData: 189}
+		for graft_data_type in REQ_GRAFT_DATA_TYPES:
+			graft_data = graft_data_type()
+			with self.subTest(file=graft_data.file_name):
+				graft_data.new()
+				self.assertEqual(graft_data.entry_count(vanilla_data_context()), expected_counts[graft_data_type])
+				self.assertEqual(graft_data.entry_ids(vanilla_data_context()), list(range(expected_counts[graft_data_type])))
+				self.assertEqual(graft_data.entry_count(DataContext()), expected_counts[graft_data_type])
+
+	def test_req_entry_ids_include_scripts_past_the_dat(self) -> None:
+		graft_data = OrdersGraftData()
 		graft_data.new()
-		self.assertEqual(graft_data.entry_ids(), sorted(graft_data.graft.list_ids()))
+		graft_data.graft.set_script(ReqScript(300, []))
+		entry_ids = graft_data.entry_ids(vanilla_data_context())
+		self.assertEqual(entry_ids, [*range(189), 300])
+
+	def test_req_has_script(self) -> None:
+		graft_data = OrdersGraftData()
+		graft_data.new()
+		script_ids = set(graft_data.graft.list_ids())
+		for entry_id in graft_data.entry_ids(vanilla_data_context()):
+			self.assertEqual(graft_data.has_script(entry_id), entry_id in script_ids)
+		self.assertTrue(script_ids)
+		self.assertLess(len(script_ids), 189)
+
+	def test_req_entry_name(self) -> None:
+		graft_data = UnitsGraftData()
 		self.assertEqual(graft_data.entry_name(vanilla_data_context(), 0), 'Terran Marine')
 
 	def test_mpq_paths(self) -> None:

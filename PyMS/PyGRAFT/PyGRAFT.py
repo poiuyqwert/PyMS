@@ -1,11 +1,11 @@
 
 from .Config import PyGRAFTConfig
 from .Delegates import MainDelegate
-from .GraftData import ReqGraftData, ButtonsGraftData, AnyGraftData
+from .GraftData import UnitsGraftData, UpgradesGraftData, ResearchGraftData, TechGraftData, OrdersGraftData, ButtonsGraftData, AnyGraftData
 from .Tabs import GraftTab, ReqGraftTab, ButtonCardsTab, ButtonSetsTab, StatInfoTab
 from .SettingsUI.SettingsDialog import SettingsDialog
 
-from ..FileFormats.Graft import UnitsGraft, UpgradesGraft, ResearchGraft, TechGraft, OrdersGraft, FGP
+from ..FileFormats.Graft import FGP
 from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
 from ..FileFormats.TBL import TBL
 from ..FileFormats.DAT import UnitsDAT, UpgradesDAT, TechDAT, OrdersDAT
@@ -52,11 +52,11 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.mpq_handler = MPQHandler(self.config_.settings.mpqs)
 		self.data_context = DataContext()
 
-		self.units_data = ReqGraftData(UnitsGraft)
-		self.upgrades_data = ReqGraftData(UpgradesGraft)
-		self.research_data = ReqGraftData(ResearchGraft)
-		self.tech_data = ReqGraftData(TechGraft)
-		self.orders_data = ReqGraftData(OrdersGraft)
+		self.units_data = UnitsGraftData()
+		self.upgrades_data = UpgradesGraftData()
+		self.research_data = ResearchGraftData()
+		self.tech_data = TechGraftData()
+		self.orders_data = OrdersGraftData()
 		self.buttons_data = ButtonsGraftData()
 		for graft_data in self.all_graft_data():
 			try:
@@ -184,6 +184,9 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		names = tab.entry_names()
 		if names:
 			self.listbox.insert(UI.END, *names)
+			dimmed_foreground = self.listbox.listbox.cget('disabledforeground')
+			for index in tab.dimmed_entries():
+				self.listbox.itemconfig(index, foreground=dimmed_foreground)
 			self.listbox.select_set(tab.selected)
 			self.listbox.see(tab.selected)
 		self.update_status_bar()

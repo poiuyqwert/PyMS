@@ -62,6 +62,11 @@ class Test_DropDown(UITestCase):
 		dropdown.setentries(['x', 'y', 'z'])
 		self.assertEqual(dropdown.text.get(), 'y')
 
+	def test_setentries_with_fewer_entries_clamps_displayed_text(self) -> None:
+		dropdown = self._dropdown(['a', 'b', 'c'], value=2)
+		dropdown.setentries(['x', 'y'])
+		self.assertEqual(dropdown.text.get(), 'y')
+
 	def test_setentries_empty_clears_text(self) -> None:
 		dropdown = self._dropdown(['a', 'b'])
 		dropdown.setentries([])
@@ -147,10 +152,10 @@ class Test_DropDown(UITestCase):
 
 
 class Test_EntryDropDown(UITestCase):
-	def _entry_dropdown(self, entries, *, value=0) -> UI.EntryDropDown:
+	def _entry_dropdown(self, entries, *, value=0, callback=None) -> UI.EntryDropDown:
 		window = self.make_window(UI.MainWindow)
 		variable = UI.IntegerVar(value)
-		entry_dropdown = UI.EntryDropDown(window, variable, entries)
+		entry_dropdown = UI.EntryDropDown(window, variable, entries, callback=callback)
 		entry_dropdown.pack()
 		self.pump(window)
 		return entry_dropdown
@@ -185,3 +190,23 @@ class Test_EntryDropDown(UITestCase):
 		entry_dropdown = self._entry_dropdown([('known', 5), ('any', None)], value=999)
 		self.assertEqual(entry_dropdown.dropdown_variable.get(), 1)
 		self.assertEqual(entry_dropdown.dropdown.text.get(), 'any')
+
+	def test_callback_receives_typed_and_chosen_values(self) -> None:
+		values: list[int] = []
+		entry_dropdown = self._entry_dropdown([('x', 10), ('y', 20), ('any', None)], value=10, callback=values.append)
+		entry_dropdown.variable.set(999)
+		entry_dropdown.dropdown.set(1)
+		self.assertEqual(values[-2:], [999, 20])
+
+	def test_choosing_none_entry_keeps_known_value_selected(self) -> None:
+		# The catch-all isn't a value, so choosing it can't leave the dropdown out of sync with a known entry value.
+		entry_dropdown = self._entry_dropdown([('x', 10), ('y', 20), ('any', None)], value=20)
+		entry_dropdown.dropdown.set(2)
+		self.assertEqual(entry_dropdown.variable.get(), 20)
+		self.assertEqual(entry_dropdown.dropdown.text.get(), 'y')
+
+	def test_removing_selected_entry_selects_first_entry(self) -> None:
+		entry_dropdown = self._entry_dropdown([('x', 10), ('y', 20), ('z', 30)], value=30)
+		entry_dropdown.set_entries([('x', 10), ('y', 20)])
+		self.assertEqual(entry_dropdown.variable.get(), 10)
+		self.assertEqual(entry_dropdown.dropdown.text.get(), 'x')

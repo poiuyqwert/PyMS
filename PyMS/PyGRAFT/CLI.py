@@ -1,7 +1,6 @@
 
-from .GraftData import ReqGraftData, ButtonsGraftData, AnyGraftData
+from .GraftData import UnitsGraftData, UpgradesGraftData, ResearchGraftData, TechGraftData, OrdersGraftData, ButtonsGraftData, AnyGraftData
 
-from ..FileFormats.Graft import UnitsGraft, UpgradesGraft, ResearchGraft, TechGraft, OrdersGraft
 from ..FileFormats.TBL import TBL
 from ..FileFormats.DAT import UnitsDAT, UpgradesDAT, TechDAT, OrdersDAT
 
@@ -14,15 +13,15 @@ FILE_TYPES = ('units', 'upgrades', 'research', 'tech', 'orders', 'buttons')
 def graft_data(file_type: str) -> AnyGraftData:
 	match file_type:
 		case 'units':
-			return ReqGraftData(UnitsGraft)
+			return UnitsGraftData()
 		case 'upgrades':
-			return ReqGraftData(UpgradesGraft)
+			return UpgradesGraftData()
 		case 'research':
-			return ReqGraftData(ResearchGraft)
+			return ResearchGraftData()
 		case 'tech':
-			return ReqGraftData(TechGraft)
+			return TechGraftData()
 		case 'orders':
-			return ReqGraftData(OrdersGraft)
+			return OrdersGraftData()
 		case 'buttons':
 			return ButtonsGraftData()
 	raise ValueError(f'Unknown Graft file type `{file_type}`')

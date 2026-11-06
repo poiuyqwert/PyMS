@@ -14,28 +14,22 @@ END_OF_LIST = 0xFFFF
 
 @dataclass(frozen=True)
 class StatPreset:
+	name: str
 	status_function: int
 	display_function: int
-	name: str
 
 # Most units use one of these status/display function pairs, though not all of them do
 STAT_PRESETS: tuple[StatPreset, ...] = (
-	StatPreset(2, 1, 'Building'),
-	StatPreset(1, 0, 'Normal Unit'),
-	StatPreset(4, 3, 'Unit w/ Subunits'),
-	StatPreset(3, 2, 'Transport'),
-	StatPreset(7, 6, 'Transport w/ Supply'),
-	StatPreset(8, 7, 'Powerup'),
-	StatPreset(6, 5, 'Morph Unit'),
-	StatPreset(5, 4, 'Merge Unit'),
-	StatPreset(0, 8, 'Unselectable'),
+	StatPreset('Building', 2, 1),
+	StatPreset('Normal Unit', 1, 0),
+	StatPreset('Unit w/ Subunits', 4, 3),
+	StatPreset('Transport', 3, 2),
+	StatPreset('Transport w/ Supply', 7, 6),
+	StatPreset('Powerup', 8, 7),
+	StatPreset('Morph Unit', 6, 5),
+	StatPreset('Merge Unit', 5, 4),
+	StatPreset('Unselectable', 0, 8),
 )
-
-def stat_preset(status_function: int, display_function: int) -> StatPreset | None:
-	for preset in STAT_PRESETS:
-		if preset.status_function == status_function and preset.display_function == display_function:
-			return preset
-	return None
 
 # Default table sizes of the vanilla game
 DEFAULT_BUTTON_CARD_COUNT = 250 # The units, plus the special button cards for groups, builder pages, replays, etc.
