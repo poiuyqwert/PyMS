@@ -25,10 +25,10 @@ CanStop = GraftCommandDefinition('can_stop', 'Mixed Group - Stop', 'Shown if any
 CanAttack = GraftCommandDefinition('can_attack', 'Unit Has A Weapon', 'Shown if any selected unit can move and attack.')
 CanAttackInPlace = GraftCommandDefinition('can_attack_in_place', 'Can Attack In Place', "Shown if any selected unit can attack and isn't disabled (no movement needed).")
 IsTraining = GraftCommandDefinition('is_training', 'Cancel Last', 'Shown if the unit has something in its training queue.')
-IsBuildingAddon = GraftCommandDefinition('is_building_addon', 'Cancel AddOn', 'Shown if the unit is building an add-on.')
+IsConstructingAddon = GraftCommandDefinition('is_constructing_addon', 'Cancel AddOn', 'Shown if the unit is building an add-on.')
 IsZergTownHall = GraftCommandDefinition('is_zerg_town_hall', 'Larva Exists(Upgrading Only)', 'Shown if the unit is a Hatchery, Lair or Hive.')
-CanRally = GraftCommandDefinition('can_rally', 'Rally Point', 'Uses the requirements of the rally point order.')
-CanZergTownHallRally = GraftCommandDefinition('can_zerg_town_hall_rally', 'Rally Point - While Upgrading Only', 'Uses the requirements of the rally point order if the unit is a Hatchery, Lair or Hive. Otherwise hidden.')
+CanSetRallyPoint = GraftCommandDefinition('can_set_rally_point', 'Rally Point', 'Uses the requirements of the rally point order.')
+CanZergTownHallSetRallyPoint = GraftCommandDefinition('can_zerg_town_hall_set_rally_point', 'Rally Point - While Upgrading Only', 'Uses the requirements of the rally point order if the unit is a Hatchery, Lair or Hive. Otherwise hidden.')
 IsConstructingOrMutating = GraftCommandDefinition('is_constructing_or_mutating', 'Construction/Mutation Underway', 'Shown if the unit is under construction or mutating.')
 IsResearchingUpgrade = GraftCommandDefinition('is_researching_upgrade', 'Upgrade Research Underway', 'Shown if the unit is researching an upgrade.')
 IsResearchingTech = GraftCommandDefinition('is_researching_tech', 'Tech Research Underway', 'Shown if the unit is researching a technology.')
@@ -56,11 +56,11 @@ CanBurrow = GraftCommandDefinition('can_burrow', 'Ability Is Researched', 'Shown
 CanUnburrow = GraftCommandDefinition('can_unburrow', 'Is Using Ability', 'Shown if every selected burrower meets the use requirements of {1} and is burrowed.', CodeTypes.TechCodeType())
 CanMorphLurker = GraftCommandDefinition('can_morph_lurker', 'Morph To Lurker', 'Uses the use requirements of Lurker Aspect.')
 IsNotBurrowed = GraftCommandDefinition('is_not_burrowed', 'Not Burrowed(Move/Stop/Patrol/Hold Position)', 'Shown unless any selected unit is burrowed.')
-CanAttackAndUnburrowed = GraftCommandDefinition('can_attack_and_unburrowed', 'Not Burrowed (Attack)', 'Shown if no selected unit is burrowed and any selected unit can move and attack.')
-IsNotCarryingHarvestAndUnburrowed = GraftCommandDefinition('is_not_carrying_harvest_and_unburrowed', 'Not Carrying Minerals/Gas & Not Burrowed', "Shown if no selected unit is burrowed and any selected unit isn't carrying minerals or gas.")
-IsCarryingHarvestAndUnburrowed = GraftCommandDefinition('is_carrying_harvest_and_unburrowed', 'Carrying Minerals/Gas & Not Burrowed', 'Shown if no selected unit is burrowed and any selected unit is carrying minerals or gas.')
+CanAttackAndNotBurrowed = GraftCommandDefinition('can_attack_and_not_burrowed', 'Not Burrowed (Attack)', 'Shown if no selected unit is burrowed and any selected unit can move and attack.')
+IsNotCarryingHarvestAndNotBurrowed = GraftCommandDefinition('is_not_carrying_harvest_and_not_burrowed', 'Not Carrying Minerals/Gas & Not Burrowed', "Shown if no selected unit is burrowed and any selected unit isn't carrying minerals or gas.")
+IsCarryingHarvestAndNotBurrowed = GraftCommandDefinition('is_carrying_harvest_and_not_burrowed', 'Carrying Minerals/Gas & Not Burrowed', 'Shown if no selected unit is burrowed and any selected unit is carrying minerals or gas.')
 HasSameBurrowState = GraftCommandDefinition('has_same_burrow_state', 'Burrowed (Stop - Lurker)', 'Shown if every selected unit is burrowed, or every selected unit is unburrowed.')
-HasNoExit = GraftCommandDefinition('has_no_exit', 'Has No Exit', 'Shown if the Nydus Canal has no exit.')
+DoesNotHaveExit = GraftCommandDefinition('does_not_have_exit', 'Has No Exit', 'Shown if the Nydus Canal has no exit.')
 CanBuildZergBasic = GraftCommandDefinition('can_build_zerg_basic', 'Zerg Basic Buildings', 'Shown if one unburrowed unit is selected and any basic Zerg building can be built.')
 CanBuildZergAdvanced = GraftCommandDefinition('can_build_zerg_advanced', 'Zerg Advanced Buildings', 'Shown if one unburrowed unit is selected and any advanced Zerg building can be built.')
 HasInterceptors = GraftCommandDefinition('has_interceptors', 'Has Interceptors', 'Shown if any selected unit is a Carrier with Interceptors. Otherwise greyed.')
@@ -141,7 +141,7 @@ PlayPauseReplay = GraftCommandDefinition('play_pause_replay', 'Play/Pause Replay
 SpeedUpReplay = GraftCommandDefinition('speed_up_replay', 'Speed Up Replay', 'Speed up the replay.')
 CancelTargeting = GraftCommandDefinition('cancel_targeting', 'Cancel', 'Turn off targeting mode.')
 CancelPlacement = GraftCommandDefinition('cancel_placement', 'Cancel Place Building', 'Close the placement box.')
-ShowButtonSet = GraftCommandDefinition('show_button_set', 'Change Displayed Buttons', 'Show button set {1}.', CodeTypes.ButtonCardCodeType())
+ShowButtonCard = GraftCommandDefinition('show_button_card', 'Change Displayed Buttons', 'Show button card {1}.', CodeTypes.ButtonCardCodeType())
 
 # In the order of FireGraft and the hook's lookup tables in `grafting.cpp` (a button stores the index of its condition and action in these lists)
 condition_commands: list[GraftCommandDefinition] = number_functions([
@@ -156,10 +156,10 @@ condition_commands: list[GraftCommandDefinition] = number_functions([
 	CanAttack,
 	CanAttackInPlace,
 	IsTraining,
-	IsBuildingAddon,
+	IsConstructingAddon,
 	IsZergTownHall,
-	CanRally,
-	CanZergTownHallRally,
+	CanSetRallyPoint,
+	CanZergTownHallSetRallyPoint,
 	IsConstructingOrMutating,
 	IsResearchingUpgrade,
 	IsResearchingTech,
@@ -187,11 +187,11 @@ condition_commands: list[GraftCommandDefinition] = number_functions([
 	CanUnburrow,
 	CanMorphLurker,
 	IsNotBurrowed,
-	CanAttackAndUnburrowed,
-	IsNotCarryingHarvestAndUnburrowed,
-	IsCarryingHarvestAndUnburrowed,
+	CanAttackAndNotBurrowed,
+	IsNotCarryingHarvestAndNotBurrowed,
+	IsCarryingHarvestAndNotBurrowed,
 	HasSameBurrowState,
-	HasNoExit,
+	DoesNotHaveExit,
 	CanBuildZergBasic,
 	CanBuildZergAdvanced,
 	HasInterceptors,
@@ -274,7 +274,7 @@ action_commands: list[GraftCommandDefinition] = number_functions([
 	SpeedUpReplay,
 	CancelTargeting,
 	CancelPlacement,
-	ShowButtonSet,
+	ShowButtonCard,
 ])
 
 button_commands: list[CodeCommandDefinition] = [Icon, *condition_commands, *action_commands, EnabledStr, DisabledStr]

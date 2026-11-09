@@ -81,7 +81,7 @@ class AbstractReqGraft:
 				in_sublist = False
 				commands.append(CodeCommand(RequirementCodeCommands.EndSublist, []))
 			elif word < OPCODE_MIN:
-				commands.append(CodeCommand(RequirementCodeCommands.Has, [word]))
+				commands.append(CodeCommand(RequirementCodeCommands.HasCompleted, [word]))
 			elif cmd_def := cls.LANGUAGE.lookup_opcode(word):
 				params = [_scan_word(scanner) for _ in cmd_def.param_types]
 				commands.append(CodeCommand(cmd_def, params))
@@ -102,9 +102,9 @@ class AbstractReqGraft:
 				if not in_sublist:
 					raise PyMSError('Validate', f'`end_sublist` used outside of an `upgrade_level_1` or `upgrade_level_2` sub-list in script {script.entry_id}')
 				in_sublist = False
-			elif definition == RequirementCodeCommands.Has:
+			elif definition == RequirementCodeCommands.HasCompleted:
 				if command.params[0] >= OPCODE_MIN:
-					raise PyMSError('Validate', f'`has` unit ID {command.params[0]} is too large (must be below {OPCODE_MIN}) in script {script.entry_id}')
+					raise PyMSError('Validate', f'`has_completed` unit ID {command.params[0]} is too large (must be below {OPCODE_MIN}) in script {script.entry_id}')
 			elif definition in RequirementCodeCommands.sublist_commands:
 				in_sublist = True
 		if in_sublist:
@@ -119,7 +119,7 @@ class AbstractReqGraft:
 			definition = command.definition
 			if definition == RequirementCodeCommands.EndSublist:
 				words.append(END_OF_LIST)
-			elif definition == RequirementCodeCommands.Has:
+			elif definition == RequirementCodeCommands.HasCompleted:
 				words.append(command.params[0])
 			else:
 				assert definition.byte_code_id is not None
