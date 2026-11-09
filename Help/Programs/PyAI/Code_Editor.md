@@ -7,7 +7,7 @@ The Code Editor is where you write and edit AI script code (see [AI Language](/H
 - **Export Code** (`Ctrl+E`) and **Export As...** (`Ctrl+Alt+A`): Saves the code in the editor to a text file.
 - **Import Code** (`Ctrl+I`): Replaces the code in the editor with the contents of a text file.
 - **Find/Replace** (`Ctrl+F`): Opens the Find/Replace dialog. Each match is selected in the code as it is found. `F3` repeats the last find, and `Esc` closes the dialog.
-- **Color Settings** (`Ctrl+Alt+C`): Customizes the syntax highlighting styles.
+- **Color Settings** (`Ctrl+Alt+C`): Customizes the syntax highlighting styles, and imports/exports them to share with the other programs (see [Color Settings](/Help/Programs/Syntax_Highlighting.md#color-settings)).
 - **Insert String ID** (`Ctrl+Alt+I`): Chooses a string from `stat_txt.tbl` and inserts its index at the cursor, with the string text as a trailing comment. Used on a `name_string` line it replaces the existing index. Only available when a `stat_txt.tbl` is loaded (see [Data Files](/Help/Programs/PyAI.md#data-files)).
 - **Transpile to PyAI code** (`Ctrl+Alt+P`): Converts code written for old versions of PyAI, or for ASC3 (`script_name`/`script_id` headers), into the current `script` header syntax. The old formats don't contain all of the header information, so check the generated headers afterwards (the transpiler inserts a note where it had to guess).
 - **Debuggerize your code** (`Ctrl+D`): Automatically inserts `debug` commands around flow commands (`goto`, `call`, `multirun`, `stop`, and the various jumps) so that when the script runs in the game, it reports each jump it takes and what triggered it.
@@ -25,3 +25,4 @@ Closing the editor with unsaved changes will ask if you want to save (compile) t
 - [AI Language](/Help/Programs/PyAI/AI_Language.md)
 - [Command Reference](/Help/Programs/PyAI/Command_Reference.md)
 - [AISE Commands](/Help/Programs/PyAI/AISE_Commands.md)
+- [Syntax Highlighting](/Help/Programs/Syntax_Highlighting.md)

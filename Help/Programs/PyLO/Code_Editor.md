@@ -20,7 +20,7 @@ Frame:
 - A `#` starts a comment, which runs to the end of the line.
 
 ## Editor Features
-- **Syntax highlighting**: Comments, `Frame:` headers, numbers, and operators each have their own configurable style — customize them with **Settings > Syntax Highlighting...** (`Ctrl+Alt+C`).
+- **Syntax highlighting**: Comments, `Frame:` headers, numbers, and operators each have their own configurable style — customize them with **Settings > Syntax Highlighting...** (`Ctrl+Alt+C`), which can also import/export them to share with the other programs (see [Color Settings](/Help/Programs/Syntax_Highlighting.md#color-settings)).
 - **Autocomplete**: Press `Tab` to complete the word being typed (`Frame` is the only keyword).
 - **Offset tooltip**: Selecting an offset and hovering over the selection shows a small diagram of the offset — a green crosshair marks the center of the graphic, and a blue crosshair marks the offset position.
 - **Comment toggle** (`Ctrl+/`): Comments/uncomments the current line or selected lines.
@@ -38,3 +38,4 @@ Frame:
 - [PyLO](/Help/Programs/PyLO.md)
 - [Previewer](/Help/Programs/PyLO/Previewer.md)
 - [LO?](/Help/Files/LO.md)
+- [Syntax Highlighting](/Help/Programs/Syntax_Highlighting.md)

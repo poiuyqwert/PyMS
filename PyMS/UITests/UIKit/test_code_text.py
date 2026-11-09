@@ -95,3 +95,46 @@ class Test_CodeText_UpdateHighlightStyles(UITestCase):
 		highlight_style.style.foreground = '#0000FF'
 		text.update_highlight_styles()
 		self.assertEqual(text.text.tag_cget('Keyword', 'foreground'), '#0000FF')
+
+
+class Test_CodeText_LinesColors(UITestCase):
+	def make_text(self, background: str, foreground: str) -> UI.CodeText:
+		window = self.make_window(UI.MainWindow)
+		text = UI.CodeText(window)
+		text.pack(fill=UI.BOTH, expand=1)
+		text.text.config(background=background, foreground=foreground)
+		text.update_lines_colors()
+		self.pump(window)
+		return text
+
+	def brightness(self, text: UI.CodeText, color: str) -> int:
+		return sum(text.winfo_rgb(color))
+
+	def test_lines_background_is_darkened_text_background(self) -> None:
+		text = self.make_text('#FFFFFF', '#000000')
+		self.assertEqual(text.lines.cget('background'), '#E6E6E6')
+
+	def test_lines_foreground_is_text_foreground_half_blended_into_lines_background(self) -> None:
+		text = self.make_text('#FFFFFF', '#000000')
+		self.assertEqual(text.lines.cget('foreground'), '#737373')
+
+	def test_lines_background_is_darker_than_dark_text_background(self) -> None:
+		text = self.make_text('#2B2B2B', '#BBBBBB')
+		self.assertLess(self.brightness(text, text.lines.cget('background')), self.brightness(text, '#2B2B2B'))
+
+	def test_lines_colors_follow_text_colors_on_highlight_style_update(self) -> None:
+		text = self.make_text('#FFFFFF', '#000000')
+		text.set_syntax_highlighting(UI.SyntaxHighlighting(
+			syntax_components=(),
+			highlight_components=(
+				UI.HighlightComponent(
+					name='Keyword',
+					description='Keywords',
+					highlight_style=HighlightStyle(Style(foreground='#FF0000'))
+				),
+			)
+		))
+		text.text.config(background='#000000', foreground='#FFFFFF')
+		text.update_highlight_styles()
+		self.assertEqual(text.lines.cget('background'), '#000000')
+		self.assertEqual(text.lines.cget('foreground'), '#7F7F7F')

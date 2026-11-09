@@ -188,7 +188,8 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 			self.open(file=self.guifile)
 		UpdateDialog.check_update(self, 'PyTRG')
 
-	def keywords(self) -> list[str]:
+	@staticmethod
+	def keywords() -> list[str]:
 		keywords = set(('Trigger', 'BriefingTrigger', 'Conditions', 'Actions', 'String', 'UnitProperties'))
 		for condition in Conditions.definitions_registry:
 			for cparameter in condition.parameters:
@@ -204,18 +205,19 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 					keywords.add(keyword)
 		return sorted(list(keywords))
 
-	def setup_syntax_highlighting(self) -> None:
+	@staticmethod
+	def build_syntax_highlighting(highlights_config: PyTRGConfig.Highlights) -> UI.SyntaxHighlighting:
 		condition_names = [condition.name for condition in Conditions.definitions_registry]
 		action_names = [action.name for action in Actions.definitions_registry]
-		keywords = self.keywords()
-		self.syntax_highlighting = UI.SyntaxHighlighting(
+		keywords = PyTRG.keywords()
+		return UI.SyntaxHighlighting(
 			syntax_components=(
 				UI.SyntaxComponent((
 					UI.HighlightPattern(
 						highlight=UI.HighlightComponent(
 							name='Comment',
 							description='The style of a comment.',
-							highlight_style=self.config_.highlights.comment
+							highlight_style=highlights_config.comment
 						),
 						pattern=r'#[^\n]*$'
 					),
@@ -226,7 +228,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 						highlight=UI.HighlightComponent(
 							name='Header',
 							description='The style of a `script` header.',
-							highlight_style=self.config_.highlights.header
+							highlight_style=highlights_config.header
 						),
 						pattern=r'Trigger(?=\([^\n]+\):)|Conditions(?=(?: \w+)?:)|Actions(?=(?: \w+)?:)|Constant(?= \w+:)|String(?= \d+:)|Property(?= \d+:)'
 					),
@@ -237,7 +239,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 						highlight=UI.HighlightComponent(
 							name='Keyword',
 							description='The style of keywords.',
-							highlight_style=self.config_.highlights.keyword
+							highlight_style=highlights_config.keyword
 						),
 						pattern='|'.join(keywords)
 					),
@@ -249,7 +251,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 						highlight=UI.HighlightComponent(
 							name='Condition',
 							description='The style of condition names.',
-							highlight_style=self.config_.highlights.condition
+							highlight_style=highlights_config.condition
 						),
 						pattern='|'.join(condition_names)
 					),
@@ -261,7 +263,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 						highlight=UI.HighlightComponent(
 							name='Action',
 							description='The style of action names.',
-							highlight_style=self.config_.highlights.action
+							highlight_style=highlights_config.action
 						),
 						pattern='|'.join(action_names)
 					),
@@ -272,7 +274,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 						highlight=UI.HighlightComponent(
 							name='Constant',
 							description='The style of constants.',
-							highlight_style=self.config_.highlights.constant
+							highlight_style=highlights_config.constant
 						),
 						pattern=r'\{\w+\}'
 					),
@@ -283,7 +285,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 						highlight=UI.HighlightComponent(
 							name='Constant Definition',
 							description='The style of constant definitions.',
-							highlight_style=self.config_.highlights.constant_definition
+							highlight_style=highlights_config.constant_definition
 						),
 						pattern=r'\w+'
 					),
@@ -295,7 +297,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 						highlight=UI.HighlightComponent(
 							name='Number',
 							description='The style of all numbers.',
-							highlight_style=self.config_.highlights.number
+							highlight_style=highlights_config.number
 						),
 						pattern=r'\d+|x(?:2|4|8|16|32)|0x[0-9a-fA-F]+'
 					),
@@ -306,7 +308,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 						highlight=UI.HighlightComponent(
 							name='TBL Format',
 							description='The style of TBL formatted characters, like null: <0>',
-							highlight_style=self.config_.highlights.tbl_format
+							highlight_style=highlights_config.tbl_format
 						),
 						pattern=r'<0*(?:25[0-5]|2[0-4]\d|1?\d?\d)?>'
 					),
@@ -316,7 +318,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 						highlight=UI.HighlightComponent(
 							name='Operator',
 							description='The style of the operators:\n    ( ) , = { }',
-							highlight_style=self.config_.highlights.operator
+							highlight_style=highlights_config.operator
 						),
 						pattern=r'[():,\-]'
 					),
@@ -326,7 +328,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 						highlight=UI.HighlightComponent(
 							name='Newline',
 							description='The style of newlines',
-							highlight_style=self.config_.highlights.newline
+							highlight_style=highlights_config.newline
 						),
 						pattern=r'\n'
 					),
@@ -336,21 +338,24 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 				UI.HighlightComponent(
 					name='Selection',
 					description='The style of selected text in the editor.',
-					highlight_style=self.config_.highlights.selection,
+					highlight_style=highlights_config.selection,
 					tag='sel'
 				),
 				UI.HighlightComponent(
 					name='Error',
 					description='The style of highlighted errors in the editor.',
-					highlight_style=self.config_.highlights.error
+					highlight_style=highlights_config.error
 				),
 				UI.HighlightComponent(
 					name='Warning',
 					description='The style of highlighted warnings in the editor.',
-					highlight_style=self.config_.highlights.warning
+					highlight_style=highlights_config.warning
 				),
 			)
 		)
+
+	def setup_syntax_highlighting(self) -> None:
+		self.syntax_highlighting = PyTRG.build_syntax_highlighting(self.config_.highlights)
 		self.text.set_syntax_highlighting(self.syntax_highlighting)
 
 		ActionsTooltip(self.text.text)
@@ -603,7 +608,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 		self.text.selectall()
 
 	def colors(self) -> None:
-		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())
+		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components(), self.config_.last_path.highlights)
 		if dialog.updated:
 			self.text.update_highlight_styles()
 

@@ -394,7 +394,7 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, UI.CodeTextDelegate)
 			self.findwindow.show()
 
 	def colors(self, _: UI.Event | None = None) -> None:
-		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())
+		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components(), self.config_.last_path.highlights)
 		if dialog.updated:
 			self.text.update_highlight_styles()
 

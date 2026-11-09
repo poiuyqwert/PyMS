@@ -113,10 +113,20 @@ Run from this directory (the one containing the `.pyw` launchers and the `PyMS/`
 
 - Full suite: `pyenv exec python -m unittest discover -t . -s PyMS/Tests -p 'test_*.py'` — the `-t .` matters; without it discovery imports tests as `Tests.*` and their relative imports fail.
 - Single module: `pyenv exec python -m unittest PyMS.Tests.<Sub>.<test_module>`
-- UI automation tests: `pyenv exec python -m unittest discover -t . -s PyMS/UITests -p 'test_*.py'`
 - Single UI module: `pyenv exec python -m unittest PyMS.UITests.<Sub>.<test_module>` (e.g. `PyMS.UITests.PyPAL.test_clipboard`)
+- One UI folder: `pyenv exec python -m unittest discover -t . -s PyMS/UITests/<Sub> -p 'test_*.py'`
+- All UI automation tests (only when warranted — see below): `pyenv exec python -m unittest discover -t . -s PyMS/UITests -p 'test_*.py'`
 
 Note: SFmpq tests are expected to fail on macOS at this time
+
+Choosing UI tests: the `PyMS/Tests` suite always runs in full, but the UITest suite is slow, so scope it to the change's surface area — work out which programs and widgets can actually reach the edited code, and run only those UITests:
+
+- **Program-local change** (`PyMS/Py<PROG>/...`): run only `UITests/Py<PROG>/`, and if the change is confined to one dialog/tab, only the modules that exercise it (e.g. a PyGRAFT requirements-editor change runs `PyMS.UITests.PyGRAFT.test_requirements_editor` — no PyPAL tests).
+- **Shared widget/dialog change** (`Utilities/UIKit/...`, shared dialogs, settings/theme code): run its `UITests/UIKit/` or `UITests/Utilities/` module, then grep for the widget's users and also run the UITests of programs that use it in the changed way.
+- **Full UITest suite** only for broad changes: the harness/isolation (`UITests/harness.py`, `isolation.py`, `__init__.py`), theming or event-loop plumbing every window uses, `MainWindow`/shared base classes, refactors spanning many programs — or when asked.
+- **No UI reachability** (e.g. FileFormats parsing no UI test drives, Help docs): no UITests needed.
+
+When reporting results, say which UITest modules/folders ran and why the rest were skipped.
 
 UI automation test notes (see `PyMS/UITests/harness.py`):
 

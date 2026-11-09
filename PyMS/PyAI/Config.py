@@ -80,6 +80,7 @@ class PyAIConfig(Config.Config):
 			self.tbl = Config.SelectFile(name='stat_txt.tbl', filetypes=[UI.FileType.tbl()])
 			self.mpq = Config.SelectFile(name='MPQ', filetypes=[UI.FileType.mpq(),UI.FileType.exe_mpq()])
 			self.txt = PyAIConfig.LastPath.TXT()
+			self.highlights = Config.SelectFile(name='Syntax Highlighting', filetypes=[UI.FileType.json()], op_type=Config.FileOpType.import_export)
 			super().__init__()
 
 	class Settings(Config.Group):
@@ -120,7 +121,7 @@ class PyAIConfig(Config.Config):
 			def __init__(self) -> None:
 				self.comment = Config.HighlightStyle(default=Config.Style(foreground='#008000'))
 				self.string = Config.HighlightStyle(default=Config.Style(foreground='#A31515'))
-				self.header = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
+				self.header = Config.HighlightStyle(default=Config.Style(foreground='#FF00FF', bold=True))
 				self.ai_id = Config.HighlightStyle(default=Config.Style(foreground='#FF00FF', bold=True))
 				self.block = Config.HighlightStyle(default=Config.Style(foreground='#FF00FF'))
 				self.command = Config.HighlightStyle(default=Config.Style(foreground='#0000AA'))

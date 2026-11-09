@@ -36,6 +36,7 @@ class PyTRGConfig(Config.Config):
 		def __init__(self) -> None:
 			self.trg = Config.SelectFile(name='TRG', filetypes=[UI.FileType.trg()])
 			self.txt = Config.SelectFile(name='TXT', filetypes=[UI.FileType.txt()], op_type=Config.FileOpType.import_export)
+			self.highlights = Config.SelectFile(name='Syntax Highlighting', filetypes=[UI.FileType.json()], op_type=Config.FileOpType.import_export)
 			super().__init__()
 
 	class Settings(Config.Group):

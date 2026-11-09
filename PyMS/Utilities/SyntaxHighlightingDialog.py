@@ -2,24 +2,45 @@
 from .utils import fit
 from . import UIKit as UI
 from .PyMSDialog import PyMSDialog
+from .SyntaxHighlightingFile import SyntaxHighlightingFile
+from .ErrorDialog import ErrorDialog
+from .PyMSError import PyMSError
+from . import Config
+from . import Assets
+
+import os
 
 from typing import Sequence
 
 class SyntaxHighlightingDialog(PyMSDialog):
-	def __init__(self, parent: UI.AnyWindow, highlight_components: Sequence[UI.HighlightComponent]):
+	def __init__(self, parent: UI.AnyWindow, highlight_components: Sequence[UI.HighlightComponent], select_file: Config.SelectFile):
 		self.highlight_components = highlight_components
+		self.select_file = select_file
 		for highlight_component in self.highlight_components:
 			highlight_component.highlight_style.store_state()
 		self.updated = True
 		PyMSDialog.__init__(self, parent, 'Color Settings', resizable=(False, False))
 
 	def widgetize(self) -> UI.Widget:
-		self.listbox = UI.ScrolledListbox(self, font=UI.Font.fixed(), width=20, height=16)
+		l = UI.Frame(self)
+		self.listbox = UI.ScrolledListbox(l, font=UI.Font.fixed(), width=20, height=16)
 		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), self.highlight_component_selected)
 		for highlight_component in self.highlight_components:
 			self.listbox.insert(UI.END, highlight_component.name)
 		self.listbox.select_set(0)
-		self.listbox.pack(side=UI.LEFT, fill=UI.Y, padx=2, pady=2)
+		self.listbox.pack(side=UI.TOP, fill=UI.BOTH, expand=1, padx=2, pady=2)
+
+		self.toolbar = UI.Toolbar(l)
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import...')
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export...')
+		self.toolbar.add_gap()
+		self.reset_button = self.toolbar.add_button(Assets.get_image('reset'), self.show_reset_menu, 'Reset to Defaults')
+		self.toolbar.pack(side=UI.TOP, fill=UI.X, padx=2)
+		l.pack(side=UI.LEFT, fill=UI.Y)
+
+		self.reset_menu = UI.Menu(self, tearoff=0)
+		self.reset_menu.add_command(label='All Styles', command=self.reset_all)
+		self.reset_menu.add_command(label='Selected Style', command=self.reset_selected)
 
 		self.fg = UI.IntVar()
 		self.fg.trace_add('write', lambda *_: self.toggle_foreground())
@@ -117,6 +138,52 @@ class SyntaxHighlightingDialog(PyMSDialog):
 			highlight_component.highlight_style.style.background = self.hex_color(color)
 			self.bgcanvas['background'] = highlight_component.highlight_style.style.background
 		self.focus_set()
+
+	def iimport(self) -> None:
+		path = self.select_file.select_open(self)
+		if not path:
+			return
+		highlights_file = SyntaxHighlightingFile()
+		try:
+			highlights_file.load(path)
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		if not highlights_file.apply(self.highlight_components):
+			ErrorDialog(self, PyMSError('Import', 'The file has no syntax highlighting styles used by this program'))
+			return
+		self.highlight_component_selected()
+
+	def export(self) -> None:
+		path = self.select_file.select_save(self)
+		if not path:
+			return
+		highlights_file = SyntaxHighlightingFile()
+		if os.path.exists(path):
+			# Merge into the existing file so styles for other programs are kept
+			try:
+				highlights_file.load(path)
+			except PyMSError:
+				if not UI.MessageBox.askyesno(parent=self, title='Overwrite?', message=f"'{os.path.basename(path)}' is not a valid syntax highlighting file, so its styles can't be kept. Overwrite it?"):
+					return
+				highlights_file = SyntaxHighlightingFile()
+		highlights_file.update(self.highlight_components)
+		try:
+			highlights_file.save(path)
+		except Exception as e:
+			ErrorDialog(self, PyMSError('Export', f"Couldn't write '{path}'", cause=e))
+
+	def show_reset_menu(self) -> None:
+		self.reset_menu.post(self.reset_button.winfo_rootx(), self.reset_button.winfo_rooty() + self.reset_button.winfo_height())
+
+	def reset_all(self) -> None:
+		for highlight_component in self.highlight_components:
+			highlight_component.highlight_style.reset()
+		self.highlight_component_selected()
+
+	def reset_selected(self) -> None:
+		self.selected_highlight_component().highlight_style.reset()
+		self.highlight_component_selected()
 
 	def cancel(self, _event: UI.Event | None = None) -> None:
 		self.updated = False

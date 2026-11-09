@@ -228,15 +228,16 @@ class PyLO(UI.MainWindow, UI.CodeTextDelegate):
 
 		self.config_.windows.main.load_size(self)
 
-	def setup_syntax_highlighting(self) -> None:
-		self.syntax_highlighting = UI.SyntaxHighlighting(
+	@staticmethod
+	def build_syntax_highlighting(highlights_config: PyLOConfig.Highlights) -> UI.SyntaxHighlighting:
+		return UI.SyntaxHighlighting(
 			syntax_components=(
 				UI.SyntaxComponent((
 					UI.HighlightPattern(
 						highlight=UI.HighlightComponent(
 							name='Comment',
 							description='The style of a comment.',
-							highlight_style=self.config_.highlights.comment
+							highlight_style=highlights_config.comment
 						),
 						pattern=r'#[^\n]*$'
 					),
@@ -247,7 +248,7 @@ class PyLO(UI.MainWindow, UI.CodeTextDelegate):
 						highlight=UI.HighlightComponent(
 							name='Header',
 							description='The style of a `script` header.',
-							highlight_style=self.config_.highlights.header
+							highlight_style=highlights_config.header
 						),
 						pattern=r'Frame:'
 					),
@@ -258,7 +259,7 @@ class PyLO(UI.MainWindow, UI.CodeTextDelegate):
 						highlight=UI.HighlightComponent(
 							name='Number',
 							description='The style of all numbers.',
-							highlight_style=self.config_.highlights.number
+							highlight_style=highlights_config.number
 						),
 						pattern=SIGNED_INT
 					),
@@ -269,7 +270,7 @@ class PyLO(UI.MainWindow, UI.CodeTextDelegate):
 						highlight=UI.HighlightComponent(
 							name='Operator',
 							description='The style of the operators:\n    ( ) : ,',
-							highlight_style=self.config_.highlights.operator
+							highlight_style=highlights_config.operator
 						),
 						pattern=r'[():,]'
 					),
@@ -279,7 +280,7 @@ class PyLO(UI.MainWindow, UI.CodeTextDelegate):
 						highlight=UI.HighlightComponent(
 							name='Newline',
 							description='The style of newlines',
-							highlight_style=self.config_.highlights.newline
+							highlight_style=highlights_config.newline
 						),
 						pattern=r'\n'
 					),
@@ -289,21 +290,24 @@ class PyLO(UI.MainWindow, UI.CodeTextDelegate):
 				UI.HighlightComponent(
 					name='Selection',
 					description='The style of selected text in the editor.',
-					highlight_style=self.config_.highlights.selection,
+					highlight_style=highlights_config.selection,
 					tag='sel'
 				),
 				UI.HighlightComponent(
 					name='Error',
 					description='The style of highlighted errors in the editor.',
-					highlight_style=self.config_.highlights.error
+					highlight_style=highlights_config.error
 				),
 				UI.HighlightComponent(
 					name='Warning',
 					description='The style of highlighted warnings in the editor.',
-					highlight_style=self.config_.highlights.warning
+					highlight_style=highlights_config.warning
 				),
 			)
 		)
+
+	def setup_syntax_highlighting(self) -> None:
+		self.syntax_highlighting = PyLO.build_syntax_highlighting(self.config_.highlights)
 		self.text.set_syntax_highlighting(self.syntax_highlighting)
 
 		SelectionTooltip(self.text.text)
@@ -702,7 +706,7 @@ class PyLO(UI.MainWindow, UI.CodeTextDelegate):
 			self.findwindow.findnext(from_parent=True)
 
 	def colors(self) -> None:
-		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())
+		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components(), self.config_.last_path.highlights)
 		if dialog.updated:
 			self.setup_syntax_highlighting()
 

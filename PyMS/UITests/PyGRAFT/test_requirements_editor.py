@@ -25,9 +25,10 @@ class Test_PyGRAFT_requirements_editor(PyGRAFTTestCase):
 		return gui, tab, tab.editor.script_view
 
 	def script_body(self, gui: PyGRAFT, entry_id: int) -> str:
+		# The decompiled script as the view shows it (without the final newline, which the text widget supplies)
 		output = io.StringIO()
 		gui.units_data.graft.decompile_script(GraftSerializeContext(output, gui.data_context), entry_id)
-		return output.getvalue()
+		return output.getvalue().rstrip('\n')
 
 	def code(self, view: ReqScriptView) -> str:
 		return view.text.get('1.0', 'end-1c')
@@ -58,6 +59,11 @@ class Test_PyGRAFT_requirements_editor(PyGRAFTTestCase):
 		self.assertFalse(view.is_edited())
 		self.assertEqual(view.apply_button['state'], UI.DISABLED)
 		self.assertFalse(gui.units_data.edited)
+
+	def test_loaded_script_has_no_trailing_blank_line(self) -> None:
+		_, _, view = self.open_req_tab()
+		self.assertFalse(self.code(view).endswith('\n'))
+		self.assertNotEqual(view.text.get('end-1c linestart', 'end-1c'), '')
 
 	def test_entry_without_script_is_empty(self) -> None:
 		gui, _, view = self.open_req_tab()
@@ -92,7 +98,7 @@ class Test_PyGRAFT_requirements_editor(PyGRAFTTestCase):
 		self.assertTrue(gui.units_data.edited)
 		self.assertEqual(gui.listbox.itemcget(UNSCRIPTED_UNIT, 'foreground'), '')
 		# The editor shows the applied script, and is no longer edited
-		self.assertEqual(self.code(view), 'is_not_lifted_off\n')
+		self.assertEqual(self.code(view), 'is_not_lifted_off')
 		self.assertFalse(view.is_edited())
 		self.assertEqual(self.list_selection(gui), [UNSCRIPTED_UNIT])
 

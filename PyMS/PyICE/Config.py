@@ -77,6 +77,7 @@ class PyICEConfig(Config.Config):
 			self.bin = Config.SelectFile(name='IScript .bin', filetypes=[UI.FileType.bin_iscript()])
 			self.txt = Config.SelectFile(name='TXT', op_type=Config.FileOpType.import_export, filetypes=[UI.FileType.txt()])
 			self.generators = PyICEConfig.LastPath.Generators()
+			self.highlights = Config.SelectFile(name='Syntax Highlighting', filetypes=[UI.FileType.json()], op_type=Config.FileOpType.import_export)
 			super().__init__()
 
 	class Settings(Config.Group):
@@ -137,7 +138,7 @@ class PyICEConfig(Config.Config):
 				self.header_command = Config.HighlightStyle(default=Config.Style(foreground='#0000AA'))
 				self.number = Config.HighlightStyle(default=Config.Style(foreground='#FF0000'))
 				self.operator = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
-				self.header = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
+				self.header = Config.HighlightStyle(default=Config.Style(foreground='#FF00FF', bold=True))
 				self.newline = Config.HighlightStyle(default=Config.Style())
 				self.selection = Config.HighlightStyle(default=Config.Style(background='#C0C0C0'))
 				self.error = Config.HighlightStyle(default=Config.Style(background='#FF8C8C'))

@@ -92,21 +92,22 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 
 		self.config_.windows.code_edit.load_size(self)
 
-	def setup_syntax_highlighting(self) -> None:
+	@staticmethod
+	def build_syntax_highlighting(highlights_config: PyICEConfig.Code.Highlights) -> UI.SyntaxHighlighting:
 		cmd_names = [cmd.name for cmd in CodeCommands.all_basic_commands]
 		header_names = [cmd.name for cmd in CodeCommands.all_header_commands]
 		keywords: list[str] = []
 		for code_type in CodeTypes.all_basic_types + CodeTypes.all_header_types:
 			if isinstance(code_type, CodeType.HasKeywords):
 				keywords.extend(code_type.keywords())
-		self.syntax_highlighting = UI.SyntaxHighlighting(
+		return UI.SyntaxHighlighting(
 			syntax_components=(
 				UI.SyntaxComponent((
 					UI.HighlightPattern(
 						highlight=UI.HighlightComponent(
 							name='Comment',
 							description='The style of a comment.',
-							highlight_style=self.config_.code.highlights.comment
+							highlight_style=highlights_config.comment
 						),
 						pattern=r'#[^\n]*$'
 					),
@@ -117,7 +118,7 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 						highlight=UI.HighlightComponent(
 							name='Keyword',
 							description='The style of keywords.',
-							highlight_style=self.config_.code.highlights.keyword
+							highlight_style=highlights_config.keyword
 						),
 						pattern='|'.join(keywords)
 					),
@@ -129,7 +130,7 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 						highlight=UI.HighlightComponent(
 							name='Block',
 							description='The style of a --block-- or :block in the code.',
-							highlight_style=self.config_.code.highlights.block
+							highlight_style=highlights_config.block
 						),
 						pattern=r'\w+:'
 					)
@@ -140,7 +141,7 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 						highlight=UI.HighlightComponent(
 							name='Command',
 							description='The style of command names.',
-							highlight_style=self.config_.code.highlights.command
+							highlight_style=highlights_config.command
 						),
 						pattern='|'.join(cmd_names)
 					),
@@ -152,7 +153,7 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 						highlight=UI.HighlightComponent(
 							name='Header Command',
 							description='The style of header command names.',
-							highlight_style=self.config_.code.highlights.header_command
+							highlight_style=highlights_config.header_command
 						),
 						pattern='|'.join(header_names)
 					),
@@ -164,7 +165,7 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 						highlight=UI.HighlightComponent(
 							name='Number',
 							description='The style of all numbers.',
-							highlight_style=self.config_.code.highlights.number
+							highlight_style=highlights_config.number
 						),
 						pattern=r'\d+|0x[0-9a-fA-F]+'
 					),
@@ -175,7 +176,7 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 						highlight=UI.HighlightComponent(
 							name='Operator',
 							description='The style of the operators:\n    ( ) : , =',
-							highlight_style=self.config_.code.highlights.operator
+							highlight_style=highlights_config.operator
 						),
 						pattern=r'[():,=]'
 					),
@@ -185,7 +186,7 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 						highlight=UI.HighlightComponent(
 							name='Header',
 							description='The style of a `script` header.',
-							highlight_style=self.config_.code.highlights.header
+							highlight_style=highlights_config.header
 						),
 						pattern=r'\.headerstart|\.headerend'
 					),
@@ -195,7 +196,7 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 						highlight=UI.HighlightComponent(
 							name='Newline',
 							description='The style of newlines',
-							highlight_style=self.config_.code.highlights.newline
+							highlight_style=highlights_config.newline
 						),
 						pattern=r'\n'
 					),
@@ -205,21 +206,24 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 				UI.HighlightComponent(
 					name='Selection',
 					description='The style of selected text in the editor.',
-					highlight_style=self.config_.code.highlights.selection,
+					highlight_style=highlights_config.selection,
 					tag='sel'
 				),
 				UI.HighlightComponent(
 					name='Error',
 					description='The style of highlighted errors in the editor.',
-					highlight_style=self.config_.code.highlights.error
+					highlight_style=highlights_config.error
 				),
 				UI.HighlightComponent(
 					name='Warning',
 					description='The style of highlighted warnings in the editor.',
-					highlight_style=self.config_.code.highlights.warning
+					highlight_style=highlights_config.warning
 				),
 			)
 		)
+
+	def setup_syntax_highlighting(self) -> None:
+		self.syntax_highlighting = CodeEditDialog.build_syntax_highlighting(self.config_.code.highlights)
 		self.text.set_syntax_highlighting(self.syntax_highlighting)
 
 		AnimationTooltip(self.text.text)
@@ -318,7 +322,7 @@ class CodeEditDialog(PyMSDialog, UI.CodeTextDelegate, CodeGeneratorDelegate):
 			self.findwindow.show()
 
 	def colors(self, _event: UI.Event | None = None) -> None:
-		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())
+		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components(), self.config_.last_path.highlights)
 		if dialog.updated:
 			self.text.update_highlight_styles()
 

@@ -38,6 +38,7 @@ class PyLOConfig(Config.Config):
 		def __init__(self) -> None:
 			self.lo = Config.SelectFile(name='LO', filetypes=[UI.FileType.lo(),UI.FileType.loa(),UI.FileType.lob(),UI.FileType.lod(),UI.FileType.lof(),UI.FileType.loo(),UI.FileType.los(),UI.FileType.lou(),UI.FileType.log(),UI.FileType.lol(),UI.FileType.lox()])
 			self.txt = Config.SelectFile(name='TXT', filetypes=[UI.FileType.txt()], op_type=Config.FileOpType.import_export)
+			self.highlights = Config.SelectFile(name='Syntax Highlighting', filetypes=[UI.FileType.json()], op_type=Config.FileOpType.import_export)
 			super().__init__()
 
 	class Settings(Config.Group):

@@ -28,6 +28,7 @@ class PyGRAFTConfig(Config.Config):
 			self.fgp = Config.SelectFile(name='FireGraft Project', filetypes=[UI.FileType.fgp()], op_type=Config.FileOpType.import_export)
 			self.mpq = Config.SelectFile(name='MPQ', filetypes=[UI.FileType.mpq(),UI.FileType.exe_mpq()])
 			self.dir = Config.SelectDirectory(title='Open Directory')
+			self.highlights = Config.SelectFile(name='Syntax Highlighting', filetypes=[UI.FileType.json()], op_type=Config.FileOpType.import_export)
 			super().__init__()
 
 	class Settings(Config.Group):

@@ -28,6 +28,11 @@ class HighlightComponent:
 	def tag_name(self) -> str:
 		return self.tag or self.name.replace(' ', '')
 
+	# Shared across all programs, used for config fields and imported/exported highlight files
+	@property
+	def key(self) -> str:
+		return self.name.lower().replace(' ', '_')
+
 @dataclass
 class HighlightPattern:
 	highlight: HighlightComponent

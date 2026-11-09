@@ -105,7 +105,8 @@ class ReqScriptView(UI.NotebookTab, UI.CodeTextDelegate):
 			output = io.StringIO()
 			try:
 				self.graft_data.graft.decompile_script(GraftSerializeContext(output, self.delegate.data_context), entry_id)
-				code = output.getvalue()
+				# The text widget supplies the final newline itself
+				code = output.getvalue().rstrip('\n')
 			except PyMSError as e:
 				ErrorDialog(self, e)
 			self.script_status.set(entry_name)
@@ -209,7 +210,7 @@ class ReqScriptView(UI.NotebookTab, UI.CodeTextDelegate):
 			self.findwindow.show()
 
 	def colors(self) -> None:
-		dialog = SyntaxHighlightingDialog(self.window(), self.syntax_highlighting.all_highlight_components())
+		dialog = SyntaxHighlightingDialog(self.window(), self.syntax_highlighting.all_highlight_components(), self.delegate.config_.last_path.highlights)
 		if dialog.updated:
 			self.text.update_highlight_styles()
 

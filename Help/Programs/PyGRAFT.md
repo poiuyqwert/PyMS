@@ -49,7 +49,7 @@ The toolbar above the code has these buttons, whose shortcuts work while editing
 - **Revert Changes**: Discards the changes to the code since it was loaded or last applied.
 - **Test Code** (`Ctrl+T`): Checks the code for errors without applying it.
 - **Find/Replace** (`Ctrl+F`): Finds or replaces text in the code (`F3` finds the next match).
-- **Color Settings** (`Ctrl+Alt+C`): Changes the colors of the code, which all of the requirement tabs share.
+- **Color Settings** (`Ctrl+Alt+C`): Changes the colors of the code, which all of the requirement tabs share, and imports/exports them to share with the other programs (see [Color Settings](/Help/Programs/Syntax_Highlighting.md#color-settings)).
 
 After applying, the code is reloaded from the file, so comments and formatting aren't kept.
 

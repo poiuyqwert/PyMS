@@ -1,5 +1,6 @@
 
 from ..Widgets import Frame, Menu, Misc, Scrollbar, Text
+from ..Colors import Colors
 from ..Constants import BOTH, END, EW, HORIZONTAL, INSERT, LEFT, MOVETO, NONE, NORMAL, NS, NSEW, SUNKEN, Y
 from ..Event import Event
 from ..EventPattern import Alt, ButtonRelease, Ctrl, CustomEventPattern, EventPropogation, Field, Focus, Key, Mouse, Shift, WidgetEvent
@@ -15,6 +16,9 @@ import re
 from dataclasses import dataclass
 
 from typing import Generator, Protocol, Sequence, Any, Literal
+
+# How much the line numbers background is darkened from the text background
+LINES_DARKEN = 0.1
 
 @dataclass
 class AutocompleteState:
@@ -81,7 +85,7 @@ class CodeText(Frame):
 		frame = Frame(self)
 
 		font = Font.fixed().sized(12)
-		self.lines = Text(frame, height=1, font=font, bg='#E4E4E4', fg='#808080', width=8, cursor='')
+		self.lines = Text(frame, height=1, font=font, width=8, cursor='')
 		self.lines.config(bd=0)
 		self.lines.pack(side=LEFT, fill=Y)
 
@@ -92,6 +96,7 @@ class CodeText(Frame):
 		self.text.config(bd=0)
 		self.text.configure(tabs=self.tk.call("font", "measure", self.text["font"], "-displayof", frame, '    '))
 		self.text.pack(side=LEFT, fill=BOTH, expand=1)
+		self.update_lines_colors()
 		self.text.bind(Ctrl.a(), lambda e: self.after_managed(1, self.selectall))
 
 		frame.grid(sticky=NSEW)
@@ -360,6 +365,14 @@ class CodeText(Frame):
 			self.tag_configure(highlight_component.tag_name, **highlight_component.highlight_style.style.configuration)
 		self.tag_raise('sel')
 		self.update_inactive_select_background()
+		self.update_lines_colors()
+
+	def _mix_colors(self, color: str, other: str, amount: float) -> str:
+		# Mix `amount` of `other` into `color`
+		rgb = self.winfo_rgb(color)
+		other_rgb = self.winfo_rgb(other)
+		red, green, blue = (int(channel + (other_channel - channel) * amount) >> 8 for channel, other_channel in zip(rgb, other_rgb))
+		return Colors.to_html(red, green, blue)
 
 	def update_inactive_select_background(self) -> None:
 		# Show the unfocused selection as the selection color at 50% opacity over the background
@@ -367,10 +380,17 @@ class CodeText(Frame):
 		background = self.text.cget('background')
 		if not select_background or not background:
 			return
-		select_rgb = self.winfo_rgb(select_background)
-		background_rgb = self.winfo_rgb(background)
-		red, green, blue = (((select + back) // 2) >> 8 for select, back in zip(select_rgb, background_rgb))
-		self.text.config(inactiveselectbackground=f'#{red:02X}{green:02X}{blue:02X}')
+		self.text.config(inactiveselectbackground=self._mix_colors(background, select_background, 0.5))
+
+	def update_lines_colors(self) -> None:
+		# Show the line numbers on a darkened text background, with the text color faded into it
+		background = self.text.cget('background')
+		foreground = self.text.cget('foreground')
+		if not background or not foreground:
+			return
+		lines_background = self._mix_colors(background, '#000000', LINES_DARKEN)
+		lines_foreground = self._mix_colors(foreground, lines_background, 0.5)
+		self.lines.config(background=lines_background, foreground=lines_foreground)
 
 	def docolor(self) -> None:
 		self.after_id = None
