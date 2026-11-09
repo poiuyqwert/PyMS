@@ -63,5 +63,6 @@ class MainWindow(Tk, WindowExtensions):
 
 	def destroy(self) -> None:
 		from ... import Assets  # pylint: disable=cyclic-import
+		# Cleared after destroying, since widgets' callbacks while being destroyed (e.g. resizing) can get images, which would be cached for the destroyed window
+		Tk.destroy(self)
 		Assets.clear_image_cache()
-		return Tk.destroy(self)

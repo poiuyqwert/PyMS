@@ -351,7 +351,12 @@ class CodeText(Frame):
 		if not self.highlight_components:
 			return
 		for highlight_component in self.highlight_components:
-			self.tag_delete(highlight_component.tag_name)
+			if highlight_component.tag_name == 'sel':
+				# Deleting the selection tag resets it to the widget's selection colors
+				self.tag_delete(highlight_component.tag_name)
+			else:
+				# Reset the options a style can set, instead of deleting the tag (which would remove its ranges and bindings, like tooltips)
+				self.tag_configure(highlight_component.tag_name, foreground='', background='', font='')
 			self.tag_configure(highlight_component.tag_name, **highlight_component.highlight_style.style.configuration)
 		self.tag_raise('sel')
 		self.update_inactive_select_background()

@@ -1,12 +1,12 @@
 
 from .Tooltip import Tooltip
-from ..Widgets import Button, Checkbutton, Frame, Misc, Radiobutton, Widget
+from ..Widgets import Button, Checkbutton, Frame, Misc, Radiobutton, Tk, Toplevel, Widget
 from ..Constants import DISABLED, LEFT, NORMAL, TOP, X
 from ..Variables import Variable
 from ..Images import PhotoImage
 from ..Event import Event
 from ..TagStateManager import TagStateManager
-from ..EventPattern import EventPattern
+from ..EventPattern import EventPattern, EventPropogation
 
 from typing import Any, Callable, Sequence
 
@@ -19,15 +19,18 @@ class Toolbar(Frame):
 	def __init__(self, *args: Any, **kwargs: Any) -> None:
 		self._buttons: dict[str, Widget] = {}
 		self._tag_manager = TagStateManager()
-		self._bind_target: Misc
-		if 'bind_target' in kwargs:
-			self._bind_target = kwargs['bind_target']
-			del kwargs['bind_target']
+		bind_target: Misc | None = kwargs.pop('bind_target', None)
 		Frame.__init__(self, *args, **kwargs)
-		if not 'bind_target' in kwargs:
-			self._bind_target = self.master
+		self._bind_target: Misc = self.master if bind_target is None else bind_target
 		self._row: Frame
 		self.add_row()
+
+	# Shortcuts bound on a widget (not a window) break after triggering, so the class bindings of a widget they're bound on (like a Text transposing on Ctrl+T) don't also run.
+	# Shortcuts bound on a window don't break, leaving the `all` bindings to run as they always have.
+	def _shortcut_result(self) -> str | None:
+		if isinstance(self._bind_target, (Tk, Toplevel)):
+			return None
+		return EventPropogation.Break
 
 	def add_row(self) -> None:
 		self._row = Frame(self)
@@ -65,11 +68,12 @@ class Toolbar(Frame):
 		setattr(button, '_image', icon)
 		if shortcut:
 			if bind_shortcut:
-				def _callback() -> Callable[[Event], None]:
-					def _binding_trigger_command(_: Event) -> None:
+				def _callback() -> Callable[[Event], str | None]:
+					def _binding_trigger_command(_: Event) -> str | None:
 						if button['state'] == DISABLED or not button.winfo_viewable():
-							return
+							return self._shortcut_result()
 						callback()
+						return self._shortcut_result()
 					return _binding_trigger_command
 				self._bind_target.bind(shortcut(), _callback())
 			if add_shortcut_to_tooltip:
@@ -84,11 +88,12 @@ class Toolbar(Frame):
 		setattr(button, '_image', icon)
 		if shortcut:
 			if bind_shortcut:
-				def _callback() -> Callable[[Event], None]:
-					def _binding_trigger_radiobutton(_: Event) -> None:
+				def _callback() -> Callable[[Event], str | None]:
+					def _binding_trigger_radiobutton(_: Event) -> str | None:
 						if button['state'] == DISABLED or not button.winfo_viewable():
-							return
+							return self._shortcut_result()
 						variable.set(value)
+						return self._shortcut_result()
 					return _binding_trigger_radiobutton
 				self._bind_target.bind(shortcut(), _callback())
 			if add_shortcut_to_tooltip:
@@ -103,11 +108,12 @@ class Toolbar(Frame):
 		setattr(button, '_image', icon)
 		if shortcut:
 			if bind_shortcut:
-				def _callback() -> Callable[[Event], None]:
-					def _binding_trigger_checkbutton(_: Event) -> None:
+				def _callback() -> Callable[[Event], str | None]:
+					def _binding_trigger_checkbutton(_: Event) -> str | None:
 						if button['state'] == DISABLED or not button.winfo_viewable():
-							return
+							return self._shortcut_result()
 						variable.set(onvalue if variable.get() == offvalue else offvalue)
+						return self._shortcut_result()
 					return _binding_trigger_checkbutton
 				self._bind_target.bind(shortcut(), _callback())
 			if add_shortcut_to_tooltip:

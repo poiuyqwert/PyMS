@@ -202,7 +202,26 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		selection = self.listbox.curselection()
 		if not selection:
 			return
-		self.active_tab().select(int(selection[0]))
+		index = int(selection[0])
+		tab = self.active_tab()
+		if index != tab.selected and not self.confirm_leave():
+			# Stay on the entry being edited
+			index = tab.selected
+		elif index == tab.selected:
+			return
+		# Confirming can refresh the list (by applying changes), so (re)select the entry in the list
+		self.listbox.select_clear(0, UI.END)
+		self.listbox.select_set(index)
+		self.listbox.see(index)
+		if index != tab.selected:
+			tab.select(index)
+
+	def confirm_leave(self) -> bool:
+		# Only the active tab can have unapplied changes, since leaving a tab asks to apply them
+		return self.active_tab().confirm_leave()
+
+	def confirm_apply_before_save(self) -> bool:
+		return self.active_tab().confirm_apply_before_save()
 
 	def open_files(self) -> PyMSError | None:
 		self.mpq_handler.open_mpqs()
@@ -238,6 +257,8 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		return err
 
 	def reload_files(self) -> None:
+		if not self.confirm_leave():
+			return
 		err = self.open_files()
 		if err:
 			ErrorDialog(self, err)
@@ -280,6 +301,8 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	# File commands
 
 	def new(self, _event: UI.Event | None = None) -> None:
+		if not self.confirm_leave():
+			return
 		graft_data = self.active_graft_data()
 		if self.check_saved(graft_data) == CheckSaved.cancelled:
 			return
@@ -301,6 +324,8 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			file_path = self.config_.last_path.graft.select_open(self)
 			if not file_path:
 				return
+		if not self.confirm_leave():
+			return
 		# Files with a known name open into their tab, anything else into the active tab's file
 		graft_data = self.graft_data_for_file_name(os.path.basename(file_path)) or self.active_graft_data()
 		if self.check_saved(graft_data) == CheckSaved.cancelled:
@@ -321,6 +346,8 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def _open_all(self, source: str, read: dict[AnyGraftData, bytes | str]) -> None:
 		if not read:
 			ErrorDialog(self, PyMSError('Open', f'No Graft files found in {source}'))
+			return
+		if not self.confirm_leave():
 			return
 		if any(self.check_saved(graft_data) == CheckSaved.cancelled for graft_data in read):
 			return
@@ -377,14 +404,20 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self._open_all(f'MPQ "{path}"', read)
 
 	def save(self, _event: UI.Event | None = None) -> None:
+		if not self.confirm_apply_before_save():
+			return
 		graft_data = self.active_graft_data()
 		self.save_graft_data(graft_data, graft_data.file_path)
 
 	def saveas(self, _event: UI.Event | None = None) -> None:
+		if not self.confirm_apply_before_save():
+			return
 		self.save_graft_data(self.active_graft_data(), None)
 
 	def save_mpq(self, _event: UI.Event | None = None) -> None:
 		if not MPQ.supported():
+			return
+		if not self.confirm_apply_before_save():
 			return
 		path = self.config_.last_path.mpq.select_save(self)
 		if not path:
@@ -409,6 +442,8 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		path = self.config_.last_path.txt.select_open(self)
 		if not path:
 			return
+		if not self.confirm_leave():
+			return
 		try:
 			self.active_graft_data().import_text(path, self.data_context)
 		except PyMSError as e:
@@ -417,6 +452,8 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.refresh()
 
 	def export(self, _event: UI.Event | None = None) -> None:
+		if not self.confirm_apply_before_save():
+			return
 		graft_data = self.active_graft_data()
 		path = self.config_.last_path.txt.select_save(self, filename=os.path.splitext(graft_data.file_name)[0])
 		if not path:
@@ -429,6 +466,8 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def import_fgp(self, _event: UI.Event | None = None) -> None:
 		path = self.config_.last_path.fgp.select_open(self)
 		if not path:
+			return
+		if not self.confirm_leave():
 			return
 		fgp = FGP()
 		try:
@@ -466,6 +505,9 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		UpdateDialog(self, 'PyGRAFT')
 
 	def exit(self, _event: UI.Event | None = None) -> None:
+		# Applied changes then count as unsaved changes of their file
+		if not self.confirm_leave():
+			return
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.config_.windows.main.save_size(self)

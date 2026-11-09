@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from .GraftTab import GraftTab
 from ..GraftData import ReqGraftData
+from ..RequirementsEditor import RequirementsEditor
 
 from ...Utilities import UIKit as UI
 
@@ -15,6 +16,14 @@ class ReqGraftTab(GraftTab):
 	def __init__(self, parent: UI.Misc, delegate: MainDelegate, graft_data: ReqGraftData[Any]) -> None:
 		self.graft_data = graft_data
 		super().__init__(parent, delegate)
+
+	def build_editor(self) -> None:
+		self.editor = RequirementsEditor(self, self.delegate, self.graft_data)
+		self.editor.pack(fill=UI.BOTH, expand=1)
+
+	def activate(self) -> None:
+		# The code colors are shared by every requirements tab, and may have been changed in another
+		self.editor.update_highlight_styles()
 
 	def get_graft_data(self) -> ReqGraftData[Any]:
 		return self.graft_data
@@ -40,7 +49,14 @@ class ReqGraftTab(GraftTab):
 		return None
 
 	def load_selected(self) -> None:
-		super().load_selected()
 		entry_id = self.selected_entry_id()
-		if entry_id is not None and not self.graft_data.has_script(entry_id):
-			self.placeholder.set(self.placeholder.get() + '\n(No script)')
+		entry_name = ''
+		if entry_id is not None:
+			entry_name = self.entry_names()[self.selected].strip()
+		self.editor.load(entry_id, entry_name)
+
+	def confirm_leave(self) -> bool:
+		return self.editor.confirm_leave()
+
+	def confirm_apply_before_save(self) -> bool:
+		return self.editor.confirm_apply_before_save()

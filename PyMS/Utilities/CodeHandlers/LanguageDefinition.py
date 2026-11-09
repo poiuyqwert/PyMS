@@ -136,5 +136,9 @@ class LanguagePlugin:
 	def lookup_type(self, name: str) -> CodeType | None:
 		return self._type_name_lookup.get(name)
 
+	def commands(self) -> list[CodeCommandDefinition]:
+		# The plugin's commands, in the order they were given
+		return list(self._cmd_name_lookup.values())
+
 	def activate(self, reason: str, language_context: LanguageContext) -> None:
 		language_context.set_status(self.id, PluginStatus.in_use, reason)

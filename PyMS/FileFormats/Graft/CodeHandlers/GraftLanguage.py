@@ -20,6 +20,10 @@ class GraftLanguage(LanguageDefinition):
 		return cls.CORE_PLUGIN.lookup_command(word)
 
 	@classmethod
+	def commands(cls) -> list[CodeCommandDefinition]:
+		return cls.CORE_PLUGIN.commands()
+
+	@classmethod
 	def has_command(cls, cmd_def: CodeCommandDefinition) -> bool:
 		return cls.CORE_PLUGIN.lookup_command(cmd_def.name) is cmd_def
 

@@ -47,6 +47,17 @@ class GraftTab(UI.NotebookTab):
 	def format_entry(entry_id: int, max_id: int, name: str) -> str:
 		return f'{entry_id:>{len(str(max_id))}}  {name}'
 
+	def confirm_leave(self) -> bool:
+		# Called before the selected entry is left or reloaded, return `False` to stay on it
+		return True
+
+	def confirm_apply_before_save(self) -> bool:
+		# Called before the file is saved, return `False` to cancel saving
+		return True
+
+	def can_deactivate(self) -> bool:
+		return self.confirm_leave()
+
 	def select(self, index: int) -> None:
 		self.selected = index
 		self.load_selected()

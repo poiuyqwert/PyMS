@@ -39,6 +39,14 @@ def decompile_req(graft: AbstractReqGraft, data_context: DataContext | None = No
 def compile_req(code: str, graft_type: type[AbstractReqGraft], data_context: DataContext | None = None) -> list[ReqScript]:
 	return graft_type.compile(parse_context(code, data_context, graft_type.LANGUAGE()))
 
+def decompile_req_script(graft: AbstractReqGraft, entry_id: int, data_context: DataContext | None = None) -> str:
+	output = io.StringIO()
+	graft.decompile_script(GraftSerializeContext(output, data_context if data_context is not None else vanilla_data_context()), entry_id)
+	return output.getvalue()
+
+def compile_req_script(code: str, graft_type: type[AbstractReqGraft], entry_id: int, data_context: DataContext | None = None) -> ReqScript:
+	return graft_type.compile_script(parse_context(code, data_context, graft_type.LANGUAGE()), entry_id)
+
 def decompile_buttons(graft: ButtonsGraft, data_context: DataContext | None = None) -> str:
 	output = io.StringIO()
 	graft.decompile(GraftSerializeContext(output, data_context if data_context is not None else vanilla_data_context()))

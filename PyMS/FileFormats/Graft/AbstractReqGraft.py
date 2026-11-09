@@ -92,23 +92,30 @@ class AbstractReqGraft:
 		return commands
 
 	@classmethod
-	def validate_script(cls, script: ReqScript) -> None:
-		in_sublist = False
-		for command in script.commands:
+	def _find_invalid_command(cls, script: ReqScript) -> tuple[str, int] | None:
+		# The first problem with the script, and the index of the command it's about
+		sublist_index: int | None = None
+		for index, command in enumerate(script.commands):
 			definition = command.definition
 			if not cls.LANGUAGE.has_command(definition):
-				raise PyMSError('Validate', f'`{definition.name}` is not available for {cls.DESCRIPTION.lower()} in script {script.entry_id}')
+				return (f'`{definition.name}` is not available for {cls.DESCRIPTION.lower()} in script {script.entry_id}', index)
 			if definition == RequirementCodeCommands.EndSublist:
-				if not in_sublist:
-					raise PyMSError('Validate', f'`end_sublist` used outside of an `upgrade_level_1` or `upgrade_level_2` sub-list in script {script.entry_id}')
-				in_sublist = False
+				if sublist_index is None:
+					return (f'`end_sublist` used outside of an `upgrade_level_1` or `upgrade_level_2` sub-list in script {script.entry_id}', index)
+				sublist_index = None
 			elif definition == RequirementCodeCommands.Has:
 				if command.params[0] >= OPCODE_MIN:
-					raise PyMSError('Validate', f'`has` unit ID {command.params[0]} is too large (must be below {OPCODE_MIN}) in script {script.entry_id}')
+					return (f'`has` unit ID {command.params[0]} is too large (must be below {OPCODE_MIN}) in script {script.entry_id}', index)
 			elif definition in RequirementCodeCommands.sublist_commands:
-				in_sublist = True
-		if in_sublist:
-			raise PyMSError('Validate', f'An `upgrade_level_1` or `upgrade_level_2` sub-list is not ended with `end_sublist` in script {script.entry_id}')
+				sublist_index = index
+		if sublist_index is not None:
+			return (f'An `upgrade_level_1` or `upgrade_level_2` sub-list is not ended with `end_sublist` in script {script.entry_id}', sublist_index)
+		return None
+
+	@classmethod
+	def validate_script(cls, script: ReqScript) -> None:
+		if invalid := cls._find_invalid_command(script):
+			raise PyMSError('Validate', invalid[0])
 
 	@classmethod
 	def _encode_script(cls, script: ReqScript) -> bytes:
@@ -230,22 +237,53 @@ class AbstractReqGraft:
 				serialize_context.write(serialize_context.formatters.comment.serialize([name]))
 			serialize_context.write('\n')
 			serialize_context.indent()
-			# Sub-list commands and their `end_sublist` are indented an extra level, as is the rest of the script after `upgrade_level_3`
-			in_sublist = False
-			for command in script.commands:
-				command.serialize(serialize_context)
-				if (command.definition in RequirementCodeCommands.sublist_commands or command.definition is RequirementCodeCommands.UpgradeLevel3) and not in_sublist:
-					serialize_context.indent()
-					in_sublist = True
-				elif command.definition is RequirementCodeCommands.EndSublist and in_sublist:
-					serialize_context.dedent()
-					in_sublist = False
-			serialize_context.dedent(2 if in_sublist else 1)
+			self._serialize_commands(serialize_context, script.commands)
+			serialize_context.dedent()
+
+	def decompile_script(self, serialize_context: GraftSerializeContext, entry_id: int) -> None:
+		# Only the script's commands (no header), starting unindented
+		script = self._scripts.get(entry_id)
+		if script is None:
+			raise PyMSError('Decompile', f'There is no script with ID {entry_id}')
+		self._serialize_commands(serialize_context, script.commands)
+
+	@staticmethod
+	def _serialize_commands(serialize_context: GraftSerializeContext, commands: list[CodeCommand]) -> None:
+		# Sub-list commands and their `end_sublist` are indented an extra level, as is the rest of the script after `upgrade_level_3`
+		in_sublist = False
+		for command in commands:
+			command.serialize(serialize_context)
+			if (command.definition in RequirementCodeCommands.sublist_commands or command.definition is RequirementCodeCommands.UpgradeLevel3) and not in_sublist:
+				serialize_context.indent()
+				in_sublist = True
+			elif command.definition is RequirementCodeCommands.EndSublist and in_sublist:
+				serialize_context.dedent()
+				in_sublist = False
+		if in_sublist:
+			serialize_context.dedent()
+
+	@classmethod
+	def _check_language(cls, parse_context: GraftParseContext) -> None:
+		if not isinstance(parse_context.language, cls.LANGUAGE):
+			raise PyMSError('Internal', f'{cls.__name__} scripts must be compiled with a parse context using `{cls.LANGUAGE.__name__}`')
+
+	@classmethod
+	def _parse_command(cls, parse_context: GraftParseContext, token: Tokens.Token) -> CodeCommand:
+		# Parses the command that starts with `token` (the first token of its line)
+		cmd_def = parse_context.language.lookup_command(token.raw_value, parse_context.language_context)
+		if cmd_def is None:
+			if any(other.name == token.raw_value for other in RequirementCodeCommands.all_opcode_commands + [RequirementCodeCommands.EndSublist]):
+				raise parse_context.error('Parse', f'`{token.raw_value}` is not available for {cls.DESCRIPTION.lower()}')
+			raise parse_context.error('Parse', f'Unknown command `{token.raw_value}`')
+		try:
+			return cmd_def.parse(parse_context)
+		except PyMSError as e:
+			parse_context.attribute_error(e)
+			raise
 
 	@classmethod
 	def compile(cls, parse_context: GraftParseContext) -> list[ReqScript]:
-		if not isinstance(parse_context.language, cls.LANGUAGE):
-			raise PyMSError('Internal', f'{cls.__name__} scripts must be compiled with a parse context using `{cls.LANGUAGE.__name__}`')
+		cls._check_language(parse_context)
 		keyword = cls.HEADER_KEYWORD
 		scripts: OrderedDict[int, ReqScript] = OrderedDict()
 		script_lines: dict[int, int] = {}
@@ -265,18 +303,10 @@ class AbstractReqGraft:
 				scripts[entry_id] = script
 				script_lines[entry_id] = line
 				continue
-			cmd_def = parse_context.language.lookup_command(token.raw_value, parse_context.language_context)
-			if cmd_def is None:
-				if any(other.name == token.raw_value for other in RequirementCodeCommands.all_opcode_commands + [RequirementCodeCommands.EndSublist]):
-					raise parse_context.error('Parse', f'`{token.raw_value}` is not available for {cls.DESCRIPTION.lower()}')
-				raise parse_context.error('Parse', f'Unknown command `{token.raw_value}`')
+			command = cls._parse_command(parse_context, token)
 			if script is None:
 				raise parse_context.error('Parse', f'Command `{token.raw_value}` is not inside a `{keyword}` script')
-			try:
-				script.commands.append(cmd_def.parse(parse_context))
-			except PyMSError as e:
-				parse_context.attribute_error(e)
-				raise
+			script.commands.append(command)
 		for entry_id, script in scripts.items():
 			try:
 				cls.validate_script(script)
@@ -284,6 +314,31 @@ class AbstractReqGraft:
 				raise PyMSError('Parse', e.error, line=script_lines[entry_id], code=parse_context.lexer.get_line_of_code(script_lines[entry_id])) from e
 		parse_context.finalize()
 		return list(scripts.values())
+
+	@classmethod
+	def compile_script(cls, parse_context: GraftParseContext, entry_id: int) -> ReqScript:
+		# Compiles only a script's commands (no header) into the script for `entry_id`
+		cls._check_language(parse_context)
+		keyword = cls.HEADER_KEYWORD
+		script = ReqScript(entry_id)
+		command_lines: list[int] = []
+		while True:
+			token = SourceParsing.next_line_token(parse_context)
+			if isinstance(token, Tokens.EOFToken):
+				break
+			if not isinstance(token, Tokens.IdentifierToken):
+				raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected a command)')
+			if token.raw_value == keyword:
+				raise parse_context.error('Parse', f'`{keyword}` headers are not allowed, the code is only the commands of {keyword.lower()} {entry_id}')
+			line = parse_context.lexer.state.token_line
+			script.commands.append(cls._parse_command(parse_context, token))
+			command_lines.append(line)
+		if invalid := cls._find_invalid_command(script):
+			error, index = invalid
+			line = command_lines[index]
+			raise PyMSError('Parse', error, line=line, code=parse_context.lexer.get_line_of_code(line))
+		parse_context.finalize()
+		return script
 
 	def import_fgp(self, fgp: FGP) -> list[PyMSWarning]:
 		# Lays the FireGraft project's requirements over the current scripts.

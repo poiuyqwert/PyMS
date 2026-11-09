@@ -1,7 +1,7 @@
 # PyGRAFT
 PyGRAFT is a tool used for editing the `.graft` files of the GPTP Graft Hook, a replacement for FireGraft. The Graft Hook loads six files from the `datreq` folder of your mod's MPQ: the requirements for training or building units (`Units.graft`), researching upgrades (`Upgrades.graft`), researching technologies (`Research.graft`), using technologies (`Tech.graft`), and using orders (`Orders.graft`), along with the command card buttons (`Buttons.graft`).
 
-PyGRAFT is in early development: only the **Button Cards** and **Unit Stat Info** tabs edit their entries so far. To change anything else, use **Export to TXT**, edit the text, then **Import from TXT**.
+PyGRAFT is in early development: only the **Button Cards**, **Unit Stat Info**, and requirement tabs edit their entries so far. To change button sets, use **Export to TXT**, edit the text, then **Import from TXT**.
 
 ## Main Window
 The menubar holds every command, in the **File**, **Settings**, and **Help** menus, and the toolbar under it has buttons for the file actions and settings (hover over a button to see its name and shortcut).
@@ -36,6 +36,24 @@ Each unit's stat info picks the functions the game uses for that unit's stat pan
 - **Display Func.**: Draws the stat panel.
 - **Presets**: Shows a menu of the function pairs most units use (such as **Building**, **Normal Unit**, or **Transport**). Choosing one sets both functions.
 - **Unit ID** (under **Debug**): A debug unit ID that the game doesn't use (it defaults to the unit itself). Choose a unit from the dropdown, or type any number in the entry (numbers that aren't a unit show as **Unknown**).
+
+## Requirements
+The **Unit Training Reqs.**, **Upgrade Research Reqs.**, **Tech Research Reqs.**, **Tech Usage Reqs.**, and **Order Reqs.** tabs share one editor for the selected entry's requirements script. Every tab has the same editor, but only the commands of its file can be used (for example, `upgrade_level_1` is only for upgrades, and `does_not_have_exit` is only for orders). The editor has two modes, chosen by the tabs at its top: **Builder** (not available yet) and **Script**.
+
+### Script
+The **Script** mode edits the selected entry's script as code. The code is only the script's commands, without the `Unit 0:` style header used in exported text, since the script is always for the selected entry. Entries without a script start empty. Hover over a command to see its description, and press `Tab` to complete a command name.
+
+The toolbar above the code has these buttons, whose shortcuts work while editing the code:
+
+- **Apply Changes** (`Ctrl+Return`): Compiles the code into the file's script for the entry, which makes the file edited (save the file to keep the changes). If the code has an error, its line is highlighted and nothing is changed. Applying code without any commands asks whether to remove the entry's script (**Yes**) or keep an empty script (**No**).
+- **Revert Changes**: Discards the changes to the code since it was loaded or last applied.
+- **Test Code** (`Ctrl+T`): Checks the code for errors without applying it.
+- **Find/Replace** (`Ctrl+F`): Finds or replaces text in the code (`F3` finds the next match).
+- **Color Settings** (`Ctrl+Alt+C`): Changes the colors of the code, which all of the requirement tabs share.
+
+After applying, the code is reloaded from the file, so comments and formatting aren't kept.
+
+Changes to the code must be applied or discarded before leaving them. Selecting another entry, switching tabs or modes, or anything else that would reload the code (such as **New**, **Open...**, **Import from TXT...**, **Reload Data Files**, or exiting) asks whether to apply the changes first: **Yes** applies them (and stays if they have an error), **No** discards them, and **Cancel** stays. Saving (**Save**, **Save As...**, **Save MPQ...**, or **Export to TXT...**) also asks whether to apply the changes first, where **No** saves the file without them and keeps them in the editor.
 
 ## Managing Files
 These commands are in the **File** menu and on the toolbar. Unless noted otherwise, they act on the file of the active tab:

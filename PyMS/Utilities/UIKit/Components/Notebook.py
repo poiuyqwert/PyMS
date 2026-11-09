@@ -106,6 +106,10 @@ class Notebook(Frame):
 	def display(self, tab_id: str) -> Widget:
 		if self.pages[tab_id][0] == self.active:
 			return self.active
+		if self.active and hasattr(self.active, 'can_deactivate') and not self.active.can_deactivate():
+			# Clicking a tab already selected its radiobutton, so select the active tab's again
+			self.tab.set(self._active_index())
+			return self.active
 		if self.active:
 			if hasattr(self.active, 'deactivate'):
 				self.active.deactivate()
@@ -120,6 +124,12 @@ class Notebook(Frame):
 		self.event_generate(WidgetEvent.Notebook.TabActivated())
 		return self.active
 
+	def _active_index(self) -> int:
+		for frame, index in self.pages.values():
+			if frame is self.active:
+				return index
+		return 0
+
 class NotebookTab(Frame):
 	def __init__(self, parent: Misc) -> None:
 		self.parent = parent
@@ -130,3 +140,7 @@ class NotebookTab(Frame):
 
 	def deactivate(self) -> None:
 		pass
+
+	def can_deactivate(self) -> bool:
+		# Return `False` to stay on this tab when another tab is displayed
+		return True

@@ -17,6 +17,7 @@ class PyGRAFTConfig(Config.Config):
 		def __init__(self) -> None:
 			self.main = Config.WindowGeometry()
 			self.help = Config.WindowGeometry()
+			self.find_replace = Config.WindowGeometry()
 			self.settings = PyGRAFTConfig.Windows.Settings()
 			super().__init__()
 
@@ -57,10 +58,29 @@ class PyGRAFTConfig(Config.Config):
 			self.last_path = PyGRAFTConfig.Settings.LastPath()
 			super().__init__()
 
+	class Code(Config.Group):
+		class Highlights(Config.Group):
+			def __init__(self) -> None:
+				self.comment = Config.HighlightStyle(default=Config.Style(foreground='#008000'))
+				self.string = Config.HighlightStyle(default=Config.Style(foreground='#A31515'))
+				self.command = Config.HighlightStyle(default=Config.Style(foreground='#0000AA'))
+				self.number = Config.HighlightStyle(default=Config.Style(foreground='#FF0000'))
+				self.operator = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
+				self.newline = Config.HighlightStyle(default=Config.Style())
+				self.selection = Config.HighlightStyle(default=Config.Style(background='#C0C0C0'))
+				self.error = Config.HighlightStyle(default=Config.Style(background='#FF8C8C'))
+				self.warning = Config.HighlightStyle(default=Config.Style(background='#FFC8C8'))
+				super().__init__()
+
+		def __init__(self) -> None:
+			self.highlights = PyGRAFTConfig.Code.Highlights()
+			super().__init__()
+
 	def __init__(self) -> None:
 		self.theme = Config.String()
 		self.windows = PyGRAFTConfig.Windows()
 		self.last_path = PyGRAFTConfig.LastPath()
 		self.settings = PyGRAFTConfig.Settings()
+		self.code = PyGRAFTConfig.Code()
 		self.list_size = Config.PaneSizes(defaults=(300,))
 		super().__init__()

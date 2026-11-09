@@ -44,3 +44,54 @@ class Test_CodeText_InactiveSelectBackground(UITestCase):
 		text, _ = self.make_text(Style())
 		expected = self.expected_blend(text, text.text.cget('selectbackground'), '#FFFFFF')
 		self.assertEqual(text.text.cget('inactiveselectbackground'), expected)
+
+
+class Test_CodeText_UpdateHighlightStyles(UITestCase):
+	def make_text(self, style: Style) -> tuple[UI.CodeText, HighlightStyle]:
+		window = self.make_window(UI.MainWindow)
+		text = UI.CodeText(window)
+		text.pack(fill=UI.BOTH, expand=1)
+		highlight_style = HighlightStyle(style)
+		text.set_syntax_highlighting(UI.SyntaxHighlighting(
+			syntax_components=(),
+			highlight_components=(
+				UI.HighlightComponent(
+					name='Keyword',
+					description='Keywords',
+					highlight_style=highlight_style
+				),
+			)
+		))
+		self.pump(window)
+		return text, highlight_style
+
+	def test_tag_bindings_are_kept(self) -> None:
+		# Tooltips bind to highlight tags, so restyling must not remove them
+		text, _ = self.make_text(Style(foreground='#FF0000'))
+		text.text.tag_bind('Keyword', UI.Cursor.Enter(), lambda _: None)
+		text.update_highlight_styles()
+		self.assertTrue(text.text.tk.call(str(text.text), 'tag', 'bind', 'Keyword'))
+
+	def test_tagged_ranges_are_kept(self) -> None:
+		text, _ = self.make_text(Style(foreground='#FF0000'))
+		text.insert('1.0', 'word')
+		text.tag_add('Keyword', '1.0', '1.4')
+		text.update_highlight_styles()
+		self.assertEqual([str(index) for index in text.tag_ranges('Keyword')], ['1.0', '1.4'])
+
+	def test_options_the_style_no_longer_sets_are_cleared(self) -> None:
+		text, highlight_style = self.make_text(Style(foreground='#FF0000', background='#00FF00', bold=True))
+		self.assertEqual(text.text.tag_cget('Keyword', 'foreground'), '#FF0000')
+		highlight_style.style.foreground = None
+		highlight_style.style.background = None
+		highlight_style.style.bold = False
+		text.update_highlight_styles()
+		self.assertEqual(text.text.tag_cget('Keyword', 'foreground'), '')
+		self.assertEqual(text.text.tag_cget('Keyword', 'background'), '')
+		self.assertEqual(text.text.tag_cget('Keyword', 'font'), '')
+
+	def test_changed_options_are_applied(self) -> None:
+		text, highlight_style = self.make_text(Style(foreground='#FF0000'))
+		highlight_style.style.foreground = '#0000FF'
+		text.update_highlight_styles()
+		self.assertEqual(text.text.tag_cget('Keyword', 'foreground'), '#0000FF')

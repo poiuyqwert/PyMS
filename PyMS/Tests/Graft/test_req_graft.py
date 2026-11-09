@@ -1,6 +1,6 @@
-from .utils import words, decompile_req, compile_req, parse_context
+from .utils import words, decompile_req, compile_req, decompile_req_script, compile_req_script, parse_context
 from ...FileFormats.Graft import AbstractReqGraft, ReqScript, UnitsGraft, UpgradesGraft, ResearchGraft, TechGraft, OrdersGraft, FGP
-from ...FileFormats.Graft.CodeHandlers import RequirementCodeCommands
+from ...FileFormats.Graft.CodeHandlers import RequirementCodeCommands, UnitRequirementsLanguage, OtherRequirementsLanguage
 from ...Utilities.DataContext import DataContext
 from ...FileFormats.TBL import TBL
 from ...Utilities.CodeHandlers.CodeCommand import CodeCommand
@@ -275,6 +275,69 @@ class Test_Decompile(unittest.TestCase):
 		self.assertEqual(text, "Unit 2:\t# Terran Vulture (Other)\n\thas 0\t# Terran Marine (Same)\n\thas 1\t# Terran Ghost (Same)\n\thas 'Other'\n")
 		graft.replace_scripts(compile_req(text, UnitsGraft, _duplicate_names_context()))
 		self.assertEqual(IO.output_to_bytes(graft.save), words(0, 2, 0, 1, 2, 0xFFFF, 0xFFFF))
+
+class Test_ScriptBody(unittest.TestCase):
+	def test_vanilla_scripts_round_trip(self) -> None:
+		for graft_type in REQ_GRAFT_TYPES:
+			graft = graft_type()
+			graft.new()
+			for entry_id in graft.list_ids():
+				with self.subTest(graft_type=graft_type.__name__, entry_id=entry_id):
+					script = graft.get_script(entry_id)
+					assert script is not None
+					recompiled = compile_req_script(decompile_req_script(graft, entry_id), graft_type, entry_id)
+					self.assertEqual(recompiled.entry_id, entry_id)
+					self.assertEqual([(command.definition, command.params) for command in recompiled.commands], [(command.definition, command.params) for command in script.commands])
+
+	def test_body_has_no_header_and_starts_unindented(self) -> None:
+		graft = _load(UpgradesGraft, INFANTRY_ARMOR)
+		body = ''.join(line[1:] + '\n' for line in INFANTRY_ARMOR_TEXT.splitlines()[1:])
+		self.assertEqual(decompile_req_script(graft, 0), body)
+
+	def test_decompile_unknown_script(self) -> None:
+		graft = _load(UpgradesGraft, INFANTRY_ARMOR)
+		with self.assertRaises(PyMSError) as cm:
+			decompile_req_script(graft, 5)
+		self.assertIn('There is no script with ID 5', str(cm.exception))
+
+	def test_compile_sets_the_entry_id(self) -> None:
+		script = compile_req_script('# Comment\ncurrent_unit_is 111\n\nhas 0x75\n', UnitsGraft, 9)
+		self.assertEqual(script.entry_id, 9)
+		self.assertEqual([command.definition for command in script.commands], [RequirementCodeCommands.CurrentUnitIs, RequirementCodeCommands.Has])
+
+	def test_empty_body(self) -> None:
+		self.assertEqual(compile_req_script('# Nothing\n\n', OrdersGraft, 3).commands, [])
+
+	def assertBodyError(self, code: str, graft_type: type[AbstractReqGraft], message: str, line: int | None) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			compile_req_script(code, graft_type, 0)
+		self.assertIn(message, str(cm.exception))
+		self.assertEqual(cm.exception.line, line)
+
+	def test_header_is_an_error(self) -> None:
+		self.assertBodyError('is_not_lifted_off\nUnit 0:\n', UnitsGraft, '`Unit` headers are not allowed', 2)
+
+	def test_unknown_command(self) -> None:
+		self.assertBodyError('is_not_lifted_off\n\tis_awesome\n', UnitsGraft, 'Unknown command `is_awesome`', 2)
+
+	def test_unavailable_command(self) -> None:
+		self.assertBodyError('does_not_have_exit\n', UnitsGraft, '`does_not_have_exit` is not available for unit requirements', 1)
+
+	def test_unended_sublist_points_at_the_sublist(self) -> None:
+		self.assertBodyError('is_not_lifted_off\nupgrade_level_2\nhas 0\n', UpgradesGraft, 'sub-list is not ended with `end_sublist`', 2)
+
+	def test_end_sublist_outside_sublist_points_at_it(self) -> None:
+		self.assertBodyError('is_not_lifted_off\nend_sublist\n', UpgradesGraft, '`end_sublist` used outside of', 2)
+
+	def test_compile_requires_the_files_language(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			UnitsGraft.compile_script(parse_context('', language=UpgradesGraft.LANGUAGE()), 0)
+		self.assertIn('UnitsGraft scripts must be compiled with a parse context using `UnitRequirementsLanguage`', str(cm.exception))
+
+class Test_LanguageCommands(unittest.TestCase):
+	def test_commands_are_the_languages_commands(self) -> None:
+		self.assertEqual(UnitRequirementsLanguage.commands(), RequirementCodeCommands.unit_req_commands)
+		self.assertEqual(OtherRequirementsLanguage.commands(), RequirementCodeCommands.other_req_commands)
 
 class Test_ImportFGP(unittest.TestCase):
 	def test_replaces_adds_and_removes_scripts(self) -> None:
