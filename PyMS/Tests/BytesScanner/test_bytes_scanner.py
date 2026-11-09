@@ -151,6 +151,14 @@ class Test_peek(unittest.TestCase):
 	def test_respects_current_address(self) -> None:
 		self.assertEqual(BytesScanner(b'\x09\x05', 1).peek(Struct.l_u8), 5)
 
+	def test_not_enough_data_raises(self) -> None:
+		for data_format in ('<H', struct.Struct('<H'), Struct.l_u16, Struct.l_au8(2), Pair):
+			with self.subTest(data_format=data_format):
+				with self.assertRaises(PyMSError) as cm:
+					BytesScanner(b'\x09\x05', 1).peek(data_format)
+				self.assertIn('not enough data to read', str(cm.exception))
+				self.assertIn('at offset 1 (1 remaining)', str(cm.exception))
+
 
 class Test_scan(unittest.TestCase):
 	def test_format_string_advances(self) -> None:
@@ -172,6 +180,13 @@ class Test_scan(unittest.TestCase):
 		scanner = BytesScanner(b'\x01\x02\x00')
 		self.assertEqual(scanner.scan(Pair), make_pair(1, 2))
 		self.assertEqual(scanner.address, 3)
+
+	def test_not_enough_data_raises_without_advancing(self) -> None:
+		scanner = BytesScanner(b'\x05')
+		with self.assertRaises(PyMSError) as cm:
+			scanner.scan(Struct.l_u16)
+		self.assertIn('not enough data to read 2 bytes at offset 0', str(cm.exception))
+		self.assertEqual(scanner.address, 0)
 
 	def test_sequential_scans(self) -> None:
 		scanner = BytesScanner(b'\x05\x01\x00')

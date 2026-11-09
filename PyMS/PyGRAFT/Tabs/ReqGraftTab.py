@@ -36,7 +36,7 @@ class ReqGraftTab(GraftTab):
 		if not entry_ids:
 			return []
 		max_id = max(entry_ids)
-		keyword = self.graft_data.graft_type.HEADER_KEYWORD
+		keyword = self.graft_data.graft_type.LANGUAGE.HEADER_KEYWORD
 		return [GraftTab.format_entry(entry_id, max_id, self.graft_data.entry_name(self.delegate.data_context, entry_id) or f'{keyword} {entry_id}') for entry_id in entry_ids]
 
 	def dimmed_entries(self) -> set[int]:

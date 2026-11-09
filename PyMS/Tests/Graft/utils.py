@@ -45,7 +45,7 @@ def decompile_req_script(graft: AbstractReqGraft, entry_id: int, data_context: D
 	return output.getvalue()
 
 def compile_req_script(code: str, graft_type: type[AbstractReqGraft], entry_id: int, data_context: DataContext | None = None) -> ReqScript:
-	return graft_type.compile_script(parse_context(code, data_context, graft_type.LANGUAGE()), entry_id)
+	return ReqScript.compile(parse_context(code, data_context, graft_type.LANGUAGE()), entry_id, graft_type.LANGUAGE)
 
 def decompile_buttons(graft: ButtonsGraft, data_context: DataContext | None = None) -> str:
 	output = io.StringIO()

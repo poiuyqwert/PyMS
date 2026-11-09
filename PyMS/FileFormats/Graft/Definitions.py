@@ -2,15 +2,23 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-# Static tables for the GPTP "Graft Hook" (the FireGraft replacement).
+# Static tables and constants for the GPTP "Graft Hook" (the FireGraft replacement) files.
+
+# Requirement .graft files:
+
+# Opcode values are >= 0xFF00, any other value in a script is a "has unit" check
+OPCODE_MIN = 0xFF00
+# Ends a script, a sub-list, and the list of scripts
+END_OF_LIST = 0xFFFF
+# Script IDs can be anything but the end of list marker
+MAX_SCRIPT_ID = END_OF_LIST - 1
+
+# Buttons.graft:
+
 # Function lists are indexed by their position (that index is what is stored in Buttons.graft),
 # in the same order as FireGraft and the hook's lookup tables in `grafting.cpp`. The button conditions and actions
 # are the `condition_commands` and `action_commands` of `CodeHandlers.ButtonCodeCommands`, and the unit status and
 # display functions are the `status_function_commands` and `display_function_commands` of `CodeHandlers.StatInfoCodeCommands`.
-
-# Opcode values are >= 0xFF00, any other value in a script is a "has unit" check
-OPCODE_MIN = 0xFF00
-END_OF_LIST = 0xFFFF
 
 @dataclass(frozen=True)
 class StatPreset:

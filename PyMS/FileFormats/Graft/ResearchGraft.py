@@ -2,15 +2,13 @@ from __future__ import annotations
 
 from .AbstractReqGraft import AbstractReqGraft
 from ...Utilities.DataContext import DataContext
-from .CodeHandlers.GraftLanguage import OtherRequirementsLanguage
+from .CodeHandlers.GraftLanguage import ResearchRequirementsLanguage
 
 # Requirements to research a tech (`TechGraft` is the requirements to use a tech)
 class ResearchGraft(AbstractReqGraft):
 	FILE_NAME = 'Research.graft'
 	MPQ_PATH = 'datreq\\Research.graft'
-	DESCRIPTION = 'Tech Research Requirements'
-	HEADER_KEYWORD = 'Research'
-	LANGUAGE = OtherRequirementsLanguage
+	LANGUAGE = ResearchRequirementsLanguage
 
 	@staticmethod
 	def entry_name(data_context: DataContext, entry_id: int) -> str | None:

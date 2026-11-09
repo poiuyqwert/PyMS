@@ -197,7 +197,7 @@ class FGP:
 			while entry_id in requirements:
 				entry_id += 256
 			if entry_id != fg_id and not warned:
-				warnings.append(PyMSWarning(warn_type='Load', warning=f'Extended IDs detected in the {graft_type.DESCRIPTION.lower()} (FireGraft only stores the low byte of IDs), verify the scripts past 255 are correct'))
+				warnings.append(PyMSWarning(warn_type='Load', warning=f'Extended IDs detected in the {graft_type.LANGUAGE.DESCRIPTION.lower()} (FireGraft only stores the low byte of IDs), verify the scripts past 255 are correct'))
 				warned = True
 			requirements[entry_id] = words if used else None
 		return requirements

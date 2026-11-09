@@ -1,6 +1,6 @@
 from .utils import words, decompile_req, compile_req, decompile_req_script, compile_req_script, parse_context
 from ...FileFormats.Graft import AbstractReqGraft, ReqScript, UnitsGraft, UpgradesGraft, ResearchGraft, TechGraft, OrdersGraft, FGP
-from ...FileFormats.Graft.CodeHandlers import RequirementCodeCommands, UnitRequirementsLanguage, OtherRequirementsLanguage
+from ...FileFormats.Graft.CodeHandlers import RequirementCodeCommands, UnitRequirementsLanguage, UpgradeRequirementsLanguage, ResearchRequirementsLanguage, TechRequirementsLanguage, OrderRequirementsLanguage
 from ...Utilities.DataContext import DataContext
 from ...FileFormats.TBL import TBL
 from ...Utilities.CodeHandlers.CodeCommand import CodeCommand
@@ -146,7 +146,7 @@ class Test_Load(unittest.TestCase):
 				graft = UpgradesGraft()
 				with self.assertRaises(PyMSError) as cm:
 					graft.load(data)
-				self.assertIn('ends before its end of list marker', str(cm.exception))
+				self.assertIn('not enough data to read', str(cm.exception))
 
 	def test_failed_load_keeps_existing_scripts(self) -> None:
 		graft = _load(UpgradesGraft, INFANTRY_ARMOR)
@@ -242,12 +242,13 @@ class Test_Compile(unittest.TestCase):
 	def test_compile_requires_the_files_language(self) -> None:
 		with self.assertRaises(PyMSError) as cm:
 			UnitsGraft.compile(parse_context('Unit 0:\n', language=UpgradesGraft.LANGUAGE()))
-		self.assertIn('UnitsGraft scripts must be compiled with a parse context using `UnitRequirementsLanguage`', str(cm.exception))
+		self.assertIn('Unit Requirements scripts must be compiled with a parse context using `UnitRequirementsLanguage`', str(cm.exception))
 
-	def test_files_share_the_other_requirements_language(self) -> None:
-		# Research and tech use requirements have the same opcodes, so one language compiles both
-		scripts = ResearchGraft.compile(parse_context('Research 1:\n\tmust_be_researched\n', language=TechGraft.LANGUAGE()))
-		self.assertEqual(scripts[0].commands[0].definition.name, 'must_be_researched')
+	def test_compile_requires_the_files_own_language(self) -> None:
+		# Research and tech use requirements have the same opcodes, but each file has its own language
+		with self.assertRaises(PyMSError) as cm:
+			ResearchGraft.compile(parse_context('Research 1:\n\tmust_be_researched\n', language=TechGraft.LANGUAGE()))
+		self.assertIn('Tech Research Requirements scripts must be compiled with a parse context using `ResearchRequirementsLanguage`', str(cm.exception))
 
 	def test_end_sublist_outside_sublist(self) -> None:
 		self.assertCompileError('Upgrade 0:\n\tend_sublist\n', UpgradesGraft, '`end_sublist` used outside of an `upgrade_level_1` or `upgrade_level_2` sub-list')
@@ -331,13 +332,14 @@ class Test_ScriptBody(unittest.TestCase):
 
 	def test_compile_requires_the_files_language(self) -> None:
 		with self.assertRaises(PyMSError) as cm:
-			UnitsGraft.compile_script(parse_context('', language=UpgradesGraft.LANGUAGE()), 0)
-		self.assertIn('UnitsGraft scripts must be compiled with a parse context using `UnitRequirementsLanguage`', str(cm.exception))
+			ReqScript.compile(parse_context('', language=UpgradesGraft.LANGUAGE()), 0, UnitsGraft.LANGUAGE)
+		self.assertIn('Unit Requirements scripts must be compiled with a parse context using `UnitRequirementsLanguage`', str(cm.exception))
 
 class Test_LanguageCommands(unittest.TestCase):
 	def test_commands_are_the_languages_commands(self) -> None:
 		self.assertEqual(UnitRequirementsLanguage.commands(), RequirementCodeCommands.unit_req_commands)
-		self.assertEqual(OtherRequirementsLanguage.commands(), RequirementCodeCommands.other_req_commands)
+		for language in (UpgradeRequirementsLanguage, ResearchRequirementsLanguage, TechRequirementsLanguage, OrderRequirementsLanguage):
+			self.assertEqual(language.commands(), RequirementCodeCommands.other_req_commands)
 
 class Test_ImportFGP(unittest.TestCase):
 	def test_replaces_adds_and_removes_scripts(self) -> None:
@@ -352,7 +354,7 @@ class Test_ImportFGP(unittest.TestCase):
 		self.assertEqual(IO.output_to_bytes(graft.save), words(0, 0, 0xFF11, 0xFFFF, 5, 0x0070, 0xFFFF, 0xFFFF))
 
 	def test_invalid_scripts_fail_without_changes(self) -> None:
-		for words_list, message in (([0xFF1F, 0xFFFF], 'ends before its end of list marker'), ([0xFF04], 'has the word 0xFF04, which is not an opcode for upgrade requirements')):
+		for words_list, message in (([0xFF1F, 0xFFFF], 'not enough data to read'), ([0xFF04], 'has the word 0xFF04, which is not an opcode for upgrade requirements')):
 			with self.subTest(message=message):
 				graft = _load(UpgradesGraft, INFANTRY_ARMOR)
 				fgp = FGP()

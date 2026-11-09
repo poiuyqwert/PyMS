@@ -1,4 +1,5 @@
-from .AbstractReqGraft import AbstractReqGraft, ReqScript
+from .ReqScript import ReqScript
+from .AbstractReqGraft import AbstractReqGraft
 from .UnitsGraft import UnitsGraft
 from .UpgradesGraft import UpgradesGraft
 from .ResearchGraft import ResearchGraft

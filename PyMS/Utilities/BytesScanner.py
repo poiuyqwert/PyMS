@@ -27,6 +27,17 @@ class BytesScanner:
 	def skip(self, size: int) -> None:
 		self.address += size
 
+	@staticmethod
+	def _size(data_format: AnyFormat) -> int:
+		if isinstance(data_format, str):
+			return struct.calcsize(data_format)
+		elif isinstance(data_format, struct.Struct):
+			return data_format.size
+		elif isinstance(data_format, Struct.Field):
+			return data_format.size
+		else: # if is Type[S]
+			return data_format.calcsize()
+
 	@overload
 	def can_scan(self, data_format: str) -> tuple[Any, ...]: ...
 	@overload
@@ -46,16 +57,7 @@ class BytesScanner:
 	@overload
 	def can_scan(self, data_format: Type[S]) -> S: ...
 	def can_scan(self, data_format: AnyFormat) -> Any:
-		size = 0
-		if isinstance(data_format, str):
-			size = struct.calcsize(data_format)
-		elif isinstance(data_format, struct.Struct):
-			size = data_format.size
-		elif isinstance(data_format, Struct.Field):
-			size = data_format.size
-		else: # if is Type[S]
-			size = data_format.calcsize()
-		return self.remaining_len() >= size
+		return self.remaining_len() >= BytesScanner._size(data_format)
 
 	@overload
 	def peek(self, data_format: str) -> tuple[Any, ...]: ...
@@ -76,6 +78,9 @@ class BytesScanner:
 	@overload
 	def peek(self, data_format: Type[S]) -> S: ...
 	def peek(self, data_format: AnyFormat) -> Any:
+		size = BytesScanner._size(data_format)
+		if self.remaining_len() < size:
+			raise PyMSError('Scan', f'not enough data to read {size} bytes at offset {self.address} ({max(self.remaining_len(), 0)} remaining)')
 		if isinstance(data_format, str):
 			return struct.unpack_from(data_format, self.data, self.address)
 		elif isinstance(data_format, struct.Struct):
@@ -105,16 +110,7 @@ class BytesScanner:
 	def scan(self, data_format: Type[S]) -> S: ...
 	def scan(self, data_format: AnyFormat) -> Any:
 		result = self.peek(data_format)
-		size = 0
-		if isinstance(data_format, str):
-			size = struct.calcsize(data_format)
-		elif isinstance(data_format, struct.Struct):
-			size = data_format.size
-		elif isinstance(data_format, Struct.Field):
-			size = data_format.size
-		else: # if is Type[S]
-			size = data_format.calcsize()
-		self.address += size
+		self.address += BytesScanner._size(data_format)
 		return result
 
 	def can_scan_bytes(self, length: int) -> bool:

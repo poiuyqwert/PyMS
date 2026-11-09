@@ -125,7 +125,7 @@ class ReqScriptView(UI.NotebookTab, UI.CodeTextDelegate):
 		graft_type = self.graft_data.graft_type
 		parse_context = GraftParseContext(GraftLexer(code), self.delegate.data_context, graft_type.LANGUAGE())
 		try:
-			script = graft_type.compile_script(parse_context, self.entry_id)
+			script = ReqScript.compile(parse_context, self.entry_id, graft_type.LANGUAGE)
 		except PyMSError as e:
 			self.text.highlight_error(e)
 			ErrorDialog(self, e)

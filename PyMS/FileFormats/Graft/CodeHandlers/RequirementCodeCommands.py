@@ -106,3 +106,6 @@ all_opcode_commands: list[CodeCommandDefinition] = sorted(set(unit_opcode_comman
 
 unit_req_commands: list[CodeCommandDefinition] = unit_opcode_commands + [Has]
 other_req_commands: list[CodeCommandDefinition] = other_opcode_commands + [Has, EndSublist]
+
+# Every requirement command, including the ones a file's language doesn't have available
+all_req_commands: list[CodeCommandDefinition] = all_opcode_commands + [Has, EndSublist]

@@ -27,12 +27,41 @@ class GraftLanguage(LanguageDefinition):
 	def has_command(cls, cmd_def: CodeCommandDefinition) -> bool:
 		return cls.CORE_PLUGIN.lookup_command(cmd_def.name) is cmd_def
 
+# Base class for the languages of the requirement .graft files (one per file, since each file's errors name what its requirements are for)
+class ReqGraftLanguage(GraftLanguage):
+	# What the file's scripts are the requirements for
+	DESCRIPTION: str
+	# Keyword for the header of each script in the source code
+	HEADER_KEYWORD: str
+
 # The language of units.dat requirements, which are parsed by a different function than the other requirements
-class UnitRequirementsLanguage(GraftLanguage):
+class UnitRequirementsLanguage(ReqGraftLanguage):
+	DESCRIPTION = 'Unit Requirements'
+	HEADER_KEYWORD = 'Unit'
 	CORE_PLUGIN = LanguagePlugin(LanguagePlugin.CORE_ID, RequirementCodeCommands.unit_req_commands, [])
 
-# The language of upgrades.dat, techdata.dat (research and use), and orders.dat requirements
-class OtherRequirementsLanguage(GraftLanguage):
+# The language of upgrades.dat requirements
+class UpgradeRequirementsLanguage(ReqGraftLanguage):
+	DESCRIPTION = 'Upgrade Requirements'
+	HEADER_KEYWORD = 'Upgrade'
+	CORE_PLUGIN = LanguagePlugin(LanguagePlugin.CORE_ID, RequirementCodeCommands.other_req_commands, [])
+
+# The language of techdata.dat research requirements
+class ResearchRequirementsLanguage(ReqGraftLanguage):
+	DESCRIPTION = 'Tech Research Requirements'
+	HEADER_KEYWORD = 'Research'
+	CORE_PLUGIN = LanguagePlugin(LanguagePlugin.CORE_ID, RequirementCodeCommands.other_req_commands, [])
+
+# The language of techdata.dat use requirements
+class TechRequirementsLanguage(ReqGraftLanguage):
+	DESCRIPTION = 'Tech Use Requirements'
+	HEADER_KEYWORD = 'Tech'
+	CORE_PLUGIN = LanguagePlugin(LanguagePlugin.CORE_ID, RequirementCodeCommands.other_req_commands, [])
+
+# The language of orders.dat requirements
+class OrderRequirementsLanguage(ReqGraftLanguage):
+	DESCRIPTION = 'Order Requirements'
+	HEADER_KEYWORD = 'Order'
 	CORE_PLUGIN = LanguagePlugin(LanguagePlugin.CORE_ID, RequirementCodeCommands.other_req_commands, [])
 
 # The language of Buttons.graft (its button sets, button cards, and unit stat info)

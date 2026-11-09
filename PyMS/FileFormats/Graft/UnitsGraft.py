@@ -7,8 +7,6 @@ from .CodeHandlers.GraftLanguage import UnitRequirementsLanguage
 class UnitsGraft(AbstractReqGraft):
 	FILE_NAME = 'Units.graft'
 	MPQ_PATH = 'datreq\\Units.graft'
-	DESCRIPTION = 'Unit Requirements'
-	HEADER_KEYWORD = 'Unit'
 	LANGUAGE = UnitRequirementsLanguage
 
 	@staticmethod
