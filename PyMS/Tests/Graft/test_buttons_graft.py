@@ -57,7 +57,7 @@ class Test_Defaults(unittest.TestCase):
 		graft.new()
 		text = decompile_buttons(graft)
 		self.assertIn('\t\tcancel_train last\n', text)
-		self.assertIn('\t\tshow_button_set 238\t# Zerg Basic Buildings\n', text)
+		self.assertIn('\t\tshow_button_card 238\t# Zerg Basic Buildings\n', text)
 		self.assertIn('\t\thas_no_exit\n', text)
 		self.assertIn('\t\tcan_morph_lurker\n', text)
 
@@ -139,7 +139,7 @@ class Test_Decompile(unittest.TestCase):
 				self.assertIn(f'\t\tcancel_train {text}\n', self._round_trip(Button(condition=10, action=4, action_param=value)))
 
 	def test_special_button_cards(self) -> None:
-		self.assertIn('\t\tshow_button_set 228\t# Blank\n', self._round_trip(Button(action=59, action_param=228)))
+		self.assertIn('\t\tshow_button_card 228\t# Blank\n', self._round_trip(Button(action=59, action_param=228)))
 
 	def test_button_cards_and_units_are_separate_blocks(self) -> None:
 		graft = ButtonsGraft()
@@ -324,7 +324,7 @@ unit_stat_info 1 {{
 				self.assertEqual(graft.button_sets, [[Button(position=1, condition=10, action=4, action_param=value)]])
 
 	def test_button_card_accepts_unit_names(self) -> None:
-		graft = compile_buttons('button_set 0 {\n' + _button("icon 0\nalways\nshow_button_set 'Terran SCV'\nenabled_str 0\ndisabled_str 0") + '}\n')
+		graft = compile_buttons('button_set 0 {\n' + _button("icon 0\nalways\nshow_button_card 'Terran SCV'\nenabled_str 0\ndisabled_str 0") + '}\n')
 		self.assertEqual(graft.button_sets, [[Button(position=1, condition=3, action=59, action_param=7)]])
 
 	def assertCompileError(self, code: str, message: str, line: int | None = None) -> None:

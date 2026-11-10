@@ -32,7 +32,7 @@ class ReqScript:
 				in_sublist = False
 				commands.append(CodeCommand(RequirementCodeCommands.EndSublist, []))
 			elif word < OPCODE_MIN:
-				commands.append(CodeCommand(RequirementCodeCommands.Has, [word]))
+				commands.append(CodeCommand(RequirementCodeCommands.HasCompleted, [word]))
 			elif cmd_def := language.lookup_opcode(word):
 				params = [scanner.scan(Struct.l_u16) for _ in cmd_def.param_types]
 				commands.append(CodeCommand(cmd_def, params))
@@ -53,9 +53,9 @@ class ReqScript:
 				if sublist_index is None:
 					return (f'`end_sublist` used outside of an `upgrade_level_1` or `upgrade_level_2` sub-list in script {self.entry_id}', index)
 				sublist_index = None
-			elif definition == RequirementCodeCommands.Has:
+			elif definition == RequirementCodeCommands.HasCompleted:
 				if command.params[0] >= OPCODE_MIN:
-					return (f'`has` unit ID {command.params[0]} is too large (must be below {OPCODE_MIN}) in script {self.entry_id}', index)
+					return (f'`has_completed` unit ID {command.params[0]} is too large (must be below {OPCODE_MIN}) in script {self.entry_id}', index)
 			elif definition in RequirementCodeCommands.sublist_commands:
 				sublist_index = index
 		if sublist_index is not None:
@@ -74,7 +74,7 @@ class ReqScript:
 			definition = command.definition
 			if definition == RequirementCodeCommands.EndSublist:
 				words.append(END_OF_LIST)
-			elif definition == RequirementCodeCommands.Has:
+			elif definition == RequirementCodeCommands.HasCompleted:
 				words.append(command.params[0])
 			else:
 				assert definition.byte_code_id is not None

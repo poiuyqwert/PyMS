@@ -16,8 +16,8 @@ INFANTRY_ARMOR = words(
 	0xFF02, 0x007A, # Current unit is Terran Engineering Bay
 	0xFF05, 0xFF07,
 	0xFF1F, 0xFFFF, # Level 1 (empty sub-list)
-	0xFF20, 0x0074, 0xFFFF, # Level 2: has Terran Science Facility
-	0xFF21, 0x0074, 0xFFFF, # Level 3: has Terran Science Facility (ends the script)
+	0xFF20, 0x0074, 0xFFFF, # Level 2: has_completed Terran Science Facility
+	0xFF21, 0x0074, 0xFFFF, # Level 3: has_completed Terran Science Facility (ends the script)
 	0xFFFF, # End of file
 )
 
@@ -28,10 +28,10 @@ INFANTRY_ARMOR_TEXT = """Upgrade 0:	# Terran Infantry Armor
 	upgrade_level_1
 		end_sublist
 	upgrade_level_2
-		has 'Terran Science Facility'
+		has_completed 'Terran Science Facility'
 		end_sublist
 	upgrade_level_3
-		has 'Terran Science Facility'
+		has_completed 'Terran Science Facility'
 """
 
 REQ_GRAFT_TYPES: tuple[type[AbstractReqGraft], ...] = (UnitsGraft, UpgradesGraft, ResearchGraft, TechGraft, OrdersGraft)
@@ -73,7 +73,7 @@ class Test_Defaults(unittest.TestCase):
 		graft.new()
 		text = decompile_req(graft)
 		self.assertIn("Unit 0:\t# Terran Marine\n\tcurrent_unit_is 'Terran Barracks'\n\tis_not_constructing_addon\n\tis_not_lifted_off\n", text)
-		self.assertIn("Unit 1:\t# Terran Ghost\n\tcurrent_unit_is 'Terran Barracks'\n\tis_not_constructing_addon\n\tis_not_lifted_off\n\thas 'Terran Covert Ops'\n\thas 'Terran Academy'\n", text)
+		self.assertIn("Unit 1:\t# Terran Ghost\n\tcurrent_unit_is 'Terran Barracks'\n\tis_not_constructing_addon\n\tis_not_lifted_off\n\thas_completed 'Terran Covert Ops'\n\thas_completed 'Terran Academy'\n", text)
 
 class Test_Load(unittest.TestCase):
 	def test_upgrade_sub_lists(self) -> None:
@@ -106,11 +106,19 @@ class Test_Load(unittest.TestCase):
 		self.assertIn("\tcurrent_unit_is 'Zerg Nydus Canal'\n\tdoes_not_have_exit\n", decompile_req(graft))
 		self.assertEqual(IO.output_to_bytes(graft.save), data)
 
-	def test_bare_values_are_has_unit(self) -> None:
+	def test_must_have_addon_reads_its_unit(self) -> None:
+		graft = _load(UnitsGraft, words(0, 5, 0xFF04, 120, 0x0074, 0xFFFF, 0xFFFF))
+		script = graft.get_script(5)
+		assert script is not None
+		self.assertEqual([command.definition for command in script.commands], [RequirementCodeCommands.MustHaveAddon, RequirementCodeCommands.HasCompleted])
+		self.assertEqual(script.commands[0].params, [120])
+		self.assertIn("\tmust_have_addon 'Terran Machine Shop'\n\thas_completed 'Terran Science Facility'\n", decompile_req(graft))
+
+	def test_bare_values_are_has_completed(self) -> None:
 		graft = _load(UnitsGraft, words(0, 1, 0x0070, 0xFFFF, 0xFFFF))
 		script = graft.get_script(1)
 		assert script is not None
-		self.assertEqual(script.commands[0].definition, RequirementCodeCommands.Has)
+		self.assertEqual(script.commands[0].definition, RequirementCodeCommands.HasCompleted)
 		self.assertEqual(script.commands[0].params, [0x70])
 
 	def test_header_word_is_preserved(self) -> None:
@@ -178,7 +186,7 @@ class Test_Scripts(unittest.TestCase):
 	def test_set_script_inserts_new_ids_in_order(self) -> None:
 		graft = _load(UnitsGraft, words(0, 9, 0xFFFF, 2, 0xFFFF, 20, 0xFFFF, 0xFFFF))
 		graft.set_script(ReqScript(15))
-		graft.set_script(ReqScript(2, [CodeCommand(RequirementCodeCommands.Has, [7])]))
+		graft.set_script(ReqScript(2, [CodeCommand(RequirementCodeCommands.HasCompleted, [7])]))
 		self.assertEqual(graft.list_ids(), [9, 2, 15, 20])
 
 	def test_set_script_without_replace(self) -> None:
@@ -195,7 +203,7 @@ class Test_Scripts(unittest.TestCase):
 
 class Test_Compile(unittest.TestCase):
 	def test_numbers_and_names(self) -> None:
-		scripts = compile_req('Unit 0:\n\tcurrent_unit_is 111\n\thas "Terran Academy"\n\thas 0x75\n', UnitsGraft)
+		scripts = compile_req('Unit 0:\n\tcurrent_unit_is 111\n\thas_completed "Terran Academy"\n\thas_completed 0x75\n', UnitsGraft)
 		graft = UnitsGraft()
 		graft.replace_scripts(scripts)
 		self.assertEqual(IO.output_to_bytes(graft.save), words(0, 0, 0xFF02, 111, 112, 0x75, 0xFFFF, 0xFFFF))
@@ -257,23 +265,23 @@ class Test_Compile(unittest.TestCase):
 		self.assertCompileError('Upgrade 0:\n\tupgrade_level_2\n', UpgradesGraft, 'sub-list is not ended with `end_sublist`')
 
 	def test_has_unit_too_large(self) -> None:
-		self.assertCompileError('Unit 0:\n\thas 0xFF00\n', UnitsGraft, 'Value is too large for `unit`')
+		self.assertCompileError('Unit 0:\n\thas_completed 0xFF00\n', UnitsGraft, 'Value is too large for `unit`')
 
 	def test_unknown_name(self) -> None:
-		self.assertCompileError("Unit 0:\n\thas 'Not A Unit'\n", UnitsGraft, '`Not A Unit` is not a known unit name')
+		self.assertCompileError("Unit 0:\n\thas_completed 'Not A Unit'\n", UnitsGraft, '`Not A Unit` is not a known unit name')
 
 	def test_name_of_multiple_ids(self) -> None:
-		self.assertCompileError("Unit 0:\n\thas 'Same'\n", UnitsGraft, '`Same` is the name of multiple unit IDs (0, 1)', data_context=_duplicate_names_context())
+		self.assertCompileError("Unit 0:\n\thas_completed 'Same'\n", UnitsGraft, '`Same` is the name of multiple unit IDs (0, 1)', data_context=_duplicate_names_context())
 
 	def test_unique_name_beside_duplicate_names(self) -> None:
-		scripts = compile_req("Unit 0:\n\thas 'Other'\n", UnitsGraft, _duplicate_names_context())
+		scripts = compile_req("Unit 0:\n\thas_completed 'Other'\n", UnitsGraft, _duplicate_names_context())
 		self.assertEqual(scripts[0].commands[0].params, [2])
 
 class Test_Decompile(unittest.TestCase):
 	def test_duplicate_names_are_written_as_ids(self) -> None:
 		graft = _load(UnitsGraft, words(0, 2, 0, 1, 2, 0xFFFF, 0xFFFF))
 		text = decompile_req(graft, _duplicate_names_context())
-		self.assertEqual(text, "Unit 2:\t# Terran Vulture (Other)\n\thas 0\t# Terran Marine (Same)\n\thas 1\t# Terran Ghost (Same)\n\thas 'Other'\n")
+		self.assertEqual(text, "Unit 2:\t# Terran Vulture (Other)\n\thas_completed 0\t# Terran Marine (Same)\n\thas_completed 1\t# Terran Ghost (Same)\n\thas_completed 'Other'\n")
 		graft.replace_scripts(compile_req(text, UnitsGraft, _duplicate_names_context()))
 		self.assertEqual(IO.output_to_bytes(graft.save), words(0, 2, 0, 1, 2, 0xFFFF, 0xFFFF))
 
@@ -302,9 +310,9 @@ class Test_ScriptBody(unittest.TestCase):
 		self.assertIn('There is no script with ID 5', str(cm.exception))
 
 	def test_compile_sets_the_entry_id(self) -> None:
-		script = compile_req_script('# Comment\ncurrent_unit_is 111\n\nhas 0x75\n', UnitsGraft, 9)
+		script = compile_req_script('# Comment\ncurrent_unit_is 111\n\nhas_completed 0x75\n', UnitsGraft, 9)
 		self.assertEqual(script.entry_id, 9)
-		self.assertEqual([command.definition for command in script.commands], [RequirementCodeCommands.CurrentUnitIs, RequirementCodeCommands.Has])
+		self.assertEqual([command.definition for command in script.commands], [RequirementCodeCommands.CurrentUnitIs, RequirementCodeCommands.HasCompleted])
 
 	def test_empty_body(self) -> None:
 		self.assertEqual(compile_req_script('# Nothing\n\n', OrdersGraft, 3).commands, [])
@@ -325,7 +333,7 @@ class Test_ScriptBody(unittest.TestCase):
 		self.assertBodyError('does_not_have_exit\n', UnitsGraft, '`does_not_have_exit` is not available for unit requirements', 1)
 
 	def test_unended_sublist_points_at_the_sublist(self) -> None:
-		self.assertBodyError('is_not_lifted_off\nupgrade_level_2\nhas 0\n', UpgradesGraft, 'sub-list is not ended with `end_sublist`', 2)
+		self.assertBodyError('is_not_lifted_off\nupgrade_level_2\nhas_completed 0\n', UpgradesGraft, 'sub-list is not ended with `end_sublist`', 2)
 
 	def test_end_sublist_outside_sublist_points_at_it(self) -> None:
 		self.assertBodyError('is_not_lifted_off\nend_sublist\n', UpgradesGraft, '`end_sublist` used outside of', 2)

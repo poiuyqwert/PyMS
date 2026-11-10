@@ -42,7 +42,7 @@ class ButtonCardsTab(GraftTab):
 		# There is no catch-all entry, so only units and None can be entered
 		self.connected_unit_dropdown = UI.EntryDropDown(f, self.connected_unit, [('None', NO_CONNECTED_UNIT)], entry_width=10, dropdown_width=30, callback=self.connected_unit_changed)
 		self.connected_unit_dropdown.pack(side=UI.LEFT, padx=2)
-		GraftTab.tip(f, 'Connected Unit', f"When units with this button card are selected together with this unit, the group uses this unit's button card instead of the generic group card (such as Kerrigan connected to the Ghost), or None ({NO_CONNECTED_UNIT}). Choose a unit, or enter its ID.")
+		GraftTab.tip(f, 'Connected Unit', f"When units with this button card are selected together with the connected unit (such as Kerrigan connected to the Ghost), the group uses the connected unit's button card instead of the generic group card, or None ({NO_CONNECTED_UNIT}).")
 		f.pack(fill=UI.X, pady=2)
 		frame.pack(anchor=UI.W, padx=5, pady=5)
 
