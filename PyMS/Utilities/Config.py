@@ -875,15 +875,14 @@ class Style:
 	background: str | None = None
 	bold: bool = False
 
-	@property
-	def configuration(self) -> dict[str, Any]:
+	def configuration(self, font: UI.Font) -> dict[str, Any]:
 		configuration: dict[str, Any] = {}
 		if self.foreground is not None:
 			configuration['foreground'] = self.foreground
 		if self.background is not None:
 			configuration['background'] = self.background
 		if self.bold:
-			configuration['font'] = UI.Font.fixed().bolded()
+			configuration['font'] = font.bolded()
 		return configuration
 
 	def copy(self) -> Style:

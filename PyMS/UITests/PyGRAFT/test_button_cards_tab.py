@@ -3,7 +3,7 @@ from .utils import PyGRAFTTestCase
 
 from ...PyGRAFT.PyGRAFT import PyGRAFT
 from ...PyGRAFT.Tabs import GraftTab, ButtonCardsTab
-from ...FileFormats.Graft.Definitions import NO_CONNECTED_UNIT
+from ...FileFormats.Graft.CodeHandlers.CodeTypes import ConnectedUnitCodeType
 
 from typing import cast
 
@@ -32,7 +32,7 @@ class Test_PyGRAFT_button_cards_tab(PyGRAFTTestCase):
 			self.select_in_list(gui, card_id)
 			card = gui.buttons_data.graft.button_cards[card_id]
 			self.assertEqual(tab.button_set.get(), 0 if card.button_set is None else card.button_set + 1)
-			self.assertEqual(tab.connected_unit.get(), NO_CONNECTED_UNIT if card.connected_unit is None else card.connected_unit)
+			self.assertEqual(tab.connected_unit.get(), ConnectedUnitCodeType.NONE_VALUE if card.connected_unit is None else card.connected_unit)
 		self.select_in_list(gui, 16)
 		self.assertEqual(tab.connected_unit_dropdown.dropdown.text.get(), gui.data_context.unit_display_name(1))
 		self.select_in_list(gui, 0)
@@ -67,7 +67,7 @@ class Test_PyGRAFT_button_cards_tab(PyGRAFTTestCase):
 		self.assertEqual(card.connected_unit, 12)
 		self.assertTrue(gui.buttons_data.edited)
 		tab.connected_unit_dropdown.dropdown.set(len(gui.data_context.unit_display_names()))
-		self.assertEqual(tab.connected_unit.get(), NO_CONNECTED_UNIT)
+		self.assertEqual(tab.connected_unit.get(), ConnectedUnitCodeType.NONE_VALUE)
 		self.assertIsNone(card.connected_unit)
 
 	def test_entering_connected_unit_id_selects_unit(self) -> None:
@@ -76,7 +76,7 @@ class Test_PyGRAFT_button_cards_tab(PyGRAFTTestCase):
 		tab.connected_unit.set(7)
 		self.assertEqual(gui.buttons_data.graft.button_cards[3].connected_unit, 7)
 		self.assertEqual(tab.connected_unit_dropdown.dropdown.text.get(), gui.data_context.unit_display_name(7))
-		tab.connected_unit.set(NO_CONNECTED_UNIT)
+		tab.connected_unit.set(ConnectedUnitCodeType.NONE_VALUE)
 		self.assertIsNone(gui.buttons_data.graft.button_cards[3].connected_unit)
 
 	def test_connected_unit_entry_only_accepts_units_or_none(self) -> None:

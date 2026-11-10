@@ -328,19 +328,23 @@ class Test_Enum(unittest.TestCase):
 
 class Test_Style(unittest.TestCase):
 	def test_configuration_empty_when_unset(self) -> None:
-		self.assertEqual(Config.Style().configuration, {})
+		self.assertEqual(Config.Style().configuration(mock.Mock()), {})
 
 	def test_configuration_includes_foreground(self) -> None:
-		self.assertEqual(Config.Style(foreground='#ffffff').configuration, {'foreground': '#ffffff'})
+		self.assertEqual(Config.Style(foreground='#ffffff').configuration(mock.Mock()), {'foreground': '#ffffff'})
 
 	def test_configuration_includes_background(self) -> None:
-		self.assertEqual(Config.Style(background='#000000').configuration, {'background': '#000000'})
+		self.assertEqual(Config.Style(background='#000000').configuration(mock.Mock()), {'background': '#000000'})
 
 	def test_configuration_includes_both_colors(self) -> None:
 		self.assertEqual(
-			Config.Style(foreground='#ffffff', background='#000000').configuration,
+			Config.Style(foreground='#ffffff', background='#000000').configuration(mock.Mock()),
 			{'foreground': '#ffffff', 'background': '#000000'}
 		)
+
+	def test_configuration_bolds_given_font(self) -> None:
+		font = mock.Mock()
+		self.assertEqual(Config.Style(bold=True).configuration(font), {'font': font.bolded.return_value})
 
 	def test_copy_preserves_fields(self) -> None:
 		original = Config.Style(foreground='#ffffff', background='#000000', bold=True)

@@ -6,7 +6,6 @@ from ..GraftData import ButtonsGraftData
 
 from ...FileFormats.Graft import ButtonCard
 from ...FileFormats.Graft.CodeHandlers.CodeTypes import ConnectedUnitCodeType
-from ...FileFormats.Graft.Definitions import NO_CONNECTED_UNIT
 
 from ...Utilities import UIKit as UI
 
@@ -28,7 +27,7 @@ class ButtonCardsTab(GraftTab):
 	def build_editor(self) -> None:
 		# Index 0 is no button set, and index `n` is button set `n - 1`
 		self.button_set = UI.IntVar()
-		self.connected_unit = UI.IntegerVar(NO_CONNECTED_UNIT, [0, NO_CONNECTED_UNIT])
+		self.connected_unit = UI.IntegerVar(ConnectedUnitCodeType.NONE_VALUE, [0, ConnectedUnitCodeType.NONE_VALUE])
 
 		frame = UI.LabelFrame(self, text='Button Card')
 		f = UI.Frame(frame)
@@ -40,9 +39,9 @@ class ButtonCardsTab(GraftTab):
 		f = UI.Frame(frame)
 		UI.Label(f, text='Connected Unit:', width=13, anchor=UI.E).pack(side=UI.LEFT)
 		# There is no catch-all entry, so only units and None can be entered
-		self.connected_unit_dropdown = UI.EntryDropDown(f, self.connected_unit, [('None', NO_CONNECTED_UNIT)], entry_width=10, dropdown_width=30, callback=self.connected_unit_changed)
+		self.connected_unit_dropdown = UI.EntryDropDown(f, self.connected_unit, [('None', ConnectedUnitCodeType.NONE_VALUE)], entry_width=10, dropdown_width=30, callback=self.connected_unit_changed)
 		self.connected_unit_dropdown.pack(side=UI.LEFT, padx=2)
-		GraftTab.tip(f, 'Connected Unit', f"When units with this button card are selected together with the connected unit (such as Kerrigan connected to the Ghost), the group uses the connected unit's button card instead of the generic group card, or None ({NO_CONNECTED_UNIT}).")
+		GraftTab.tip(f, 'Connected Unit', f"When units with this button card are selected together with the connected unit (such as Kerrigan connected to the Ghost), the group uses the connected unit's button card instead of the generic group card, or None ({ConnectedUnitCodeType.NONE_VALUE}).")
 		f.pack(fill=UI.X, pady=2)
 		frame.pack(anchor=UI.W, padx=5, pady=5)
 
@@ -69,9 +68,9 @@ class ButtonCardsTab(GraftTab):
 			self.button_set_dropdown.setentries(names)
 
 	def update_connected_unit_entries(self, connected_unit: int) -> None:
-		entries = [*((name, unit_id) for unit_id, name in enumerate(self.delegate.data_context.unit_display_names())), ('None', NO_CONNECTED_UNIT)]
+		entries = [*((name, unit_id) for unit_id, name in enumerate(self.delegate.data_context.unit_display_names())), ('None', ConnectedUnitCodeType.NONE_VALUE)]
 		# A connected unit past the loaded units gets its own entry, so loading it doesn't change it
-		if connected_unit != NO_CONNECTED_UNIT and connected_unit >= len(entries) - 1:
+		if connected_unit != ConnectedUnitCodeType.NONE_VALUE and connected_unit >= len(entries) - 1:
 			entries.append((f'Unit {connected_unit}', connected_unit))
 		if entries != self.connected_unit_entries:
 			self.connected_unit_entries = entries
@@ -79,7 +78,7 @@ class ButtonCardsTab(GraftTab):
 
 	def load_selected(self) -> None:
 		button_card = self.selected_button_card()
-		connected_unit = ConnectedUnitCodeType.to_value(button_card.connected_unit) if button_card else NO_CONNECTED_UNIT
+		connected_unit = ConnectedUnitCodeType.to_value(button_card.connected_unit) if button_card else ConnectedUnitCodeType.NONE_VALUE
 		self.loading = True
 		try:
 			self.update_button_set_names()

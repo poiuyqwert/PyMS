@@ -1,5 +1,5 @@
 from .utils import button_bytes, fgp_chunk, fgp_file
-from ...FileFormats.Graft import FGP, FGPUnit, Button, StatInfo, UnitsGraft, UpgradesGraft, FGPNames
+from ...FileFormats.Graft import FGP, FGPUnit, Button, ButtonSet, StatInfo, UnitsGraft, UpgradesGraft, FGPNames
 from ...Utilities.PyMSError import PyMSError
 
 import struct
@@ -46,7 +46,7 @@ class Test_Load(unittest.TestCase):
 		)
 		fgp = FGP()
 		self.assertEqual(fgp.load(data), [])
-		self.assertEqual(fgp.button_sets, {0: [Button.unpack(MOVE), Button.unpack(STOP)], 5: []})
+		self.assertEqual(fgp.button_sets, {0: ButtonSet([Button.unpack(MOVE), Button.unpack(STOP)]), 5: ButtonSet()})
 		self.assertEqual(fgp.units, [FGPUnit(0, 0, 0xFFFF, StatInfo(0, 1, 0)), FGPUnit(1, None, 3, None)])
 		self.assertEqual(fgp.requirements, {
 			UnitsGraft: {0: [0xFF05, 0xFFFF], 1: None},

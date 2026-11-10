@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from .Definitions import OPCODE_MIN, END_OF_LIST
 from .CodeHandlers import RequirementCodeCommands
 from .CodeHandlers.GraftLanguage import ReqGraftLanguage
 from .CodeHandlers.GraftParseContext import GraftParseContext
@@ -26,12 +25,12 @@ class ReqScript:
 		in_sublist = False
 		while True:
 			word = scanner.scan(Struct.l_u16)
-			if word == END_OF_LIST:
+			if word == RequirementCodeCommands.END_OF_LIST:
 				if not in_sublist:
 					break
 				in_sublist = False
 				commands.append(CodeCommand(RequirementCodeCommands.EndSublist, []))
-			elif word < OPCODE_MIN:
+			elif word < RequirementCodeCommands.OPCODE_MIN:
 				commands.append(CodeCommand(RequirementCodeCommands.HasCompleted, [word]))
 			elif cmd_def := language.lookup_opcode(word):
 				params = [scanner.scan(Struct.l_u16) for _ in cmd_def.param_types]
@@ -54,8 +53,8 @@ class ReqScript:
 					return (f'`end_sublist` used outside of an `upgrade_level_1` or `upgrade_level_2` sub-list in script {self.entry_id}', index)
 				sublist_index = None
 			elif definition == RequirementCodeCommands.HasCompleted:
-				if command.params[0] >= OPCODE_MIN:
-					return (f'`has_completed` unit ID {command.params[0]} is too large (must be below {OPCODE_MIN}) in script {self.entry_id}', index)
+				if command.params[0] >= RequirementCodeCommands.OPCODE_MIN:
+					return (f'`has_completed` unit ID {command.params[0]} is too large (must be below {RequirementCodeCommands.OPCODE_MIN}) in script {self.entry_id}', index)
 			elif definition in RequirementCodeCommands.sublist_commands:
 				sublist_index = index
 		if sublist_index is not None:
@@ -73,14 +72,14 @@ class ReqScript:
 		for command in self.commands:
 			definition = command.definition
 			if definition == RequirementCodeCommands.EndSublist:
-				words.append(END_OF_LIST)
+				words.append(RequirementCodeCommands.END_OF_LIST)
 			elif definition == RequirementCodeCommands.HasCompleted:
 				words.append(command.params[0])
 			else:
 				assert definition.byte_code_id is not None
 				words.append(definition.byte_code_id)
 				words.extend(command.params)
-		words.append(END_OF_LIST)
+		words.append(RequirementCodeCommands.END_OF_LIST)
 		return Struct.l_au16(len(words)).pack(words)
 
 	def serialize(self, serialize_context: GraftSerializeContext) -> None:

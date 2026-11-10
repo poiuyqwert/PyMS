@@ -1,6 +1,6 @@
 
 from ..FileFormats.Graft import AbstractReqGraft, UnitsGraft, UpgradesGraft, ResearchGraft, TechGraft, OrdersGraft, ButtonsGraft, FGP
-from ..FileFormats.Graft.CodeHandlers import GraftLexer, GraftParseContext, GraftSerializeContext
+from ..FileFormats.Graft.CodeHandlers import GraftLexer, GraftParseContext, GraftSerializeContext, ButtonsLanguage
 
 from ..Utilities.DataContext import DataContext
 from ..Utilities.PyMSWarning import PyMSWarning
@@ -168,7 +168,7 @@ class ButtonsGraftData:
 		# Replaces the contents of the open file, so it's marked edited but still saves to the same place
 		with IO.InputText(any_input) as f:
 			code = f.read()
-		self.graft = ButtonsGraft.compile(GraftParseContext(GraftLexer(code), data_context))
+		self.graft = ButtonsGraft.compile(GraftParseContext(GraftLexer(code), data_context, ButtonsLanguage()))
 		self.edited = True
 
 	def import_fgp(self, fgp: FGP) -> list[PyMSWarning]:

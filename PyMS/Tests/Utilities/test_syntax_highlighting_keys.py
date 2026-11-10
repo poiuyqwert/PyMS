@@ -9,7 +9,7 @@ from ...PyTRG.PyTRG import PyTRG
 from ...PyTRG.Config import PyTRGConfig
 from ...PyLO.PyLO import PyLO
 from ...PyLO.Config import PyLOConfig
-from ...PyGRAFT.RequirementsEditor.ReqSyntaxHighlighting import build_syntax_highlighting as build_graft_syntax_highlighting
+from ...PyGRAFT.ScriptEditor.SyntaxHighlighting import build_syntax_highlighting as build_graft_syntax_highlighting
 from ...PyGRAFT.Config import PyGRAFTConfig
 from ...FileFormats.Graft.UnitsGraft import UnitsGraft
 
@@ -28,7 +28,7 @@ def _program_highlights() -> dict[str, tuple[Config.Group, list[UI.HighlightComp
 		'PyICE': (pyice, list(PyICECodeEditDialog.build_syntax_highlighting(pyice).all_highlight_components())),
 		'PyTRG': (pytrg, list(PyTRG.build_syntax_highlighting(pytrg).all_highlight_components())),
 		'PyLO': (pylo, list(PyLO.build_syntax_highlighting(pylo).all_highlight_components())),
-		'PyGRAFT': (pygraft, list(build_graft_syntax_highlighting(pygraft, UnitsGraft.LANGUAGE).all_highlight_components())),
+		'PyGRAFT': (pygraft, list(build_graft_syntax_highlighting(pygraft, [cmd_def.name for cmd_def in UnitsGraft.LANGUAGE.commands()], []).all_highlight_components())),
 	}
 
 class Test_Shared_Highlight_Keys(unittest.TestCase):

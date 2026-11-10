@@ -5,15 +5,35 @@ from ..GraftData import ButtonsGraftData
 
 from ...FileFormats.Graft import StatInfo
 from ...FileFormats.Graft.CodeHandlers import StatInfoCodeCommands
-from ...FileFormats.Graft.Definitions import STAT_PRESETS, StatPreset
+from ...FileFormats.Graft.CodeHandlers.GraftCommandDefinition import GraftCommandDefinition
 
 from ...Utilities import UIKit as UI
 from ...Utilities import Struct
 
+from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..Delegates import MainDelegate
+
+@dataclass(frozen=True)
+class StatPreset:
+	name: str
+	status_function: GraftCommandDefinition
+	display_function: GraftCommandDefinition
+
+# Most units use one of these status/display function pairs, though not all of them do
+STAT_PRESETS: tuple[StatPreset, ...] = (
+	StatPreset('Building', StatInfoCodeCommands.ChangedBuilding, StatInfoCodeCommands.DrawBuilding),
+	StatPreset('Normal Unit', StatInfoCodeCommands.ChangedUnit, StatInfoCodeCommands.DrawUnit),
+	StatPreset('Unit w/ Subunits', StatInfoCodeCommands.ChangedHangar, StatInfoCodeCommands.DrawHangar),
+	StatPreset('Transport', StatInfoCodeCommands.ChangedTransport, StatInfoCodeCommands.DrawTransport),
+	StatPreset('Transport w/ Supply', StatInfoCodeCommands.ChangedSupplyTransport, StatInfoCodeCommands.DrawSupplyTransport),
+	StatPreset('Powerup', StatInfoCodeCommands.ChangedPowerup, StatInfoCodeCommands.DrawPowerup),
+	StatPreset('Morph Unit', StatInfoCodeCommands.ChangedMorph, StatInfoCodeCommands.DrawMorph),
+	StatPreset('Merge Unit', StatInfoCodeCommands.ChangedSummon, StatInfoCodeCommands.DrawSummon),
+	StatPreset('Unselectable', StatInfoCodeCommands.ChangedNever, StatInfoCodeCommands.DrawNone),
+)
 
 # Tab for the unit stat info of Buttons.graft (one per unit)
 class StatInfoTab(GraftTab):
@@ -130,5 +150,5 @@ class StatInfoTab(GraftTab):
 		self.presets_menu.post(self.presets_button.winfo_rootx(), self.presets_button.winfo_rooty() + self.presets_button.winfo_height())
 
 	def apply_preset(self, preset: StatPreset) -> None:
-		self.status_function.set(preset.status_function)
-		self.display_function.set(preset.display_function)
+		self.status_function.set(preset.status_function.function_index)
+		self.display_function.set(preset.display_function.function_index)

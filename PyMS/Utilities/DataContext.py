@@ -686,10 +686,10 @@ class DataContext:
 	def button_card_name(self, card_id: int) -> str | None:
 		# Button cards are the units, followed by the special button cards
 		# Imported here, the Graft package imports this module
-		from ..FileFormats.Graft.Definitions import SPECIAL_BUTTON_CARDS_START
-		if card_id < SPECIAL_BUTTON_CARDS_START:
+		from ..FileFormats.Graft.ButtonsGraft import ButtonsGraft # pylint: disable=cyclic-import
+		if card_id < ButtonsGraft.SPECIAL_BUTTON_CARDS_START:
 			return self.unit_display_name(card_id)
 		names = Assets.data_cache(Assets.DataReference.ButtonCards)
-		if card_id - SPECIAL_BUTTON_CARDS_START < len(names):
-			return names[card_id - SPECIAL_BUTTON_CARDS_START]
+		if card_id - ButtonsGraft.SPECIAL_BUTTON_CARDS_START < len(names):
+			return names[card_id - ButtonsGraft.SPECIAL_BUTTON_CARDS_START]
 		return None

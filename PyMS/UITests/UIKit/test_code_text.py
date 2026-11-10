@@ -138,3 +138,48 @@ class Test_CodeText_LinesColors(UITestCase):
 		text.update_highlight_styles()
 		self.assertEqual(text.lines.cget('background'), '#000000')
 		self.assertEqual(text.lines.cget('foreground'), '#7F7F7F')
+
+
+class Test_CodeText_LineNumbers(UITestCase):
+	def make_text(self, code: str) -> UI.CodeText:
+		window = self.make_window(UI.MainWindow)
+		text = UI.CodeText(window)
+		text.pack(fill=UI.BOTH, expand=1)
+		text.load(code)
+		self.pump(window)
+		return text
+
+	def assertLineNumbers(self, text: UI.CodeText, count: int) -> None:
+		self.assertEqual(text.get('1.0', UI.END).count('\n'), count)
+		numbers = [int(number) for number in text.lines.get('1.0', 'end -1c').split('\n')]
+		self.assertEqual(numbers, list(range(1, count + 1)))
+
+	def test_line_numbers_match_loaded_text(self) -> None:
+		text = self.make_text('\n'.join(['a'] * 10))
+		self.assertLineNumbers(text, 10)
+
+	def test_line_numbers_follow_every_inserted_line(self) -> None:
+		text = self.make_text('\n'.join(['a'] * 10))
+		for count in range(11, 14):
+			text.insert('end -1c', '\nb')
+			self.assertLineNumbers(text, count)
+
+	def test_line_numbers_follow_deleted_lines_after_inserting(self) -> None:
+		text = self.make_text('\n'.join(['a'] * 10))
+		text.insert('end -1c', '\nb\nc')
+		self.assertLineNumbers(text, 12)
+		text.delete('1.0', '2.0')
+		self.assertLineNumbers(text, 11)
+		text.delete('1.0', '4.0')
+		self.assertLineNumbers(text, 8)
+
+	def test_line_numbers_follow_undo_and_redo(self) -> None:
+		text = self.make_text('\n'.join(['a'] * 10))
+		text.insert('end -1c', '\nb')
+		text.edit_separator()
+		text.insert('end -1c', '\nc')
+		self.assertLineNumbers(text, 12)
+		text.edit_undo()
+		self.assertLineNumbers(text, 11)
+		text.edit_redo()
+		self.assertLineNumbers(text, 12)

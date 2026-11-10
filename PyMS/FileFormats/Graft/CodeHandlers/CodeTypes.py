@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from ....Utilities.DataContext import DataContext
-from ..Definitions import NO_CONNECTED_UNIT
 
 from ....Utilities.CodeHandlers import CodeType
 from ....Utilities.CodeHandlers import Tokens
@@ -171,11 +170,33 @@ class StringIDCodeType(CodeType.IntCodeType):
 			return data_context.stat_txt_string(value - 1)
 		return None
 
-class ButtonPositionCodeType(CodeType.IntCodeType):
-	NAMES = ('Top Left', 'Top Middle', 'Top Right', 'Middle Left', 'Center', 'Middle Right', 'Bottom Left', 'Bottom Middle', 'Bottom Right')
+class ButtonPositionCodeType(CodeType.EnumCodeType):
+	# Written as the row (T, M, B) followed by the column (L, M, R), or as its number
+	CODES = {
+		'TL': 1,
+		'TM': 2,
+		'TR': 3,
+		'ML': 4,
+		'MM': 5,
+		'MR': 6,
+		'BL': 7,
+		'BM': 8,
+		'BR': 9
+	}
+	NAMES = (
+		'Top Left',
+		'Top Middle',
+		'Top Right',
+		'Middle Left',
+		'Center',
+		'Middle Right',
+		'Bottom Left',
+		'Bottom Middle',
+		'Bottom Right'
+	)
 
 	def __init__(self) -> None:
-		super().__init__('position', 'The button position (1 to 9, left to right then top to bottom)', Struct.l_u16)
+		super().__init__('position', 'The button position, as the row (T, M, or B) followed by the column (L, M, or R), or 1 to 9 (left to right then top to bottom, 1 being TL and 9 being BR)', Struct.l_u16, ButtonPositionCodeType.CODES, allow_integer=True)
 
 	def comment(self, value: int, _context: SerializeContext) -> str | None:
 		if 1 <= value <= len(ButtonPositionCodeType.NAMES):
@@ -245,18 +266,19 @@ class UnitButtonSetCodeType(CodeType.CodeType[int | None, int | None], CodeType.
 class ConnectedUnitCodeType(CodeType.CodeType[int | None, int | None], CodeType.HasKeywords):
 	# The unit whose button card a mixed selection falls back to, or `None` (stored as 0xFFFF)
 	NONE = 'None'
+	NONE_VALUE = 0xFFFF
 
 	def __init__(self) -> None:
 		CodeType.CodeType.__init__(self, 'connected_unit', 'A unit ID (or its quoted name), or `None`', Struct.l_u16, False)
-		self._unit = UnitCodeType('connected_unit', limits=(0, NO_CONNECTED_UNIT - 1))
+		self._unit = UnitCodeType('connected_unit', limits=(0, ConnectedUnitCodeType.NONE_VALUE - 1))
 
 	@staticmethod
 	def to_value(value: int | None) -> int:
-		return NO_CONNECTED_UNIT if value is None else value
+		return ConnectedUnitCodeType.NONE_VALUE if value is None else value
 
 	@staticmethod
 	def from_value(value: int) -> int | None:
-		return None if value == NO_CONNECTED_UNIT else value
+		return None if value == ConnectedUnitCodeType.NONE_VALUE else value
 
 	def serialize(self, value: int | None, context: SerializeContext) -> str:
 		if value is None:

@@ -65,6 +65,7 @@ class PyGRAFTConfig(Config.Config):
 				self.comment = Config.HighlightStyle(default=Config.Style(foreground='#008000'))
 				self.string = Config.HighlightStyle(default=Config.Style(foreground='#A31515'))
 				self.command = Config.HighlightStyle(default=Config.Style(foreground='#0000AA'))
+				self.keyword = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
 				self.number = Config.HighlightStyle(default=Config.Style(foreground='#FF0000'))
 				self.operator = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
 				self.newline = Config.HighlightStyle(default=Config.Style())

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from .Definitions import END_OF_LIST, MAX_SCRIPT_ID
 from .ReqScript import ReqScript
+from .CodeHandlers import RequirementCodeCommands
 from .CodeHandlers.GraftLanguage import ReqGraftLanguage
 from ...Utilities.DataContext import DataContext
 from .CodeHandlers.GraftParseContext import GraftParseContext
@@ -30,6 +30,8 @@ class AbstractReqGraft:
 	FILE_NAME: str
 	# Path the Graft Hook loads the file from in an MPQ
 	MPQ_PATH: str
+	# Script IDs can be anything but the end of list marker
+	MAX_SCRIPT_ID = RequirementCodeCommands.END_OF_LIST - 1
 	# The language of the file's scripts (which has the requirement opcodes that are available for the file, what they are the requirements for, and their header keyword)
 	LANGUAGE: type[ReqGraftLanguage]
 
@@ -61,7 +63,7 @@ class AbstractReqGraft:
 			header_word = scanner.scan(Struct.l_u16)
 			while True:
 				entry_id = scanner.scan(Struct.l_u16)
-				if entry_id == END_OF_LIST:
+				if entry_id == RequirementCodeCommands.END_OF_LIST:
 					break
 				script = ReqScript.decode(scanner, entry_id, self.LANGUAGE)
 				if entry_id in scripts:
@@ -87,7 +89,7 @@ class AbstractReqGraft:
 				data += script.encode(self.LANGUAGE)
 			except PyMSError as e:
 				raise PyMSError('Save', e.error) from e
-		data += Struct.l_u16.pack(END_OF_LIST)
+		data += Struct.l_u16.pack(RequirementCodeCommands.END_OF_LIST)
 		with IO.OutputBytes(output) as f:
 			f.write(bytes(data))
 
@@ -99,8 +101,8 @@ class AbstractReqGraft:
 
 	@staticmethod
 	def _check_entry_id(entry_id: int) -> None:
-		if entry_id < 0 or entry_id > MAX_SCRIPT_ID:
-			raise PyMSError('Internal', f'Script ID {entry_id} is out of range (must be 0 to {MAX_SCRIPT_ID})')
+		if entry_id < 0 or entry_id > AbstractReqGraft.MAX_SCRIPT_ID:
+			raise PyMSError('Internal', f'Script ID {entry_id} is out of range (must be 0 to {AbstractReqGraft.MAX_SCRIPT_ID})')
 
 	def set_script(self, script: ReqScript, allow_replace: bool = True) -> None:
 		self._check_entry_id(script.entry_id)
@@ -181,7 +183,7 @@ class AbstractReqGraft:
 				raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `{keyword}` header or a command)')
 			if token.raw_value == keyword:
 				line = parse_context.lexer.state.token_line
-				entry_id = SourceParsing.parse_header_id(parse_context, keyword, MAX_SCRIPT_ID)
+				entry_id = SourceParsing.parse_header_id(parse_context, keyword, AbstractReqGraft.MAX_SCRIPT_ID)
 				if entry_id in scripts:
 					raise parse_context.error('Parse', f'{keyword} {entry_id} is already defined on line {script_lines[entry_id] + 1}', line=line)
 				script = ReqScript(entry_id)
@@ -209,8 +211,8 @@ class AbstractReqGraft:
 			if words is None:
 				changes.append((entry_id, None))
 				continue
-			if not words or words[-1] != END_OF_LIST:
-				words = words + [END_OF_LIST]
+			if not words or words[-1] != RequirementCodeCommands.END_OF_LIST:
+				words = words + [RequirementCodeCommands.END_OF_LIST]
 			scanner = BytesScanner(Struct.l_au16(len(words)).pack(words))
 			try:
 				script = ReqScript.decode(scanner, entry_id, self.LANGUAGE)

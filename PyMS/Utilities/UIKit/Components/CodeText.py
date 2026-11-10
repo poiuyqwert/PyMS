@@ -84,15 +84,15 @@ class CodeText(Frame):
 		Frame.__init__(self, parent, bd=2, relief=SUNKEN)
 		frame = Frame(self)
 
-		font = Font.fixed().sized(12)
-		self.lines = Text(frame, height=1, font=font, width=8, cursor='')
+		self.font = Font.fixed().sized(12)
+		self.lines = Text(frame, height=1, font=self.font, width=8, cursor='')
 		self.lines.config(bd=0)
 		self.lines.pack(side=LEFT, fill=Y)
 
 		hscroll = Scrollbar(self, orient=HORIZONTAL)
 		self.vscroll = Scrollbar(self)
 
-		self.text = Text(frame, height=1, font=font, undo=True, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=self.yscroll, exportselection=False)
+		self.text = Text(frame, height=1, font=self.font, undo=True, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=self.yscroll, exportselection=False)
 		self.text.config(bd=0)
 		self.text.configure(tabs=self.tk.call("font", "measure", self.text["font"], "-displayof", frame, '    '))
 		self.text.pack(side=LEFT, fill=BOTH, expand=1)
@@ -225,7 +225,6 @@ class CodeText(Frame):
 		if cut:
 			self.mark_set('insert', 'sel.first')
 			self.delete('sel.first','sel.last')
-			self.update_lines()
 
 	def paste(self) -> None:
 		text = self.clipboard_get()
@@ -236,7 +235,6 @@ class CodeText(Frame):
 				self.mark_set(INSERT, 'sel.first')
 				self.delete('sel.first','sel.last')
 			self.insert(INSERT, text)
-		self.update_lines()
 
 	def focus_set(self) -> None:
 		self.text.focus_set()
@@ -322,7 +320,6 @@ class CodeText(Frame):
 
 	def modified(self, _event: Event | None = None) -> None:
 		self.edited_state.mark_edited(self.text.edit_modified())
-		self.update_lines()
 
 	def update_lines(self) -> None:
 		lines = self.lines.get('1.0', END).count('\n')
@@ -362,7 +359,7 @@ class CodeText(Frame):
 			else:
 				# Reset the options a style can set, instead of deleting the tag (which would remove its ranges and bindings, like tooltips)
 				self.tag_configure(highlight_component.tag_name, foreground='', background='', font='')
-			self.tag_configure(highlight_component.tag_name, **highlight_component.highlight_style.style.configuration)
+			self.tag_configure(highlight_component.tag_name, **highlight_component.highlight_style.style.configuration(self.font))
 		self.tag_raise('sel')
 		self.update_inactive_select_background()
 		self.update_lines_colors()
@@ -435,9 +432,8 @@ class CodeText(Frame):
 		if not self.autocomplete_state:
 			index = self.index('insert')
 			line = self.get(f'{index} linestart', index)
-			text_prefix = line
-			if ' ' in text_prefix:
-				text_prefix = text_prefix.split(' ')[-1]
+			# The word being typed, after any space or tab (lines can be indented with tabs)
+			text_prefix = re.split(r'[ \t]', line)[-1]
 			if not text_prefix:
 				return EventPropogation.Continue
 
@@ -494,6 +490,8 @@ class CodeText(Frame):
 		# print(cmd, args, result)
 		if recolor_range:
 			self.mark_recolor_range(*recolor_range)
+			# The modified event only fires when the modified flag changes, so the line numbers are updated on every change
+			self.update_lines()
 			self.event_generate(CodeText.WidgetEvent.TextChanged())
 		if cmd == 'mark' and args[0] == 'set' and args[1] == INSERT:
 			self.event_generate(CodeText.WidgetEvent.InsertCursorMoved())

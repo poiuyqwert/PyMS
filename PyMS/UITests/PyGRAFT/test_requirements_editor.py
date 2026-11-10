@@ -11,7 +11,7 @@ import time
 
 from unittest import mock
 
-ERROR_DIALOG = 'PyMS.PyGRAFT.RequirementsEditor.ScriptView.ErrorDialog'
+ERROR_DIALOG = 'PyMS.PyGRAFT.ScriptEditor.ScriptView.ErrorDialog'
 SHOW_INFO = 'tkinter.messagebox.showinfo'
 
 # Unit 4 (Terran Siege Tank (Siege Mode)) has no vanilla script
@@ -70,7 +70,6 @@ class Test_PyGRAFT_requirements_editor(PyGRAFTTestCase):
 		self.assertFalse(gui.units_data.has_script(UNSCRIPTED_UNIT))
 		self.select_in_list(gui, UNSCRIPTED_UNIT)
 		self.assertEqual(self.code(view), '')
-		self.assertIn('No script', view.script_status.get())
 
 	def test_script_mode_is_shown_first(self) -> None:
 		_, tab, view = self.open_req_tab()
@@ -152,6 +151,19 @@ class Test_PyGRAFT_requirements_editor(PyGRAFTTestCase):
 		self.assertTrue(gui.units_data.has_script(0))
 		self.assertFalse(gui.units_data.edited)
 		self.assertTrue(view.is_edited())
+
+	def test_save_indicator_shows_the_edited_state(self) -> None:
+		gui, _, view = self.open_req_tab()
+		self.assertEqual(view.editstatus['state'], UI.DISABLED)
+		self.set_code(view, 'is_not_lifted_off\n')
+		self.assertEqual(view.editstatus['state'], UI.NORMAL)
+		view.revert()
+		self.assertEqual(view.editstatus['state'], UI.DISABLED)
+		self.set_code(view, 'is_not_lifted_off\n')
+		self.assertTrue(view.apply())
+		self.assertEqual(view.editstatus['state'], UI.DISABLED)
+		# The main window's indicator is for the file, which applying edited
+		self.assertEqual(gui.editstatus['state'], UI.NORMAL)
 
 	def test_revert_restores_the_script(self) -> None:
 		gui, _, view = self.open_req_tab()
@@ -326,6 +338,16 @@ class Test_PyGRAFT_requirements_editor(PyGRAFTTestCase):
 			self.pump(gui)
 		error_dialog.assert_called_once()
 		self.assertEqual(self.code(view), 'is_awesome')
+
+	def test_tab_completes_a_tab_indented_command(self) -> None:
+		gui, _, view = self.open_req_tab('Upgrade Research Reqs.')
+		# Sub-list bodies are indented with a tab, which isn't part of the word being completed
+		self.set_code(view, 'upgrade_level_1\n\tend')
+		view.text.mark_set(UI.INSERT, UI.END)
+		self.focus_text(gui, view)
+		view.text.text.event_generate(UI.Key.Tab.event())
+		self.pump(gui)
+		self.assertEqual(self.code(view), 'upgrade_level_1\n\tend_sublist')
 
 	def test_test_shortcut_does_not_edit_the_code(self) -> None:
 		gui, _, view = self.open_req_tab()

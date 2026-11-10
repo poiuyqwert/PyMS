@@ -23,6 +23,14 @@ class Test_PyTRG_autocomplete_options(PyTRGTestCase):
 		self.assertIn('Trigger', options)
 		self.assertIn(Conditions.definitions_registry[0].name, options)
 
+	def test_tab_indented_word_is_completed(self) -> None:
+		gui = self.make_pytrg()
+		gui.new()
+		self.settle_syntax_coloring(gui)
+		options = gui.get_autocomplete_options('\tT')
+		assert options is not None
+		self.assertIn('Trigger', options)
+
 	def test_non_identifier_prefix_offers_nothing(self) -> None:
 		gui = self.make_pytrg()
 		gui.new()

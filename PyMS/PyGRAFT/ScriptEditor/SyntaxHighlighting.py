@@ -1,15 +1,17 @@
 
 from ..Config import PyGRAFTConfig
 
-from ...FileFormats.Graft.CodeHandlers import GraftLanguage
-
 from ...Utilities import UIKit as UI
 
 import re
 
-def build_syntax_highlighting(highlights: PyGRAFTConfig.Code.Highlights, language: type[GraftLanguage]) -> UI.SyntaxHighlighting:
-	# The highlighting of a requirement script's commands, which differ by the language of the file
-	cmd_names = [re.escape(cmd_def.name) for cmd_def in language.commands()]
+from typing import Sequence
+
+def build_syntax_highlighting(highlights: PyGRAFTConfig.Code.Highlights, command_names: Sequence[str], keywords: Sequence[str]) -> UI.SyntaxHighlighting:
+	# The highlighting of a script, whose commands (and block keywords) and parameter keywords differ by what it's for
+	cmd_names = [re.escape(name) for name in command_names]
+	# A script without parameter keywords still has the style (so every script has the same styles), but it never matches
+	keyword_pattern = '|'.join(re.escape(keyword) for keyword in keywords) or r'(?!)'
 	return UI.SyntaxHighlighting(
 		syntax_components=(
 			UI.SyntaxComponent((
@@ -48,6 +50,18 @@ def build_syntax_highlighting(highlights: PyGRAFTConfig.Code.Highlights, languag
 				r'\b',
 				UI.HighlightPattern(
 					highlight=UI.HighlightComponent(
+						name='Keyword',
+						description='The style of keywords.',
+						highlight_style=highlights.keyword
+					),
+					pattern=keyword_pattern
+				),
+				r'\b'
+			)),
+			UI.SyntaxComponent((
+				r'\b',
+				UI.HighlightPattern(
+					highlight=UI.HighlightComponent(
 						name='Number',
 						description='The style of a number.',
 						highlight_style=highlights.number
@@ -60,10 +74,10 @@ def build_syntax_highlighting(highlights: PyGRAFTConfig.Code.Highlights, languag
 				UI.HighlightPattern(
 					highlight=UI.HighlightComponent(
 						name='Operator',
-						description='The style of the operators: ( ) ,',
+						description='The style of the operators: ( ) { } ,',
 						highlight_style=highlights.operator
 					),
-					pattern=r'[(),]'
+					pattern=r'[(){},]'
 				),
 			)),
 			UI.SyntaxComponent((

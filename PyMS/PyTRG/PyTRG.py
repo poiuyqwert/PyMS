@@ -662,7 +662,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 
 	RE_LOWERCASE_WORD = re.compile(r'\A\s*[a-z\{]+\Z')
 	def get_autocomplete_options(self, line: str) -> list[str] | None:
-		text = line.split(' ')[-1]
+		text = re.split(r'[ \t]', line)[-1]
 		if not text or not text[0].lower() in 'abcdefghijklmnopqrstuvwxyz{':
 			return None
 		options = list(self.autocomptext)

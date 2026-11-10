@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 from . import CodeTypes
-from ..Definitions import OPCODE_MIN
 
 from ....Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
+
+# Opcode values are >= 0xFF00, any other value in a script is a `has_completed` unit check
+OPCODE_MIN = 0xFF00
+# Ends a script, a sub-list, and the list of scripts
+END_OF_LIST = 0xFFFF
 
 # Requirement opcodes. units.dat requirements are parsed by a
 # different function than the other requirements, so each has its own list of available opcodes.

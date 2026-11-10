@@ -1,12 +1,13 @@
-from .utils import button_bytes, buttons_file, decompile_buttons, compile_buttons, parse_context
-from ...FileFormats.Graft import ButtonsGraft, Button, StatInfo, ButtonCard, UnitsGraft, FGP, FGPUnit
-from ...FileFormats.Graft.CodeHandlers import ButtonsLanguage, ButtonCodeCommands
+from .utils import button_bytes, buttons_file, decompile_buttons, compile_buttons, parse_context, vanilla_data_context
+from ...FileFormats.Graft import ButtonsGraft, Button, ButtonSet, StatInfo, ButtonCard, UnitsGraft, FGP, FGPUnit
+from ...FileFormats.Graft.CodeHandlers import ButtonsLanguage, ButtonCodeCommands, GraftSerializeContext
 from ...Utilities.DataContext import DataContext
 from ...FileFormats.TBL import TBL
 from ...Utilities.CodeHandlers.LanguageDefinition import LanguageContext
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import IO
 
+import io
 import unittest
 
 MOVE = button_bytes(1, 228, 3, 9, enabled_string=664) # Always, Move
@@ -76,21 +77,24 @@ class Test_Defaults(unittest.TestCase):
 		stat_txt.strings[1543] = 'd\x00Slow \x03D\x01own\x00'
 		text = decompile_buttons(graft, DataContext(stat_txt_tbl=stat_txt))
 		self.assertTrue(text.startswith('''button_set 0 {\t# Replay: Paused
-	button 7 {\t# Bottom Left
+	button {
+		position BL\t# Bottom Left
 		icon 386\t# Play (Replay)
 		is_watching_replay
 		play_pause_replay
 		enabled_str 1542\t# p<0><3>P<1>lay
 		disabled_str 0
 	}
-	button 8 {\t# Bottom Middle
+	button {
+		position BM\t# Bottom Middle
 		icon 389\t# Slow Down (Replay)
 		can_slow_down_replay
 		slow_down_replay
 		enabled_str 1544\t# d<0>Slow <3>D<1>own
 		disabled_str 0
 	}
-	button 9 {\t# Bottom Right
+	button {
+		position BR\t# Bottom Right
 		icon 388\t# Speed Up (Replay)
 		can_speed_up_replay
 		speed_up_replay
@@ -104,11 +108,11 @@ class Test_Defaults(unittest.TestCase):
 class Test_Decompile(unittest.TestCase):
 	def _round_trip(self, button: Button) -> str:
 		graft = ButtonsGraft()
-		graft.button_sets = [[button]]
+		graft.button_sets = [ButtonSet([button])]
 		graft.button_cards = []
 		graft.stat_info = []
 		text = decompile_buttons(graft)
-		self.assertEqual(compile_buttons(text).button_sets, [[button]])
+		self.assertEqual(compile_buttons(text).button_sets, [ButtonSet([button])])
 		return text
 
 	def test_function_parameters_are_named(self) -> None:
@@ -117,12 +121,12 @@ class Test_Decompile(unittest.TestCase):
 
 	def test_values_of_functions_without_params_are_not_written(self) -> None:
 		graft = ButtonsGraft()
-		graft.button_sets = [[Button(condition=3, condition_param=254, action=9, action_param=0x10)]]
+		graft.button_sets = [ButtonSet([Button(condition=3, condition_param=254, action=9, action_param=0x10)])]
 		graft.button_cards = []
 		graft.stat_info = []
 		text = decompile_buttons(graft)
 		self.assertIn('\t\talways\n\t\tmove\n', text)
-		self.assertEqual(compile_buttons(text).button_sets, [[Button(condition=3, action=9)]])
+		self.assertEqual(compile_buttons(text).button_sets, [ButtonSet([Button(condition=3, action=9)])])
 
 	def test_every_function_round_trips(self) -> None:
 		for commands, field in ((ButtonCodeCommands.condition_commands, 'condition'), (ButtonCodeCommands.action_commands, 'action')):
@@ -154,7 +158,7 @@ class Test_Load(unittest.TestCase):
 	def test_shared_button_sets(self) -> None:
 		data = buttons_file([MOVE, STOP, TRAIN_MARINE], [(2, 0, 0xFFFF, 0), (1, 2, 5, 0), (2, 0, 0xFFFF, 0), (0, 0, 0xFFFF, 0)], [(0, 1, 0), (7, 2, 1)])
 		graft = _load(data)
-		self.assertEqual(graft.button_sets, [[Button.unpack(MOVE), Button.unpack(STOP)], [Button.unpack(TRAIN_MARINE)]])
+		self.assertEqual(graft.button_sets, [ButtonSet([Button.unpack(MOVE), Button.unpack(STOP)]), ButtonSet([Button.unpack(TRAIN_MARINE)])])
 		self.assertEqual(graft.button_cards, [ButtonCard(0), ButtonCard(1, 5), ButtonCard(0), ButtonCard()])
 		self.assertEqual(graft.stat_info, [StatInfo(0, 1, 0), StatInfo(7, 2, 1)])
 		self.assertEqual(IO.output_to_bytes(graft.save), data)
@@ -179,14 +183,14 @@ class Test_Load(unittest.TestCase):
 		warnings = graft.load(data)
 		self.assertEqual(len(warnings), 1)
 		self.assertIn('overlap another button set', warnings[0].warning)
-		self.assertEqual(graft.button_sets, [[Button.unpack(MOVE), Button.unpack(STOP), Button.unpack(TRAIN_MARINE)], [Button.unpack(STOP), Button.unpack(TRAIN_MARINE)]])
+		self.assertEqual(graft.button_sets, [ButtonSet([Button.unpack(MOVE), Button.unpack(STOP), Button.unpack(TRAIN_MARINE)]), ButtonSet([Button.unpack(STOP), Button.unpack(TRAIN_MARINE)])])
 		saved = IO.output_to_bytes(graft.save)
 		self.assertEqual(saved, buttons_file([MOVE, STOP, TRAIN_MARINE, STOP, TRAIN_MARINE], [(3, 0, 0xFFFF, 0), (2, 3, 0xFFFF, 0)], []))
 		# The separated sets are stable
 		self.assertEqual(IO.output_to_bytes(_load(saved).save), saved)
 		# The separated sets don't share buttons
-		graft.button_sets[1][0].icon = 1
-		self.assertEqual(graft.button_sets[0][1].icon, 229)
+		graft.button_sets[1].buttons[0].icon = 1
+		self.assertEqual(graft.button_sets[0].buttons[1].icon, 229)
 
 	def test_unknown_status_function_fails(self) -> None:
 		graft = _load(buttons_file([MOVE], [(1, 0, 0xFFFF, 0)], [(0, 1, 0)]))
@@ -206,7 +210,7 @@ class Test_Load(unittest.TestCase):
 		with self.assertRaises(PyMSError) as cm:
 			graft.load(buttons_file([STOP, button_bytes(1, 0, 500, 9)], [(2, 0, 0xFFFF, 0)], []))
 		self.assertIn('Button set 0 uses unknown button condition 500', str(cm.exception))
-		self.assertEqual(graft.button_sets, [[Button.unpack(MOVE)]])
+		self.assertEqual(graft.button_sets, [ButtonSet([Button.unpack(MOVE)])])
 
 	def test_unknown_action_fails(self) -> None:
 		with self.assertRaises(PyMSError) as cm:
@@ -243,7 +247,7 @@ class Test_Load(unittest.TestCase):
 class Test_Save(unittest.TestCase):
 	def test_empty_button_set_saves_as_no_buttons(self) -> None:
 		graft = ButtonsGraft()
-		graft.button_sets = [[]]
+		graft.button_sets = [ButtonSet()]
 		graft.button_cards = [ButtonCard(0, 3)]
 		graft.stat_info = []
 		self.assertEqual(IO.output_to_bytes(graft.save), buttons_file([], [(0, 0, 3, 0)], []))
@@ -258,14 +262,14 @@ class Test_Save(unittest.TestCase):
 class Test_Editing(unittest.TestCase):
 	def test_remove_button_set_renumbers_references(self) -> None:
 		graft = ButtonsGraft()
-		graft.button_sets = [[Button.unpack(MOVE)], [Button.unpack(STOP)], [Button.unpack(TRAIN_MARINE)]]
+		graft.button_sets = [ButtonSet([Button.unpack(MOVE)]), ButtonSet([Button.unpack(STOP)]), ButtonSet([Button.unpack(TRAIN_MARINE)])]
 		graft.button_cards = [ButtonCard(2), ButtonCard(0)]
-		self.assertEqual(graft.remove_button_set(1), [Button.unpack(STOP)])
+		self.assertEqual(graft.remove_button_set(1), ButtonSet([Button.unpack(STOP)]))
 		self.assertEqual(graft.button_cards, [ButtonCard(1), ButtonCard(0)])
 
 	def test_remove_used_button_set_fails(self) -> None:
 		graft = ButtonsGraft()
-		graft.button_sets = [[Button.unpack(MOVE)]]
+		graft.button_sets = [ButtonSet([Button.unpack(MOVE)])]
 		graft.button_cards = [ButtonCard(0), ButtonCard(0)]
 		with self.assertRaises(PyMSError) as cm:
 			graft.remove_button_set(0)
@@ -282,7 +286,7 @@ class Test_Editing(unittest.TestCase):
 		self.assertEqual((len(graft.button_cards), len(graft.stat_info)), (10, 5))
 
 def _button(body: str, position: int = 1) -> str:
-	return f'\tbutton {position} {{\n' + ''.join(f'\t\t{line}\n' for line in body.split('\n')) + '\t}\n'
+	return f'\tbutton {{\n\t\tposition {position}\n' + ''.join(f'\t\t{line}\n' for line in body.split('\n')) + '\t}\n'
 
 MOVE_BODY = 'icon 0\nalways\nmove\nenabled_str 0\ndisabled_str 0'
 
@@ -309,23 +313,23 @@ unit_stat_info 1 {{
 	changed_never
 }}
 """)
-		self.assertEqual(graft.button_sets, [[Button(position=1, condition=4, action=3, enabled_string=1), Button(position=2, icon=16, condition=3, action=26, enabled_string=2, disabled_string=3)], [], []])
+		self.assertEqual(graft.button_sets, [ButtonSet([Button(position=1, condition=4, action=3, enabled_string=1), Button(position=2, icon=16, condition=3, action=26, enabled_string=2, disabled_string=3)]), ButtonSet(), ButtonSet()])
 		self.assertEqual(graft.button_cards, [ButtonCard(), ButtonCard(0, 1), ButtonCard(), ButtonCard()])
 		self.assertEqual(graft.stat_info, [StatInfo(0, 1, 0), StatInfo(3, 0, 1)])
 
 	def test_buttons_can_share_a_position(self) -> None:
 		graft = compile_buttons('button_set 0 {\n' + _button(MOVE_BODY) + _button(MOVE_BODY) + '}\n')
-		self.assertEqual(graft.button_sets, [[Button(position=1, condition=3, action=9)] * 2])
+		self.assertEqual(graft.button_sets, [ButtonSet([Button(position=1, condition=3, action=9)] * 2)])
 
 	def test_queue_slot_params(self) -> None:
 		for text, value in (('1', 0), ('5', 4), ('last', 0xFE)):
 			with self.subTest(text=text):
 				graft = compile_buttons('button_set 0 {\n' + _button(f'icon 0\nis_training\ncancel_train {text}\nenabled_str 0\ndisabled_str 0') + '}\n')
-				self.assertEqual(graft.button_sets, [[Button(position=1, condition=10, action=4, action_param=value)]])
+				self.assertEqual(graft.button_sets, [ButtonSet([Button(position=1, condition=10, action=4, action_param=value)])])
 
 	def test_button_card_accepts_unit_names(self) -> None:
 		graft = compile_buttons('button_set 0 {\n' + _button("icon 0\nalways\nshow_button_card 'Terran SCV'\nenabled_str 0\ndisabled_str 0") + '}\n')
-		self.assertEqual(graft.button_sets, [[Button(position=1, condition=3, action=59, action_param=7)]])
+		self.assertEqual(graft.button_sets, [ButtonSet([Button(position=1, condition=3, action=59, action_param=7)])])
 
 	def assertCompileError(self, code: str, message: str, line: int | None = None) -> None:
 		with self.assertRaises(PyMSError) as cm:
@@ -367,27 +371,27 @@ unit_stat_info 1 {{
 		self.assertCompileError('button_card 0 {\n\tuse_button_set None\n\tuse_button_set None\n}\n', "Duplicate button card command 'use_button_set'", 3)
 
 	def test_duplicate_choice(self) -> None:
-		self.assertCompileError('button_set 0 {\n' + _button('icon 0\nalways\nis_player_nuke_ready') + '}\n', "Duplicate button command 'is_player_nuke_ready'", 5)
+		self.assertCompileError('button_set 0 {\n' + _button('icon 0\nalways\nis_player_nuke_ready') + '}\n', "Duplicate button command 'is_player_nuke_ready'", 6)
 
 	def test_missing_field(self) -> None:
-		self.assertCompileError('button_set 0 {\n' + _button('always\nmove\nenabled_str 0\ndisabled_str 0') + '}\n', "Button 1 is missing 'icon'", 7)
+		self.assertCompileError('button_set 0 {\n' + _button('always\nmove\nenabled_str 0\ndisabled_str 0') + '}\n', "Button is missing 'icon'", 8)
 
 	def test_duplicate_header(self) -> None:
 		self.assertCompileError('button_set 0 {\n}\nbutton_set 0 {\n}\n', 'Button set 0 is already defined on line 1', 3)
 
 	def test_unknown_function(self) -> None:
-		self.assertCompileError('button_set 0 {\n' + _button('icon 0\nis_sometimes') + '}\n', "Unknown button command 'is_sometimes'", 4)
+		self.assertCompileError('button_set 0 {\n' + _button('icon 0\nis_sometimes') + '}\n', "Unknown button command 'is_sometimes'", 5)
 
 	def test_function_without_param_rejects_a_param(self) -> None:
-		self.assertCompileError('button_set 0 {\n' + _button("icon 0\nalways 'Terran Marine'") + '}\n', "Unexpected token ''Terran Marine'' (expected end of line or file)", 4)
+		self.assertCompileError('button_set 0 {\n' + _button("icon 0\nalways 'Terran Marine'") + '}\n', "Unexpected token ''Terran Marine'' (expected end of line or file)", 5)
 
 	def test_function_param_is_required(self) -> None:
-		self.assertCompileError('button_set 0 {\n' + _button('icon 0\nalways\ntrain') + '}\n', 'for `unit`', 5)
+		self.assertCompileError('button_set 0 {\n' + _button('icon 0\nalways\ntrain') + '}\n', 'for `unit`', 6)
 
 	def test_invalid_queue_slots(self) -> None:
 		for text in ('0', '6', 'first'):
 			with self.subTest(text=text):
-				self.assertCompileError('button_set 0 {\n' + _button(f'icon 0\nis_training\ncancel_train {text}') + '}\n', f'Invalid value `{text}` for `queue_slot` (expected 1 to 5, or `last`)', 5)
+				self.assertCompileError('button_set 0 {\n' + _button(f'icon 0\nis_training\ncancel_train {text}') + '}\n', f'Invalid value `{text}` for `queue_slot` (expected 1 to 5, or `last`)', 6)
 
 	def test_button_card_has_no_button_set_or_padding_commands(self) -> None:
 		self.assertCompileError('button_card 0 {\n\tbutton_set 0\n}\n', "Unknown button card command 'button_set'", 2)
@@ -399,7 +403,7 @@ unit_stat_info 1 {{
 
 	def test_parens_and_flat_forms(self) -> None:
 		graft = compile_buttons("button_set 0 {\n" + _button("icon(0)\nalways()\ntrain('Terran Marine')\nenabled_str 0\ndisabled_str 0") + "}\nbutton_card 0 {\n\tuse_button_set(0)\n\tconnected_unit(None)\n}\nunit_stat_info 0 {\n\tdebug_id(7)\n\tchanged_unit()\n\tdraw_unit()\n}\n")
-		self.assertEqual(graft.button_sets, [[Button(position=1, condition=3, action=3)]])
+		self.assertEqual(graft.button_sets, [ButtonSet([Button(position=1, condition=3, action=3)])])
 		self.assertEqual(graft.button_cards, [ButtonCard(0)])
 		self.assertEqual(graft.stat_info, [StatInfo(7, 1, 0)])
 
@@ -415,7 +419,7 @@ unit_stat_info 1 {{
 	def test_requires_buttons_language(self) -> None:
 		with self.assertRaises(PyMSError) as cm:
 			ButtonsGraft.compile(parse_context('unit_stat_info 0 {\n}\n', language=UnitsGraft.LANGUAGE()))
-		self.assertIn('ButtonsGraft must be compiled with a parse context using `ButtonsLanguage`', str(cm.exception))
+		self.assertIn('Buttons.graft code must be compiled with a parse context using `ButtonsLanguage`', str(cm.exception))
 
 	def test_language_has_the_commands(self) -> None:
 		language = ButtonsLanguage()
@@ -432,39 +436,39 @@ unit_stat_info 1 {{
 class Test_ImportFGP(unittest.TestCase):
 	def test_unknown_function_fails(self) -> None:
 		graft = ButtonsGraft()
-		graft.button_sets = [[Button.unpack(MOVE)]]
+		graft.button_sets = [ButtonSet([Button.unpack(MOVE)])]
 		graft.button_cards = [ButtonCard(0)]
 		graft.stat_info = []
 		fgp = FGP()
-		fgp.button_sets = {0: [Button.unpack(STOP)], 1: [Button(condition=3, action=600)]}
+		fgp.button_sets = {0: ButtonSet([Button.unpack(STOP)]), 1: ButtonSet([Button(condition=3, action=600)])}
 		fgp.units = [FGPUnit(0, None, 0xFFFF, None)]
 		with self.assertRaises(PyMSError) as cm:
 			graft.import_fgp(fgp)
 		self.assertIn('Button set 1 uses unknown button action 600', str(cm.exception))
-		self.assertEqual(graft.button_sets, [[Button.unpack(MOVE)]])
+		self.assertEqual(graft.button_sets, [ButtonSet([Button.unpack(MOVE)])])
 		self.assertEqual(graft.button_cards, [ButtonCard(0)])
 
 	def test_unknown_stat_function_fails(self) -> None:
 		graft = ButtonsGraft()
-		graft.button_sets = [[Button.unpack(MOVE)]]
+		graft.button_sets = [ButtonSet([Button.unpack(MOVE)])]
 		graft.button_cards = [ButtonCard(0)]
 		graft.stat_info = [StatInfo(0, 1, 0)]
 		fgp = FGP()
-		fgp.button_sets = {0: [Button.unpack(STOP)]}
+		fgp.button_sets = {0: ButtonSet([Button.unpack(STOP)])}
 		fgp.units = [FGPUnit(0, 0, 0xFFFF, StatInfo(0, 1, 9))]
 		with self.assertRaises(PyMSError) as cm:
 			graft.import_fgp(fgp)
 		self.assertIn('Unit 0 uses unknown display function 9', str(cm.exception))
-		self.assertEqual(graft.button_sets, [[Button.unpack(MOVE)]])
+		self.assertEqual(graft.button_sets, [ButtonSet([Button.unpack(MOVE)])])
 		self.assertEqual(graft.stat_info, [StatInfo(0, 1, 0)])
 
 	def test_overlays_buttons(self) -> None:
 		graft = ButtonsGraft()
-		graft.button_sets = [[Button.unpack(MOVE)]]
+		graft.button_sets = [ButtonSet([Button.unpack(MOVE)])]
 		graft.button_cards = [ButtonCard(0), ButtonCard(0)]
 		graft.stat_info = [StatInfo(0, 1, 0)]
 		fgp = FGP()
-		fgp.button_sets = {2: [Button.unpack(STOP)]}
+		fgp.button_sets = {2: ButtonSet([Button.unpack(STOP)])}
 		fgp.units = [
 			FGPUnit(1, 2, 0xFFFF, StatInfo(1, 2, 1)),
 			FGPUnit(0, 7, 5, None),
@@ -476,6 +480,79 @@ class Test_ImportFGP(unittest.TestCase):
 			'FireGraft unit 0 uses button set 7, which does not exist, so it was set to no button set',
 			'FireGraft unit 9 is past the last button card (1) and was skipped',
 		])
-		self.assertEqual(graft.button_sets, [[Button.unpack(MOVE)], [], [Button.unpack(STOP)]])
+		self.assertEqual(graft.button_sets, [ButtonSet([Button.unpack(MOVE)]), ButtonSet(), ButtonSet([Button.unpack(STOP)])])
 		self.assertEqual(graft.button_cards, [ButtonCard(None, 5), ButtonCard(2)])
 		self.assertEqual(graft.stat_info, [StatInfo(0, 1, 0)])
+
+class Test_ButtonSetScript(unittest.TestCase):
+	def _decompile(self, graft: ButtonsGraft, set_id: int) -> str:
+		output = io.StringIO()
+		graft.decompile_button_set(GraftSerializeContext(output, vanilla_data_context()), set_id)
+		return output.getvalue()
+
+	def _compile(self, code: str, set_id: int = 0) -> ButtonSet:
+		return ButtonSet.compile(parse_context(code, language=ButtonsLanguage()), set_id)
+
+	def test_vanilla_sets_round_trip(self) -> None:
+		graft = ButtonsGraft()
+		graft.new()
+		for set_id, button_set in enumerate(graft.button_sets):
+			with self.subTest(set_id=set_id):
+				self.assertEqual(self._compile(self._decompile(graft, set_id), set_id), button_set)
+
+	def test_only_the_buttons_are_written(self) -> None:
+		graft = ButtonsGraft()
+		graft.new()
+		code = self._decompile(graft, 0)
+		self.assertTrue(code.startswith('button {\n\tposition BL\t# Bottom Left\n'), code)
+		self.assertNotIn('button_set', code)
+
+	def test_empty_code_is_no_buttons(self) -> None:
+		self.assertEqual(self._compile(''), ButtonSet())
+		self.assertEqual(self._compile('\n# Comment\n\n'), ButtonSet())
+
+	def test_button_set_header_fails(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			self._compile('button_set 3 {\n}\n', 3)
+		self.assertIn('headers are not allowed', cm.exception.error)
+		self.assertIn('button set 3', cm.exception.error)
+
+	def test_unknown_token_fails(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			self._compile('always\n')
+		self.assertIn("expected 'button'", cm.exception.error)
+
+	def test_missing_field_fails(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			self._compile('button {\n\tposition 1\n\ticon 0\n\talways\n\tmove\n\tenabled_str 0\n}\n')
+		self.assertIn("missing 'disabled_str'", cm.exception.error)
+
+	def test_positions(self) -> None:
+		for text, position in (('1', 1), ('7', 7), ('TL', 1), ('BL', 7), ('MM', 5), ('BR', 9)):
+			with self.subTest(text=text):
+				self.assertEqual(self._compile(f'button {{\n\tposition {text}\n\ticon 0\n\talways\n\tmove\n\tenabled_str 0\n\tdisabled_str 0\n}}\n').buttons[0].position, position)
+
+	def test_invalid_positions_fail(self) -> None:
+		for text in ('0', '10', 'bl', 'LB', 'TT', 'BLX'):
+			with self.subTest(text=text):
+				with self.assertRaises(PyMSError) as cm:
+					self._compile(f'button {{\n\tposition {text}\n\ticon 0\n\talways\n\tmove\n\tenabled_str 0\n\tdisabled_str 0\n}}\n')
+				self.assertIn('`position`', cm.exception.error)
+
+	def test_missing_position_fails(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			self._compile('button {\n\ticon 0\n\talways\n\tmove\n\tenabled_str 0\n\tdisabled_str 0\n}\n')
+		self.assertIn("missing 'position'", cm.exception.error)
+
+	def test_duplicate_position_fails(self) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			self._compile('button {\n\tposition TL\n\tposition BR\n}\n')
+		self.assertIn("Duplicate button command 'position'", cm.exception.error)
+
+	def test_set_button_set(self) -> None:
+		graft = ButtonsGraft()
+		graft.button_sets = [ButtonSet([Button.unpack(MOVE)])]
+		graft.set_button_set(0, ButtonSet([Button.unpack(STOP)]))
+		self.assertEqual(graft.button_sets, [ButtonSet([Button.unpack(STOP)])])
+		with self.assertRaises(PyMSError):
+			graft.set_button_set(1, ButtonSet())

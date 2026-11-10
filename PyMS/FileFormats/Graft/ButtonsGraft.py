@@ -1,70 +1,25 @@
 from __future__ import annotations
 
-from .Definitions import DEFAULT_BUTTON_CARD_COUNT, DEFAULT_STAT_COUNT, NO_CONNECTED_UNIT
+from .Buttons import Button, ButtonSet, ButtonCard
+from .StatInfo import StatInfo
 from .CodeHandlers import CodeTypes
 from .CodeHandlers import ButtonCodeCommands
 from .CodeHandlers import StatInfoCodeCommands
-from .CodeHandlers.GraftLanguage import ButtonsLanguage
 from .CodeHandlers.GraftParseContext import GraftParseContext
 from .CodeHandlers.GraftSerializeContext import GraftSerializeContext
-from .CodeHandlers.GraftCommandDefinition import GraftCommandDefinition
 
-from ...Utilities.CodeHandlers.CodeCommand import CodeCommand
-from ...Utilities.CodeHandlers.CodeStruct import StructBlock, StructField, parse_struct_blocks
+from ...Utilities.CodeHandlers.CodeStruct import parse_struct_blocks
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.PyMSWarning import PyMSWarning
 from ...Utilities import Struct
 from ...Utilities import Assets
 from ...Utilities import IO
 
-from dataclasses import dataclass
 import os
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from .FGP import FGP
-
-class Button(Struct.Struct):
-	position: int
-	icon: int
-	condition: int
-	action: int
-	condition_param: int
-	action_param: int
-	enabled_string: int
-	disabled_string: int
-
-	_fields = (
-		('position', Struct.t_u16),
-		('icon', Struct.t_u16),
-		('condition', Struct.t_u32),
-		('action', Struct.t_u32),
-		('condition_param', Struct.t_u16),
-		('action_param', Struct.t_u16),
-		('enabled_string', Struct.t_u16),
-		('disabled_string', Struct.t_u16),
-	)
-
-	def __init__(self, *, position: int = 1, icon: int = 0, condition: int = 0, action: int = 0, condition_param: int = 0, action_param: int = 0, enabled_string: int = 0, disabled_string: int = 0) -> None:
-		self.position = position
-		self.icon = icon
-		self.condition = condition # Index into `ButtonCodeCommands.condition_commands`
-		self.action = action # Index into `ButtonCodeCommands.action_commands`
-		self.condition_param = condition_param
-		self.action_param = action_param
-		self.enabled_string = enabled_string
-		self.disabled_string = disabled_string
-
-	def copy(self) -> Button:
-		return Button(position=self.position, icon=self.icon, condition=self.condition, action=self.action, condition_param=self.condition_param, action_param=self.action_param, enabled_string=self.enabled_string, disabled_string=self.disabled_string)
-
-	def __eq__(self, other: object) -> bool:
-		if not isinstance(other, Button):
-			return False
-		return self.pack() == other.pack()
-
-	def __hash__(self) -> int:
-		return hash(self.pack())
 
 class _ButtonCardEntry(Struct.Struct):
 	button_count: int
@@ -79,40 +34,11 @@ class _ButtonCardEntry(Struct.Struct):
 		('padding', Struct.t_u16),
 	)
 
-	def __init__(self, button_count: int = 0, first_button: int = 0, connected_unit: int = NO_CONNECTED_UNIT, padding: int = 0) -> None:
+	def __init__(self, button_count: int = 0, first_button: int = 0, connected_unit: int = CodeTypes.ConnectedUnitCodeType.NONE_VALUE, padding: int = 0) -> None:
 		self.button_count = button_count
 		self.first_button = first_button
 		self.connected_unit = connected_unit
 		self.padding = padding
-
-class StatInfo(Struct.Struct):
-	debug_unit_id: int
-	status_function: int
-	display_function: int
-
-	_fields = (
-		('debug_unit_id', Struct.t_u32), # Unused by the game
-		('status_function', Struct.t_u32), # Index into `StatInfoCodeCommands.status_function_commands`
-		('display_function', Struct.t_u32), # Index into `StatInfoCodeCommands.display_function_commands`
-	)
-
-	def __init__(self, debug_unit_id: int = 0, status_function: int = 0, display_function: int = 0) -> None:
-		self.debug_unit_id = debug_unit_id
-		self.status_function = status_function
-		self.display_function = display_function
-
-	def __eq__(self, other: object) -> bool:
-		if not isinstance(other, StatInfo):
-			return False
-		return self.pack() == other.pack()
-
-	def __hash__(self) -> int:
-		return hash(self.pack())
-
-@dataclass
-class ButtonCard:
-	button_set: int | None = None # Index into `ButtonsGraft.button_sets`
-	connected_unit: int | None = None
 
 _HEADER = Struct.l_au32(3)
 
@@ -122,10 +48,16 @@ class ButtonsGraft:
 	# Path the Graft Hook loads the file from in an MPQ
 	MPQ_PATH = 'datreq\\Buttons.graft'
 
+	# Default table sizes of the vanilla game
+	DEFAULT_BUTTON_CARD_COUNT = 250 # The units, plus the special button cards for groups, builder pages, replays, etc.
+	DEFAULT_STAT_COUNT = 228
+	# The first button card after the units (their names are in `Assets.DataReference.ButtonCards`), which aren't units but have `unit` buttons entries
+	SPECIAL_BUTTON_CARDS_START = 228
+
 	def __init__(self) -> None:
-		self.button_sets: list[list[Button]] = []
-		self.button_cards: list[ButtonCard] = [ButtonCard() for _ in range(DEFAULT_BUTTON_CARD_COUNT)]
-		self.stat_info: list[StatInfo] = [StatInfo(unit_id) for unit_id in range(DEFAULT_STAT_COUNT)]
+		self.button_sets: list[ButtonSet] = []
+		self.button_cards: list[ButtonCard] = [ButtonCard() for _ in range(ButtonsGraft.DEFAULT_BUTTON_CARD_COUNT)]
+		self.stat_info: list[StatInfo] = [StatInfo(unit_id) for unit_id in range(ButtonsGraft.DEFAULT_STAT_COUNT)]
 
 	@classmethod
 	def default_path(cls) -> str:
@@ -165,7 +97,7 @@ class ButtonsGraft:
 
 		# Rebuild the button sets from the ranges of buttons the button cards reference.
 		# Any buttons no button card references are kept as their own sets so they aren't lost.
-		button_sets: list[list[Button]] = []
+		button_sets: list[ButtonSet] = []
 		set_lookup: dict[tuple[int, int], int] = {}
 		cursor = 0
 		for first, count in sorted(set((entry.first_button, entry.button_count) for entry in entries if entry.button_count)):
@@ -173,12 +105,12 @@ class ButtonsGraft:
 				warnings.append(PyMSWarning(warn_type='Load', warning=f'Buttons {first} to {first + count - 1} overlap another button set, they will be saved as a separate button set'))
 			else:
 				if first > cursor:
-					button_sets.append(buttons[cursor:first])
+					button_sets.append(ButtonSet(buttons[cursor:first]))
 				cursor = first + count
 			set_lookup[(first, count)] = len(button_sets)
-			button_sets.append([button.copy() for button in buttons[first:first + count]])
+			button_sets.append(ButtonSet(buttons[first:first + count]).copy())
 		if cursor < button_count:
-			button_sets.append(buttons[cursor:])
+			button_sets.append(ButtonSet(buttons[cursor:]))
 
 		button_cards: list[ButtonCard] = []
 		for entry in entries:
@@ -187,10 +119,10 @@ class ButtonsGraft:
 		if padded_cards := [card_id for card_id, entry in enumerate(entries) if entry.padding]:
 			warnings.append(PyMSWarning(warn_type='Load', warning=f"Button card(s) {', '.join(str(card_id) for card_id in padded_cards)} have unused data after their connected unit, it will be discarded"))
 
-		for set_id, button_set_buttons in enumerate(button_sets):
-			ButtonsGraft._check_functions(set_id, button_set_buttons, 'Load')
+		for set_id, loaded_set in enumerate(button_sets):
+			ButtonsGraft._check_button_set(set_id, loaded_set, 'Load')
 		for unit_id, info in enumerate(stat_info):
-			ButtonsGraft._check_stat_functions(unit_id, info, 'Load')
+			ButtonsGraft._check_stat_info(unit_id, info, 'Load')
 
 		self.button_sets = button_sets
 		self.button_cards = button_cards
@@ -203,9 +135,9 @@ class ButtonsGraft:
 		button_count = 0
 		for button_set in self.button_sets:
 			set_offsets.append(button_count)
-			for button in button_set:
+			for button in button_set.buttons:
 				buttons += button.pack()
-			button_count += len(button_set)
+			button_count += len(button_set.buttons)
 		entries = bytearray()
 		for card_id, card in enumerate(self.button_cards):
 			entry = _ButtonCardEntry(connected_unit=CodeTypes.ConnectedUnitCodeType.to_value(card.connected_unit))
@@ -213,7 +145,7 @@ class ButtonsGraft:
 				if not 0 <= card.button_set < len(self.button_sets):
 					raise PyMSError('Save', f'Button card {card_id} uses button set {card.button_set}, which does not exist')
 				# An empty button set is saved the same as no button set
-				entry.button_count = len(self.button_sets[card.button_set])
+				entry.button_count = len(self.button_sets[card.button_set].buttons)
 				if entry.button_count:
 					entry.first_button = set_offsets[card.button_set]
 			entries += entry.pack()
@@ -223,23 +155,28 @@ class ButtonsGraft:
 		with IO.OutputBytes(output) as f:
 			f.write(bytes(data))
 
-	def add_button_set(self, buttons: list[Button] | None = None) -> int:
-		self.button_sets.append(buttons if buttons is not None else [])
+	def add_button_set(self, button_set: ButtonSet | None = None) -> int:
+		self.button_sets.append(button_set if button_set is not None else ButtonSet())
 		return len(self.button_sets) - 1
+
+	def set_button_set(self, set_id: int, button_set: ButtonSet) -> None:
+		if not 0 <= set_id < len(self.button_sets):
+			raise PyMSError('Internal', f'Button set {set_id} does not exist')
+		self.button_sets[set_id] = button_set
 
 	def button_cards_using_button_set(self, set_id: int) -> list[int]:
 		return [card_id for card_id, card in enumerate(self.button_cards) if card.button_set == set_id]
 
-	def remove_button_set(self, set_id: int) -> list[Button]:
+	def remove_button_set(self, set_id: int) -> ButtonSet:
 		if not 0 <= set_id < len(self.button_sets):
 			raise PyMSError('Internal', f'Button set {set_id} does not exist')
 		if users := self.button_cards_using_button_set(set_id):
 			raise PyMSError('Internal', f"Button set {set_id} can't be removed because it is used by button card(s) {', '.join(str(card_id) for card_id in users)}")
-		buttons = self.button_sets.pop(set_id)
+		button_set = self.button_sets.pop(set_id)
 		for card in self.button_cards:
 			if card.button_set is not None and card.button_set > set_id:
 				card.button_set -= 1
-		return buttons
+		return button_set
 
 	def set_button_card_count(self, count: int) -> None:
 		if count < len(self.button_cards):
@@ -254,86 +191,36 @@ class ButtonsGraft:
 			self.stat_info.extend(StatInfo(unit_id) for unit_id in range(len(self.stat_info), count))
 
 	@staticmethod
-	def _check_functions(set_id: int, buttons: list[Button], error_type: str) -> None:
-		# Every button must use a known condition and action, since they're written by name
-		for button in buttons:
-			if not 0 <= button.condition < len(ButtonCodeCommands.condition_commands):
-				raise PyMSError(error_type, f'Button set {set_id} uses unknown button condition {button.condition}')
-			if not 0 <= button.action < len(ButtonCodeCommands.action_commands):
-				raise PyMSError(error_type, f'Button set {set_id} uses unknown button action {button.action}')
+	def _check_button_set(set_id: int, button_set: ButtonSet, error_type: str) -> None:
+		if problem := button_set.find_unknown_function():
+			raise PyMSError(error_type, f'Button set {set_id} uses {problem}')
 
 	@staticmethod
-	def _check_stat_functions(unit_id: int, info: StatInfo, error_type: str) -> None:
-		# Every unit must use a known status and display function, since they're written by name
-		if not 0 <= info.status_function < len(StatInfoCodeCommands.status_function_commands):
-			raise PyMSError(error_type, f'Unit {unit_id} uses unknown status function {info.status_function}')
-		if not 0 <= info.display_function < len(StatInfoCodeCommands.display_function_commands):
-			raise PyMSError(error_type, f'Unit {unit_id} uses unknown display function {info.display_function}')
-
-	@staticmethod
-	def _button_block(button: Button) -> StructBlock:
-		commands: list[CodeCommand] = [CodeCommand(ButtonCodeCommands.Icon, [button.icon])]
-		# The stored value of a function without a parameter is unused, so it isn't written
-		condition = ButtonCodeCommands.condition_commands[button.condition]
-		commands.append(CodeCommand(condition, [button.condition_param] if condition.param_types else []))
-		action = ButtonCodeCommands.action_commands[button.action]
-		commands.append(CodeCommand(action, [button.action_param] if action.param_types else []))
-		commands.append(CodeCommand(ButtonCodeCommands.EnabledStr, [button.enabled_string]))
-		commands.append(CodeCommand(ButtonCodeCommands.DisabledStr, [button.disabled_string]))
-		return StructBlock(ButtonCodeCommands.ButtonBlock, [button.position], commands)
-
-	@staticmethod
-	def _function_value(block: StructBlock, field: StructField) -> tuple[int, int]:
-		# The function index and parameter of a condition or action
-		command = block.get(field)
-		assert command is not None and isinstance(command.definition, GraftCommandDefinition)
-		return (command.definition.function_index, command.params[0] if command.params else 0)
-
-	@staticmethod
-	def _function_index(block: StructBlock, field: StructField) -> int:
-		# The function index of a status or display function
-		command = block.get(field)
-		assert command is not None and isinstance(command.definition, GraftCommandDefinition)
-		return command.definition.function_index
-
-	@staticmethod
-	def _button(block: StructBlock) -> Button:
-		condition, condition_param = ButtonsGraft._function_value(block, ButtonCodeCommands.ButtonConditionField)
-		action, action_param = ButtonsGraft._function_value(block, ButtonCodeCommands.ButtonActionField)
-		return Button(
-			position=block.header_params[0],
-			icon=block.param(ButtonCodeCommands.Icon),
-			condition=condition,
-			condition_param=condition_param,
-			action=action,
-			action_param=action_param,
-			enabled_string=block.param(ButtonCodeCommands.EnabledStr),
-			disabled_string=block.param(ButtonCodeCommands.DisabledStr),
-		)
+	def _check_stat_info(unit_id: int, info: StatInfo, error_type: str) -> None:
+		if problem := info.find_unknown_function():
+			raise PyMSError(error_type, f'Unit {unit_id} uses {problem}')
 
 	def decompile(self, serialize_context: GraftSerializeContext) -> None:
-		for set_id, buttons in enumerate(self.button_sets):
-			StructBlock(ButtonCodeCommands.ButtonSetBlock, [set_id], children=[ButtonsGraft._button_block(button) for button in buttons]).serialize(serialize_context)
+		for set_id, button_set in enumerate(self.button_sets):
+			button_set.to_block(set_id).serialize(serialize_context)
 			serialize_context.write('\n')
 		for card_id, card in enumerate(self.button_cards):
-			StructBlock(ButtonCodeCommands.ButtonCardBlock, [card_id], [
-				CodeCommand(ButtonCodeCommands.UseButtonSet, [card.button_set]),
-				CodeCommand(ButtonCodeCommands.ConnectedUnit, [card.connected_unit]),
-			]).serialize(serialize_context)
+			card.to_block(card_id).serialize(serialize_context)
 			serialize_context.write('\n')
 		for unit_id, info in enumerate(self.stat_info):
-			StructBlock(StatInfoCodeCommands.UnitStatInfoBlock, [unit_id], [
-				CodeCommand(StatInfoCodeCommands.DebugID, [info.debug_unit_id]),
-				CodeCommand(StatInfoCodeCommands.status_function_commands[info.status_function], []),
-				CodeCommand(StatInfoCodeCommands.display_function_commands[info.display_function], []),
-			]).serialize(serialize_context)
+			info.to_block(unit_id).serialize(serialize_context)
 			serialize_context.write('\n')
+
+	def decompile_button_set(self, serialize_context: GraftSerializeContext, set_id: int) -> None:
+		# Only the buttons of the button set (the body of its `button_set` block)
+		if not 0 <= set_id < len(self.button_sets):
+			raise PyMSError('Decompile', f'Button set {set_id} does not exist')
+		self.button_sets[set_id].serialize(serialize_context)
 
 	@staticmethod
 	def compile(parse_context: GraftParseContext) -> ButtonsGraft:
-		if not isinstance(parse_context.language, ButtonsLanguage):
-			raise PyMSError('Internal', f'ButtonsGraft must be compiled with a parse context using `{ButtonsLanguage.__name__}`')
-		button_sets: dict[int, list[Button]] = {}
+		ButtonSet.check_language(parse_context)
+		button_sets: dict[int, ButtonSet] = {}
 		button_cards: dict[int, ButtonCard] = {}
 		stat_info: dict[int, StatInfo] = {}
 		header_lines: dict[tuple[str, int], int] = {}
@@ -345,17 +232,15 @@ class ButtonsGraft:
 				raise parse_context.error('Parse', f'{definition.title(block.header_params)} is already defined on line {header_lines[(definition.keyword, entry_id)] + 1}', line=block.line)
 			header_lines[(definition.keyword, entry_id)] = block.line
 			if definition is ButtonCodeCommands.ButtonSetBlock:
-				button_sets[entry_id] = [ButtonsGraft._button(child) for child in block.children]
+				button_sets[entry_id] = ButtonSet.from_block(block)
 			elif definition is ButtonCodeCommands.ButtonCardBlock:
-				button_cards[entry_id] = ButtonCard(block.param(ButtonCodeCommands.UseButtonSet), block.param(ButtonCodeCommands.ConnectedUnit))
+				button_cards[entry_id] = ButtonCard.from_block(block)
 			else:
-				status_function = ButtonsGraft._function_index(block, StatInfoCodeCommands.UnitStatusFunctionField)
-				display_function = ButtonsGraft._function_index(block, StatInfoCodeCommands.UnitDisplayFunctionField)
-				stat_info[entry_id] = StatInfo(block.param(StatInfoCodeCommands.DebugID, entry_id), status_function, display_function)
+				stat_info[entry_id] = StatInfo.from_block(block, entry_id)
 
 		buttons_graft = ButtonsGraft()
 		set_count = max(button_sets.keys()) + 1 if button_sets else 0
-		buttons_graft.button_sets = [button_sets.get(set_id, []) for set_id in range(set_count)]
+		buttons_graft.button_sets = [button_sets.get(set_id, ButtonSet()) for set_id in range(set_count)]
 		card_count = max(button_cards.keys()) + 1 if button_cards else 0
 		buttons_graft.button_cards = [button_cards.get(card_id, ButtonCard()) for card_id in range(card_count)]
 		card_title = ButtonCodeCommands.ButtonCardBlock.title
@@ -376,15 +261,15 @@ class ButtonsGraft:
 	def import_fgp(self, fgp: FGP) -> list[PyMSWarning]:
 		# Lays the FireGraft project's buttons over the current buttons
 		warnings: list[PyMSWarning] = []
-		for set_id, buttons in fgp.button_sets.items():
-			ButtonsGraft._check_functions(set_id, buttons, 'Import')
+		for set_id, fg_button_set in fgp.button_sets.items():
+			ButtonsGraft._check_button_set(set_id, fg_button_set, 'Import')
 		for fg_unit in fgp.units:
 			if fg_unit.stat_info is not None:
-				ButtonsGraft._check_stat_functions(fg_unit.unit_id, fg_unit.stat_info, 'Import')
-		for set_id, buttons in fgp.button_sets.items():
+				ButtonsGraft._check_stat_info(fg_unit.unit_id, fg_unit.stat_info, 'Import')
+		for set_id, fg_button_set in fgp.button_sets.items():
 			while set_id >= len(self.button_sets):
-				self.button_sets.append([])
-			self.button_sets[set_id] = [button.copy() for button in buttons]
+				self.button_sets.append(ButtonSet())
+			self.button_sets[set_id] = fg_button_set.copy()
 		for fg_unit in fgp.units:
 			if fg_unit.unit_id >= len(self.button_cards):
 				warnings.append(PyMSWarning(warn_type='Import', warning=f'FireGraft unit {fg_unit.unit_id} is past the last button card ({len(self.button_cards) - 1}) and was skipped'))

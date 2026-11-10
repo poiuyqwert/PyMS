@@ -8,11 +8,15 @@ from ....Utilities.CodeHandlers.CodeStruct import StructBlockDefinition, StructF
 
 # Buttons.graft commands
 
+Position = CodeCommandDefinition('position', 'The button is at position {1}', None, (CodeTypes.ButtonPositionCodeType(),))
 Icon = CodeCommandDefinition('icon', 'The button uses icon {1}', None, (CodeTypes.IconCodeType(),))
 EnabledStr = CodeCommandDefinition('enabled_str', 'The button uses string {1} when enabled', None, (CodeTypes.StringIDCodeType(),))
 DisabledStr = CodeCommandDefinition('disabled_str', 'The button uses string {1} when disabled', None, (CodeTypes.StringIDCodeType(),))
 
 # Button conditions and actions
+
+# Function lists are indexed by their position (that index is what is stored in Buttons.graft),
+# in the same order as FireGraft and the hook's lookup tables in `grafting.cpp`.
 
 CanSlowDownReplay = GraftCommandDefinition('can_slow_down_replay', 'Can Slow Down Replay', 'Shown when watching a replay as the host. Greyed while paused or at the slowest speed.')
 CanSpeedUpReplay = GraftCommandDefinition('can_speed_up_replay', 'Can Speed Up Replay', 'Shown when watching a replay as the host. Greyed while paused or at the fastest speed.')
@@ -277,7 +281,7 @@ action_commands: list[GraftCommandDefinition] = number_functions([
 	ShowButtonCard,
 ])
 
-button_commands: list[CodeCommandDefinition] = [Icon, *condition_commands, *action_commands, EnabledStr, DisabledStr]
+button_commands: list[CodeCommandDefinition] = [Position, Icon, *condition_commands, *action_commands, EnabledStr, DisabledStr]
 
 UseButtonSet = CodeCommandDefinition('use_button_set', 'The button card uses button set {1}', None, (CodeTypes.UnitButtonSetCodeType(),))
 ConnectedUnit = CodeCommandDefinition('connected_unit', 'When selected together with {1}, the group uses the button card of {1} instead of the generic group card', None, (CodeTypes.ConnectedUnitCodeType(),))
@@ -289,7 +293,8 @@ button_card_commands: list[CodeCommandDefinition] = [UseButtonSet, ConnectedUnit
 ButtonConditionField = StructField('condition', tuple(condition_commands))
 ButtonActionField = StructField('action', tuple(action_commands))
 
-ButtonBlock = StructBlockDefinition('button', 'button', 'Button {0}', (CodeTypes.ButtonPositionCodeType(),), fields=(
+ButtonBlock = StructBlockDefinition('button', 'button', 'Button', (), fields=(
+	StructField(Position.name, (Position,)),
 	StructField(Icon.name, (Icon,)),
 	ButtonConditionField,
 	ButtonActionField,

@@ -1,7 +1,7 @@
 # PyGRAFT
 PyGRAFT is a tool used for editing the `.graft` files of the GPTP Graft Hook, a replacement for FireGraft. The Graft Hook loads six files from the `datreq` folder of your mod's MPQ: the requirements for training or building units (`Units.graft`), researching upgrades (`Upgrades.graft`), researching technologies (`Research.graft`), using technologies (`Tech.graft`), and using orders (`Orders.graft`), along with the command card buttons (`Buttons.graft`).
 
-PyGRAFT is in early development: only the **Button Cards**, **Unit Stat Info**, and requirement tabs edit their entries so far. To change button sets, use **Export to TXT**, edit the text, then **Import from TXT**.
+PyGRAFT is in early development: the **Builder** mode of the button set and requirements editors isn't available yet, so button sets and requirements are edited as code in the **Script** mode.
 
 ## Main Window
 The menubar holds every command, in the **File**, **Settings**, and **Help** menus, and the toolbar under it has buttons for the file actions and settings (hover over a button to see its name and shortcut).
@@ -22,6 +22,27 @@ The **Button Sets**, **Button Cards**, and **Unit Stat Info** tabs all edit the 
 The list on the left shows the entries of the active tab, and selecting an entry in the list selects it in the tab. The requirement tabs list every entry of their `.dat` file, and entries without a requirements script are greyed out. Each tab remembers its selected entry when you switch between tabs.
 
 The status bar shows the path of the active tab's file, an indicator for unsaved changes, and how many entries the active tab has.
+
+## Button Sets
+The **Button Sets** tab edits the selected button set. Like the [requirements editor](#requirements), it has two modes, chosen by the tabs at its top: **Builder** (not available yet) and **Script**.
+
+### Button Set Script
+The **Script** mode edits the selected button set as code. The code is only the set's `button` blocks, without the `button_set 0 {` style header used in exported text, since the code is always for the selected button set. For example:
+
+```
+button {
+	position TL
+	icon 228
+	always
+	move
+	enabled_str 664
+	disabled_str 0
+}
+```
+
+Each `button` block sets the button's `position`, its `icon`, its condition (when it's shown, enabled, or greyed), its action (what clicking it does), and the `enabled_str` and `disabled_str` strings of its tooltip. The position is the row (`T`, `M`, or `B`) followed by the column (`L`, `M`, or `R`), such as `TL` for the top left or `MM` for the center, or a number from `1` to `9` (left to right and top to bottom). Hover over a condition or action to see its description, and press `Tab` to complete a name. Applying code without any buttons makes the button set empty, so the button cards that use it show no buttons.
+
+The toolbar, status bar, and asking to apply changes before leaving them work the same as in the requirements [Script](#script) mode.
 
 ## Button Cards
 Each button card picks what the command card shows for its unit (or, for the cards after the units, for groups, builder pages, replays, and so on):
@@ -49,9 +70,11 @@ The toolbar above the code has these buttons, whose shortcuts work while editing
 - **Revert Changes**: Discards the changes to the code since it was loaded or last applied.
 - **Test Code** (`Ctrl+T`): Checks the code for errors without applying it.
 - **Find/Replace** (`Ctrl+F`): Finds or replaces text in the code (`F3` finds the next match).
-- **Color Settings** (`Ctrl+Alt+C`): Changes the colors of the code, which all of the requirement tabs share, and imports/exports them to share with the other programs (see [Color Settings](/Help/Programs/Syntax_Highlighting.md#color-settings)).
+- **Color Settings** (`Ctrl+Alt+C`): Changes the colors of the code, which the **Button Sets** and requirement tabs share, and imports/exports them to share with the other programs (see [Color Settings](/Help/Programs/Syntax_Highlighting.md#color-settings)).
 
 After applying, the code is reloaded from the file, so comments and formatting aren't kept.
+
+The status bar under the code shows an indicator for changes that haven't been applied, and the cursor's line, column, and how many characters are selected.
 
 Changes to the code must be applied or discarded before leaving them. Selecting another entry, switching tabs or modes, or anything else that would reload the code (such as **New**, **Open...**, **Import from TXT...**, **Reload Data Files**, or exiting) asks whether to apply the changes first: **Yes** applies them (and stays if they have an error), **No** discards them, and **Cancel** stays. Saving (**Save**, **Save As...**, **Save MPQ...**, or **Export to TXT...**) also asks whether to apply the changes first, where **No** saves the file without them and keeps them in the editor.
 

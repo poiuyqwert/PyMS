@@ -62,7 +62,9 @@ class Test_PyGRAFT_tabs(PyGRAFTTestCase):
 		tab = self.display_tab(gui, 'Button Sets')
 		self.select_in_list(gui, 7)
 		self.assertEqual(tab.selected, 7)
-		self.assertIn(self.list_entries(gui)[7].strip(), tab.placeholder.get())
+		assert isinstance(tab, ButtonSetsTab)
+		self.assertEqual(tab.editor.script_view.entry_id, 7)
+		self.assertEqual(tab.editor.script_view.entry_name, self.list_entries(gui)[7].strip())
 
 	def test_each_tab_keeps_its_selection(self) -> None:
 		gui = self.open_pygraft()

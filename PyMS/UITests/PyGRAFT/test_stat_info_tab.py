@@ -2,8 +2,8 @@ from .utils import PyGRAFTTestCase
 
 from ...PyGRAFT.PyGRAFT import PyGRAFT
 from ...PyGRAFT.Tabs import GraftTab, StatInfoTab
+from ...PyGRAFT.Tabs.StatInfoTab import STAT_PRESETS
 from ...FileFormats.Graft.CodeHandlers import StatInfoCodeCommands
-from ...FileFormats.Graft.Definitions import STAT_PRESETS
 from ...Utilities import UIKit as UI
 
 from typing import cast
@@ -57,8 +57,9 @@ class Test_PyGRAFT_stat_info_tab(PyGRAFTTestCase):
 		stat_info = gui.buttons_data.graft.stat_info[5]
 		for index, preset in enumerate(STAT_PRESETS):
 			tab.presets_menu.invoke(index)
-			self.assertEqual((stat_info.status_function, stat_info.display_function), (preset.status_function, preset.display_function))
-			self.assertEqual((tab.status_function.get(), tab.display_function.get()), (preset.status_function, preset.display_function))
+			expected = (preset.status_function.function_index, preset.display_function.function_index)
+			self.assertEqual((stat_info.status_function, stat_info.display_function), expected)
+			self.assertEqual((tab.status_function.get(), tab.display_function.get()), expected)
 
 	def test_choosing_debug_unit_sets_entry(self) -> None:
 		gui, tab = self.open_stat_info()

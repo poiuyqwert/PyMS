@@ -22,7 +22,7 @@ class ReqGraftTab(GraftTab):
 		self.editor.pack(fill=UI.BOTH, expand=1)
 
 	def activate(self) -> None:
-		# The code colors are shared by every requirements tab, and may have been changed in another
+		# The code colors are shared by every script editor, and may have been changed in another tab
 		self.editor.update_highlight_styles()
 
 	def get_graft_data(self) -> ReqGraftData[Any]:

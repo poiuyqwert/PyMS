@@ -1,7 +1,7 @@
 
 from ...Utilities.DataContext import DataContext
 from ...FileFormats.TBL import TBL
-from ...FileFormats.Graft.Definitions import SPECIAL_BUTTON_CARDS_START
+from ...FileFormats.Graft.ButtonsGraft import ButtonsGraft
 from ...Utilities import Assets
 from ...FileFormats.DAT import UnitsDAT, UpgradesDAT, TechDAT, OrdersDAT, WeaponsDAT, ImagesDAT, SpritesDAT, FlingyDAT, SoundsDAT
 
@@ -343,7 +343,7 @@ class Test_OtherNames(unittest.TestCase):
 	def test_button_card_names_are_units_then_special_button_cards(self) -> None:
 		data_context = DataContext(stat_txt_tbl=_vanilla_stat_txt())
 		self.assertEqual(data_context.button_card_name(0), data_context.unit_display_name(0))
-		self.assertEqual(data_context.button_card_name(SPECIAL_BUTTON_CARDS_START - 1), data_context.unit_display_name(SPECIAL_BUTTON_CARDS_START - 1))
-		self.assertEqual(data_context.button_card_name(SPECIAL_BUTTON_CARDS_START), Assets.data_cache(Assets.DataReference.ButtonCards)[0])
+		self.assertEqual(data_context.button_card_name(ButtonsGraft.SPECIAL_BUTTON_CARDS_START - 1), data_context.unit_display_name(ButtonsGraft.SPECIAL_BUTTON_CARDS_START - 1))
+		self.assertEqual(data_context.button_card_name(ButtonsGraft.SPECIAL_BUTTON_CARDS_START), Assets.data_cache(Assets.DataReference.ButtonCards)[0])
 		self.assertIsNone(data_context.button_card_name(-1))
-		self.assertIsNone(data_context.button_card_name(SPECIAL_BUTTON_CARDS_START + len(Assets.data_cache(Assets.DataReference.ButtonCards))))
+		self.assertIsNone(data_context.button_card_name(ButtonsGraft.SPECIAL_BUTTON_CARDS_START + len(Assets.data_cache(Assets.DataReference.ButtonCards))))

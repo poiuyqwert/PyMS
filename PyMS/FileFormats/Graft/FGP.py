@@ -6,7 +6,8 @@ from .UpgradesGraft import UpgradesGraft
 from .ResearchGraft import ResearchGraft
 from .TechGraft import TechGraft
 from .OrdersGraft import OrdersGraft
-from .ButtonsGraft import Button, StatInfo
+from .Buttons import Button, ButtonSet
+from .StatInfo import StatInfo
 
 from ...Utilities.BytesScanner import BytesScanner
 from ...Utilities.PyMSError import PyMSError
@@ -87,7 +88,7 @@ class FGP:
 	}
 
 	def __init__(self) -> None:
-		self.button_sets: dict[int, list[Button]] = {}
+		self.button_sets: dict[int, ButtonSet] = {}
 		self.units: list[FGPUnit] = []
 		# Requirement scripts as raw words, `None` for a removed script
 		self.requirements: dict[type[AbstractReqGraft], dict[int, list[int] | None]] = {}
@@ -141,8 +142,8 @@ class FGP:
 		return warnings
 
 	@staticmethod
-	def _load_button_sets(chunk: bytes | None) -> dict[int, list[Button]]:
-		button_sets: dict[int, list[Button]] = {}
+	def _load_button_sets(chunk: bytes | None) -> dict[int, ButtonSet]:
+		button_sets: dict[int, ButtonSet] = {}
 		if chunk is None:
 			return button_sets
 		scanner = BytesScanner(chunk)
@@ -150,7 +151,7 @@ class FGP:
 		for _ in range(count):
 			set_id = scanner.scan(Struct.l_u8)
 			button_count = scanner.scan(Struct.l_u8)
-			button_sets[set_id] = [scanner.scan(Button) for _ in range(button_count)]
+			button_sets[set_id] = ButtonSet([scanner.scan(Button) for _ in range(button_count)])
 		return button_sets
 
 	@staticmethod
