@@ -63,6 +63,20 @@ def get_image(filename: str, cache: bool = True) -> PhotoImage:
 def clear_image_cache() -> None:
 	_IMAGE_CACHE.clear()
 
+## App icons
+app_icons_dir = _os.path.join(images_dir, 'AppIcons')
+_APP_ICON_SIZES = (256, 128, 64, 48, 32, 16) # Largest first: macOS uses the first image as the Dock icon
+
+# Not cached: `wm iconphoto` copies the image data, so the icons are only needed while being applied
+def lookup_icons(name: str) -> list[PhotoImage]:
+	icons: list[PhotoImage] = []
+	for size in _APP_ICON_SIZES:
+		try:
+			icons.append(PhotoImage(file=_os.path.join(app_icons_dir, f'{name}-{size}.gif')))
+		except Exception:
+			continue
+	return icons
+
 ## MPQ
 mpq_dir = _os.path.join(internals_dir, 'MPQ')
 

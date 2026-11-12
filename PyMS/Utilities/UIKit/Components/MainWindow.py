@@ -34,32 +34,16 @@ class MainWindow(Tk, WindowExtensions):
 
 	def set_icon(self, name: str) -> None:
 		from ... import Assets  # pylint: disable=cyclic-import
-		import os
+		# `wm iconphoto` raises when given no images, so a program without its own icons falls back to the PyMS icons
 		try:
-			icon = Assets.lookup_image(f'{name}.ico')
-			if not icon:
-				icon = Assets.lookup_image(name)
-			if not icon:
-				icon = Assets.lookup_image('PyMS.ico')
-			if not icon:
-				icon = Assets.lookup_image('PyMS')
-			if icon:
-				try:
-					self.tk.call('wm', 'iconphoto', getattr(self, '_w'), '-default', icon) # Python3: self.wm_iconphoto(True, icon)
-					return
-				except Exception:
-					self.wm_iconbitmap(default=icon)
-					return
+			self.wm_iconphoto(True, *Assets.lookup_icons(name))
 		except Exception:
-			pass
-		try:
-			icon_path = Assets.image_path(f'{name}.xbm')
-			if not os.path.exists(icon_path):
-				icon_path = Assets.image_path('PyMS.xbm')
-			icon_path = f'@{icon_path}'
-			self.wm_iconbitmap(default=icon_path)
-		except Exception:
-			pass
+			try:
+				self.wm_iconphoto(True, *Assets.lookup_icons('PyMS'))
+			except Exception:
+				from ... import trace  # pylint: disable=cyclic-import
+				if tracer := trace.get_tracer():
+					tracer.trace_error()
 
 	def destroy(self) -> None:
 		from ... import Assets  # pylint: disable=cyclic-import
