@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
 	from .Config import PyGRAFTConfig
 	from ..Utilities.DataContext import DataContext
+	from ..FileFormats.Graft import ReqScript
 
 class MainDelegate(Protocol):
 	config_: PyGRAFTConfig
@@ -14,4 +15,8 @@ class MainDelegate(Protocol):
 		...
 
 	def refresh(self) -> None:
+		...
+
+class ReqEditorDelegate(Protocol):
+	def apply_script(self, script: ReqScript) -> bool:
 		...

@@ -1,10 +1,11 @@
 from .utils import PyGRAFTTestCase
 
 from ...PyGRAFT.PyGRAFT import PyGRAFT
-from ...PyGRAFT.Tabs import GraftTab, StatInfoTab
+from ...PyGRAFT.Tabs import StatInfoTab
 from ...PyGRAFT.Tabs.StatInfoTab import STAT_PRESETS
 from ...FileFormats.Graft.CodeHandlers import StatInfoCodeCommands
 from ...Utilities import UIKit as UI
+from ...Utilities.utils import fit
 
 from typing import cast
 
@@ -93,8 +94,8 @@ class Test_PyGRAFT_stat_info_tab(PyGRAFTTestCase):
 		def assert_help(status_function: int, display_function: int) -> None:
 			status_command = StatInfoCodeCommands.status_function_commands[status_function]
 			display_command = StatInfoCodeCommands.display_function_commands[display_function]
-			self.assertEqual(tab.status_help.text, GraftTab.tip_text(status_command.display_name, status_command.help_text))
-			self.assertEqual(tab.display_help.text, GraftTab.tip_text(display_command.display_name, display_command.help_text))
+			self.assertEqual(tab.status_help.text, fit('', status_command.full_help_text()))
+			self.assertEqual(tab.display_help.text, fit('', display_command.full_help_text()))
 		assert_help(stat_info.status_function, stat_info.display_function)
 		tab.status_dropdown.set(4)
 		tab.display_dropdown.set(8)

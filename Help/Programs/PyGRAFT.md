@@ -1,7 +1,7 @@
 # PyGRAFT
 PyGRAFT is a tool used for editing the `.graft` files of the GPTP Graft Hook, a replacement for FireGraft. The Graft Hook loads six files from the `datreq` folder of your mod's MPQ: the requirements for training or building units (`Units.graft`), researching upgrades (`Upgrades.graft`), researching technologies (`Research.graft`), using technologies (`Tech.graft`), and using orders (`Orders.graft`), along with the command card buttons (`Buttons.graft`).
 
-PyGRAFT is in early development: the **Builder** mode of the button set and requirements editors isn't available yet, so button sets and requirements are edited as code in the **Script** mode.
+PyGRAFT is in early development: the **Builder** mode of the button set editor isn't available yet, so button sets are edited as code in the **Script** mode.
 
 ## Main Window
 The menubar holds every command, in the **File**, **Settings**, and **Help** menus, and the toolbar under it has buttons for the file actions and settings (hover over a button to see its name and shortcut).
@@ -59,7 +59,30 @@ Each unit's stat info picks the functions the game uses for that unit's stat pan
 - **Unit ID** (under **Debug**): A debug unit ID that the game doesn't use (it defaults to the unit itself). Choose a unit from the dropdown, or type any number in the entry (numbers that aren't a unit show as **Unknown**).
 
 ## Requirements
-The **Unit Training Reqs.**, **Upgrade Research Reqs.**, **Tech Research Reqs.**, **Tech Usage Reqs.**, and **Order Reqs.** tabs share one editor for the selected entry's requirements script. Every tab has the same editor, but only the commands of its file can be used (for example, `upgrade_level_1` is only for upgrades, and `does_not_have_exit` is only for orders). The editor has two modes, chosen by the tabs at its top: **Builder** (not available yet) and **Script**.
+The **Unit Training Reqs.**, **Upgrade Research Reqs.**, **Tech Research Reqs.**, **Tech Usage Reqs.**, and **Order Reqs.** tabs share one editor for the selected entry's requirements script. Every tab has the same editor, but only the commands that make sense for its file can be used (for example, `level_1_requires` is only for upgrades, `must_be_researched` is only for tech usage, and `must_have_addon` is only for units). The game checks unit requirements differently than the other requirements, so a unit requirements file can only be opened with unit commands. The other requirements files are all checked the same way, so one that uses a command from another of them (such as `level_1_requires` in tech usage requirements) still opens: the command is shown in the **Builder** as "(Not Available)", and applying or saving reports it as an error until it's changed. The editor has two modes, chosen by the tabs at its top: **Builder** (shown first) and **Script**.
+
+An upgrade's requirements can be different for each upgrade level. The commands for every level come first, followed by `level_1_requires`, its commands, and `end_level_requirements`, then `level_2_requires`, its commands, and `end_level_requirements`, and finally `level_3_requires` and the commands for level 3 (up to the end of the script). The game jumps from `level_1_requires` to the requirements of the level being researched, and its `end_level_requirements` ends the requirements for that level, so all three levels must be used, in order, each directly after the previous level's `end_level_requirements`. An `or` can't directly follow an upgrade level or come right before `end_level_requirements`. Levels above 3 use the level 1 requirements. Applying or saving reports a script that doesn't follow these rules as an error.
+
+### Builder
+The **Builder** mode edits the selected entry's script without writing code. Each command (opcode) of the script is a row, in the order the game checks them. Entries without a script start without any rows.
+
+Each row shows, from left to right:
+
+- The row's line number.
+- The opcode, chosen from a dropdown of the opcodes of the tab's file. Hover over the **?** after it to see what the opcode does, the same help the **Script** mode shows for its command (its code name and parameter, its description, and what the parameter is).
+- The opcode's parameter, if it has one: a unit (for opcodes like **Has Completed** or **Must Have**) or a technology (for **Is Researched**). Choose one from the dropdown, or type its ID in the entry.
+- While hovering over the row, its actions: **Move Up**, **Move Down**, **Delete**, and **Add Opcode Below** (which adds a **Has Completed** row just below it).
+
+The rows that belong to a **Level 1 Requires...** or **Level 2 Requires...** (up to and including its **End Level Requirements**), and every row after a **Level 3 Requires...**, are indented, like they are in the code.
+
+The toolbar above the rows has these buttons:
+
+- **Apply Changes** (`Ctrl+Return`): Stores the rows into the file's script for the entry, which makes the file edited (save the file to keep the changes). If the script has an error (such as an **End Level Requirements** without an upgrade level before it, a **Level 1 Requires...** that is never ended, or a **Level 1 Requires...** without the **Level 2 Requires...** and **Level 3 Requires...** after it), the row it's about is highlighted in red and nothing is changed. Any change to the rows clears the highlight. Applying without any rows asks whether to remove the entry's script (**Yes**) or keep an empty script (**No**).
+- **Revert Changes**: Discards the changes to the rows since they were loaded or last applied.
+- **Test Script** (`Ctrl+T`): Checks the script for errors without applying it.
+- **Add Opcode**: Adds a **Has Completed** row to the end of the script.
+
+The status bar under the rows shows an indicator for changes that haven't been applied. Like the **Script** mode, changes must be applied or discarded before leaving them, and saving asks whether to apply them first (see [Script](#script)).
 
 ### Script
 The **Script** mode edits the selected entry's script as code. The code is only the script's commands, without the `Unit 0:` style header used in exported text, since the script is always for the selected entry. Entries without a script start empty. Hover over a command to see its description, and press `Tab` to complete a command name.

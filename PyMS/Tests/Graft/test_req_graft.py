@@ -25,12 +25,12 @@ INFANTRY_ARMOR_TEXT = """Upgrade 0:	# Terran Infantry Armor
 	current_unit_is 'Terran Engineering Bay'
 	is_not_lifted_off
 	is_not_training_or_morphing
-	upgrade_level_1
-		end_sublist
-	upgrade_level_2
+	level_1_requires
+		end_level_requirements
+	level_2_requires
 		has_completed 'Terran Science Facility'
-		end_sublist
-	upgrade_level_3
+		end_level_requirements
+	level_3_requires
 		has_completed 'Terran Science Facility'
 """
 
@@ -88,13 +88,43 @@ class Test_Load(unittest.TestCase):
 		graft.replace_scripts(compile_req(flat_text, UpgradesGraft))
 		self.assertEqual(IO.output_to_bytes(graft.save), INFANTRY_ARMOR)
 
-	def test_unavailable_opcodes_fail(self) -> None:
-		# 0xFF1F isn't a units.dat opcode, and 0xFF27 isn't an opcode at all
-		for graft_type, data, word in ((UnitsGraft, words(0, 5, 0xFF1F, 0xFFFF, 0xFFFF), 'FF1F'), (OrdersGraft, words(0, 7, 0xFF27, 0xFFFF, 0xFFFF), 'FF27')):
+	def test_unknown_opcodes_fail(self) -> None:
+		# 0xFF27 isn't a requirement opcode for any file
+		for graft_type in REQ_GRAFT_TYPES:
 			with self.subTest(graft_type=graft_type.__name__):
 				with self.assertRaises(PyMSError) as cm:
-					graft_type().load(data)
-				self.assertIn(f'has the word 0x{word}, which is not an opcode for', str(cm.exception))
+					graft_type().load(words(0, 7, 0xFF27, 0xFFFF, 0xFFFF))
+				self.assertIn(f'has the word 0xFF27, which is not an opcode for {graft_type.LANGUAGE.DESCRIPTION.lower()}', str(cm.exception))
+
+	def test_opcodes_of_the_other_kind_of_requirements_fail(self) -> None:
+		# units.dat requirements and the other requirements are checked by different functions, which each only handle their own opcodes
+		for graft_type, word in ((UnitsGraft, 0xFF1F), (UnitsGraft, 0xFF0F), (UpgradesGraft, 0xFF04), (ResearchGraft, 0xFF0B), (TechGraft, 0xFF25), (OrdersGraft, 0xFF10)):
+			with self.subTest(graft_type=graft_type.__name__, word=f'0x{word:04X}'):
+				with self.assertRaises(PyMSError) as cm:
+					graft_type().load(words(0, 7, word, 0xFFFF, 0xFFFF, 0xFFFF))
+				self.assertIn(f'has the word 0x{word:04X}, which is not an opcode for {graft_type.LANGUAGE.DESCRIPTION.lower()}', str(cm.exception))
+
+	def test_unavailable_opcodes_load_but_fail_to_save(self) -> None:
+		# The non-unit requirements are all checked the same way, so they load with each other's opcodes
+		for graft_type, data, name in (
+			(UpgradesGraft, words(0, 5, 0xFF0F, 0xFFFF, 0xFFFF), 'must_be_researched'),
+			(ResearchGraft, words(0, 5, 0xFF0F, 0xFFFF, 0xFFFF), 'must_be_researched'),
+			(TechGraft, words(0, 5, 0xFF1E, 0xFFFF, 0xFFFF), 'allow_on_hallucinations'),
+			(OrdersGraft, words(0, 5, 0xFF0F, 0xFFFF, 0xFFFF), 'must_be_researched'),
+		):
+			with self.subTest(graft_type=graft_type.__name__):
+				graft = _load(graft_type, data)
+				self.assertIn(f'\t{name}\n', decompile_req(graft))
+				with self.assertRaises(PyMSError) as cm:
+					IO.output_to_bytes(graft.save)
+				self.assertIn(f'`{name}` is not available for {graft_type.LANGUAGE.DESCRIPTION.lower()} in script 5', str(cm.exception))
+
+	def test_unavailable_sub_list_opcode_keeps_its_sub_list(self) -> None:
+		# The 0xFFFF after `level_1_requires` ends its sub-list, not the script
+		graft = _load(OrdersGraft, words(0, 5, 0xFF1F, 0x0074, 0xFFFF, 0xFF05, 0xFFFF, 0xFFFF))
+		script = graft.get_script(5)
+		assert script is not None
+		self.assertEqual([command.definition for command in script.commands], [RequirementCodeCommands.Level1Requires, RequirementCodeCommands.HasCompleted, RequirementCodeCommands.EndLevelRequirements, RequirementCodeCommands.IsNotLiftedOff])
 
 	def test_does_not_have_exit_is_an_order_opcode(self) -> None:
 		# The vanilla Nydus Canal exit order requirements
@@ -165,17 +195,17 @@ class Test_Load(unittest.TestCase):
 class Test_Save(unittest.TestCase):
 	def test_unended_sub_list_fails(self) -> None:
 		graft = UpgradesGraft()
-		graft.set_script(ReqScript(0, [CodeCommand(RequirementCodeCommands.UpgradeLevel1, [])]))
+		graft.set_script(ReqScript(0, [CodeCommand(RequirementCodeCommands.Level1Requires, [])]))
 		with self.assertRaises(PyMSError) as cm:
 			IO.output_to_bytes(graft.save)
 		self.assertIn('sub-list is not ended', str(cm.exception))
 
 	def test_unavailable_command_fails(self) -> None:
 		graft = UnitsGraft()
-		graft.set_script(ReqScript(0, [CodeCommand(RequirementCodeCommands.UpgradeLevel1, []), CodeCommand(RequirementCodeCommands.EndSublist, [])]))
+		graft.set_script(ReqScript(0, [CodeCommand(RequirementCodeCommands.Level1Requires, []), CodeCommand(RequirementCodeCommands.EndLevelRequirements, [])]))
 		with self.assertRaises(PyMSError) as cm:
 			IO.output_to_bytes(graft.save)
-		self.assertIn('`upgrade_level_1` is not available for unit requirements in script 0', str(cm.exception))
+		self.assertIn('`level_1_requires` is not available for unit requirements in script 0', str(cm.exception))
 
 	def test_empty_script(self) -> None:
 		graft = OrdersGraft()
@@ -241,8 +271,8 @@ class Test_Compile(unittest.TestCase):
 		self.assertCompileError('Unit 65535:\n', UnitsGraft, 'Unit ID `65535` is out of range')
 
 	def test_unavailable_opcode(self) -> None:
-		self.assertCompileError('Unit 0:\n\tupgrade_level_1\n', UnitsGraft, '`upgrade_level_1` is not available for unit requirements', 2)
-		self.assertCompileError('Unit 0:\n\tend_sublist\n', UnitsGraft, '`end_sublist` is not available for unit requirements', 2)
+		self.assertCompileError('Unit 0:\n\tlevel_1_requires\n', UnitsGraft, '`level_1_requires` is not available for unit requirements', 2)
+		self.assertCompileError('Unit 0:\n\tend_level_requirements\n', UnitsGraft, '`end_level_requirements` is not available for unit requirements', 2)
 		self.assertCompileError('Order 0:\n\tis_researched 1\n', OrdersGraft, '`is_researched` is not available for order requirements', 2)
 		self.assertCompileError('Unit 0:\n\tdoes_not_have_exit\n', UnitsGraft, '`does_not_have_exit` is not available for unit requirements', 2)
 		self.assertCompileError('Unit 0:\n\traw 0xFF05\n', UnitsGraft, 'Unknown command `raw`', 2)
@@ -258,11 +288,11 @@ class Test_Compile(unittest.TestCase):
 			ResearchGraft.compile(parse_context('Research 1:\n\tmust_be_researched\n', language=TechGraft.LANGUAGE()))
 		self.assertIn('Tech Research Requirements scripts must be compiled with a parse context using `ResearchRequirementsLanguage`', str(cm.exception))
 
-	def test_end_sublist_outside_sublist(self) -> None:
-		self.assertCompileError('Upgrade 0:\n\tend_sublist\n', UpgradesGraft, '`end_sublist` used outside of an `upgrade_level_1` or `upgrade_level_2` sub-list')
+	def test_end_level_requirements_outside_sublist(self) -> None:
+		self.assertCompileError('Upgrade 0:\n\tend_level_requirements\n', UpgradesGraft, '`end_level_requirements` used outside of a `level_1_requires` or `level_2_requires` sub-list')
 
 	def test_unended_sublist(self) -> None:
-		self.assertCompileError('Upgrade 0:\n\tupgrade_level_2\n', UpgradesGraft, 'sub-list is not ended with `end_sublist`')
+		self.assertCompileError('Upgrade 0:\n\tlevel_1_requires\n', UpgradesGraft, 'sub-list is not ended with `end_level_requirements`')
 
 	def test_has_unit_too_large(self) -> None:
 		self.assertCompileError('Unit 0:\n\thas_completed 0xFF00\n', UnitsGraft, 'Value is too large for `unit`')
@@ -333,21 +363,156 @@ class Test_ScriptBody(unittest.TestCase):
 		self.assertBodyError('does_not_have_exit\n', UnitsGraft, '`does_not_have_exit` is not available for unit requirements', 1)
 
 	def test_unended_sublist_points_at_the_sublist(self) -> None:
-		self.assertBodyError('is_not_lifted_off\nupgrade_level_2\nhas_completed 0\n', UpgradesGraft, 'sub-list is not ended with `end_sublist`', 2)
+		self.assertBodyError('is_not_lifted_off\nlevel_1_requires\nhas_completed 0\n', UpgradesGraft, 'sub-list is not ended with `end_level_requirements`', 2)
 
-	def test_end_sublist_outside_sublist_points_at_it(self) -> None:
-		self.assertBodyError('is_not_lifted_off\nend_sublist\n', UpgradesGraft, '`end_sublist` used outside of', 2)
+	def test_end_level_requirements_outside_sublist_points_at_it(self) -> None:
+		self.assertBodyError('is_not_lifted_off\nend_level_requirements\n', UpgradesGraft, '`end_level_requirements` used outside of', 2)
 
 	def test_compile_requires_the_files_language(self) -> None:
 		with self.assertRaises(PyMSError) as cm:
 			ReqScript.compile(parse_context('', language=UpgradesGraft.LANGUAGE()), 0, UnitsGraft.LANGUAGE)
 		self.assertIn('Unit Requirements scripts must be compiled with a parse context using `UnitRequirementsLanguage`', str(cm.exception))
 
+class Test_UpgradeLevels(unittest.TestCase):
+	# The game only checks `level_1_requires`, jumping from it to the `level_N_requires` word for the current level, then checking up to the next 0xFFFF
+
+	def assertBodyError(self, code: str, message: str, line: int) -> None:
+		with self.assertRaises(PyMSError) as cm:
+			compile_req_script(code, UpgradesGraft, 0)
+		self.assertIn(message, str(cm.exception))
+		self.assertEqual(cm.exception.line, line)
+
+	def test_all_levels_in_order_are_valid(self) -> None:
+		code = 'is_not_lifted_off\nlevel_1_requires\nhas_completed 1\nend_level_requirements\nlevel_2_requires\nend_level_requirements\nlevel_3_requires\nhas_completed 2\nhas_completed 3\n'
+		self.assertEqual(len(compile_req_script(code, UpgradesGraft, 0).commands), 9)
+
+	def test_later_level_needs_level_1(self) -> None:
+		self.assertBodyError('is_not_lifted_off\nlevel_3_requires\nhas_completed 1\n', '`level_3_requires` is used without a `level_1_requires` before it', 2)
+		self.assertBodyError('level_2_requires\nend_level_requirements\nlevel_3_requires\n', '`level_2_requires` is used without a `level_1_requires` before it', 1)
+
+	def test_levels_must_be_in_order(self) -> None:
+		self.assertBodyError('level_1_requires\nend_level_requirements\nlevel_3_requires\n', '`end_level_requirements` must be directly followed by `level_2_requires`', 3)
+
+	def test_next_level_before_the_sub_list_is_ended_points_at_the_sub_list(self) -> None:
+		self.assertBodyError('is_not_lifted_off\nlevel_1_requires\nhas_completed 1\nlevel_2_requires\nend_level_requirements\nlevel_3_requires\n', 'A `level_1_requires` or `level_2_requires` sub-list is not ended with `end_level_requirements`', 2)
+		self.assertBodyError('level_1_requires\nend_level_requirements\nlevel_2_requires\nhas_completed 1\nlevel_3_requires\n', 'A `level_1_requires` or `level_2_requires` sub-list is not ended with `end_level_requirements`', 3)
+
+	def test_first_error_is_reported_whatever_its_kind(self) -> None:
+		# The misplaced `end_level_requirements` comes before the `has_completed` that is too large
+		script = ReqScript(0, [
+			CodeCommand(RequirementCodeCommands.IsNotLiftedOff, []),
+			CodeCommand(RequirementCodeCommands.EndLevelRequirements, []),
+			CodeCommand(RequirementCodeCommands.HasCompleted, [0xFF00]),
+		])
+		self.assertEqual(script.find_invalid_command(UpgradesGraft.LANGUAGE), ('`end_level_requirements` used outside of a `level_1_requires` or `level_2_requires` sub-list in script 0', 1))
+		script.commands.reverse()
+		invalid = script.find_invalid_command(UpgradesGraft.LANGUAGE)
+		assert invalid is not None
+		self.assertIn('`has_completed` unit ID 65280 is too large', invalid[0])
+		self.assertEqual(invalid[1], 0)
+
+	def test_levels_are_used_once(self) -> None:
+		self.assertBodyError('level_1_requires\nend_level_requirements\nlevel_2_requires\nend_level_requirements\nlevel_3_requires\nlevel_1_requires\nend_level_requirements\n', '`level_1_requires` is used more than once', 6)
+
+	def test_level_1_needs_the_other_levels(self) -> None:
+		self.assertBodyError('is_not_lifted_off\nlevel_1_requires\nhas_completed 1\nend_level_requirements\n', '`level_1_requires` is used without `level_2_requires` and `level_3_requires` after it', 2)
+		self.assertBodyError('level_1_requires\nend_level_requirements\nlevel_2_requires\nend_level_requirements\n', '`level_1_requires` is used without `level_3_requires` after it', 1)
+
+	def test_end_level_requirements_is_directly_followed_by_the_next_level(self) -> None:
+		self.assertBodyError('level_1_requires\nend_level_requirements\nhas_completed 1\nlevel_2_requires\nend_level_requirements\nlevel_3_requires\n', '`end_level_requirements` must be directly followed by `level_2_requires`', 3)
+		self.assertBodyError('level_1_requires\nend_level_requirements\nlevel_2_requires\nend_level_requirements\nis_not_lifted_off\nlevel_3_requires\n', '`end_level_requirements` must be directly followed by `level_3_requires`', 5)
+
+	def test_or_does_not_follow_a_level(self) -> None:
+		self.assertBodyError('level_1_requires\nor\nhas_completed 1\nend_level_requirements\nlevel_2_requires\nend_level_requirements\nlevel_3_requires\n', '`or` can\'t directly follow `level_1_requires`', 2)
+		self.assertBodyError('level_1_requires\nend_level_requirements\nlevel_2_requires\nend_level_requirements\nlevel_3_requires\nor\nhas_completed 1\n', '`or` can\'t directly follow `level_3_requires`', 6)
+
+	def test_or_does_not_come_before_end_level_requirements(self) -> None:
+		self.assertBodyError('level_1_requires\nhas_completed 1\nor\nend_level_requirements\nlevel_2_requires\nend_level_requirements\nlevel_3_requires\n', '`or` can\'t directly come before `end_level_requirements`', 3)
+
+	def test_params_are_not_upgrade_level_words(self) -> None:
+		# The game's jump to a level searches every word, including parameters
+		for value in (0xFF20, 0xFF21):
+			with self.subTest(value=f'0x{value:04X}'):
+				script = ReqScript(0, [
+					CodeCommand(RequirementCodeCommands.Level1Requires, []),
+					CodeCommand(RequirementCodeCommands.CurrentUnitIs, [value]),
+					CodeCommand(RequirementCodeCommands.EndLevelRequirements, []),
+					CodeCommand(RequirementCodeCommands.Level2Requires, []),
+					CodeCommand(RequirementCodeCommands.EndLevelRequirements, []),
+					CodeCommand(RequirementCodeCommands.Level3Requires, []),
+				])
+				invalid = script.find_invalid_command(UpgradesGraft.LANGUAGE)
+				assert invalid is not None
+				self.assertIn(f'`current_unit_is` can\'t use the value 0x{value:04X} after `level_1_requires`', invalid[0])
+				self.assertEqual(invalid[1], 1)
+
+	def test_params_before_level_1_are_not_checked(self) -> None:
+		script = ReqScript(0, [
+			CodeCommand(RequirementCodeCommands.CurrentUnitIs, [0xFF20]),
+			CodeCommand(RequirementCodeCommands.Level1Requires, []),
+			CodeCommand(RequirementCodeCommands.EndLevelRequirements, []),
+			CodeCommand(RequirementCodeCommands.Level2Requires, []),
+			CodeCommand(RequirementCodeCommands.EndLevelRequirements, []),
+			CodeCommand(RequirementCodeCommands.Level3Requires, []),
+		])
+		self.assertIsNone(script.find_invalid_command(UpgradesGraft.LANGUAGE))
+
+	def test_invalid_levels_load_but_fail_to_save(self) -> None:
+		# Level 1 without levels 2 and 3
+		graft = _load(UpgradesGraft, words(0, 5, 0xFF1F, 0x0074, 0xFFFF, 0xFF05, 0xFFFF, 0xFFFF))
+		with self.assertRaises(PyMSError) as cm:
+			IO.output_to_bytes(graft.save)
+		self.assertIn('`end_level_requirements` must be directly followed by `level_2_requires` in script 5', str(cm.exception))
+
 class Test_LanguageCommands(unittest.TestCase):
 	def test_commands_are_the_languages_commands(self) -> None:
-		self.assertEqual(UnitRequirementsLanguage.commands(), RequirementCodeCommands.unit_req_commands)
+		for language, commands in (
+			(UnitRequirementsLanguage, RequirementCodeCommands.unit_req_commands),
+			(UpgradeRequirementsLanguage, RequirementCodeCommands.upgrade_req_commands),
+			(ResearchRequirementsLanguage, RequirementCodeCommands.research_req_commands),
+			(TechRequirementsLanguage, RequirementCodeCommands.tech_use_req_commands),
+			(OrderRequirementsLanguage, RequirementCodeCommands.order_req_commands),
+		):
+			with self.subTest(language=language.__name__):
+				self.assertEqual(language.commands(), commands)
+
+	def test_upgrade_levels_are_only_for_upgrades(self) -> None:
+		for graft_type in (UnitsGraft, ResearchGraft, TechGraft, OrdersGraft):
+			for name in ('level_1_requires', 'level_2_requires', 'level_3_requires', 'end_level_requirements'):
+				with self.subTest(graft_type=graft_type.__name__, name=name):
+					with self.assertRaises(PyMSError) as cm:
+						compile_req_script(f'{name}\n', graft_type, 0)
+					self.assertIn(f'`{name}` is not available for {graft_type.LANGUAGE.DESCRIPTION.lower()}', str(cm.exception))
+
+	def test_must_be_researched_is_only_for_tech_use(self) -> None:
+		self.assertEqual(compile_req_script('must_be_researched\n', TechGraft, 0).commands[0].definition, RequirementCodeCommands.MustBeResearched)
+		for graft_type in (UnitsGraft, UpgradesGraft, ResearchGraft, OrdersGraft):
+			with self.subTest(graft_type=graft_type.__name__):
+				with self.assertRaises(PyMSError) as cm:
+					compile_req_script('must_be_researched\n', graft_type, 0)
+				self.assertIn(f'`must_be_researched` is not available for {graft_type.LANGUAGE.DESCRIPTION.lower()}', str(cm.exception))
+
+	def test_allow_on_hallucinations_is_not_for_tech_use_or_units(self) -> None:
+		allowed: tuple[type[AbstractReqGraft], ...] = (UpgradesGraft, ResearchGraft, OrdersGraft)
+		for graft_type in allowed:
+			with self.subTest(graft_type=graft_type.__name__):
+				self.assertEqual(compile_req_script('allow_on_hallucinations\n', graft_type, 0).commands[0].definition, RequirementCodeCommands.AllowOnHallucinations)
+		not_allowed: tuple[type[AbstractReqGraft], ...] = (UnitsGraft, TechGraft)
+		for graft_type in not_allowed:
+			with self.subTest(graft_type=graft_type.__name__):
+				with self.assertRaises(PyMSError) as cm:
+					compile_req_script('allow_on_hallucinations\n', graft_type, 0)
+				self.assertIn(f'`allow_on_hallucinations` is not available for {graft_type.LANGUAGE.DESCRIPTION.lower()}', str(cm.exception))
+
+	def test_every_opcode_is_available_somewhere(self) -> None:
+		self.assertEqual(sorted(RequirementCodeCommands.unit_loadable_opcodes.keys() | RequirementCodeCommands.check_allowed_loadable_opcodes.keys()), list(range(0xFF01, 0xFF27)))
+
+	def test_loadable_opcodes_are_the_available_opcodes_of_the_files_kind(self) -> None:
+		self.assertEqual(set(UnitRequirementsLanguage.LOADABLE_OPCODES.values()), {cmd_def for cmd_def in RequirementCodeCommands.unit_req_commands if cmd_def.byte_code_id is not None})
+		check_allowed_commands = {cmd_def for language in (UpgradeRequirementsLanguage, ResearchRequirementsLanguage, TechRequirementsLanguage, OrderRequirementsLanguage) for cmd_def in language.commands() if cmd_def.byte_code_id is not None}
 		for language in (UpgradeRequirementsLanguage, ResearchRequirementsLanguage, TechRequirementsLanguage, OrderRequirementsLanguage):
-			self.assertEqual(language.commands(), RequirementCodeCommands.other_req_commands)
+			with self.subTest(language=language.__name__):
+				self.assertEqual(set(language.LOADABLE_OPCODES.values()), check_allowed_commands)
 
 class Test_ImportFGP(unittest.TestCase):
 	def test_replaces_adds_and_removes_scripts(self) -> None:

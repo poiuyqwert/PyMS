@@ -5,6 +5,8 @@ from .CommandTooltip import CommandTooltip
 
 from ...FileFormats.Graft.CodeHandlers import GraftLexer, GraftParseContext, GraftSerializeContext, GraftLanguage
 
+from ..EditorModeView import EditorModeView
+
 from ...Utilities import UIKit as UI
 from ...Utilities import Assets
 from ...Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
@@ -27,12 +29,10 @@ CompiledT = TypeVar('CompiledT')
 
 # The Script mode of an editor, editing the selected entry as code (only its contents, the entry is the selected one).
 # Subclasses decompile, compile, and apply the code of their kind of entry.
-class ScriptView(UI.NotebookTab, UI.CodeTextDelegate, Generic[CompiledT]):
+class ScriptView(EditorModeView, UI.CodeTextDelegate, Generic[CompiledT]):
 	def __init__(self, parent: UI.Misc, delegate: MainDelegate, commands: list[CodeCommandDefinition], block_keywords: Sequence[str] = ()) -> None:
 		super().__init__(parent)
 		self.delegate = delegate
-		self.entry_id: int | None = None
-		self.entry_name = ''
 		self.commands = commands
 		# Block keywords (like `button`) are highlighted like commands, and parameter keywords (like button positions) have their own style
 		command_names = [*block_keywords, *(cmd_def.name for cmd_def in commands)]
@@ -189,35 +189,6 @@ class ScriptView(UI.NotebookTab, UI.CodeTextDelegate, Generic[CompiledT]):
 		# Refreshing updates the list and status bar, and reloads the code (no longer edited)
 		self.delegate.refresh()
 		return True
-
-	def revert(self) -> None:
-		self.load(self.entry_id, self.entry_name)
-
-	def confirm_leave(self) -> bool:
-		# Asks to apply changes before leaving the editor, returning `False` to stay
-		if not self.is_edited():
-			return True
-		apply = UI.MessageBox.askyesnocancel(parent=self, title='Apply Changes?', message=f"Apply changes to '{self.entry_name}'?", default=UI.MessageBox.YES)
-		if apply is None:
-			return False
-		if apply:
-			return self.apply()
-		self.revert()
-		return True
-
-	def confirm_apply_before_save(self) -> bool:
-		# Asks to apply changes before saving the file, returning `False` to cancel the save
-		if not self.is_edited():
-			return True
-		apply = UI.MessageBox.askyesnocancel(parent=self, title='Apply Changes?', message=f"Apply changes to '{self.entry_name}' before saving?\n\nNo saves the file without them (they stay in the editor).", default=UI.MessageBox.YES)
-		if apply is None:
-			return False
-		if apply:
-			return self.apply()
-		return True
-
-	def can_deactivate(self) -> bool:
-		return self.confirm_leave()
 
 	def find(self) -> None:
 		if self.findwindow is None:

@@ -6,7 +6,7 @@ from .CodeHandlers.GraftParseContext import GraftParseContext
 from .CodeHandlers.GraftSerializeContext import GraftSerializeContext
 from .CodeHandlers import SourceParsing
 
-from ...Utilities.CodeHandlers.CodeCommand import CodeCommand
+from ...Utilities.CodeHandlers.CodeCommand import CodeCommand, CodeCommandDefinition
 from ...Utilities.CodeHandlers import Tokens
 from ...Utilities.BytesScanner import BytesScanner
 from ...Utilities.PyMSError import PyMSError
@@ -20,7 +20,8 @@ class ReqScript:
 
 	@classmethod
 	def decode(cls, scanner: BytesScanner, entry_id: int, language: type[ReqGraftLanguage]) -> ReqScript:
-		# Reads words up to (and including) the script's terminating 0xFFFF
+		# Reads words up to (and including) the script's terminating 0xFFFF.
+		# Loadable opcodes the language doesn't have are kept, so the file still loads and `validate` reports them
 		commands: list[CodeCommand] = []
 		in_sublist = False
 		while True:
@@ -29,10 +30,10 @@ class ReqScript:
 				if not in_sublist:
 					break
 				in_sublist = False
-				commands.append(CodeCommand(RequirementCodeCommands.EndSublist, []))
+				commands.append(CodeCommand(RequirementCodeCommands.EndLevelRequirements, []))
 			elif word < RequirementCodeCommands.OPCODE_MIN:
 				commands.append(CodeCommand(RequirementCodeCommands.HasCompleted, [word]))
-			elif cmd_def := language.lookup_opcode(word):
+			elif cmd_def := language.LOADABLE_OPCODES.get(word):
 				params = [scanner.scan(Struct.l_u16) for _ in cmd_def.param_types]
 				commands.append(CodeCommand(cmd_def, params))
 				if cmd_def in RequirementCodeCommands.sublist_commands:
@@ -42,23 +43,63 @@ class ReqScript:
 		return cls(entry_id, commands)
 
 	def find_invalid_command(self, language: type[ReqGraftLanguage]) -> tuple[str, int] | None:
-		# The first problem with the script, and the index of the command it's about
+		# The first problem with the script, and the index of the command it's about.
+		# Upgrade levels must be laid out the way the game uses them: it checks the commands before `level_1_requires`, then jumps from it to the first
+		# `level_N_requires` word for the current upgrade level (searching past the end of the script if it's missing), and checks the commands after that word
+		# up to the next 0xFFFF. When indexing the scripts, the game also reads the word after any 0xFFFF as the ID of the next script.
+		levels = RequirementCodeCommands.level_commands
+		level_indices: dict[CodeCommandDefinition, int] = {}
+		# The `level_1_requires` or `level_2_requires` whose sub-list hasn't been ended yet
 		sublist_index: int | None = None
+		unended_sublist_error = f'A `level_1_requires` or `level_2_requires` sub-list is not ended with `end_level_requirements` in script {self.entry_id}'
+		# The level command that must come directly after the last `end_level_requirements`
+		expected_level: CodeCommandDefinition | None = None
 		for index, command in enumerate(self.commands):
 			definition = command.definition
 			if not language.has_command(definition):
 				return (f'`{definition.name}` is not available for {language.DESCRIPTION.lower()} in script {self.entry_id}', index)
-			if definition == RequirementCodeCommands.EndSublist:
-				if sublist_index is None:
-					return (f'`end_sublist` used outside of an `upgrade_level_1` or `upgrade_level_2` sub-list in script {self.entry_id}', index)
-				sublist_index = None
-			elif definition == RequirementCodeCommands.HasCompleted:
+			if expected_level is not None:
+				if definition is not expected_level:
+					return (f'`end_level_requirements` must be directly followed by `{expected_level.name}` in script {self.entry_id} (the game never checks commands placed between them, and can read them as the start of another script)', index)
+				expected_level = None
+			if definition == RequirementCodeCommands.HasCompleted:
 				if command.params[0] >= RequirementCodeCommands.OPCODE_MIN:
 					return (f'`has_completed` unit ID {command.params[0]} is too large (must be below {RequirementCodeCommands.OPCODE_MIN}) in script {self.entry_id}', index)
-			elif definition in RequirementCodeCommands.sublist_commands:
-				sublist_index = index
+			elif definition in levels:
+				if definition in level_indices:
+					return (f'`{definition.name}` is used more than once in script {self.entry_id}', index)
+				if sublist_index is not None:
+					# The next level can't start until the previous level's sub-list is ended
+					return (unended_sublist_error, sublist_index)
+				position = levels.index(definition)
+				if position and levels[position - 1] not in level_indices:
+					if RequirementCodeCommands.Level1Requires not in level_indices:
+						return (f'`{definition.name}` is used without a `level_1_requires` before it in script {self.entry_id} (the game only reaches it by jumping from `level_1_requires`)', index)
+					return (f'`{definition.name}` must come after `{levels[position - 1].name}` in script {self.entry_id}', index)
+				level_indices[definition] = index
+				if definition in RequirementCodeCommands.sublist_commands:
+					sublist_index = index
+			elif definition == RequirementCodeCommands.EndLevelRequirements:
+				if sublist_index is None:
+					return (f'`end_level_requirements` used outside of a `level_1_requires` or `level_2_requires` sub-list in script {self.entry_id}', index)
+				expected_level = levels[levels.index(self.commands[sublist_index].definition) + 1]
+				sublist_index = None
+			elif definition == RequirementCodeCommands.Or:
+				if index and self.commands[index - 1].definition in levels:
+					return (f'`or` can\'t directly follow `{self.commands[index - 1].definition.name}` in script {self.entry_id} (the upgrade level always counts as met, so the condition after the `or` would never matter)', index)
+				if index + 1 < len(self.commands) and self.commands[index + 1].definition == RequirementCodeCommands.EndLevelRequirements:
+					return (f'`or` can\'t directly come before `end_level_requirements` in script {self.entry_id}', index)
+			if RequirementCodeCommands.Level1Requires in level_indices and RequirementCodeCommands.Level3Requires not in level_indices:
+				for param in command.params:
+					if param in (RequirementCodeCommands.Level2Requires.byte_code_id, RequirementCodeCommands.Level3Requires.byte_code_id):
+						return (f'`{definition.name}` can\'t use the value 0x{param:04X} after `level_1_requires` in script {self.entry_id} (the game would jump to it as an upgrade level)', index)
 		if sublist_index is not None:
-			return (f'An `upgrade_level_1` or `upgrade_level_2` sub-list is not ended with `end_sublist` in script {self.entry_id}', sublist_index)
+			return (unended_sublist_error, sublist_index)
+		if RequirementCodeCommands.Level1Requires in level_indices:
+			missing = [level.name for level in levels if level not in level_indices]
+			if missing:
+				missing_text = ' and '.join(f'`{name}`' for name in missing)
+				return (f'`level_1_requires` is used without {missing_text} after it in script {self.entry_id} (the game would search past the end of the script for the upgrade level)', level_indices[RequirementCodeCommands.Level1Requires])
 		return None
 
 	def validate(self, language: type[ReqGraftLanguage]) -> None:
@@ -71,7 +112,7 @@ class ReqScript:
 		words: list[int] = []
 		for command in self.commands:
 			definition = command.definition
-			if definition == RequirementCodeCommands.EndSublist:
+			if definition == RequirementCodeCommands.EndLevelRequirements:
 				words.append(RequirementCodeCommands.END_OF_LIST)
 			elif definition == RequirementCodeCommands.HasCompleted:
 				words.append(command.params[0])
@@ -83,14 +124,14 @@ class ReqScript:
 		return Struct.l_au16(len(words)).pack(words)
 
 	def serialize(self, serialize_context: GraftSerializeContext) -> None:
-		# Sub-list commands and their `end_sublist` are indented an extra level, as is the rest of the script after `upgrade_level_3`
+		# Sub-list commands and their `end_level_requirements` are indented an extra level, as is the rest of the script after `level_3_requires`
 		in_sublist = False
 		for command in self.commands:
 			command.serialize(serialize_context)
-			if (command.definition in RequirementCodeCommands.sublist_commands or command.definition is RequirementCodeCommands.UpgradeLevel3) and not in_sublist:
+			if (command.definition in RequirementCodeCommands.sublist_commands or command.definition is RequirementCodeCommands.Level3Requires) and not in_sublist:
 				serialize_context.indent()
 				in_sublist = True
-			elif command.definition is RequirementCodeCommands.EndSublist and in_sublist:
+			elif command.definition is RequirementCodeCommands.EndLevelRequirements and in_sublist:
 				serialize_context.dedent()
 				in_sublist = False
 		if in_sublist:

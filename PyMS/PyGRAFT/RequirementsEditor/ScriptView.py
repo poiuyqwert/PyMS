@@ -10,11 +10,12 @@ from ...Utilities import UIKit as UI
 
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
-	from ..Delegates import MainDelegate
+	from ..Delegates import MainDelegate, ReqEditorDelegate
 
 # The Script mode of the requirements editor, editing the selected entry's script as code (only its commands)
 class ReqScriptView(ScriptView[ReqScript]):
-	def __init__(self, parent: UI.Misc, delegate: MainDelegate, graft_data: ReqGraftData[Any]) -> None:
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate, editor_delegate: ReqEditorDelegate, graft_data: ReqGraftData[Any]) -> None:
+		self.editor_delegate = editor_delegate
 		self.graft_data = graft_data
 		super().__init__(parent, delegate, graft_data.graft_type.LANGUAGE.commands())
 
@@ -29,15 +30,4 @@ class ReqScriptView(ScriptView[ReqScript]):
 		return ReqScript.compile(parse_context, entry_id, self.graft_data.graft_type.LANGUAGE)
 
 	def apply_compiled(self, compiled: ReqScript) -> bool:
-		remove = False
-		if not compiled.commands:
-			ask_remove = UI.MessageBox.askyesnocancel(parent=self, title='Empty Script', message=f"The script for '{self.entry_name}' is empty. Remove its script?\n\nYes removes the script, No keeps an empty script.", default=UI.MessageBox.YES)
-			if ask_remove is None:
-				return False
-			remove = ask_remove
-		if remove:
-			self.graft_data.graft.remove_script(compiled.entry_id)
-		else:
-			self.graft_data.graft.set_script(compiled)
-		self.graft_data.edited = True
-		return True
+		return self.editor_delegate.apply_script(compiled)

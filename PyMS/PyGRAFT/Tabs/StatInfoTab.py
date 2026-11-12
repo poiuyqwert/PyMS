@@ -9,6 +9,7 @@ from ...FileFormats.Graft.CodeHandlers.GraftCommandDefinition import GraftComman
 
 from ...Utilities import UIKit as UI
 from ...Utilities import Struct
+from ...Utilities.utils import fit
 
 from dataclasses import dataclass
 from functools import partial
@@ -126,7 +127,7 @@ class StatInfoTab(GraftTab):
 
 	def status_function_changed(self, status_function: int) -> None:
 		command = StatInfoCodeCommands.status_function_commands[status_function]
-		self.status_help.text = GraftTab.tip_text(command.display_name, command.help_text)
+		self.status_help.text = fit('', command.full_help_text())
 		stat_info = self.selected_stat_info()
 		if stat_info and stat_info.status_function != status_function:
 			stat_info.status_function = status_function
@@ -134,7 +135,7 @@ class StatInfoTab(GraftTab):
 
 	def display_function_changed(self, display_function: int) -> None:
 		command = StatInfoCodeCommands.display_function_commands[display_function]
-		self.display_help.text = GraftTab.tip_text(command.display_name, command.help_text)
+		self.display_help.text = fit('', command.full_help_text())
 		stat_info = self.selected_stat_info()
 		if stat_info and stat_info.display_function != display_function:
 			stat_info.display_function = display_function

@@ -22,6 +22,9 @@ class Test_PyGRAFT_requirements_editor(PyGRAFTTestCase):
 		gui = self.open_pygraft()
 		tab = self.display_tab(gui, title)
 		assert isinstance(tab, ReqGraftTab)
+		# The editor opens in Builder mode
+		tab.editor.notebook.display('Script')
+		self.pump(gui)
 		return gui, tab, tab.editor.script_view
 
 	def script_body(self, gui: PyGRAFT, entry_id: int) -> str:
@@ -71,9 +74,11 @@ class Test_PyGRAFT_requirements_editor(PyGRAFTTestCase):
 		self.select_in_list(gui, UNSCRIPTED_UNIT)
 		self.assertEqual(self.code(view), '')
 
-	def test_script_mode_is_shown_first(self) -> None:
-		_, tab, view = self.open_req_tab()
-		self.assertIs(tab.editor.notebook.active, view)
+	def test_builder_mode_is_shown_first(self) -> None:
+		gui = self.open_pygraft()
+		tab = self.display_tab(gui, 'Unit Training Reqs.')
+		assert isinstance(tab, ReqGraftTab)
+		self.assertIs(tab.editor.notebook.active, tab.editor.builder_view)
 
 	# Editing and applying
 
@@ -342,12 +347,12 @@ class Test_PyGRAFT_requirements_editor(PyGRAFTTestCase):
 	def test_tab_completes_a_tab_indented_command(self) -> None:
 		gui, _, view = self.open_req_tab('Upgrade Research Reqs.')
 		# Sub-list bodies are indented with a tab, which isn't part of the word being completed
-		self.set_code(view, 'upgrade_level_1\n\tend')
+		self.set_code(view, 'level_1_requires\n\tend')
 		view.text.mark_set(UI.INSERT, UI.END)
 		self.focus_text(gui, view)
 		view.text.text.event_generate(UI.Key.Tab.event())
 		self.pump(gui)
-		self.assertEqual(self.code(view), 'upgrade_level_1\n\tend_sublist')
+		self.assertEqual(self.code(view), 'level_1_requires\n\tend_level_requirements')
 
 	def test_test_shortcut_does_not_edit_the_code(self) -> None:
 		gui, _, view = self.open_req_tab()
