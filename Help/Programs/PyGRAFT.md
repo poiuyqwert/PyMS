@@ -1,8 +1,6 @@
 # PyGRAFT
 PyGRAFT is a tool used for editing the `.graft` files of the GPTP Graft Hook, a replacement for FireGraft. The Graft Hook loads six files from the `datreq` folder of your mod's MPQ: the requirements for training or building units (`Units.graft`), researching upgrades (`Upgrades.graft`), researching technologies (`Research.graft`), using technologies (`Tech.graft`), and using orders (`Orders.graft`), along with the command card buttons (`Buttons.graft`).
 
-PyGRAFT is in early development: the **Builder** mode of the button set editor isn't available yet, so button sets are edited as code in the **Script** mode.
-
 ## Main Window
 The menubar holds every command, in the **File**, **Settings**, and **Help** menus, and the toolbar under it has buttons for the file actions and settings (hover over a button to see its name and shortcut).
 
@@ -24,7 +22,24 @@ The list on the left shows the entries of the active tab, and selecting an entry
 The status bar shows the path of the active tab's file, an indicator for unsaved changes, and how many entries the active tab has.
 
 ## Button Sets
-The **Button Sets** tab edits the selected button set. Like the [requirements editor](#requirements), it has two modes, chosen by the tabs at its top: **Builder** (not available yet) and **Script**.
+The **Button Sets** tab edits the selected button set. Like the [requirements editor](#requirements), it has two modes, chosen by the tabs at its top: **Builder** (shown first) and **Script**.
+
+### Button Set Builder
+The **Builder** mode edits the selected button set without writing code. Unlike the other editors, every change is made to the button set right away: there is nothing to apply, the file is marked as edited as soon as you change something (save the file to keep the changes), and leaving the Builder never asks anything.
+
+The **Buttons** list has a row for each button of the set, in their order in the file. Each row shows the button's position (hover over it to see the slot's name), its icon, and its enabled string. Click a row to select its button. While hovering over a row, its actions are shown: **Move Up**, **Move Down**, **Delete**, and **Add Button Below**. The **Add Button** button above the list adds a button to the end of the set, which is how buttons are added to an empty set. A new button is placed in the first slot no other button uses (or the top left slot when all of them are used), is always shown, does nothing, and has no strings.
+
+The **Preview** shows the button set like the game's command card: a slot for each position, numbered from 1 (top left) to 9 (bottom right), showing the icon of the button at that position. The slot of the selected button has a white border, and clicking a slot selects its button. When more than one button is at the same position, the slot shows which of them it's showing (such as `1/2`), and clicking the slot of the selected button selects the next one.
+
+The **Button Settings** edit the selected button:
+
+- **Position**: The slot the button is in.
+- **Icon**: The button's `cmdicons.grp` frame, chosen from the dropdown or by its ID. Click **Find** (or the icon) to choose the icon from a grid of every icon.
+- **Condition**: When the button is shown, enabled, or greyed, and the unit, upgrade, or technology it uses (if it has one).
+- **Action**: What clicking the button does, and what it does it with (if it has one).
+- **Enabled String** and **Disabled String**: The `stat_txt.tbl` strings of the button's tooltip when it's enabled and when it's greyed (**None** for no string).
+
+Hover over the **?** after a setting to see its help, the same help the **Script** mode shows for its command (for the condition and action, the help of the one chosen).
 
 ### Button Set Script
 The **Script** mode edits the selected button set as code. The code is only the set's `button` blocks, without the `button_set 0 {` style header used in exported text, since the code is always for the selected button set. For example:
@@ -119,7 +134,7 @@ These commands are in the **File** menu and on the toolbar. Unless noted otherwi
 PyGRAFT asks to save unsaved changes before they would be lost (when creating or opening over an edited file, or exiting).
 
 ## Settings
-**Manage Settings...** (`Ctrl+M`, in the **Settings** menu) sets the MPQs to load files from, the theme, and the `stat_txt.tbl`, `unitnames.tbl`, `units.dat`, `upgrades.dat`, `techdata.dat`, and `orders.dat` files used to name the entries. `unitnames.tbl` is optional: it holds the unit names of mods with expanded units, and when it isn't found the unit names come from `stat_txt.tbl`. **Reload Data Files** reloads those files after you change them.
+**Manage Settings...** (`Ctrl+M`, in the **Settings** menu) sets the MPQs to load files from, the theme, and the `stat_txt.tbl`, `unitnames.tbl`, `units.dat`, `upgrades.dat`, `techdata.dat`, and `orders.dat` files used to name the entries, and the `cmdicons.grp` and `ticon.pcx` files used to draw the button icons. `unitnames.tbl` is optional: it holds the unit names of mods with expanded units, and when it isn't found the unit names come from `stat_txt.tbl`. `cmdicons.grp` and `ticon.pcx` are optional too: without `cmdicons.grp` the icons aren't shown, and without `ticon.pcx` the icon chosen in the **Find** window isn't highlighted. **Reload Data Files** reloads those files after you change them.
 
 ## Command Line
 PyGRAFT can convert Graft files to and from text without opening the window:

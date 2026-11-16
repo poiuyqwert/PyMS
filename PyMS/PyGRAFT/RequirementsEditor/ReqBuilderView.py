@@ -3,11 +3,11 @@ from __future__ import annotations
 from .OpcodeEditorView import OpcodeEditorView
 from ..EditorModeView import EditorModeView
 from ..GraftData import ReqGraftData
+from .. import ParamEntries
 
 from ...FileFormats.Graft import ReqScript
-from ...FileFormats.Graft.CodeHandlers import RequirementCodeCommands, GraftLexer, GraftParseContext
+from ...FileFormats.Graft.CodeHandlers import RequirementCodeCommands
 from ...FileFormats.Graft.CodeHandlers.RequirementCodeCommands import ReqCommandDefinition
-from ...FileFormats.Graft.CodeHandlers.CodeTypes import UnitCodeType, TechCodeType
 
 from ...Utilities import UIKit as UI
 from ...Utilities import Assets
@@ -163,17 +163,10 @@ class ReqBuilderView(EditorModeView):
 		self.insert_opcode(index + 1)
 
 	def param_limits(self, param_type: IntCodeType) -> tuple[int, int]:
-		return param_type.get_limits(GraftParseContext(GraftLexer(''), self.delegate.data_context, self.language()))
+		return ParamEntries.param_limits(self.delegate.data_context, self.language(), param_type)
 
 	def param_entries(self, param_type: IntCodeType) -> list[tuple[str, int | None]]:
-		names: tuple[str, ...] = ()
-		if isinstance(param_type, UnitCodeType):
-			names = self.delegate.data_context.unit_display_names()
-		elif isinstance(param_type, TechCodeType):
-			names = self.delegate.data_context.tech_display_names()
-		min_value, max_value = self.param_limits(param_type)
-		# Any ID can be entered, so IDs without a name show the catch-all entry
-		return [*((name, entry_id) for entry_id, name in enumerate(names) if min_value <= entry_id <= max_value), ('Unknown', None)]
+		return ParamEntries.param_entries(self.delegate.data_context, self.language(), param_type)
 
 	# Actions
 

@@ -18,6 +18,8 @@ class FileSettingsTab(SettingsTab):
 			('upgrades.dat', 'Used to look up Upgrade names in stat_txt.tbl', config.settings.files.dat.upgrades),
 			('techdata.dat', 'Used to look up Technology names in stat_txt.tbl', config.settings.files.dat.techdata),
 			('orders.dat', 'Used to look up Order names in stat_txt.tbl', config.settings.files.dat.orders),
+			('cmdicons.grp', 'Contains the button icons (optional, icons are not shown when it is not found)', config.settings.files.cmdicons),
+			('ticon.pcx', 'Used to draw highlighted button icons (optional)', config.settings.files.ticon),
 		)
 		for name, description, setting in files:
 			view = FileSettingView(parent=self, edited_state=edited_state, name=name, description=description, setting=setting, mpq_handler=mpq_handler, mpq_history_config=config.settings.mpq_select_history, mpq_window_geometry_config=config.windows.settings.mpq_select)

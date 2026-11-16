@@ -1,0 +1,215 @@
+from __future__ import annotations
+
+from .ButtonRow import ButtonRow
+from .PreviewGrid import PreviewGrid
+from .ButtonSettingsView import ButtonSettingsView
+from ..GraftData import ButtonsGraftData
+
+from ...FileFormats.Graft import Button, ButtonSet
+from ...FileFormats.Graft.CodeHandlers import ButtonCodeCommands
+
+from ...Utilities import UIKit as UI
+from ...Utilities import Assets
+from ...Utilities.Config import WindowGeometry
+from ...Utilities.DataContext import DataContext
+from ...Utilities.IconSelectDialog import ImageWithBounds
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..Delegates import MainDelegate
+
+# The Builder mode of the button set editor, editing the selected button set without code.
+# Changes are made straight to the button set (there is nothing to apply), so leaving it never asks anything.
+class ButtonSetBuilderView(UI.NotebookTab):
+	# The Buttons list shows this many rows before it scrolls
+	VISIBLE_ROWS = 9.5
+
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate, graft_data: ButtonsGraftData) -> None:
+		super().__init__(parent)
+		self.delegate = delegate
+		self.graft_data = graft_data
+		self.entry_id: int | None = None
+		self.entry_name = ''
+		self.selected: int | None = None
+		self.rows: list[ButtonRow] = []
+
+		top = UI.Frame(self)
+		preview_frame = UI.LabelFrame(top, text='Preview')
+		self.preview = PreviewGrid(preview_frame, self)
+		self.preview.pack(padx=5, pady=5)
+		preview_frame.pack(side=UI.RIGHT, anchor=UI.N, padx=(2, 0))
+
+		buttons_frame = UI.LabelFrame(top, text='Buttons')
+		self.toolbar = UI.Toolbar(buttons_frame)
+		self.add_button_button = self.toolbar.add_button(Assets.get_image('add'), self.add_button, 'Add Button')
+		self.toolbar.pack(side=UI.TOP, fill=UI.X, padx=2, pady=2)
+		self.scroll_view = UI.ScrollView(buttons_frame, viewport_height=round(ButtonSetBuilderView.VISIBLE_ROWS * ButtonRow.ROW_HEIGHT), fill_width=True)
+		self.scroll_view.pack(fill=UI.BOTH, expand=1, padx=2, pady=(0, 2))
+		buttons_frame.pack(side=UI.LEFT, fill=UI.BOTH, expand=1)
+		top.pack(side=UI.TOP, fill=UI.X, padx=2, pady=2)
+
+		settings_frame = UI.LabelFrame(self, text='Button Settings')
+		self.settings_view = ButtonSettingsView(settings_frame, self)
+		self.settings_view.pack(padx=5, pady=5)
+		# Sized to fit the settings, not the width of the Builder
+		settings_frame.pack(side=UI.TOP, anchor=UI.W, padx=2, pady=2)
+
+		self.update_read_only()
+
+	@property
+	def data_context(self) -> DataContext:
+		return self.delegate.data_context
+
+	def button_set(self) -> ButtonSet | None:
+		if self.entry_id is None or not 0 <= self.entry_id < len(self.graft_data.graft.button_sets):
+			return None
+		return self.graft_data.graft.button_sets[self.entry_id]
+
+	def buttons(self) -> list[Button]:
+		button_set = self.button_set()
+		return button_set.buttons if button_set else []
+
+	# Loading
+
+	def load(self, entry_id: int | None, entry_name: str) -> None:
+		# Reloading the same button set keeps its selected button
+		same_set = entry_id == self.entry_id
+		self.entry_id = entry_id
+		self.entry_name = entry_name
+		self.settings_view.refresh_entries()
+		buttons = self.buttons()
+		if not buttons:
+			self.selected = None
+		elif same_set and self.selected is not None:
+			self.selected = min(self.selected, len(buttons) - 1)
+		else:
+			self.selected = 0
+		self.update_read_only()
+		self.sync()
+
+	def update_read_only(self) -> None:
+		# Without a selected button set there is nothing to add to
+		self.add_button_button['state'] = UI.DISABLED if self.button_set() is None else UI.NORMAL
+
+	def sync(self) -> None:
+		# Shows the buttons in the rows (reusing the rows already made), the preview, and the settings of the selected button
+		buttons = self.buttons()
+		while len(self.rows) > len(buttons):
+			self.rows.pop().destroy()
+		new_rows: list[ButtonRow] = []
+		while len(self.rows) < len(buttons):
+			row = ButtonRow(self.scroll_view.content_view, self)
+			self.rows.append(row)
+			new_rows.append(row)
+		for index, (row, button) in enumerate(zip(self.rows, buttons)):
+			row.set_button(index, button, is_last=index == len(buttons) - 1)
+		# New rows are only shown once they're loaded, so they all appear at once with their buttons
+		for row in new_rows:
+			row.pack(side=UI.TOP, fill=UI.X)
+		self.update_selection()
+
+	def update_selection(self) -> None:
+		buttons = self.buttons()
+		for index, row in enumerate(self.rows):
+			row.set_selected(index == self.selected)
+		self.preview.update_buttons(buttons, self.selected)
+		self.settings_view.load(buttons[self.selected] if self.selected is not None else None)
+
+	def scroll_to_selected(self) -> None:
+		if self.selected is None:
+			return
+		UI.Misc.update_idletasks(self)
+		self.scroll_view.scroll_to_view(self.rows[self.selected])
+
+	def edited(self) -> None:
+		# The button set was changed in place
+		self.graft_data.edited = True
+		self.delegate.update_status_bar()
+
+	# Delegates (ButtonRow, PreviewGrid, ButtonSettingsView)
+
+	def select_button(self, index: int) -> None:
+		if index == self.selected or not 0 <= index < len(self.buttons()):
+			return
+		self.selected = index
+		self.update_selection()
+		self.scroll_to_selected()
+
+	def move_button(self, index: int, delta: int) -> None:
+		buttons = self.buttons()
+		other = index + delta
+		if not 0 <= index < len(buttons) or not 0 <= other < len(buttons):
+			return
+		buttons[index], buttons[other] = buttons[other], buttons[index]
+		# The selection stays on the same button
+		if self.selected == index:
+			self.selected = other
+		elif self.selected == other:
+			self.selected = index
+		self.sync()
+		self.edited()
+
+	def delete_button(self, index: int) -> None:
+		buttons = self.buttons()
+		if not 0 <= index < len(buttons):
+			return
+		del buttons[index]
+		if not buttons:
+			self.selected = None
+		elif self.selected is not None and self.selected > index:
+			self.selected -= 1
+		elif self.selected is not None:
+			self.selected = min(self.selected, len(buttons) - 1)
+		self.sync()
+		self.edited()
+
+	def add_button_after(self, index: int) -> None:
+		self.insert_button(index + 1)
+
+	def add_button(self) -> None:
+		self.insert_button(len(self.buttons()))
+
+	def insert_button(self, index: int) -> None:
+		button_set = self.button_set()
+		if button_set is None:
+			return
+		button_set.buttons.insert(index, ButtonSetBuilderView.new_button(button_set.buttons))
+		self.selected = index
+		self.sync()
+		self.edited()
+		self.scroll_to_selected()
+
+	@staticmethod
+	def new_button(buttons: list[Button]) -> Button:
+		# A button in the first free slot of the 9 (or the first slot when they're all used), that's always shown and does nothing
+		used = set(button.position for button in buttons)
+		position = next((position for position in range(1, 10) if position not in used), 1)
+		return Button(position=position, condition=ButtonCodeCommands.Always.function_index, action=ButtonCodeCommands.Nothing.function_index)
+
+	def button_icon(self, icon: int) -> ImageWithBounds | None:
+		return self.data_context.get_cmdicon(icon)
+
+	def string_text(self, string_id: int) -> str:
+		# String IDs are 1-based (0 is no string)
+		if string_id == 0:
+			return 'No String'
+		return self.data_context.stat_txt_string(string_id - 1) or f'Unknown String {string_id}'
+
+	def button_settings_changed(self) -> None:
+		# The selected button was changed, which can change its row and the preview (its position, icon, or string)
+		if self.selected is not None:
+			buttons = self.buttons()
+			self.rows[self.selected].set_button(self.selected, buttons[self.selected], is_last=self.selected == len(buttons) - 1)
+			self.preview.update_buttons(buttons, self.selected)
+		self.edited()
+
+	def icon_select_geometry(self) -> WindowGeometry:
+		return self.delegate.config_.windows.icon_select
+
+	# Editor mode
+
+	def confirm_leave(self) -> bool:
+		return True
+
+	def confirm_apply_before_save(self) -> bool:
+		return True

@@ -1,8 +1,8 @@
 
 from __future__ import annotations
 
-from .BuilderView import ReqBuilderView
-from .ScriptView import ReqScriptView
+from .ReqBuilderView import ReqBuilderView
+from .ReqScriptView import ReqScriptView
 from ..GraftData import ReqGraftData
 
 from ...FileFormats.Graft import ReqScript

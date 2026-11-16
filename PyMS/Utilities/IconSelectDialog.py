@@ -1,19 +1,37 @@
-
 from __future__ import annotations
 
-from ..Utilities import UIKit as UI
-from ..Utilities.PyMSDialog import PyMSDialog
+from . import UIKit as UI
+from .PyMSDialog import PyMSDialog
+from .Config import WindowGeometry
+
+from ..FileFormats.Images import Bounds
 
 from math import floor, ceil
 
-from typing import TYPE_CHECKING, Callable
-if TYPE_CHECKING:
-	from .DataContext import DataContext
+from typing import Callable, Protocol, Sequence
+
+# A cmdicons.grp frame, with the bounds of its visible pixels
+ImageWithBounds = tuple[UI.AnyPhotoImage, Bounds]
+
+# The icons an `IconSelectDialog` chooses from
+class IconSource(Protocol):
+	def icon_frame_size(self) -> tuple[int, int]:
+		...
+
+	def icon_frame_count(self) -> int:
+		...
+
+	def icon_names(self) -> Sequence[str]:
+		...
+
+	def get_cmdicon(self, index: int, highlighted: bool = False) -> ImageWithBounds | None:
+		...
 
 class IconSelectDialog(PyMSDialog):
 	# If `none_index` is not `None`, then an empty icon will be shown and its index when selected will be `none_index`
-	def __init__(self, parent: UI.Misc, *, data_context: DataContext, delegate: Callable[[int], None], selected_index: int, none_index: int | None = None) -> None:
-		self.data_context = data_context
+	def __init__(self, parent: UI.Misc, *, icon_source: IconSource, window_geometry: WindowGeometry, delegate: Callable[[int], None], selected_index: int, none_index: int | None = None) -> None:
+		self.icon_source = icon_source
+		self.window_geometry = window_geometry
 		self.delegate = delegate
 		self._initial_selection = selected_index
 		self.selected_index = selected_index
@@ -23,7 +41,7 @@ class IconSelectDialog(PyMSDialog):
 		PyMSDialog.__init__(self, parent, 'Choose Icon', set_min_size=(True,True))
 
 	def widgetize(self) -> UI.Misc | None:
-		icon_size = self.data_context.cmdicons.frame_size()
+		icon_size = self.icon_source.icon_frame_size()
 		self.scrolled_canvas = UI.ScrolledCanvas(self, horizontal=UI.ShowScrollbar.never, width=icon_size[0] * 10, height=icon_size[1] * 5, background='#000000')
 		self.scrolled_canvas.pack(side=UI.TOP, fill=UI.BOTH, expand=1)
 		self.selection_box_item = self.scrolled_canvas.canvas.create_rectangle(0, 0, 0, 0, outline='#FFFFFF')
@@ -51,21 +69,21 @@ class IconSelectDialog(PyMSDialog):
 		return None
 
 	def setup_complete(self) -> None:
-		icon_size = self.data_context.cmdicons.frame_size()
+		icon_size = self.icon_source.icon_frame_size()
 		max_width = self.winfo_width() + 5 * icon_size[0]
 		max_height = self.winfo_height() + 10 * icon_size[1]
 		self.maxsize(max_width, max_height)
-		self.data_context.config.windows.icon_select.load_size(self)
+		self.window_geometry.load_size(self)
 
 		self._update_status_selection()
 		self.scrolled_canvas.canvas.update_idletasks()
 		self._scroll_to_selection()
 
 	def _icon_size(self) -> tuple[int, int]:
-		return self.data_context.cmdicons.frame_size()
+		return self.icon_source.icon_frame_size()
 
 	def _icon_count(self) -> int:
-		icon_count = self.data_context.cmdicons.frame_count()
+		icon_count = self.icon_source.icon_frame_count()
 		if self.none_index is not None:
 			icon_count += 1
 		return icon_count
@@ -167,7 +185,7 @@ class IconSelectDialog(PyMSDialog):
 				x = ((index - visible_start_index) % columns) * icon_size[0]
 				y = start_y + floor((index - visible_start_index) / float(columns)) * icon_size[1]
 				frame_index = self._display_index_to_frame_index(index)
-				image_with_bounds = self.data_context.get_cmdicon(frame_index, highlighted=(self._display_index_to_selected_index(index) == self.selected_index))
+				image_with_bounds = self.icon_source.get_cmdicon(frame_index, highlighted=(self._display_index_to_selected_index(index) == self.selected_index))
 				if not image_with_bounds:
 					continue
 				icon, bounds = image_with_bounds
@@ -189,14 +207,14 @@ class IconSelectDialog(PyMSDialog):
 			old_display_index = self._selected_index_to_display_index(old_selection)
 			if start_index <= old_display_index <= end_index:
 				frame_index = self._display_index_to_frame_index(old_display_index)
-				image_with_bounds = self.data_context.get_cmdicon(frame_index, highlighted=False)
+				image_with_bounds = self.icon_source.get_cmdicon(frame_index, highlighted=False)
 				if image_with_bounds:
 					icon, _ = image_with_bounds
 					self.scrolled_canvas.canvas.itemconfigure(self._display_index_to_tag(old_display_index), image=icon)
 		new_display_index = self._selected_index_to_display_index(new_selection)
 		if start_index <= new_display_index <= end_index:
 			frame_index = self._display_index_to_frame_index(new_display_index)
-			image_with_bounds = self.data_context.get_cmdicon(frame_index, highlighted=True)
+			image_with_bounds = self.icon_source.get_cmdicon(frame_index, highlighted=True)
 			if image_with_bounds:
 				icon, _ = image_with_bounds
 				self.scrolled_canvas.canvas.itemconfigure(self._display_index_to_tag(new_display_index), image=icon)
@@ -210,9 +228,10 @@ class IconSelectDialog(PyMSDialog):
 	def _selected_index_to_name(self, selected_index: int) -> str:
 		if selected_index == self.none_index:
 			return 'None'
-		if selected_index < 0 or selected_index >= len(self.data_context.cmdicons.names):
+		names = self.icon_source.icon_names()
+		if selected_index < 0 or selected_index >= len(names):
 			return 'Unknown'
-		return self.data_context.cmdicons.names[selected_index]
+		return names[selected_index]
 
 	def _update_status_selection(self) -> None:
 		self.status_selection.set(f'Selected: {self.selected_index} ({self._selected_index_to_name(self.selected_index)})')
@@ -257,5 +276,5 @@ class IconSelectDialog(PyMSDialog):
 		PyMSDialog.ok(self)
 
 	def dismiss(self) -> None:
-		self.data_context.config.windows.icon_select.save_size(self)
+		self.window_geometry.save_size(self)
 		PyMSDialog.dismiss(self)

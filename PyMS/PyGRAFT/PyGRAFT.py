@@ -9,10 +9,13 @@ from ..FileFormats.Graft import FGP
 from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
 from ..FileFormats.TBL import TBL
 from ..FileFormats.DAT import UnitsDAT, UpgradesDAT, TechDAT, OrdersDAT
+from ..FileFormats.GRP import CacheGRP
+from ..FileFormats.PCX import PCX
+from ..FileFormats.Palette import Palette
 
 from ..Utilities import registry
 from ..Utilities.analytics import ga, GAScreen
-from ..Utilities.trace import setup_trace
+from ..Utilities.trace import setup_trace, get_tracer
 from ..Utilities.DataContext import DataContext
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.PyMSError import PyMSError
@@ -31,7 +34,9 @@ from ..Utilities import UIKit as UI
 
 import os
 
-from typing import cast
+from typing import BinaryIO, Callable, TypeVar, cast
+
+T = TypeVar('T')
 
 LONG_VERSION = 'v' + Assets.version('PyGRAFT')
 
@@ -51,6 +56,7 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 		self.mpq_handler = MPQHandler(self.config_.settings.mpqs)
 		self.data_context = DataContext()
+		self.load_icons_palette()
 
 		self.units_data = UnitsGraftData()
 		self.upgrades_data = UpgradesGraftData()
@@ -223,6 +229,29 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def confirm_apply_before_save(self) -> bool:
 		return self.active_tab().confirm_apply_before_save()
 
+	def load_icons_palette(self) -> None:
+		# The button icons always use the bundled icons palette
+		try:
+			palette = Palette()
+			palette.load(Assets.palette_file_path('Icons.pal'))
+		except Exception:
+			if tracer := get_tracer():
+				tracer.trace_error()
+		else:
+			self.data_context.set_icons_palette(palette.palette)
+
+	def load_optional_file(self, path: str, load: Callable[[BinaryIO], T]) -> T | None:
+		# Loads a file that isn't needed to edit the files (only to show them), so it's `None` when it isn't found or can't be loaded
+		file = self.mpq_handler.get_file(path)
+		if file is None:
+			return None
+		try:
+			return load(file)
+		except Exception:
+			if tracer := get_tracer():
+				tracer.trace_error()
+			return None
+
 	def open_files(self) -> PyMSError | None:
 		self.mpq_handler.open_mpqs()
 		err = None
@@ -251,10 +280,24 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.data_context.set_upgrades_dat(upgrades_dat)
 			self.data_context.set_techdata_dat(techdata_dat)
 			self.data_context.set_orders_dat(orders_dat)
+			self.data_context.set_cmdicons_grp(self.load_optional_file(self.config_.settings.files.cmdicons.file_path, PyGRAFT.load_grp))
+			self.data_context.set_ticon_pcx(self.load_optional_file(self.config_.settings.files.ticon.file_path, PyGRAFT.load_pcx))
 			self.refresh()
 		finally:
 			self.mpq_handler.close_mpqs()
 		return err
+
+	@staticmethod
+	def load_grp(file: BinaryIO) -> CacheGRP:
+		grp = CacheGRP()
+		grp.load(file)
+		return grp
+
+	@staticmethod
+	def load_pcx(file: BinaryIO) -> PCX:
+		pcx = PCX()
+		pcx.load(file)
+		return pcx
 
 	def reload_files(self) -> None:
 		if not self.confirm_leave():

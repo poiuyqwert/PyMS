@@ -2,7 +2,7 @@ from .utils import PyGRAFTTestCase, ASK_YES_NO_CANCEL
 
 from ...PyGRAFT.PyGRAFT import PyGRAFT
 from ...PyGRAFT.Tabs import ReqGraftTab
-from ...PyGRAFT.RequirementsEditor.ScriptView import ReqScriptView
+from ...PyGRAFT.RequirementsEditor.ReqScriptView import ReqScriptView
 from ...FileFormats.Graft.CodeHandlers import RequirementCodeCommands, GraftSerializeContext
 from ...Utilities import UIKit as UI
 

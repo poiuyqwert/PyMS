@@ -11,13 +11,21 @@ from typing import Callable, Any
 
 # WARNING: You must use the `scrollView.content_view` as the master of the widgets placed into a ScrollView
 # WARNING: ScrollView relies on `bind_all` for scrolling, only 1 can be used per window
+# `viewport_height` sets the height of the visible area (instead of the default canvas height)
+# `fill_width` makes the `content_view` as wide as the visible area (so its contents can fill the width, and it only scrolls vertically)
 class ScrollView(Frame):
-	def __init__(self, parent: Misc, **config: Any) -> None:
+	def __init__(self, parent: Misc, *, viewport_height: int | None = None, fill_width: bool = False, **config: Any) -> None:
 		Frame.__init__(self, parent, **config)
 
 		self._content_area = Canvas(self, scrollregion=(0,0,0,0), highlightthickness=0)
+		if viewport_height is not None:
+			self._content_area.config(height=viewport_height)
 		self.content_view = Frame(self._content_area)
 		self.content_view_id = self._content_area.create_window(0, 0, window=self.content_view, anchor=NW)
+		if fill_width:
+			def fill(event: Event) -> None:
+				self.content_view_id.config(width=event.width)
+			self._content_area.bind(WidgetEvent.Configure(), fill, True)
 		self._content_area.grid(sticky=NSEW)
 		xscrollbar = AutohideScrollbar(self, orient=HORIZONTAL, command=self._content_area.xview)
 		xscrollbar.grid(sticky=EW)

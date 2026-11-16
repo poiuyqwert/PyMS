@@ -10,17 +10,17 @@ from ..FileFormats.Palette import Palette
 from ..FileFormats import GRP
 from ..FileFormats.MPQ.MPQ import MPQ
 from ..FileFormats.IScriptBIN.IScriptBIN import IScriptBIN
-from ..FileFormats.Images import RawPalette, Bounds
+from ..FileFormats.Images import RawPalette
 
 from ..Utilities import Assets
-from ..Utilities import UIKit as UI
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.Callback import Callback
+from ..Utilities.IconSelectDialog import ImageWithBounds
+from ..Utilities.DataContext import render_cmdicon
 
-from typing import Any, assert_never
+from typing import Any, Sequence, assert_never
 
-ImageWithBounds = tuple[UI.AnyPhotoImage, Bounds]
 
 class TicksPerSecond:
 	fastest = 24
@@ -239,21 +239,23 @@ class DataContext:
 		self.orders.load_defaults(defaultmpqs)
 		defaultmpqs.close_mpqs()
 
+	# IconSource
+
+	def icon_frame_size(self) -> tuple[int, int]:
+		return self.cmdicons.frame_size()
+
+	def icon_frame_count(self) -> int:
+		return self.cmdicons.frame_count()
+
+	def icon_names(self) -> Sequence[str]:
+		return self.cmdicons.names
+
 	def get_cmdicon(self, index: int, highlighted: bool = False) -> ImageWithBounds | None:
 		if not 'Icons' in self.palettes or not self.cmdicons.grp or index >= self.cmdicons.grp.frames:
 			return None
 		if highlighted in self.cmdicons.images and index in self.cmdicons.images[highlighted]:
 			return self.cmdicons.images[highlighted][index]
-		palette = self.palettes['Icons']
-		if highlighted and self.cmdicons.ticon_pcx:
-			ticon = self.cmdicons.ticon_pcx.image[0]
-			remap_count = max(0, min(16, len(ticon) - 32))
-			if remap_count:
-				palette = list(palette)
-				for i in range(remap_count):
-					palette[i] = palette[ticon[32+i]]
-		pixels, transindex = GRP.frame_pixels(self.cmdicons.grp, index)
-		image = (GRP.frame_to_photo(palette, pixels, transindex=transindex), GRP.image_bounds(pixels, transindex))
+		image = render_cmdicon(self.cmdicons.grp, self.palettes['Icons'], self.cmdicons.ticon_pcx, index, highlighted)
 		if not highlighted in self.cmdicons.images:
 			self.cmdicons.images[highlighted] = {}
 		self.cmdicons.images[highlighted][index] = image

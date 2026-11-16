@@ -86,7 +86,7 @@ CanBuildTerranBasic = GraftCommandDefinition('can_build_terran_basic', 'Can Buil
 CanBuildTerranAdvanced = GraftCommandDefinition('can_build_terran_advanced', 'Can Build Terran Advanced Buildings', "Shown if one unit is selected, it isn't constructing, and any advanced Terran building can be built.")
 CanCreateSingle = GraftCommandDefinition('can_create_single', 'Can Create Single Unit', 'Uses the requirements of {1} when one unit is selected. Otherwise hidden.', CodeTypes.UnitCodeType())
 
-CancelInfestation = GraftCommandDefinition('cancel_infestation', 'Cancel Infestation', 'Believed to do nothing.')
+Nothing = GraftCommandDefinition('nothing', 'Nothing', 'Does nothing.')
 Rally = GraftCommandDefinition('rally', 'Set Rally Point', 'Start targeting a rally point on a unit or the ground.')
 SelectLarva = GraftCommandDefinition('select_larva', 'Select Larva', 'Select the Larvae of the selected building.')
 Train = GraftCommandDefinition('train', 'Train', 'Train {1}.', CodeTypes.UnitCodeType())
@@ -219,7 +219,7 @@ condition_commands: list[GraftCommandDefinition] = number_functions([
 ])
 
 action_commands: list[GraftCommandDefinition] = number_functions([
-	CancelInfestation,
+	Nothing,
 	Rally,
 	SelectLarva,
 	Train,

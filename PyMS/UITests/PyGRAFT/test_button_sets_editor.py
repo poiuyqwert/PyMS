@@ -2,7 +2,7 @@ from .utils import PyGRAFTTestCase, ASK_YES_NO_CANCEL
 
 from ...PyGRAFT.PyGRAFT import PyGRAFT
 from ...PyGRAFT.Tabs import ButtonSetsTab
-from ...PyGRAFT.ButtonSetEditor.ScriptView import ButtonSetScriptView
+from ...PyGRAFT.ButtonSetEditor.ButtonSetScriptView import ButtonSetScriptView
 from ...FileFormats.Graft import Button, ButtonSet
 from ...FileFormats.Graft.CodeHandlers import GraftSerializeContext
 from ...Utilities import UIKit as UI
@@ -24,6 +24,9 @@ class Test_PyGRAFT_button_sets_editor(PyGRAFTTestCase):
 		gui = self.open_pygraft()
 		tab = self.display_tab(gui, 'Button Sets')
 		assert isinstance(tab, ButtonSetsTab)
+		# The Builder is shown first, these are the tests of the Script mode
+		tab.editor.notebook.display('Script')
+		self.pump(gui)
 		return gui, tab, tab.editor.script_view
 
 	def set_body(self, gui: PyGRAFT, set_id: int) -> str:
@@ -69,9 +72,11 @@ class Test_PyGRAFT_button_sets_editor(PyGRAFTTestCase):
 		self.assertEqual(view.entry_id, 5)
 		self.assertEqual(self.code(view), self.set_body(gui, 5))
 
-	def test_script_mode_is_shown_first(self) -> None:
-		_, tab, view = self.open_button_sets_tab()
-		self.assertIs(tab.editor.notebook.active, view)
+	def test_builder_mode_is_shown_first(self) -> None:
+		gui = self.open_pygraft()
+		tab = self.display_tab(gui, 'Button Sets')
+		assert isinstance(tab, ButtonSetsTab)
+		self.assertIs(tab.editor.notebook.active, tab.editor.builder_view)
 
 	def test_no_button_sets_is_read_only(self) -> None:
 		gui, _, view = self.open_button_sets_tab()

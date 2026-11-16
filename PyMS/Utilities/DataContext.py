@@ -2,14 +2,34 @@ from __future__ import annotations
 
 from ..FileFormats.TBL import TBL, decompile_string, compile_string
 from ..FileFormats.DAT import DATEntryName, DataNamesUsage, UnitsDAT, UpgradesDAT, TechDAT, OrdersDAT, WeaponsDAT, ImagesDAT, SpritesDAT, FlingyDAT, SoundsDAT
+from ..FileFormats import GRP
+from ..FileFormats.PCX import PCX
+from ..FileFormats.Images import RawPalette
 
 from . import Assets
+
+from typing import TYPE_CHECKING, Sequence
+if TYPE_CHECKING:
+	# Only for typing, the UIKit barrel imports this module
+	from .IconSelectDialog import ImageWithBounds
+
+def render_cmdicon(grp: GRP.CacheGRP, palette: RawPalette, ticon_pcx: PCX | None, index: int, highlighted: bool) -> ImageWithBounds:
+	# Draws a cmdicons.grp frame. Highlighted icons remap the first 16 palette colors with ticon.pcx (from its 33rd pixel on), like the game.
+	if highlighted and ticon_pcx:
+		ticon = ticon_pcx.image[0]
+		remap_count = max(0, min(16, len(ticon) - 32))
+		if remap_count:
+			palette = list(palette)
+			for i in range(remap_count):
+				palette[i] = palette[ticon[32+i]]
+	pixels, transindex = GRP.frame_pixels(grp, index)
+	return (GRP.frame_to_photo(palette, pixels, transindex=transindex), GRP.image_bounds(pixels, transindex))
 
 class DataContext:
 	# `*_name` methods return names to be used as values in code (built from the TBL strings only, and only when the name is unique), `*_display_name` methods return names to describe values (like in comments)
 	NAME_EXCLUDE = '\x0A\x28\x29\x2C'
 
-	def __init__(self, *, stat_txt_tbl: TBL | None = None, unitnames_tbl: TBL | None = None, images_tbl: TBL | None = None, sounds_tbl: TBL | None = None, units_dat: UnitsDAT | None = None, upgrades_dat: UpgradesDAT | None = None, techdata_dat: TechDAT | None = None, orders_dat: OrdersDAT | None = None, weapons_dat: WeaponsDAT | None = None, flingy_dat: FlingyDAT | None = None, sprites_dat: SpritesDAT | None = None, images_dat: ImagesDAT | None = None, sounds_dat: SoundsDAT | None = None) -> None:
+	def __init__(self, *, stat_txt_tbl: TBL | None = None, unitnames_tbl: TBL | None = None, images_tbl: TBL | None = None, sounds_tbl: TBL | None = None, units_dat: UnitsDAT | None = None, upgrades_dat: UpgradesDAT | None = None, techdata_dat: TechDAT | None = None, orders_dat: OrdersDAT | None = None, weapons_dat: WeaponsDAT | None = None, flingy_dat: FlingyDAT | None = None, sprites_dat: SpritesDAT | None = None, images_dat: ImagesDAT | None = None, sounds_dat: SoundsDAT | None = None, cmdicons_grp: GRP.CacheGRP | None = None, ticon_pcx: PCX | None = None, icons_palette: RawPalette | None = None) -> None:
 		self.stat_txt_tbl = stat_txt_tbl
 		self.unitnames_tbl = unitnames_tbl
 		self.images_tbl = images_tbl
@@ -50,6 +70,11 @@ class DataContext:
 		self._sound_names: tuple[str | None, ...] | None = None
 		self._sound_display_names: tuple[str, ...] | None = None
 		self._sound_ids: dict[str, tuple[int, ...]] | None = None
+		self.cmdicons_grp = cmdicons_grp
+		self.ticon_pcx = ticon_pcx
+		self.icons_palette = icons_palette
+		self._icon_names: tuple[str, ...] | None = None
+		self._cmdicon_images: dict[bool, dict[int, ImageWithBounds]] = {}
 
 	@staticmethod
 	def _build_ids(names: tuple[str | None, ...]) -> dict[str, tuple[int, ...]]:
@@ -671,12 +696,6 @@ class DataContext:
 
 	# Other data names
 
-	def icon_name(self, icon_id: int) -> str | None:
-		icons = Assets.data_cache(Assets.DataReference.Icons)
-		if 0 <= icon_id < len(icons):
-			return icons[icon_id]
-		return None
-
 	def button_set_name(self, button_set_id: int) -> str | None:
 		names = Assets.data_cache(Assets.DataReference.ButtonSets)
 		if 0 <= button_set_id < len(names):
@@ -693,3 +712,56 @@ class DataContext:
 		if card_id - ButtonsGraft.SPECIAL_BUTTON_CARDS_START < len(names):
 			return names[card_id - ButtonsGraft.SPECIAL_BUTTON_CARDS_START]
 		return None
+
+	# Icons (cmdicons.grp)
+
+	def set_cmdicons_grp(self, cmdicons_grp: GRP.CacheGRP | None) -> None:
+		self.cmdicons_grp = cmdicons_grp
+		self._icon_names = None
+		self._cmdicon_images = {}
+
+	def set_ticon_pcx(self, ticon_pcx: PCX | None) -> None:
+		self.ticon_pcx = ticon_pcx
+		self._cmdicon_images = {}
+
+	def set_icons_palette(self, icons_palette: RawPalette | None) -> None:
+		self.icons_palette = icons_palette
+		self._cmdicon_images = {}
+
+	def icon_name(self, icon_id: int) -> str | None:
+		icons = Assets.data_cache(Assets.DataReference.Icons)
+		if 0 <= icon_id < len(icons):
+			return icons[icon_id]
+		return None
+
+	# IconSource
+
+	def icon_frame_size(self) -> tuple[int, int]:
+		if self.cmdicons_grp:
+			return (self.cmdicons_grp.width, self.cmdicons_grp.height)
+		return (36, 34)
+
+	def icon_frame_count(self) -> int:
+		if self.cmdicons_grp:
+			return self.cmdicons_grp.frames
+		return len(self.icon_names())
+
+	def icon_names(self) -> Sequence[str]:
+		# The icon names, matched to the frames of cmdicons.grp (when it's loaded)
+		if self._icon_names is None:
+			names = Assets.data_cache(Assets.DataReference.Icons)
+			if self.cmdicons_grp:
+				if self.cmdicons_grp.frames > len(names):
+					names += ('Unknown',) * (self.cmdicons_grp.frames - len(names))
+				else:
+					names = names[:self.cmdicons_grp.frames]
+			self._icon_names = names
+		return self._icon_names
+
+	def get_cmdicon(self, index: int, highlighted: bool = False) -> ImageWithBounds | None:
+		if self.icons_palette is None or self.cmdicons_grp is None or not 0 <= index < self.cmdicons_grp.frames:
+			return None
+		images = self._cmdicon_images.setdefault(highlighted, {})
+		if index not in images:
+			images[index] = render_cmdicon(self.cmdicons_grp, self.icons_palette, self.ticon_pcx, index, highlighted)
+		return images[index]

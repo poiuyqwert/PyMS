@@ -18,6 +18,7 @@ class PyGRAFTConfig(Config.Config):
 			self.main = Config.WindowGeometry()
 			self.help = Config.WindowGeometry()
 			self.find_replace = Config.WindowGeometry()
+			self.icon_select = Config.WindowGeometry()
 			self.settings = PyGRAFTConfig.Windows.Settings()
 			super().__init__()
 
@@ -45,6 +46,8 @@ class PyGRAFTConfig(Config.Config):
 				self.dat = PyGRAFTConfig.Settings.Files.DAT()
 				self.stat_txt = Config.File(default=Assets.mpq_file_ref('rez', 'stat_txt.tbl'), name='stat_txt.tbl', filetypes=[UI.FileType.tbl()])
 				self.unitnames = Config.File(default=Assets.mpq_file_ref('rez', 'unitnames.tbl'), name='unitnames.tbl', filetypes=[UI.FileType.tbl()])
+				self.cmdicons = Config.File(default=Assets.mpq_file_ref('unit', 'cmdbtns', 'cmdicons.grp'), name='cmdicons.grp', filetypes=[UI.FileType.grp()])
+				self.ticon = Config.File(default=Assets.mpq_file_ref('unit', 'cmdbtns', 'ticon.pcx'), name='ticon.pcx', filetypes=[UI.FileType.pal_pcx()])
 				super().__init__()
 
 		class LastPath(Config.Group):

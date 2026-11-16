@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from .BuilderView import ButtonSetBuilderView
-from .ScriptView import ButtonSetScriptView
+from .ButtonSetBuilderView import ButtonSetBuilderView
+from .ButtonSetScriptView import ButtonSetScriptView
 from ..GraftData import ButtonsGraftData
 
 from ...Utilities import UIKit as UI
@@ -18,11 +18,11 @@ class ButtonSetEditor(UI.Frame):
 		self.entry_name = ''
 
 		self.notebook = UI.Notebook(self)
-		self.builder_view = ButtonSetBuilderView(self.notebook)
+		self.builder_view = ButtonSetBuilderView(self.notebook, delegate, graft_data)
 		self.script_view = ButtonSetScriptView(self.notebook, delegate, graft_data)
 		self.notebook.add_tab(self.builder_view, 'Builder')
 		self.notebook.add_tab(self.script_view, 'Script')
-		self.notebook.display('Script')
+		self.notebook.display('Builder')
 		self.notebook.bind(UI.WidgetEvent.Notebook.TabActivated(), lambda _: self.load_active())
 		self.notebook.pack(fill=UI.BOTH, expand=1)
 

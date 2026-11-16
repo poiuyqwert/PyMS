@@ -4,7 +4,7 @@ from __future__ import annotations
 from .DATTab import DATTab
 from ..DataID import DATID, DataID, UnitsTabID, AnyID
 from ..DATRef import DATRefs, DATRef
-from ..IconSelectDialog import IconSelectDialog
+from ...Utilities.IconSelectDialog import IconSelectDialog
 
 from ...FileFormats.DAT import DATUnit, DATWeapon, DATUpgrade
 
@@ -189,7 +189,7 @@ class UpgradesTab(DATTab):
 	def choose_icon(self) -> None:
 		def update_icon(index: int) -> None:
 			self.iconentry.set(index)
-		IconSelectDialog(self, data_context=self.delegate.data_context, delegate=update_icon, selected_index=self.iconentry.get())
+		IconSelectDialog(self, icon_source=self.delegate.data_context, window_geometry=self.delegate.data_context.config.windows.icon_select, delegate=update_icon, selected_index=self.iconentry.get())
 
 	def drawpreview(self) -> None:
 		self.preview.delete(UI.ALL)

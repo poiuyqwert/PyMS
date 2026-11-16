@@ -2,7 +2,7 @@ from .utils import PyGRAFTTestCase, ASK_YES_NO_CANCEL
 
 from ...PyGRAFT.PyGRAFT import PyGRAFT
 from ...PyGRAFT.Tabs import ReqGraftTab
-from ...PyGRAFT.RequirementsEditor.BuilderView import ReqBuilderView
+from ...PyGRAFT.RequirementsEditor.ReqBuilderView import ReqBuilderView
 from ...PyGRAFT.RequirementsEditor.OpcodeEditorView import OpcodeEditorView
 from ...FileFormats.Graft import ReqScript
 from ...FileFormats.Graft.CodeHandlers import RequirementCodeCommands
@@ -15,7 +15,7 @@ from unittest import mock
 
 from typing import Any
 
-ERROR_DIALOG = 'PyMS.PyGRAFT.RequirementsEditor.BuilderView.ErrorDialog'
+ERROR_DIALOG = 'PyMS.PyGRAFT.RequirementsEditor.ReqBuilderView.ErrorDialog'
 SHOW_INFO = 'tkinter.messagebox.showinfo'
 
 # Unit 4 (Terran Siege Tank (Siege Mode)) has no vanilla script

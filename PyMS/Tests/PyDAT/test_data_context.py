@@ -127,6 +127,12 @@ class Test_image_frame_helpers(unittest.TestCase):
 		self.assertIsNone(self.dc.get_cmdicon(0))
 		self.assertIsNone(self.dc.get_cmdicon(0, highlighted=True))
 
+	def test_icon_source_uses_the_icon_data(self) -> None:
+		self.dc.cmdicons.names = ('A', 'B')
+		self.assertEqual(self.dc.icon_names(), ('A', 'B'))
+		self.assertEqual(self.dc.icon_frame_count(), self.dc.cmdicons.frame_count())
+		self.assertEqual(self.dc.icon_frame_size(), self.dc.cmdicons.frame_size())
+
 	def test_get_grp_frame_none_without_palette(self) -> None:
 		# No palettes loaded, so every palette-resolution branch returns None.
 		self.assertIsNone(self.dc.get_grp_frame('unit.grp'))

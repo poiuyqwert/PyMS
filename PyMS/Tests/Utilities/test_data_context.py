@@ -3,12 +3,15 @@ from ...Utilities.DataContext import DataContext
 from ...FileFormats.TBL import TBL
 from ...FileFormats.Graft.ButtonsGraft import ButtonsGraft
 from ...Utilities import Assets
+from ...FileFormats.GRP import CacheGRP
+from ...FileFormats.PCX import PCX
 from ...FileFormats.DAT import UnitsDAT, UpgradesDAT, TechDAT, OrdersDAT, WeaponsDAT, ImagesDAT, SpritesDAT, FlingyDAT, SoundsDAT
 
 from ..utils import resource_path
 
 import os
 import unittest
+from unittest.mock import patch
 
 def _tbl(strings: list[str]) -> TBL:
 	tbl = TBL()
@@ -347,3 +350,66 @@ class Test_OtherNames(unittest.TestCase):
 		self.assertEqual(data_context.button_card_name(ButtonsGraft.SPECIAL_BUTTON_CARDS_START), Assets.data_cache(Assets.DataReference.ButtonCards)[0])
 		self.assertIsNone(data_context.button_card_name(-1))
 		self.assertIsNone(data_context.button_card_name(ButtonsGraft.SPECIAL_BUTTON_CARDS_START + len(Assets.data_cache(Assets.DataReference.ButtonCards))))
+
+def _icons_grp(frames: int) -> CacheGRP:
+	grp = CacheGRP()
+	grp.frames = frames
+	grp.width = 40
+	grp.height = 30
+	return grp
+
+def _ticon_pcx(remap: list[int]) -> PCX:
+	pcx = PCX()
+	pcx.image = [[0] * 32 + remap]
+	return pcx
+
+FRAME_TO_PHOTO = 'PyMS.Utilities.DataContext.GRP.frame_to_photo'
+FRAME_PIXELS = 'PyMS.Utilities.DataContext.GRP.frame_pixels'
+IMAGE_BOUNDS = 'PyMS.Utilities.DataContext.GRP.image_bounds'
+
+class Test_Icons(unittest.TestCase):
+	PALETTE = [(index, index, index) for index in range(256)]
+
+	def test_names_without_a_grp_are_the_known_icons(self) -> None:
+		data_context = DataContext()
+		self.assertEqual(tuple(data_context.icon_names()), Assets.data_cache(Assets.DataReference.Icons))
+		self.assertEqual(data_context.icon_frame_count(), len(Assets.data_cache(Assets.DataReference.Icons)))
+		self.assertEqual(data_context.icon_frame_size(), (36, 34))
+
+	def test_names_match_the_grp_frames(self) -> None:
+		known = Assets.data_cache(Assets.DataReference.Icons)
+		data_context = DataContext(cmdicons_grp=_icons_grp(len(known) + 2))
+		self.assertEqual(tuple(data_context.icon_names()), known + ('Unknown', 'Unknown'))
+		data_context.set_cmdicons_grp(_icons_grp(3))
+		self.assertEqual(tuple(data_context.icon_names()), known[:3])
+		self.assertEqual(data_context.icon_frame_count(), 3)
+		self.assertEqual(data_context.icon_frame_size(), (40, 30))
+
+	def test_no_icon_without_a_grp_or_palette(self) -> None:
+		self.assertIsNone(DataContext(icons_palette=self.PALETTE).get_cmdicon(0))
+		self.assertIsNone(DataContext(cmdicons_grp=_icons_grp(3)).get_cmdicon(0))
+
+	def test_no_icon_past_the_frames(self) -> None:
+		data_context = DataContext(cmdicons_grp=_icons_grp(3), icons_palette=self.PALETTE)
+		self.assertIsNone(data_context.get_cmdicon(3))
+		self.assertIsNone(data_context.get_cmdicon(-1))
+
+	def test_icons_are_cached_until_the_files_change(self) -> None:
+		data_context = DataContext(cmdicons_grp=_icons_grp(3), icons_palette=self.PALETTE)
+		with patch(FRAME_PIXELS, return_value=([[1]], 0)), patch(IMAGE_BOUNDS), patch(FRAME_TO_PHOTO, side_effect=lambda *_, **__: object()) as frame_to_photo:
+			image = data_context.get_cmdicon(1)
+			self.assertIs(data_context.get_cmdicon(1), image)
+			self.assertEqual(frame_to_photo.call_count, 1)
+			for change in (lambda: data_context.set_cmdicons_grp(_icons_grp(3)), lambda: data_context.set_ticon_pcx(None), lambda: data_context.set_icons_palette(self.PALETTE)):
+				change()
+				self.assertIsNot(data_context.get_cmdicon(1), image)
+				image = data_context.get_cmdicon(1)
+
+	def test_highlighted_icons_remap_with_ticon(self) -> None:
+		data_context = DataContext(cmdicons_grp=_icons_grp(3), icons_palette=self.PALETTE, ticon_pcx=_ticon_pcx([200, 201]))
+		with patch(FRAME_PIXELS, return_value=([[1]], 0)), patch(IMAGE_BOUNDS), patch(FRAME_TO_PHOTO) as frame_to_photo:
+			data_context.get_cmdicon(0)
+			self.assertEqual(frame_to_photo.call_args.args[0], self.PALETTE)
+			data_context.get_cmdicon(0, highlighted=True)
+			palette = frame_to_photo.call_args.args[0]
+		self.assertEqual(palette[:3], [(200, 200, 200), (201, 201, 201), (2, 2, 2)])

@@ -12,7 +12,8 @@ from ..Utilities import IO
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-	from .DataContext import DataContext, ImageWithBounds
+	from .DataContext import DataContext
+	from ..Utilities.IconSelectDialog import ImageWithBounds
 
 class IconData:
 	def __init__(self, data_context: DataContext) -> None:
