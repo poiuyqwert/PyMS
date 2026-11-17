@@ -194,7 +194,8 @@ class CacheGRP:
 		self.width = 0
 		self.height = 0
 		self.palette = palette or [(0,0,0)]*256
-		self.imagebuffer: list[tuple[Bounds, tuple[int, ...]]] = []
+		# Per frame: its bounds and the offset of its data (compressed line offset table, or raw uncompressed rows)
+		self.imagebuffer: list[tuple[Bounds, int]] = []
 		self.images: dict[int, Pixels] = {}
 		self.databuffer = b''
 		self.uncompressed: bool | None = None
@@ -210,17 +211,14 @@ class CacheGRP:
 				raise PyMSError('Load', f'Invalid GRP file (expected size to be between 1x1 and 256x256, got {width}x{height})')
 			if restrict:
 				frames = restrict
-			images: list[tuple[Bounds, tuple[int, ...]]] = []
+			images: list[tuple[Bounds, int]] = []
 			for frame in range(frames):
 				xoffset, yoffset, linewidth, lines, framedata = tuple(int(v) for v in struct.unpack('<4BL', data[6+8*frame:14+8*frame]))
-				line_offsets: list[int] = []
-				for line in range(lines):
-					line_offsets.append(framedata+struct.unpack('<H',data[framedata+2*line:framedata+2+2*line])[0])
-				images.append((Bounds(x_min=xoffset, y_min=yoffset, x_max=xoffset + linewidth, y_max=yoffset + lines), tuple(line_offsets)))
+				images.append((Bounds(x_min=xoffset, y_min=yoffset, x_max=xoffset + linewidth, y_max=yoffset + lines), framedata))
 		except PyMSError:
 			raise
 		except Exception as exc:
-			raise PyMSError('Load', "Unsupported GRP file, could possibly be corrupt or an uncompressed GRP") from exc
+			raise PyMSError('Load', "Unsupported GRP file, could possibly be corrupt") from exc
 		self.frames = frames
 		self.width = width
 		self.height = height
@@ -238,17 +236,23 @@ class CacheGRP:
 	def __getitem__(self, frame: int) -> Pixels:
 		if frame in self.images:
 			return self.images[frame]
-		image: list[list[int]] = []
-		bounds, offsets = self.imagebuffer[frame]
-		xoffset = bounds.x_min
-		linewidth = min(bounds.x_max, self.width) - xoffset
-		image.extend([[0] * self.width for _ in range(bounds.y_min)])
+		bounds, framedata = self.imagebuffer[frame]
+		xoffset = min(bounds.x_min, self.width)
+		top = min(bounds.y_min, self.height)
+		# Uncompressed rows are stored at their full width, so step by it even when drawing fewer pixels
+		stride = bounds.width
+		linewidth = max(0, min(bounds.x_max, self.width) - xoffset)
+		lines = max(0, min(bounds.y_max, self.height) - top)
+		left_pad = [0] * xoffset
+		right_pad = [0] * (self.width - linewidth - xoffset)
+		rows: list[list[int]] | None = None
 		if not self.uncompressed:
 			try:
 				compressed_rows: list[list[int]] = []
-				for offset in offsets:
-					compressed_rows.append([0] * xoffset + RLE.decompress_line(self.databuffer[offset:], linewidth) + [0] * (self.width-linewidth-xoffset))
-				image.extend(compressed_rows)
+				for line in range(lines):
+					offset = framedata + int(struct.unpack('<H', self.databuffer[framedata+2*line:framedata+2+2*line])[0])
+					compressed_rows.append(left_pad + RLE.decompress_line(self.databuffer[offset:], linewidth) + right_pad)
+				rows = compressed_rows
 				if self.uncompressed is None:
 					self.uncompressed = False
 			except Exception as exc: # pylint: disable=broad-exception-caught
@@ -256,20 +260,19 @@ class CacheGRP:
 					self.uncompressed = True
 				else:
 					raise PyMSError('Decompile', f'Could not decompile frame {frame}, GRP could be corrupt.') from exc
-		if self.uncompressed:
-			try:
-				for offset in offsets:
-					linedata = []
-					if xoffset > 0:
-						linedata = [0] * xoffset
-					linedata.extend(self.databuffer[offset:offset+linewidth])
-					image.append(linedata + [0] * (self.width-linewidth-xoffset))
-			except Exception as exc:
-				raise PyMSError('Decompile', f'Could not decompile frame {frame}, GRP could be corrupt.') from exc
-		if len(image) < self.height:
-			image.extend([[0] * self.width for _ in range(self.height - len(image))])
-		self.images[frame] = image[:self.height]
-		return self.images[frame]
+		if rows is None:
+			rows = []
+			for line in range(lines):
+				offset = framedata + line * stride
+				linedata = list(self.databuffer[offset:offset+linewidth])
+				if len(linedata) < linewidth:
+					raise PyMSError('Decompile', f'Could not decompile frame {frame}, GRP could be corrupt.')
+				rows.append(left_pad + linedata + right_pad)
+		image = [[0] * self.width for _ in range(top)]
+		image.extend(rows)
+		image.extend([[0] * self.width for _ in range(self.height - len(image))])
+		self.images[frame] = image
+		return image
 
 class GRP:
 	def __init__(self, palette: RawPalette | None = None, uncompressed: bool | None = None, transindex: int = 0) -> None:

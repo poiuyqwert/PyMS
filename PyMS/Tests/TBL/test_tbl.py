@@ -1,5 +1,5 @@
 
-from ...FileFormats.TBL import TBL, TBL_REF, compile_string, decompile_string, simplify_string
+from ...FileFormats.TBL import TBL, TBL_REF, compile_string, decompile_string, simplify_string, end_at_null
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import IO
 
@@ -22,6 +22,11 @@ def _interpret_text(content: str) -> list[str]:
 		tbl.interpret('in.txt')
 	return tbl.strings
 
+
+class Test_end_at_null(unittest.TestCase):
+	def test_stops_at_the_first_null(self) -> None:
+		self.assertEqual(end_at_null('ab\x00cd\x00'), 'ab')
+		self.assertEqual(end_at_null('abcd'), 'abcd')
 
 class Test_compile_string(unittest.TestCase):
 	def test_numeric_escape(self) -> None:

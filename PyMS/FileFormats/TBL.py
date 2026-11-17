@@ -106,6 +106,13 @@ def simplify_string(string: str) -> str:
 	string = re.sub(r'[\x00-\x1f]', '', string)
 	return string
 
+def end_at_null(string: str) -> str:
+	# The game stops drawing a string at its first null
+	null = string.find('\x00')
+	if null == -1:
+		return string
+	return string[:null]
+
 class TBL:
 	def __init__(self) -> None:
 		self.strings: list[str] = []

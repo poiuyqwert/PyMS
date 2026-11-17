@@ -3,8 +3,8 @@ from .Config import PyBINConfig
 
 from ..FileFormats.DialogBIN import DialogBIN
 from ..FileFormats.FNT import FNT
-from ..FileFormats.PCX import PCX
 from ..Utilities.MPQHandler import MPQHandler
+from ..Utilities.DataContext import DataContext
 from ..Utilities import UIKit as UI
 
 from typing import Protocol
@@ -80,13 +80,13 @@ class NodeDelegate(Protocol):
 	def get_show_bounds_responsive(self) -> bool:
 		...
 
-	def get_font(self, flags: int) -> FNT:
+	def get_font(self, flags: int) -> (FNT | None):
 		...
 
-	def get_tfontgam(self) -> PCX:
+	def get_data_context(self) -> DataContext:
 		...
 
-	def get_tfont(self) -> (PCX | None):
+	def node_render_canvas(self) -> UI.Canvas:
 		...
 
 	def node_render_image_create(self, *, x: int, y: int, image: UI.AnyPhotoImage, anchor: UI.Anchor) -> UI.Canvas.Item: # type: ignore[name-defined]

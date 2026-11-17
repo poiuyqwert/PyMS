@@ -11,6 +11,7 @@ from ..FileFormats.TBL import TBL
 from ..FileFormats.DAT import UnitsDAT, UpgradesDAT, TechDAT, OrdersDAT
 from ..FileFormats.GRP import CacheGRP
 from ..FileFormats.PCX import PCX
+from ..FileFormats.FNT import FNT
 from ..FileFormats.Palette import Palette
 
 from ..Utilities import registry
@@ -238,7 +239,7 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			if tracer := get_tracer():
 				tracer.trace_error()
 		else:
-			self.data_context.set_icons_palette(palette.palette)
+			self.data_context.set_palette('Icons', palette.palette)
 
 	def load_optional_file(self, path: str, load: Callable[[BinaryIO], T]) -> T | None:
 		# Loads a file that isn't needed to edit the files (only to show them), so it's `None` when it isn't found or can't be loaded
@@ -282,6 +283,11 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.data_context.set_orders_dat(orders_dat)
 			self.data_context.set_cmdicons_grp(self.load_optional_file(self.config_.settings.files.cmdicons.file_path, PyGRAFT.load_grp))
 			self.data_context.set_ticon_pcx(self.load_optional_file(self.config_.settings.files.ticon.file_path, PyGRAFT.load_pcx))
+			self.data_context.set_tfontgam_pcx(self.load_optional_file(self.config_.settings.files.tfontgam.file_path, PyGRAFT.load_pcx))
+			self.data_context.set_font8_fnt(self.load_optional_file(self.config_.settings.files.font8.file_path, PyGRAFT.load_fnt))
+			self.data_context.set_icons_grp(self.load_optional_file(self.config_.settings.files.icons.file_path, PyGRAFT.load_grp))
+			unit_palette = self.load_optional_file(self.config_.settings.files.unit_pal.file_path, PyGRAFT.load_palette)
+			self.data_context.set_palette('Units', unit_palette.palette if unit_palette else None)
 			self.refresh()
 		finally:
 			self.mpq_handler.close_mpqs()
@@ -298,6 +304,18 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		pcx = PCX()
 		pcx.load(file)
 		return pcx
+
+	@staticmethod
+	def load_fnt(file: BinaryIO) -> FNT:
+		fnt = FNT()
+		fnt.load(file)
+		return fnt
+
+	@staticmethod
+	def load_palette(file: BinaryIO) -> Palette:
+		palette = Palette()
+		palette.load(file)
+		return palette
 
 	def reload_files(self) -> None:
 		if not self.confirm_leave():

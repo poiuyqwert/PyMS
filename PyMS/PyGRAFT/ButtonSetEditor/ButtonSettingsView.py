@@ -16,12 +16,16 @@ from ...Utilities.CodeHandlers.CodeType import CodeType
 from ...Utilities.DataContext import DataContext
 from ...Utilities.IconSelectDialog import IconSelectDialog
 from ...Utilities.Config import WindowGeometry
+from ...Utilities.TextPreview.TextDrawing import TextDrawing
 
 from typing import Callable, Protocol
 
 class ButtonSettingsDelegate(Protocol):
 	@property
 	def data_context(self) -> DataContext:
+		...
+
+	def button_tooltip(self, button: Button, *, enabled: bool = True) -> TextDrawing | None:
 		...
 
 	def button_settings_changed(self) -> None:
@@ -139,6 +143,28 @@ class FunctionEditor(UI.Frame):
 			self.param_editor.entry['state'] = state
 			self.param_editor.dropdown['state'] = state
 
+# A preview of a tooltip like the game draws it, hidden while there's nothing to show
+class TooltipPreview:
+	PADDING = 4
+
+	def __init__(self, parent: UI.Misc, row: int) -> None:
+		self.canvas = UI.Canvas(parent, width=1, height=1, background='#000000', highlightthickness=0, borderwidth=0, theme_tag='preview') # type: ignore[call-arg]
+		self.canvas.grid(row=row, column=1, sticky=UI.W, pady=(0, 2))
+		self.canvas.grid_remove()
+		self.drawing: TextDrawing | None = None
+
+	def show(self, drawing: TextDrawing | None) -> None:
+		if self.drawing:
+			self.drawing.delete()
+		self.drawing = drawing
+		if drawing is None:
+			self.canvas.grid_remove()
+			return
+		padding = TooltipPreview.PADDING
+		self.canvas.config(width=drawing.width + padding * 2, height=drawing.height + padding * 2)
+		drawing.draw(self.canvas, padding, padding)
+		self.canvas.grid()
+
 # Edits the settings of the selected button, writing each change straight into the button
 class ButtonSettingsView(UI.Frame):
 	def __init__(self, parent: UI.Misc, delegate: ButtonSettingsDelegate) -> None:
@@ -194,12 +220,14 @@ class ButtonSettingsView(UI.Frame):
 		self.enabled_string_editor = UI.EntryDropDown(field, self.enabled_string, self.string_entries(), entry_width=6, dropdown_width=40, callback=self.enabled_string_changed)
 		self.enabled_string_editor.pack(side=UI.LEFT)
 		add_help(field, ButtonCodeCommands.EnabledStr)
+		self.enabled_string_preview = TooltipPreview(self, 5)
 
-		field = add_field(5, 'Disabled String')
+		field = add_field(6, 'Disabled String')
 		self.disabled_string = UI.IntegerVar(0, list(U16_RANGE))
 		self.disabled_string_editor = UI.EntryDropDown(field, self.disabled_string, self.string_entries(), entry_width=6, dropdown_width=40, callback=self.disabled_string_changed)
 		self.disabled_string_editor.pack(side=UI.LEFT)
 		add_help(field, ButtonCodeCommands.DisabledStr)
+		self.disabled_string_preview = TooltipPreview(self, 7)
 
 		self.set_enabled(False)
 
@@ -225,6 +253,7 @@ class ButtonSettingsView(UI.Frame):
 			self.action_editor.refresh_entries()
 		finally:
 			self.loading = False
+		self.update_string_previews()
 
 	# Loading
 
@@ -253,6 +282,7 @@ class ButtonSettingsView(UI.Frame):
 				self.disabled_string.set(shown.disabled_string)
 		finally:
 			self.loading = False
+		self.update_string_previews()
 		self.set_enabled(button is not None)
 
 	def set_enabled(self, enabled: bool) -> None:
@@ -264,6 +294,12 @@ class ButtonSettingsView(UI.Frame):
 		self.find_icon_button['state'] = state
 		self.condition_editor.set_enabled(enabled)
 		self.action_editor.set_enabled(enabled)
+
+	def update_string_previews(self) -> None:
+		# The tooltips show the costs of the action's parameter, so they change with the action too
+		button = self.button
+		self.enabled_string_preview.show(self.delegate.button_tooltip(button) if button else None)
+		self.disabled_string_preview.show(self.delegate.button_tooltip(button, enabled=False) if button else None)
 
 	def update_icon_preview(self) -> None:
 		draw_icon(self.icon_preview, self.delegate.data_context.get_cmdicon(self.icon.get()) if self.button else None)
@@ -308,16 +344,19 @@ class ButtonSettingsView(UI.Frame):
 			return
 		self.button.action = action
 		self.button.action_param = param
+		self.update_string_previews()
 		self.edited()
 
 	def enabled_string_changed(self, string_id: int) -> None:
 		if self.loading or self.button is None or string_id == self.button.enabled_string:
 			return
 		self.button.enabled_string = string_id
+		self.update_string_previews()
 		self.edited()
 
 	def disabled_string_changed(self, string_id: int) -> None:
 		if self.loading or self.button is None or string_id == self.button.disabled_string:
 			return
 		self.button.disabled_string = string_id
+		self.update_string_previews()
 		self.edited()

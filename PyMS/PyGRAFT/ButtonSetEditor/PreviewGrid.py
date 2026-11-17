@@ -6,6 +6,8 @@ from ...FileFormats.Graft import Button
 
 from ...Utilities import UIKit as UI
 from ...Utilities.IconSelectDialog import ImageWithBounds
+from ...Utilities.TextPreview.TextDrawing import TextDrawing
+from ...Utilities.TextPreview.TextPreviewTooltip import TextPreviewTooltip
 
 from typing import Protocol
 
@@ -16,8 +18,12 @@ class PreviewGridDelegate(Protocol):
 	def button_icon(self, icon: int) -> ImageWithBounds | None:
 		...
 
+	def button_tooltip(self, button: Button, *, enabled: bool = True) -> TextDrawing | None:
+		...
+
 # A preview of the button set like the game's command card: a slot for each position, showing the icon of a button at that position.
 # When several buttons are at the same position, the slot shows which of them it's showing (`x/y`), and clicking it again selects the next one.
+# Hovering over a slot shows the tooltip of its button like the game does.
 class PreviewGrid(UI.Frame):
 	def __init__(self, parent: UI.Misc, delegate: PreviewGridDelegate) -> None:
 		super().__init__(parent)
@@ -29,6 +35,9 @@ class PreviewGrid(UI.Frame):
 		self.shown_buttons: dict[int, int] = {}
 		self.selected: int | None = None
 		self.slots: dict[int, UI.Canvas] = {}
+		# The buttons the slots show
+		self.slot_shown: dict[int, Button] = {}
+		self.tooltips: dict[int, TextPreviewTooltip] = {}
 		# A slot for each of the 9 positions, in 3 columns
 		for position in range(1, 10):
 			# Larger than an icon, so the labels in its corners overlap the (centered) icon less
@@ -37,6 +46,7 @@ class PreviewGrid(UI.Frame):
 			canvas.grid(row=row, column=column, padx=1, pady=1)
 			canvas.bind(UI.Mouse.Click_Left(), lambda _, position=position: self.slot_clicked(position)) # type: ignore[misc]
 			self.slots[position] = canvas
+			self.tooltips[position] = TextPreviewTooltip(canvas, lambda position=position: self.slot_tooltip(position)) # type: ignore[misc]
 
 	def update_buttons(self, buttons: list[Button], selected: int | None) -> None:
 		self.selected = selected
@@ -59,6 +69,10 @@ class PreviewGrid(UI.Frame):
 
 	def draw_slot(self, position: int, button: Button | None) -> None:
 		canvas = self.slots[position]
+		if button is None:
+			self.slot_shown.pop(position, None)
+		else:
+			self.slot_shown[position] = button
 		width = int(canvas.cget('width'))
 		height = int(canvas.cget('height'))
 		canvas.delete(UI.ALL)
@@ -76,6 +90,13 @@ class PreviewGrid(UI.Frame):
 		# A 1 pixel black shadow behind the label (invisible on the black) keeps it readable over the bright icons.
 		canvas.create_text(x + 1, y + 1, text=text, anchor=anchor, fill='#000000', font=self.font, tags=f'{tag}_shadow')
 		canvas.create_text(x, y, text=text, anchor=anchor, fill='#7C8DD4', font=self.font, tags=tag)
+
+	def slot_tooltip(self, position: int) -> TextDrawing | None:
+		# The enabled string of the slot's button (the string shown when it can be used)
+		button = self.slot_shown.get(position)
+		if button is None:
+			return None
+		return self.delegate.button_tooltip(button)
 
 	def slot_clicked(self, position: int) -> None:
 		indexes = self.slot_buttons.get(position)

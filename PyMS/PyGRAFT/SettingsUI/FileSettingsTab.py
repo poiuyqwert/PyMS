@@ -20,6 +20,10 @@ class FileSettingsTab(SettingsTab):
 			('orders.dat', 'Used to look up Order names in stat_txt.tbl', config.settings.files.dat.orders),
 			('cmdicons.grp', 'Contains the button icons (optional, icons are not shown when it is not found)', config.settings.files.cmdicons),
 			('ticon.pcx', 'Used to draw highlighted button icons (optional)', config.settings.files.ticon),
+			('tfontgam.pcx', 'The text colors of the tooltip previews (optional, tooltips are not previewed when it is not found)', config.settings.files.tfontgam),
+			('font8.fnt', 'The font of the tooltip previews (optional, tooltips are not previewed when it is not found)', config.settings.files.font8),
+			('icons.grp', 'The mineral, gas, supply, and energy icons of the tooltip previews (optional)', config.settings.files.icons),
+			('Unit Palette', 'The palette of the tooltip preview icons (optional)', config.settings.files.unit_pal),
 		)
 		for name, description, setting in files:
 			view = FileSettingView(parent=self, edited_state=edited_state, name=name, description=description, setting=setting, mpq_handler=mpq_handler, mpq_history_config=config.settings.mpq_select_history, mpq_window_geometry_config=config.windows.settings.mpq_select)

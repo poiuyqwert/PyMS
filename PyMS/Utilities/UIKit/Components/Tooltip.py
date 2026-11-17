@@ -60,6 +60,12 @@ class Tooltip:
 		frame = Frame(self.tip, background='#FFFFC8', borderwidth=0)
 		Label(frame, text=self.text, justify=LEFT, font=self.font, foreground='#000', background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1) # type: ignore[arg-type]
 		frame.pack()
+		self.position_tip()
+
+	def position_tip(self) -> None:
+		# Places the shown tip by the mouse (or the parent), kept on the screen
+		if not self.tip:
+			return
 		x,y = tuple(self.parent.winfo_pointerxy())
 		self.tip.update_idletasks()
 		if not self.mouse:

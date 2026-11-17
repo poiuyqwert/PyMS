@@ -167,6 +167,13 @@ class ButtonsGraft:
 	def button_cards_using_button_set(self, set_id: int) -> list[int]:
 		return [card_id for card_id, card in enumerate(self.button_cards) if card.button_set == set_id]
 
+	def first_unit_using_button_set(self, set_id: int) -> int | None:
+		# The first unit whose button card uses the button set, standing in for the unit whose command card shows it (`None` when no unit uses it)
+		for unit_id, card in enumerate(self.button_cards[:ButtonsGraft.SPECIAL_BUTTON_CARDS_START]):
+			if card.button_set == set_id:
+				return unit_id
+		return None
+
 	def remove_button_set(self, set_id: int) -> ButtonSet:
 		if not 0 <= set_id < len(self.button_sets):
 			raise PyMSError('Internal', f'Button set {set_id} does not exist')

@@ -1,15 +1,24 @@
 from __future__ import annotations
 
 from ..FileFormats.TBL import TBL, decompile_string, compile_string
-from ..FileFormats.DAT import DATEntryName, DataNamesUsage, UnitsDAT, UpgradesDAT, TechDAT, OrdersDAT, WeaponsDAT, ImagesDAT, SpritesDAT, FlingyDAT, SoundsDAT
+from ..FileFormats.DAT import DATUnit, DATEntryName, DataNamesUsage, DATImage, UnitsDAT, UpgradesDAT, TechDAT, OrdersDAT, WeaponsDAT, ImagesDAT, SpritesDAT, FlingyDAT, SoundsDAT
 from ..FileFormats import GRP
 from ..FileFormats.PCX import PCX
 from ..FileFormats.Images import RawPalette
+from ..FileFormats.FNT import FNT, letter_to_photo
+from ..FileFormats.MPQ.MPQ import MPQ
+
+from .PyMSError import PyMSError
 
 from . import Assets
 
-from typing import TYPE_CHECKING, Sequence
+from enum import IntEnum
+
+from typing import TYPE_CHECKING, Any, Sequence
 if TYPE_CHECKING:
+	from PIL import ImageTk
+	from .MPQHandler import MPQHandler
+	from .TextPreview.Layout import TextStyle
 	# Only for typing, the UIKit barrel imports this module
 	from .IconSelectDialog import ImageWithBounds
 
@@ -29,7 +38,7 @@ class DataContext:
 	# `*_name` methods return names to be used as values in code (built from the TBL strings only, and only when the name is unique), `*_display_name` methods return names to describe values (like in comments)
 	NAME_EXCLUDE = '\x0A\x28\x29\x2C'
 
-	def __init__(self, *, stat_txt_tbl: TBL | None = None, unitnames_tbl: TBL | None = None, images_tbl: TBL | None = None, sounds_tbl: TBL | None = None, units_dat: UnitsDAT | None = None, upgrades_dat: UpgradesDAT | None = None, techdata_dat: TechDAT | None = None, orders_dat: OrdersDAT | None = None, weapons_dat: WeaponsDAT | None = None, flingy_dat: FlingyDAT | None = None, sprites_dat: SpritesDAT | None = None, images_dat: ImagesDAT | None = None, sounds_dat: SoundsDAT | None = None, cmdicons_grp: GRP.CacheGRP | None = None, ticon_pcx: PCX | None = None, icons_palette: RawPalette | None = None) -> None:
+	def __init__(self, *, stat_txt_tbl: TBL | None = None, unitnames_tbl: TBL | None = None, images_tbl: TBL | None = None, sounds_tbl: TBL | None = None, units_dat: UnitsDAT | None = None, upgrades_dat: UpgradesDAT | None = None, techdata_dat: TechDAT | None = None, orders_dat: OrdersDAT | None = None, weapons_dat: WeaponsDAT | None = None, flingy_dat: FlingyDAT | None = None, sprites_dat: SpritesDAT | None = None, images_dat: ImagesDAT | None = None, sounds_dat: SoundsDAT | None = None, cmdicons_grp: GRP.CacheGRP | None = None, ticon_pcx: PCX | None = None, palettes: dict[str, RawPalette] | None = None, icons_grp: GRP.CacheGRP | None = None, font8_fnt: FNT | None = None, font10_fnt: FNT | None = None, font14_fnt: FNT | None = None, font16_fnt: FNT | None = None, font16x_fnt: FNT | None = None, tfontgam_pcx: PCX | None = None, tfont_pcx: PCX | None = None, mpq_handler: MPQHandler | None = None) -> None:
 		self.stat_txt_tbl = stat_txt_tbl
 		self.unitnames_tbl = unitnames_tbl
 		self.images_tbl = images_tbl
@@ -72,9 +81,24 @@ class DataContext:
 		self._sound_ids: dict[str, tuple[int, ...]] | None = None
 		self.cmdicons_grp = cmdicons_grp
 		self.ticon_pcx = ticon_pcx
-		self.icons_palette = icons_palette
 		self._icon_names: tuple[str, ...] | None = None
 		self._cmdicon_images: dict[bool, dict[int, ImageWithBounds]] = {}
+		# Palettes by name (`Units`, `Icons`, `Terrain`, `ofire`, `gfire`, `bfire`, ...)
+		self.palettes: dict[str, RawPalette] = dict(palettes or {})
+		self.icons_grp = icons_grp
+		self._icon_images: dict[int, ImageWithBounds] = {}
+		self.font8_fnt = font8_fnt
+		self.font10_fnt = font10_fnt
+		self.font14_fnt = font14_fnt
+		self.font16_fnt = font16_fnt
+		self.font16x_fnt = font16x_fnt
+		self.tfontgam_pcx = tfontgam_pcx
+		self.tfont_pcx = tfont_pcx
+		self._text_glyph_images: dict[tuple[int, int, int, int, int], ImageTk.PhotoImage] = {}
+		self.mpq_handler = mpq_handler
+		# GRPs loaded through the MPQ handler by path (`None` when they couldn't be loaded), and their rendered frames by path, palette, draw function, and frame
+		self._grps: dict[str, GRP.CacheGRP | None] = {}
+		self._grp_frame_images: dict[tuple[str, str, int, int], ImageWithBounds] = {}
 
 	@staticmethod
 	def _build_ids(names: tuple[str | None, ...]) -> dict[str, tuple[int, ...]]:
@@ -122,6 +146,14 @@ class DataContext:
 		if string_id < 0 or string_id >= len(self.stat_txt_tbl.strings):
 			return None
 		return decompile_string(self.stat_txt_tbl.strings[string_id][:-1])
+
+	def stat_txt_raw_string(self, string_id: int) -> str | None:
+		# 0-based index into stat_txt.tbl, the string as the game reads it (with its control characters)
+		if not self.stat_txt_tbl:
+			return None
+		if string_id < 0 or string_id >= len(self.stat_txt_tbl.strings):
+			return None
+		return self.stat_txt_tbl.strings[string_id]
 
 	def stat_txt_strings(self) -> list[str] | None:
 		if not self.stat_txt_tbl:
@@ -724,9 +756,19 @@ class DataContext:
 		self.ticon_pcx = ticon_pcx
 		self._cmdicon_images = {}
 
-	def set_icons_palette(self, icons_palette: RawPalette | None) -> None:
-		self.icons_palette = icons_palette
-		self._cmdicon_images = {}
+	# Palettes
+
+	def set_palette(self, name: str, palette: RawPalette | None) -> None:
+		# Sets (or removes, with `None`) a named palette, clearing the images drawn with it
+		if palette is None:
+			self.palettes.pop(name, None)
+		else:
+			self.palettes[name] = palette
+		if name == 'Icons':
+			self._cmdicon_images = {}
+		if name == 'Units':
+			self._icon_images = {}
+		self._grp_frame_images = {key: image for key, image in self._grp_frame_images.items() if key[1] != name}
 
 	def icon_name(self, icon_id: int) -> str | None:
 		icons = Assets.data_cache(Assets.DataReference.Icons)
@@ -759,9 +801,180 @@ class DataContext:
 		return self._icon_names
 
 	def get_cmdicon(self, index: int, highlighted: bool = False) -> ImageWithBounds | None:
-		if self.icons_palette is None or self.cmdicons_grp is None or not 0 <= index < self.cmdicons_grp.frames:
+		palette = self.palettes.get('Icons')
+		if palette is None or self.cmdicons_grp is None or not 0 <= index < self.cmdicons_grp.frames:
 			return None
 		images = self._cmdicon_images.setdefault(highlighted, {})
 		if index not in images:
-			images[index] = render_cmdicon(self.cmdicons_grp, self.icons_palette, self.ticon_pcx, index, highlighted)
+			images[index] = render_cmdicon(self.cmdicons_grp, palette, self.ticon_pcx, index, highlighted)
 		return images[index]
+
+	# Icons (icons.grp, the resource/supply/energy icons of tooltips and the resource bar)
+
+	def set_icons_grp(self, icons_grp: GRP.CacheGRP | None) -> None:
+		self.icons_grp = icons_grp
+		self._icon_images = {}
+
+	def get_icon(self, frame: IconFrame) -> ImageWithBounds | None:
+		palette = self.palettes.get('Units')
+		if palette is None or self.icons_grp is None or not 0 <= frame < self.icons_grp.frames:
+			return None
+		if frame not in self._icon_images:
+			pixels, transindex = GRP.frame_pixels(self.icons_grp, frame)
+			self._icon_images[frame] = (GRP.frame_to_photo(palette, pixels, transindex=transindex), GRP.image_bounds(pixels, transindex))
+		return self._icon_images[frame]
+
+	# Text (fonts and their color palettes)
+
+	def _clear_text_glyphs(self) -> None:
+		self._text_glyph_images = {}
+
+	def set_font8_fnt(self, font8_fnt: FNT | None) -> None:
+		self.font8_fnt = font8_fnt
+		self._clear_text_glyphs()
+
+	def set_font10_fnt(self, font10_fnt: FNT | None) -> None:
+		self.font10_fnt = font10_fnt
+		self._clear_text_glyphs()
+
+	def set_font14_fnt(self, font14_fnt: FNT | None) -> None:
+		self.font14_fnt = font14_fnt
+		self._clear_text_glyphs()
+
+	def set_font16_fnt(self, font16_fnt: FNT | None) -> None:
+		self.font16_fnt = font16_fnt
+		self._clear_text_glyphs()
+
+	def set_font16x_fnt(self, font16x_fnt: FNT | None) -> None:
+		self.font16x_fnt = font16x_fnt
+		self._clear_text_glyphs()
+
+	def set_tfontgam_pcx(self, tfontgam_pcx: PCX | None) -> None:
+		self.tfontgam_pcx = tfontgam_pcx
+		self._clear_text_glyphs()
+
+	def set_tfont_pcx(self, tfont_pcx: PCX | None) -> None:
+		self.tfont_pcx = tfont_pcx
+		self._clear_text_glyphs()
+
+	def text_glyph(self, style: TextStyle, letter_index: int, color: int) -> ImageTk.PhotoImage | None:
+		# A letter of the style's font drawn in `color` (a color code of its remap, from its color palette).
+		# The fonts and palettes are fields of the context, and replacing one clears the cache, so they can be keyed by identity.
+		font = style.font
+		if not 0 <= letter_index < len(font.letters) or color not in style.remap:
+			return None
+		key = (id(font), id(style.colors), id(style.remap), letter_index, color)
+		if key not in self._text_glyph_images:
+			self._text_glyph_images[key] = letter_to_photo(style.colors, font.letters[letter_index], color, style.remap)
+		return self._text_glyph_images[key]
+
+	# GRP frames (loaded from the MPQ handler)
+
+	def set_mpq_handler(self, mpq_handler: MPQHandler | None) -> None:
+		self.mpq_handler = mpq_handler
+		self._grps = {}
+		self._grp_frame_images = {}
+
+	def _load_grp(self, path: str) -> GRP.CacheGRP | None:
+		if path not in self._grps:
+			grp: GRP.CacheGRP | None = None
+			if self.mpq_handler is not None:
+				try:
+					grp = GRP.CacheGRP()
+					grp.load(self.mpq_handler.load_file('MPQ:' + path))
+				except PyMSError:
+					grp = None
+			self._grps[path] = grp
+		return self._grps[path]
+
+	def get_grp_frame(self, path: str, *, draw_function: int | None = None, remapping: int | None = None, draw_info: Any | None = None, palette: str | None = None, frame: int = 0, is_full_path: bool = False) -> ImageWithBounds | None:
+		if palette is None:
+			if path.startswith('thingy\\tileset\\'):
+				palette = 'Terrain'
+			elif draw_function == DATImage.DrawFunction.use_remapping and remapping is not None and DATImage.Remapping.ofire <= remapping <= DATImage.Remapping.bfire:
+				palette = ('o','g','b')[remapping-1] + 'fire'
+			else:
+				palette = 'Units'
+		if not MPQ.supported() or not palette in self.palettes:
+			return None
+		if not is_full_path:
+			path = 'unit\\' + path
+		if not draw_function in (DATImage.DrawFunction.selection_circle, DATImage.DrawFunction.shadow):
+			draw_function = DATImage.DrawFunction.normal
+		key = (path, palette, draw_function, frame)
+		if key not in self._grp_frame_images:
+			grp = self._load_grp(path)
+			if grp is None or not 0 <= frame < grp.frames:
+				return None
+			rle_function: GRP.RLEFunc
+			if draw_function == DATImage.DrawFunction.selection_circle:
+				rle_function = GRP.rle_outline
+				if draw_info is None:
+					draw_info = GRP.Outline.self
+			elif draw_function == DATImage.DrawFunction.shadow:
+				rle_function = GRP.rle_shadow
+				if draw_info is None:
+					draw_info = (50,50,50, 255)
+			else:
+				rle_function = GRP.rle_normal
+			pixels, transindex = GRP.frame_pixels(grp, frame)
+			photo = GRP.frame_to_photo(self.palettes[palette], pixels, transindex=transindex, draw_function=rle_function, draw_info=draw_info)
+			self._grp_frame_images[key] = (photo, GRP.image_bounds(pixels, transindex))
+		return self._grp_frame_images[key]
+
+	def get_image_frame(self, image_id: int, *, draw_function: int | None = None, remapping: int | None = None, draw_info: Any | None = None, palette: str | None = None, frame: int = 0) -> ImageWithBounds | None:
+		if not self.images_dat or not self.images_tbl or not 0 <= image_id < self.images_dat.entry_count():
+			return None
+		image_entry = self.images_dat.get_entry(image_id)
+		tbl_index = image_entry.grp_file
+		if not 0 < tbl_index <= len(self.images_tbl.strings):
+			return None
+		grp_path = self.images_tbl.strings[tbl_index - 1]
+		if grp_path.endswith('<0>'):
+			grp_path = grp_path[:-3]
+		if draw_function is None:
+			draw_function = image_entry.draw_function
+			if draw_function == DATImage.DrawFunction.use_remapping and remapping is None:
+				remapping = image_entry.remapping
+		return self.get_grp_frame(grp_path, draw_function=draw_function, remapping=remapping, draw_info=draw_info, palette=palette, frame=frame)
+
+class IconFrame(IntEnum):
+	# The frames of icons.grp
+	minerals = 0
+	zerg_gas = 1
+	terran_gas = 2
+	protoss_gas = 3
+	zerg_supply = 4
+	terran_supply = 5
+	protoss_supply = 6
+	zerg_energy = 7
+	terran_energy = 8
+	protoss_energy = 9
+
+	@staticmethod
+	def gas(race: Race | None) -> IconFrame:
+		return (IconFrame.zerg_gas, IconFrame.terran_gas, IconFrame.protoss_gas)[race or Race.zerg]
+
+	@staticmethod
+	def supply(race: Race | None) -> IconFrame:
+		return (IconFrame.zerg_supply, IconFrame.terran_supply, IconFrame.protoss_supply)[race or Race.zerg]
+
+	@staticmethod
+	def energy(race: Race | None) -> IconFrame:
+		return (IconFrame.zerg_energy, IconFrame.terran_energy, IconFrame.protoss_energy)[race or Race.zerg]
+
+class Race(IntEnum):
+	zerg = 0
+	terran = 1
+	protoss = 2
+
+	@classmethod
+	def from_staredit_group_flags(cls, staredit_group_flags: int) -> Race | None:
+		# The race the game gives a unit (Zerg first, then Protoss, then Terran)
+		if staredit_group_flags & DATUnit.StarEditGroupFlag.zerg:
+			return cls.zerg
+		if staredit_group_flags & DATUnit.StarEditGroupFlag.protoss:
+			return cls.protoss
+		if staredit_group_flags & DATUnit.StarEditGroupFlag.terran:
+			return cls.terran
+		return None

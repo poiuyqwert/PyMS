@@ -528,8 +528,7 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 			self.widget.flags = flags
 			edited = True
 
-		self.node.string = None
-		self.node.item_string_images = None
+		self.node.reset_text()
 
 		if edited:
 			self.delegate.mark_edited()
@@ -565,8 +564,7 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 
 	def cancel(self, _event: UI.Event | None = None) -> None:
 		self.widget.restore(self.original_widget)
-		self.node.string = None
-		self.node.item_string_images = None
+		self.node.reset_text()
 		self.delegate.refresh_nodes()
 		self.delegate.refresh_preview()
 		self.dismiss()

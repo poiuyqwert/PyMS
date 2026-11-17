@@ -1,17 +1,20 @@
 
-from ...Utilities.DataContext import DataContext
+from ...Utilities.DataContext import DataContext, IconFrame, Race
+from ...Utilities.PyMSError import PyMSError
+from ...Utilities.TextPreview.Layout import TextStyle
 from ...FileFormats.TBL import TBL
 from ...FileFormats.Graft.ButtonsGraft import ButtonsGraft
 from ...Utilities import Assets
 from ...FileFormats.GRP import CacheGRP
+from ...FileFormats.FNT import FNT, COLOR_CODES_INGAME
 from ...FileFormats.PCX import PCX
-from ...FileFormats.DAT import UnitsDAT, UpgradesDAT, TechDAT, OrdersDAT, WeaponsDAT, ImagesDAT, SpritesDAT, FlingyDAT, SoundsDAT
+from ...FileFormats.DAT import DATUnit, DATImage, UnitsDAT, UpgradesDAT, TechDAT, OrdersDAT, WeaponsDAT, ImagesDAT, SpritesDAT, FlingyDAT, SoundsDAT
 
 from ..utils import resource_path
 
 import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 def _tbl(strings: list[str]) -> TBL:
 	tbl = TBL()
@@ -386,30 +389,191 @@ class Test_Icons(unittest.TestCase):
 		self.assertEqual(data_context.icon_frame_size(), (40, 30))
 
 	def test_no_icon_without_a_grp_or_palette(self) -> None:
-		self.assertIsNone(DataContext(icons_palette=self.PALETTE).get_cmdicon(0))
+		self.assertIsNone(DataContext(palettes={'Icons': self.PALETTE}).get_cmdicon(0))
 		self.assertIsNone(DataContext(cmdicons_grp=_icons_grp(3)).get_cmdicon(0))
 
 	def test_no_icon_past_the_frames(self) -> None:
-		data_context = DataContext(cmdicons_grp=_icons_grp(3), icons_palette=self.PALETTE)
+		data_context = DataContext(cmdicons_grp=_icons_grp(3), palettes={'Icons': self.PALETTE})
 		self.assertIsNone(data_context.get_cmdicon(3))
 		self.assertIsNone(data_context.get_cmdicon(-1))
 
 	def test_icons_are_cached_until_the_files_change(self) -> None:
-		data_context = DataContext(cmdicons_grp=_icons_grp(3), icons_palette=self.PALETTE)
+		data_context = DataContext(cmdicons_grp=_icons_grp(3), palettes={'Icons': self.PALETTE})
 		with patch(FRAME_PIXELS, return_value=([[1]], 0)), patch(IMAGE_BOUNDS), patch(FRAME_TO_PHOTO, side_effect=lambda *_, **__: object()) as frame_to_photo:
 			image = data_context.get_cmdicon(1)
 			self.assertIs(data_context.get_cmdicon(1), image)
 			self.assertEqual(frame_to_photo.call_count, 1)
-			for change in (lambda: data_context.set_cmdicons_grp(_icons_grp(3)), lambda: data_context.set_ticon_pcx(None), lambda: data_context.set_icons_palette(self.PALETTE)):
+			for change in (lambda: data_context.set_cmdicons_grp(_icons_grp(3)), lambda: data_context.set_ticon_pcx(None), lambda: data_context.set_palette('Icons', self.PALETTE)):
 				change()
 				self.assertIsNot(data_context.get_cmdicon(1), image)
 				image = data_context.get_cmdicon(1)
 
 	def test_highlighted_icons_remap_with_ticon(self) -> None:
-		data_context = DataContext(cmdicons_grp=_icons_grp(3), icons_palette=self.PALETTE, ticon_pcx=_ticon_pcx([200, 201]))
+		data_context = DataContext(cmdicons_grp=_icons_grp(3), palettes={'Icons': self.PALETTE}, ticon_pcx=_ticon_pcx([200, 201]))
 		with patch(FRAME_PIXELS, return_value=([[1]], 0)), patch(IMAGE_BOUNDS), patch(FRAME_TO_PHOTO) as frame_to_photo:
 			data_context.get_cmdicon(0)
 			self.assertEqual(frame_to_photo.call_args.args[0], self.PALETTE)
 			data_context.get_cmdicon(0, highlighted=True)
 			palette = frame_to_photo.call_args.args[0]
 		self.assertEqual(palette[:3], [(200, 200, 200), (201, 201, 201), (2, 2, 2)])
+
+def _resource_icons_grp(frames: int) -> CacheGRP:
+	grp = CacheGRP()
+	grp.frames = frames
+	return grp
+
+class Test_ResourceIcons(unittest.TestCase):
+	PALETTE = [(index, index, index) for index in range(256)]
+
+	def test_no_icon_without_a_grp_or_palette(self) -> None:
+		self.assertIsNone(DataContext(palettes={'Units': self.PALETTE}).get_icon(IconFrame.minerals))
+		self.assertIsNone(DataContext(icons_grp=_resource_icons_grp(10)).get_icon(IconFrame.minerals))
+
+	def test_no_icon_past_the_frames(self) -> None:
+		data_context = DataContext(icons_grp=_resource_icons_grp(3), palettes={'Units': self.PALETTE})
+		self.assertIsNone(data_context.get_icon(IconFrame.zerg_supply))
+
+	def test_icons_use_the_units_palette_and_are_cached_until_the_files_change(self) -> None:
+		data_context = DataContext(icons_grp=_resource_icons_grp(10), palettes={'Units': self.PALETTE, 'Icons': []})
+		with patch(FRAME_PIXELS, return_value=([[1]], 0)) as frame_pixels, patch(IMAGE_BOUNDS), patch(FRAME_TO_PHOTO, side_effect=lambda *_, **__: object()) as frame_to_photo:
+			icon = data_context.get_icon(IconFrame.terran_gas)
+			self.assertEqual(frame_pixels.call_args.args[1], IconFrame.terran_gas)
+			self.assertEqual(frame_to_photo.call_args.args[0], self.PALETTE)
+			self.assertIs(data_context.get_icon(IconFrame.terran_gas), icon)
+			# Other palettes don't affect the icons
+			data_context.set_palette('Icons', self.PALETTE)
+			self.assertIs(data_context.get_icon(IconFrame.terran_gas), icon)
+			for change in (lambda: data_context.set_icons_grp(_resource_icons_grp(10)), lambda: data_context.set_palette('Units', self.PALETTE)):
+				change()
+				self.assertIsNot(data_context.get_icon(IconFrame.terran_gas), icon)
+				icon = data_context.get_icon(IconFrame.terran_gas)
+
+	def test_race_frames(self) -> None:
+		self.assertEqual(IconFrame.gas(Race.terran), IconFrame.terran_gas)
+		self.assertEqual(IconFrame.supply(Race.protoss), IconFrame.protoss_supply)
+		self.assertEqual(IconFrame.energy(Race.zerg), IconFrame.zerg_energy)
+		# Without a race, the Zerg icons are used
+		self.assertEqual(IconFrame.gas(None), IconFrame.zerg_gas)
+		self.assertEqual(IconFrame.supply(None), IconFrame.zerg_supply)
+		self.assertEqual(IconFrame.energy(None), IconFrame.zerg_energy)
+
+LETTER_TO_PHOTO = 'PyMS.Utilities.DataContext.letter_to_photo'
+
+def _font(letters: int) -> FNT:
+	font = FNT()
+	font.start = 32
+	font.letters = [[[1]] for _ in range(letters)]
+	font.sizes = [(1, 1, 0, 0) for _ in range(letters)]
+	return font
+
+class Test_TextGlyphs(unittest.TestCase):
+	def test_no_glyph_for_unknown_letters_or_colors(self) -> None:
+		font = _font(2)
+		data_context = DataContext(font8_fnt=font, tfontgam_pcx=PCX())
+		assert data_context.tfontgam_pcx is not None
+		with patch(LETTER_TO_PHOTO) as letter_to_photo:
+			self.assertIsNone(data_context.text_glyph(TextStyle(font, data_context.tfontgam_pcx, COLOR_CODES_INGAME), 2, 2))
+			# 9 isn't a color code in game
+			self.assertIsNone(data_context.text_glyph(TextStyle(font, data_context.tfontgam_pcx, COLOR_CODES_INGAME), 0, 9))
+		letter_to_photo.assert_not_called()
+
+	def test_glyphs_are_drawn_with_the_remap_and_cached_until_the_fonts_change(self) -> None:
+		font = _font(2)
+		tfontgam = PCX()
+		data_context = DataContext(font8_fnt=font, tfontgam_pcx=tfontgam)
+		style = TextStyle(font, tfontgam, COLOR_CODES_INGAME)
+		with patch(LETTER_TO_PHOTO, side_effect=lambda *_: object()) as letter_to_photo:
+			glyph = data_context.text_glyph(style, 1, 4)
+			self.assertEqual(letter_to_photo.call_args.args, (tfontgam, font.letters[1], 4, COLOR_CODES_INGAME))
+			self.assertIs(data_context.text_glyph(style, 1, 4), glyph)
+			self.assertIsNot(data_context.text_glyph(style, 1, 3), glyph)
+			changes = (
+				lambda: data_context.set_font8_fnt(font),
+				lambda: data_context.set_font10_fnt(None),
+				lambda: data_context.set_font14_fnt(None),
+				lambda: data_context.set_font16_fnt(None),
+				lambda: data_context.set_font16x_fnt(None),
+				lambda: data_context.set_tfontgam_pcx(tfontgam),
+				lambda: data_context.set_tfont_pcx(None),
+			)
+			for change in changes:
+				change()
+				self.assertIsNot(data_context.text_glyph(style, 1, 4), glyph)
+				glyph = data_context.text_glyph(style, 1, 4)
+
+MPQ_SUPPORTED = 'PyMS.Utilities.DataContext.MPQ.supported'
+CACHE_GRP = 'PyMS.Utilities.DataContext.GRP.CacheGRP'
+
+class _StubCacheGRP:
+	def __init__(self) -> None:
+		self.frames = 0
+		self.loaded: list[object] = []
+
+	def load(self, file: object) -> None:
+		self.frames = 3
+		self.loaded.append(file)
+
+class Test_GRPFrames(unittest.TestCase):
+	PALETTE = [(index, index, index) for index in range(256)]
+
+	def _data_context(self, **kwargs: object) -> tuple[DataContext, Mock]:
+		mpq_handler = Mock()
+		mpq_handler.load_file.side_effect = lambda path: path
+		data_context = DataContext(mpq_handler=mpq_handler, palettes={'Units': self.PALETTE, 'Terrain': self.PALETTE, 'gfire': self.PALETTE}, **kwargs) # type: ignore[arg-type]
+		return data_context, mpq_handler
+
+	def test_no_frame_without_a_handler_palette_or_mpq_support(self) -> None:
+		with patch(MPQ_SUPPORTED, return_value=True):
+			self.assertIsNone(DataContext(palettes={'Units': self.PALETTE}).get_grp_frame('marine.grp'))
+			data_context, _ = self._data_context()
+			self.assertIsNone(data_context.get_grp_frame('marine.grp', palette='bfire'))
+		with patch(MPQ_SUPPORTED, return_value=False):
+			data_context, _ = self._data_context()
+			self.assertIsNone(data_context.get_grp_frame('marine.grp'))
+
+	def test_no_frame_when_the_grp_fails_to_load(self) -> None:
+		data_context, mpq_handler = self._data_context()
+		mpq_handler.load_file.side_effect = PyMSError('Load', 'Missing file')
+		with patch(MPQ_SUPPORTED, return_value=True):
+			self.assertIsNone(data_context.get_grp_frame('marine.grp'))
+
+	def test_frames_load_from_the_unit_folder_with_a_palette_from_the_path(self) -> None:
+		data_context, mpq_handler = self._data_context()
+		with patch(MPQ_SUPPORTED, return_value=True), patch(CACHE_GRP, _StubCacheGRP), patch(FRAME_PIXELS, return_value=([[1]], 0)), patch(IMAGE_BOUNDS), patch(FRAME_TO_PHOTO) as frame_to_photo:
+			data_context.get_grp_frame('terran\\marine.grp')
+			mpq_handler.load_file.assert_called_with('MPQ:unit\\terran\\marine.grp')
+			data_context.get_grp_frame('thingy\\tileset\\x.grp', is_full_path=True)
+			mpq_handler.load_file.assert_called_with('MPQ:thingy\\tileset\\x.grp')
+			data_context.get_grp_frame('fire.grp', draw_function=DATImage.DrawFunction.use_remapping, remapping=DATImage.Remapping.gfire)
+		self.assertEqual(frame_to_photo.call_count, 3)
+
+	def test_each_frame_is_drawn_and_cached(self) -> None:
+		data_context, mpq_handler = self._data_context()
+		with patch(MPQ_SUPPORTED, return_value=True), patch(CACHE_GRP, _StubCacheGRP), patch(FRAME_PIXELS, return_value=([[1]], 0)) as frame_pixels, patch(IMAGE_BOUNDS), patch(FRAME_TO_PHOTO, side_effect=lambda *_, **__: object()):
+			first = data_context.get_grp_frame('marine.grp', frame=0)
+			second = data_context.get_grp_frame('marine.grp', frame=1)
+			self.assertIsNot(first, second)
+			self.assertEqual([call.args[1] for call in frame_pixels.call_args_list], [0, 1])
+			self.assertIs(data_context.get_grp_frame('marine.grp', frame=1), second)
+			self.assertIsNone(data_context.get_grp_frame('marine.grp', frame=3))
+			# The GRP is only loaded once for all its frames
+			self.assertEqual(mpq_handler.load_file.call_count, 1)
+			data_context.set_palette('Units', self.PALETTE)
+			self.assertIsNot(data_context.get_grp_frame('marine.grp', frame=1), second)
+
+	def test_image_frames_use_the_images_tbl_path(self) -> None:
+		images_dat = _images_dat({0: 2, 1: 0})
+		data_context, mpq_handler = self._data_context(images_dat=images_dat, images_tbl=_tbl(['a.grp\x00', 'zerg\\drone.grp<0>']))
+		with patch(MPQ_SUPPORTED, return_value=True), patch(CACHE_GRP, _StubCacheGRP), patch(FRAME_PIXELS, return_value=([[1]], 0)), patch(IMAGE_BOUNDS), patch(FRAME_TO_PHOTO):
+			self.assertIsNotNone(data_context.get_image_frame(0))
+			mpq_handler.load_file.assert_called_with('MPQ:unit\\zerg\\drone.grp')
+			# No GRP file
+			self.assertIsNone(data_context.get_image_frame(1))
+		self.assertIsNone(DataContext().get_image_frame(0))
+
+class Test_Race(unittest.TestCase):
+	def test_from_staredit_group_flags(self) -> None:
+		self.assertEqual(Race.from_staredit_group_flags(DATUnit.StarEditGroupFlag.protoss | DATUnit.StarEditGroupFlag.men), Race.protoss)
+		# The game checks Zerg, then Protoss, then Terran
+		self.assertEqual(Race.from_staredit_group_flags(DATUnit.StarEditGroupFlag.terran | DATUnit.StarEditGroupFlag.protoss), Race.protoss)
+		self.assertIsNone(Race.from_staredit_group_flags(DATUnit.StarEditGroupFlag.men))

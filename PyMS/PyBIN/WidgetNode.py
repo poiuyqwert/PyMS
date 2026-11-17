@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from .Delegates import NodeDelegate
-from .StringPreview import StringPreview
 
 from ..FileFormats import DialogBIN, TBL, SMK, GRP, PCX, FNT
 
 from ..Utilities import UIKit as UI
+from ..Utilities.TextPreview.Layout import TextLayout, TextStyle, HAlign, VAlign
+from ..Utilities.TextPreview.TextDrawing import TextDrawing
 
 import sys
 
@@ -26,7 +27,9 @@ class WidgetNode:
 		else:
 			self.children = []
 
-		self.string: StringPreview | None = None
+		# The drawing of the widget's text, and the size of the text box it was laid out in
+		self.text_drawing: TextDrawing | None = None
+		self.text_drawing_size: tuple[int, int] | None = None
 		self.photo: UI.AnyPhotoImage | None = None
 		self.image_load_failed: str | None = None
 		self.smks: dict[str, SMK.SMK] | None = None
@@ -38,7 +41,6 @@ class WidgetNode:
 		self.item_bounds: UI.Canvas.Item | None = None # type: ignore[name-defined]
 		self.item_text_bounds: UI.Canvas.Item | None = None # type: ignore[name-defined]
 		self.item_responsive_bounds: UI.Canvas.Item | None = None # type: ignore[name-defined]
-		self.item_string_images: list[UI.Canvas.Item] | None = None # type: ignore[name-defined]
 		self.item_image: UI.Canvas.Item | None = None # type: ignore[name-defined]
 		self.item_smks: list[UI.Canvas.Item] = [] # type: ignore[name-defined]
 		self.item_dialog: UI.Canvas.Item | None = None # type: ignore[name-defined]
@@ -423,48 +425,75 @@ class WidgetNode:
 			self.item_image = None
 		return reorder
 
+	def text_style(self, width: int) -> TextStyle | None:
+		# How the widget's text is drawn (`None` when the fonts aren't loaded)
+		assert self.widget is not None
+		data_context = self.delegate.get_data_context()
+		font = self.delegate.get_font(self.widget.flags)
+		if font is None:
+			return None
+		if data_context.tfont_pcx:
+			colors = data_context.tfont_pcx
+			remap = FNT.COLOR_CODES_GLUE
+		elif data_context.tfontgam_pcx:
+			colors = data_context.tfontgam_pcx
+			remap = FNT.COLOR_CODES_INGAME
+		else:
+			return None
+		default_color = 2
+		if self.widget.type in (DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_COMBOBOX,DialogBIN.BINWidget.TYPE_DEFAULT_BTN,DialogBIN.BINWidget.TYPE_OPTION_BTN,DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN):
+			default_color = 3
+		align_flags = self.widget.flags
+		if self.widget.type == DialogBIN.BINWidget.TYPE_LABEL_LEFT_ALIGN:
+			align_flags = 0
+		elif self.widget.type == DialogBIN.BINWidget.TYPE_LABEL_CENTER_ALIGN:
+			align_flags = DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER
+		elif self.widget.type == DialogBIN.BINWidget.TYPE_LABEL_RIGHT_ALIGN:
+			align_flags = DialogBIN.BINWidget.FLAG_TEXT_ALIGN_RIGHT
+		elif self.widget.type in (DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_DEFAULT_BTN):
+			align_flags = DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER | DialogBIN.BINWidget.FLAG_ALIGN_MIDDLE
+		elif self.widget.type in (DialogBIN.BINWidget.TYPE_CHECKBOX, DialogBIN.BINWidget.TYPE_OPTION_BTN):
+			align_flags = DialogBIN.BINWidget.FLAG_ALIGN_MIDDLE
+		align = HAlign.left
+		if align_flags & DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER:
+			align = HAlign.center
+		elif align_flags & DialogBIN.BINWidget.FLAG_TEXT_ALIGN_RIGHT:
+			align = HAlign.right
+		valign = VAlign.top
+		if align_flags & DialogBIN.BINWidget.FLAG_ALIGN_MIDDLE:
+			valign = VAlign.middle
+		elif align_flags & DialogBIN.BINWidget.FLAG_ALIGN_BOTTOM:
+			valign = VAlign.bottom
+		return TextStyle(font, colors, remap, default_color=default_color, wrap_width=width, align=align, valign=valign)
+
+	def reset_text(self) -> None:
+		# Removes the drawn text, so it's laid out and drawn again (after the text, its settings, or the fonts change)
+		if self.text_drawing:
+			self.text_drawing.delete()
+		self.text_drawing = None
+		self.text_drawing_size = None
+
 	def update_text(self) -> bool:
 		reorder = False
 		SHOW_TEXT = self.delegate.get_show_text()
 		if SHOW_TEXT and self.widget and self.widget.display_text() and self.visible():
-			if self.string is None:
-				font = self.delegate.get_font(self.widget.flags)
-				tfontgam = self.delegate.get_tfontgam()
-				remap_pal = tfontgam
-				remap = FNT.COLOR_CODES_INGAME
-				if tfont := self.delegate.get_tfont():
-					remap_pal = tfont
-					remap = FNT.COLOR_CODES_GLUE
-				default_color = 2
-				if self.widget.type in (DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_COMBOBOX,DialogBIN.BINWidget.TYPE_DEFAULT_BTN,DialogBIN.BINWidget.TYPE_OPTION_BTN,DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN):
-					default_color = 3
-				self.string = StringPreview(self.widget.display_text() or '', font, tfontgam, remap=remap, remap_palette=remap_pal, default_color=default_color)
 			x1,y1,x2,y2 = self.text_box()
-			align = self.widget.flags
-			if self.widget.type == DialogBIN.BINWidget.TYPE_LABEL_LEFT_ALIGN:
-				align = 0
-			elif self.widget.type == DialogBIN.BINWidget.TYPE_LABEL_CENTER_ALIGN:
-				align = DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER
-			elif self.widget.type == DialogBIN.BINWidget.TYPE_LABEL_RIGHT_ALIGN:
-				align = DialogBIN.BINWidget.FLAG_TEXT_ALIGN_RIGHT
-			elif self.widget.type in (DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_DEFAULT_BTN):
-				align = DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER | DialogBIN.BINWidget.FLAG_ALIGN_MIDDLE
-			elif self.widget.type in (DialogBIN.BINWidget.TYPE_CHECKBOX, DialogBIN.BINWidget.TYPE_OPTION_BTN):
-				align = DialogBIN.BINWidget.FLAG_ALIGN_MIDDLE
-			positions = self.string.get_positions(x1,y1, x2,y2, align_flags=align)
-			if self.item_string_images:
-				for item,position in zip(self.item_string_images,positions):
-					self.delegate.node_render_image_update(item=item, x=position[0], y=position[1], image=None)
-			else:
-				self.item_string_images = []
-				glyphs = self.string.get_glyphs()
-				for glyph,position in zip(glyphs,positions):
-					self.item_string_images.append(self.delegate.node_render_image_create(x=position[0], y=position[1], image=glyph, anchor=UI.NW))
-				reorder = True
-		elif self.item_string_images is not None:
-			for item in self.item_string_images:
-				self.delegate.node_render_delete(item)
-			self.item_string_images = None
+			size = (x2-x1, y2-y1)
+			if self.text_drawing is None or size != self.text_drawing_size:
+				# The text is wrapped and aligned in the text box, so it's laid out again when the box changes size
+				self.reset_text()
+				if style := self.text_style(size[0]):
+					layout = TextLayout.from_runs(self.widget.display_text() or '', style, box_width=size[0], box_height=size[1])
+					self.text_drawing = TextDrawing(layout, self.delegate.get_data_context())
+					self.text_drawing_size = size
+			if self.text_drawing:
+				if self.text_drawing.is_drawn():
+					self.text_drawing.move(x1, y1)
+				else:
+					self.text_drawing.draw(self.delegate.node_render_canvas(), x1, y1)
+					reorder = True
+		else:
+			self.reset_text()
 		return reorder
 
 	def update_bounds(self) -> bool:
@@ -537,8 +566,8 @@ class WidgetNode:
 		if self.item_smks:
 			for item in self.item_smks:
 				self.delegate.node_render_lift(item)
-		if self.item_string_images:
-			for item in self.item_string_images:
+		if self.text_drawing:
+			for item in self.text_drawing.items:
 				self.delegate.node_render_lift(item)
 		if self.item_bounds:
 			self.delegate.node_render_lift(self.item_bounds)
@@ -558,10 +587,7 @@ class WidgetNode:
 			for item in self.item_smks:
 				self.delegate.node_render_delete(item)
 			self.item_smks = []
-		if self.item_string_images:
-			for item in self.item_string_images:
-				self.delegate.node_render_delete(item)
-			self.item_string_images = []
+		self.reset_text()
 		if self.item_bounds:
 			self.delegate.node_render_delete(self.item_bounds)
 			self.item_bounds = None
@@ -580,5 +606,4 @@ class WidgetNode:
 		self.image_load_failed = None
 		self.smks = None
 		self.smk_loads_failed = set()
-		self.string = None
 		self.frame_delay = None

@@ -100,4 +100,6 @@ Strings used for command button tooltips start with two special characters: the 
 - `<2>` = Upgrade Research
 - `<3>` = Spell
 - `<4>` = Technology Research
-- `<5>` = Minerals and Gas (Guardian/Devourer Aspect)
+- `<5>` = Minerals and Gas, without Supply (Guardian/Devourer Aspect)
+
+Requirements of 0 aren't displayed (an SCV shows no gas, and a building shows no supply), and when every requirement is 0 the tooltip has no requirements line.

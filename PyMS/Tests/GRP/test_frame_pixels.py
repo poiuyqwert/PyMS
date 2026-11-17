@@ -45,9 +45,9 @@ class Test_Frame_Pixels(unittest.TestCase):
 		grp.frames = 1
 		grp.width = 2
 		grp.height = 1
-		# One frame, one line at absolute offset 0: static run of 2 pixels (5, 6)
-		grp.imagebuffer = [(GRP.Bounds(x_min=0, y_min=0, x_max=2, y_max=1), (0,))]
-		grp.databuffer = b'\x02\x05\x06'
+		# One frame at offset 0: line offset table (line 0 at +2), then a static run of 2 pixels (5, 6)
+		grp.imagebuffer = [(GRP.Bounds(x_min=0, y_min=0, x_max=2, y_max=1), 0)]
+		grp.databuffer = b'\x02\x00\x02\x05\x06'
 		grp.uncompressed = False
 
 		result, transindex = GRP.frame_pixels(grp, 0, 3)

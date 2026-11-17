@@ -7,12 +7,15 @@ from ..GraftData import ButtonsGraftData
 
 from ...FileFormats.Graft import Button, ButtonSet
 from ...FileFormats.Graft.CodeHandlers import ButtonCodeCommands
+from ...FileFormats.TBL import end_at_null, simplify_string
 
 from ...Utilities import UIKit as UI
 from ...Utilities import Assets
 from ...Utilities.Config import WindowGeometry
 from ...Utilities.DataContext import DataContext
 from ...Utilities.IconSelectDialog import ImageWithBounds
+from ...Utilities.TextPreview.HotkeyString import HotkeyString, TooltipCosts
+from ...Utilities.TextPreview.TextDrawing import TextDrawing
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -189,11 +192,39 @@ class ButtonSetBuilderView(UI.NotebookTab):
 	def button_icon(self, icon: int) -> ImageWithBounds | None:
 		return self.data_context.get_cmdicon(icon)
 
+	def button_set_unit_id(self) -> int | None:
+		if self.entry_id is None:
+			return None
+		return self.graft_data.graft.first_unit_using_button_set(self.entry_id)
+
+	def button_tooltip(self, button: Button, *, enabled: bool = True) -> TextDrawing | None:
+		# The tooltip of the button like the game draws it.
+		# Enabled: its hotkey string, with the cost line of its hotkey type. Disabled (greyed): plain text (usually its requirements), without a hotkey or cost line.
+		# `None` when there's no string, an enabled string isn't a hotkey string, or the fonts aren't loaded.
+		# String IDs are 1-based (0 is no string)
+		string_id = button.enabled_string if enabled else button.disabled_string
+		if not string_id:
+			return None
+		raw = self.data_context.stat_txt_raw_string(string_id - 1)
+		if raw is None:
+			return None
+		if not enabled:
+			return TextDrawing.tooltip(end_at_null(raw), self.data_context)
+		hotkey_string = HotkeyString.parse(raw)
+		if hotkey_string is None:
+			return None
+		costs = TooltipCosts.for_kind(hotkey_string.kind, button.action_param, self.data_context, self.button_set_unit_id())
+		return TextDrawing.tooltip(hotkey_string.tooltip_runs(costs, self.data_context), self.data_context)
+
 	def string_text(self, string_id: int) -> str:
 		# String IDs are 1-based (0 is no string)
 		if string_id == 0:
 			return 'No String'
-		return self.data_context.stat_txt_string(string_id - 1) or f'Unknown String {string_id}'
+		raw = self.data_context.stat_txt_raw_string(string_id - 1)
+		if raw is None:
+			return f'Unknown String {string_id}'
+		# The plain text, without its hotkey or control characters
+		return simplify_string(raw)
 
 	def button_settings_changed(self) -> None:
 		# The selected button was changed, which can change its row and the preview (its position, icon, or string)

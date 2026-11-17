@@ -285,6 +285,17 @@ class Test_Editing(unittest.TestCase):
 		graft.set_stat_count(5)
 		self.assertEqual((len(graft.button_cards), len(graft.stat_info)), (10, 5))
 
+	def test_first_unit_using_button_set(self) -> None:
+		graft = ButtonsGraft()
+		graft.button_cards = [ButtonCard(None), ButtonCard(1), ButtonCard(1)]
+		self.assertEqual(graft.first_unit_using_button_set(1), 1)
+
+	def test_no_first_unit_when_only_special_button_cards_use_it(self) -> None:
+		graft = ButtonsGraft()
+		cards = [ButtonCard(None)] * ButtonsGraft.SPECIAL_BUTTON_CARDS_START
+		graft.button_cards = cards + [ButtonCard(2)]
+		self.assertIsNone(graft.first_unit_using_button_set(2))
+
 def _button(body: str, position: int = 1) -> str:
 	return f'\tbutton {{\n\t\tposition {position}\n' + ''.join(f'\t\t{line}\n' for line in body.split('\n')) + '\t}\n'
 

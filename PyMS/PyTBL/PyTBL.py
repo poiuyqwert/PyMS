@@ -18,6 +18,7 @@ from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
+from ..Utilities.DataContext import DataContext
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
@@ -51,11 +52,8 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.edited = False
 		self.findwindow: FindDialog | None = None
 		self.gotowindow: GotoDialog | None = None
-		self.tfontgam: PCX.PCX
-		self.font8: FNT.FNT
-		self.font10: FNT.FNT
-		self.unitpal: Palette.Palette
-		self.icons: GRP.GRP
+		# The preview files (fonts, text colors, and icons)
+		self.data_context = DataContext()
 
 		self.update_title()
 
@@ -249,7 +247,7 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			font8 = FNT.FNT()
 			font10 = FNT.FNT()
 			unitpal = Palette.Palette()
-			icons = GRP.GRP()
+			icons = GRP.CacheGRP()
 			tfontgam.load(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
 			self.mpq_handler.read_file(self.config_.settings.files.font8.file_path, font8.load)
 			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, font10.load)
@@ -258,11 +256,11 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		except PyMSError as e:
 			err = e
 		else:
-			self.tfontgam = tfontgam
-			self.font8 = font8
-			self.font10 = font10
-			self.unitpal = unitpal
-			self.icons = icons
+			self.data_context.set_tfontgam_pcx(tfontgam)
+			self.data_context.set_font8_fnt(font8)
+			self.data_context.set_font10_fnt(font10)
+			self.data_context.set_palette('Units', unitpal.palette)
+			self.data_context.set_icons_grp(icons)
 		self.mpq_handler.close_mpqs()
 		return err
 

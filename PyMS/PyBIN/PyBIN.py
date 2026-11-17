@@ -14,6 +14,7 @@ from ..FileFormats import FNT
 
 from ..Utilities import registry
 from ..Utilities import UIKit as UI
+from ..Utilities.DataContext import DataContext
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Config
@@ -110,15 +111,11 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		self.dialog: WidgetNode | None = None
 		self.widget_map: dict[str, WidgetNode] = {}
 
-		self.tfontgam: PCX.PCX
-		self.font10: FNT.FNT
-		self.font14: FNT.FNT
-		self.font16: FNT.FNT
-		self.font16x: FNT.FNT
+		# The fonts and their color palettes (the game's `tfontgam.pcx`, and the menu `tfont.pcx` of the theme)
+		self.data_context = DataContext()
 
 		self.update_title()
 
-		self.tfont: PCX.PCX | None = None
 		self.dlggrp: GRP.GRP | None = None
 		self.tilegrp: GRP.GRP | None = None
 		self.dialog_assets: dict[int, UI.PILImage.Image] = {}
@@ -657,11 +654,10 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 			else:
 				break
 		self.set_global_asset_failures('Menu font palette', check if tfont is None else [])
-		self.tfont = tfont
+		self.data_context.set_tfont_pcx(tfont)
 		if self.bin:
 			for widget in self.flattened_nodes():
-				widget.string = None
-				widget.item_string_images = None
+				widget.reset_text()
 
 	def change_theme(self, _n: int) -> None:
 		index = self.show_theme_index.get()-1
@@ -693,11 +689,11 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		except PyMSError as e:
 			err = e
 		else:
-			self.tfontgam = tfontgam
-			self.font10 = font10
-			self.font14 = font14
-			self.font16 = font16
-			self.font16x = font16x
+			self.data_context.set_tfontgam_pcx(tfontgam)
+			self.data_context.set_font10_fnt(font10)
+			self.data_context.set_font14_fnt(font14)
+			self.data_context.set_font16_fnt(font16)
+			self.data_context.set_font16x_fnt(font16x)
 		self.mpq_handler.close_mpqs()
 		self.reload_assets()
 		return err
@@ -1122,7 +1118,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 	def new(self, _event: UI.Event | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		if not self.tfont:
+		if not self.data_context.tfont_pcx:
 			self.load_tfont()
 		if not self.dlggrp:
 			self.load_dlggrp()
@@ -1153,7 +1149,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		if not self.tfont:
+		if not self.data_context.tfont_pcx:
 			self.load_tfont()
 		if not self.dlggrp:
 			self.load_dlggrp()
@@ -1185,7 +1181,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		if not self.tfont:
+		if not self.data_context.tfont_pcx:
 			self.load_tfont()
 		if not self.dlggrp:
 			self.load_dlggrp()
@@ -1424,23 +1420,23 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 	def get_show_bounds_responsive(self) -> bool:
 		return self.show_bounds_responsive.get()
 
-	def get_font(self, flags: int) -> FNT.FNT:
+	def get_font(self, flags: int) -> FNT.FNT | None:
 		if flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_10:
-			return self.font10
+			return self.data_context.font10_fnt
 		elif flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_14:
-			return self.font14
+			return self.data_context.font14_fnt
 		elif flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_16:
-			return self.font16
+			return self.data_context.font16_fnt
 		elif flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_16x:
-			return self.font16x
+			return self.data_context.font16x_fnt
 		else:
-			return self.font10
+			return self.data_context.font10_fnt
 
-	def get_tfontgam(self) -> PCX.PCX:
-		return self.tfontgam
+	def get_data_context(self) -> DataContext:
+		return self.data_context
 
-	def get_tfont(self) -> (PCX.PCX | None):
-		return self.tfont
+	def node_render_canvas(self) -> UI.Canvas:
+		return self.widgetCanvas
 
 	def node_render_image_create(self, *, x: int, y: int, image: UI.AnyPhotoImage, anchor: UI.Anchor) -> UI.Canvas.Item: # type: ignore[name-defined]
 		return self.widgetCanvas.create_image(x, y, image=image, anchor=anchor)

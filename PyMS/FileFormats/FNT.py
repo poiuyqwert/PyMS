@@ -73,12 +73,9 @@ COLOR_CODES_TITLE: Remapping = {
 # Any color codes after these will do nothing
 COLOR_OVERPOWER = [5,11,20]
 
-def letter_to_photo(palette: PCX.PCX, letter: Pixels, color: int, remap: Remapping | None = None, remap_palette: PCX.PCX | None = None) -> ImageTk.PhotoImage:
+# Draws a letter in a color code of `remap`, which maps the color codes to the color rows of `palette` (`tfontgam.pcx` with `COLOR_CODES_INGAME`, or a menu `tfont.pcx` with `COLOR_CODES_GLUE`)
+def letter_to_photo(palette: PCX.PCX, letter: Pixels, color: int, remap: Remapping) -> ImageTk.PhotoImage:
 	i = PILImage.new('RGBA', (len(letter[0]),len(letter)))
-	if remap is None:
-		remap = COLOR_CODES_INGAME
-	if remap_palette:
-		palette = remap_palette
 	color_map = remap[color]
 	while isinstance(color_map, int):
 		color_map = remap[color_map]

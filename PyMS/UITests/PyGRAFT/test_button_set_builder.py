@@ -7,6 +7,7 @@ from ...PyGRAFT.ButtonSetEditor.ButtonRow import ButtonRow
 from ...FileFormats.Graft import Button
 from ...FileFormats.Graft.CodeHandlers import ButtonCodeCommands
 from ...FileFormats.GRP import GRP, CacheGRP
+from ...FileFormats.TBL import TBL
 from ...Utilities import UIKit as UI
 from ...Utilities import IO
 
@@ -386,6 +387,14 @@ class Test_PyGRAFT_button_set_builder(PyGRAFTTestCase):
 		assert editor.param_editor is not None
 		self.assertEqual(editor.param_editor.dropdown.entries, ['Slot 1', 'Slot 2', 'Slot 3', 'Slot 4', 'Slot 5', 'Last', 'Unknown'])
 		self.assertEqual(editor.param_editor.dropdown.text.get(), 'Last')
+
+	def test_rows_show_strings_without_hotkeys_or_control_characters(self) -> None:
+		gui, view = self.open_builder()
+		stat_txt = TBL()
+		stat_txt.strings = ['m\x01Train \x03M\x01arine\x00', 'Terran Marine\x00']
+		gui.data_context.set_stat_txt_tbl(stat_txt)
+		self.set_buttons(gui, view, [Button(position=1, enabled_string=1), Button(position=2, enabled_string=2), Button(position=3, enabled_string=3)])
+		self.assertEqual([row.string_text.get() for row in view.rows], ['Train Marine', 'Terran Marine', 'Unknown String 3'])
 
 	def test_changing_the_strings(self) -> None:
 		gui, view = self.open_builder()
