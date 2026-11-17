@@ -6,6 +6,7 @@ if TYPE_CHECKING:
 	from .Config import PyGRAFTConfig
 	from ..Utilities.DataContext import DataContext
 	from ..FileFormats.Graft import ReqScript
+	from .JumpTarget import JumpTarget
 
 class MainDelegate(Protocol):
 	config_: PyGRAFTConfig
@@ -15,6 +16,12 @@ class MainDelegate(Protocol):
 		...
 
 	def refresh(self) -> None:
+		...
+
+	def can_jump(self, target: JumpTarget, entry_id: int) -> bool:
+		...
+
+	def jump(self, target: JumpTarget, entry_id: int) -> None:
 		...
 
 class ReqEditorDelegate(Protocol):

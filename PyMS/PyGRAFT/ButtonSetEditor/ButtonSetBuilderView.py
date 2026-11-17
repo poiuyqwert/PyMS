@@ -4,6 +4,7 @@ from .ButtonRow import ButtonRow
 from .PreviewGrid import PreviewGrid
 from .ButtonSettingsView import ButtonSettingsView
 from ..GraftData import ButtonsGraftData
+from ..JumpTarget import JumpTarget
 
 from ...FileFormats.Graft import Button, ButtonSet
 from ...FileFormats.Graft.CodeHandlers import ButtonCodeCommands
@@ -236,6 +237,12 @@ class ButtonSetBuilderView(UI.NotebookTab):
 
 	def icon_select_geometry(self) -> WindowGeometry:
 		return self.delegate.config_.windows.icon_select
+
+	def can_jump(self, target: JumpTarget, entry_id: int) -> bool:
+		return self.delegate.can_jump(target, entry_id)
+
+	def jump(self, target: JumpTarget, entry_id: int) -> None:
+		self.delegate.jump(target, entry_id)
 
 	# Editor mode
 

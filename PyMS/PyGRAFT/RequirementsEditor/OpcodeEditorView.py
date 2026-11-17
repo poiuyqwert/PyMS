@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from ..JumpTarget import JumpTarget
+
 from ...FileFormats.Graft.CodeHandlers.RequirementCodeCommands import ReqCommandDefinition
 
 from ...Utilities import UIKit as UI
@@ -26,6 +28,12 @@ class OpcodeEditorDelegate(Protocol):
 		...
 
 	def param_entries(self, param_type: IntCodeType) -> list[tuple[str, int | None]]:
+		...
+
+	def can_jump(self, target: JumpTarget, entry_id: int) -> bool:
+		...
+
+	def jump(self, target: JumpTarget, entry_id: int) -> None:
 		...
 
 # A row of the requirements Builder, editing one opcode of the script: its line number, the opcode, its parameter (if it has one),
@@ -68,6 +76,11 @@ class OpcodeEditorView(UI.Frame):
 		self.param_type: IntCodeType | None = None
 		self.param_value: UI.IntegerVar | None = None
 		self.param_editor: UI.EntryDropDown | None = None
+
+		# Only shown while the opcode's parameter references something that can be jumped to (always shown then, not only while hovering)
+		self.jump_button = UI.Button(self, image=Assets.get_image('jump'), command=self.jump, width=20, height=20)
+		self.jump_tooltip = UI.Tooltip(self.jump_button) # Names the target of the chosen opcode
+		self.jump_target: JumpTarget | None = None
 
 		self.actions = UI.Toolbar(self)
 		self.move_up_button = self.actions.add_button(Assets.get_image('up'), lambda: self.delegate.move_opcode(self.index, -1), 'Move Up')
@@ -115,6 +128,23 @@ class OpcodeEditorView(UI.Frame):
 			self.move_down_button['state'] = UI.DISABLED if is_last else UI.NORMAL
 		finally:
 			self.loading = False
+		self.update_jump_button()
+
+	def update_jump_button(self) -> None:
+		target = JumpTarget.for_req_command(self.cmd_def) if self.params else None
+		if target != self.jump_target:
+			self.jump_target = target
+			if target is None:
+				self.jump_button.grid_remove()
+			else:
+				self.jump_tooltip.text = target.tooltip
+				self.jump_button.grid(row=0, column=5, sticky=UI.W, padx=2)
+		if target is not None:
+			self.jump_button['state'] = UI.NORMAL if self.delegate.can_jump(target, self.params[0]) else UI.DISABLED
+
+	def jump(self) -> None:
+		if self.jump_target is not None and self.params:
+			self.delegate.jump(self.jump_target, self.params[0])
 
 	def update_commands(self) -> None:
 		# Lists the row's opcode after the file's opcodes when the file doesn't have it, so it can be shown (and its error reported) until it's changed
@@ -155,6 +185,8 @@ class OpcodeEditorView(UI.Frame):
 		# The names of the units/techs may have changed (a different dat file was loaded)
 		if self.param_editor is not None and self.param_type is not None:
 			self.param_editor.set_entries(self.delegate.param_entries(self.param_type))
+		# The entries that can be jumped to may have changed too
+		self.update_jump_button()
 
 	def opcode_chosen(self, opcode: int) -> None:
 		cmd_def = self.commands[opcode]
@@ -178,6 +210,7 @@ class OpcodeEditorView(UI.Frame):
 		if self.loading or not self.params or self.params[0] == value:
 			return
 		self.params = [value]
+		self.update_jump_button()
 		self.delegate.opcode_changed(self.index, self.cmd_def, [value])
 
 	# Highlighting

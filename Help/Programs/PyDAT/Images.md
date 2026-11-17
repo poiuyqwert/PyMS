@@ -3,7 +3,7 @@ The Images tab of [PyDAT](/Help/Programs/PyDAT.md) edits [images.dat](/Help/File
 
 ## Image
 The **GRP** field is the graphics file, referenced by its index in `images.tbl` (the dropdown shows the file paths). The **Iscript ID** is the [IScript](/Help/Files/iscript.bin.md) entry that animates the image — unused IScript IDs are marked in the dropdown.
-Each field has a **Check** button, which fills the [Used By](/Help/Programs/PyDAT.md#used-by) panel with every image sharing that GRP or IScript ID — useful for checking what else you would affect by editing them.
+Each field has a **Find Matches** button (the magnifying glass icon after its dropdown), which fills the [Used By](/Help/Programs/PyDAT.md#used-by) panel with every image sharing that GRP or IScript ID — useful for checking what else you would affect by editing them.
 
 ## General Properties
 - **Graphics Turns**: The game picks (and mirrors) animation frames based on the direction the sprite faces.

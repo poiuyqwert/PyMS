@@ -4,7 +4,7 @@ The Sprites tab of [PyDAT](/Help/Programs/PyDAT.md) edits [sprites.dat](/Help/Fi
 ## Sprite Properties
 - **Image**: The primary [Image](/Help/Programs/PyDAT/Images.md) the sprite displays.
 - **Is Visible** and **Unused**: Whether the sprite is visible, and an unused flag.
-- **Sel. Circle**: The size of the selection circle drawn under the sprite. The size maps to one of the selection circle images, and the **Jump ->** button goes to that image entry.
+- **Sel. Circle**: The size of the selection circle drawn under the sprite. The size maps to one of the selection circle images, and the **Jump To** button goes to that image entry.
 - **Health Bar**: The width of the health bar, shown both as the raw value and as the resulting number of boxes.
 - **Vert. Position**: The vertical offset of the selection circle and health bar below the sprite.
 

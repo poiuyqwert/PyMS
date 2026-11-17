@@ -3,11 +3,13 @@ from __future__ import annotations
 
 from .GraftTab import GraftTab
 from ..GraftData import ButtonsGraftData
+from ..JumpTarget import JumpTarget
 
 from ...FileFormats.Graft import ButtonCard
 from ...FileFormats.Graft.CodeHandlers.CodeTypes import ConnectedUnitCodeType
 
 from ...Utilities import UIKit as UI
+from ...Utilities import Assets
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -30,18 +32,29 @@ class ButtonCardsTab(GraftTab):
 		self.connected_unit = UI.IntegerVar(ConnectedUnitCodeType.NONE_VALUE, [0, ConnectedUnitCodeType.NONE_VALUE])
 
 		frame = UI.LabelFrame(self, text='Button Card')
+		# The field's tooltip is on its own frame, so it doesn't also show over the Jump To button beside it
 		f = UI.Frame(frame)
-		UI.Label(f, text='Button Set:', width=13, anchor=UI.E).pack(side=UI.LEFT)
-		self.button_set_dropdown = UI.DropDown(f, self.button_set, ['None'], self.button_set_changed, width=30)
+		field = UI.Frame(f)
+		UI.Label(field, text='Button Set:', width=13, anchor=UI.E).pack(side=UI.LEFT)
+		self.button_set_dropdown = UI.DropDown(field, self.button_set, ['None'], self.button_set_changed, width=30)
 		self.button_set_dropdown.pack(side=UI.LEFT, padx=2)
-		GraftTab.tip(f, 'Button Set', 'The set of buttons the button card shows, or None for no buttons.')
+		GraftTab.tip(field, 'Button Set', 'The set of buttons the button card shows, or None for no buttons.')
+		field.pack(side=UI.LEFT)
+		self.button_set_jump_button = UI.Button(f, image=Assets.get_image('jump'), command=self.jump_to_button_set, width=20, height=20)
+		self.button_set_jump_button.pack(side=UI.LEFT, padx=2)
+		UI.Tooltip(self.button_set_jump_button, JumpTarget.button_sets.tooltip)
 		f.pack(fill=UI.X, pady=2)
 		f = UI.Frame(frame)
-		UI.Label(f, text='Connected Unit:', width=13, anchor=UI.E).pack(side=UI.LEFT)
+		field = UI.Frame(f)
+		UI.Label(field, text='Connected Unit:', width=13, anchor=UI.E).pack(side=UI.LEFT)
 		# There is no catch-all entry, so only units and None can be entered
-		self.connected_unit_dropdown = UI.EntryDropDown(f, self.connected_unit, [('None', ConnectedUnitCodeType.NONE_VALUE)], entry_width=10, dropdown_width=30, callback=self.connected_unit_changed)
+		self.connected_unit_dropdown = UI.EntryDropDown(field, self.connected_unit, [('None', ConnectedUnitCodeType.NONE_VALUE)], entry_width=10, dropdown_width=30, callback=self.connected_unit_changed)
 		self.connected_unit_dropdown.pack(side=UI.LEFT, padx=2)
-		GraftTab.tip(f, 'Connected Unit', f"When units with this button card are selected together with the connected unit (such as Kerrigan connected to the Ghost), the group uses the connected unit's button card instead of the generic group card, or None ({ConnectedUnitCodeType.NONE_VALUE}).")
+		GraftTab.tip(field, 'Connected Unit', f"When units with this button card are selected together with the connected unit (such as Kerrigan connected to the Ghost), the group uses the connected unit's button card instead of the generic group card, or None ({ConnectedUnitCodeType.NONE_VALUE}).")
+		field.pack(side=UI.LEFT)
+		self.connected_unit_jump_button = UI.Button(f, image=Assets.get_image('jump'), command=self.jump_to_connected_unit, width=20, height=20)
+		self.connected_unit_jump_button.pack(side=UI.LEFT, padx=2)
+		UI.Tooltip(self.connected_unit_jump_button, JumpTarget.button_cards.tooltip)
 		f.pack(fill=UI.X, pady=2)
 		frame.pack(anchor=UI.W, padx=5, pady=5)
 
@@ -87,12 +100,35 @@ class ButtonCardsTab(GraftTab):
 			self.button_set_dropdown['state'] = state
 			self.connected_unit_dropdown.entry['state'] = state
 			self.connected_unit_dropdown.dropdown['state'] = state
-			if not button_card:
-				return
-			self.button_set.set(0 if button_card.button_set is None else button_card.button_set + 1)
-			self.connected_unit.set(connected_unit)
+			if button_card:
+				self.button_set.set(0 if button_card.button_set is None else button_card.button_set + 1)
+				self.connected_unit.set(connected_unit)
 		finally:
 			self.loading = False
+		self.update_jump_buttons()
+
+	def update_jump_buttons(self) -> None:
+		# Each jump is only enabled while its field references an entry
+		button_card = self.selected_button_card()
+		button_set = button_card.button_set if button_card else None
+		can_jump_button_set = button_set is not None and self.delegate.can_jump(JumpTarget.button_sets, button_set)
+		self.button_set_jump_button['state'] = UI.NORMAL if can_jump_button_set else UI.DISABLED
+		connected_unit = ConnectedUnitCodeType.to_value(button_card.connected_unit) if button_card else ConnectedUnitCodeType.NONE_VALUE
+		can_jump_connected_unit = connected_unit != ConnectedUnitCodeType.NONE_VALUE and self.delegate.can_jump(JumpTarget.button_cards, connected_unit)
+		self.connected_unit_jump_button['state'] = UI.NORMAL if can_jump_connected_unit else UI.DISABLED
+
+	def jump_to_button_set(self) -> None:
+		button_card = self.selected_button_card()
+		if button_card and button_card.button_set is not None:
+			self.delegate.jump(JumpTarget.button_sets, button_card.button_set)
+
+	def jump_to_connected_unit(self) -> None:
+		button_card = self.selected_button_card()
+		if button_card is None:
+			return
+		connected_unit = ConnectedUnitCodeType.to_value(button_card.connected_unit)
+		if connected_unit != ConnectedUnitCodeType.NONE_VALUE:
+			self.delegate.jump(JumpTarget.button_cards, connected_unit)
 
 	def mark_edited(self) -> None:
 		self.graft_data.edited = True
@@ -104,6 +140,7 @@ class ButtonCardsTab(GraftTab):
 		if not self.loading and button_card and button_card.button_set != button_set:
 			button_card.button_set = button_set
 			self.mark_edited()
+			self.update_jump_buttons()
 
 	def connected_unit_changed(self, value: int) -> None:
 		connected_unit = ConnectedUnitCodeType.from_value(value)
@@ -111,3 +148,4 @@ class ButtonCardsTab(GraftTab):
 		if not self.loading and button_card and button_card.connected_unit != connected_unit:
 			button_card.connected_unit = connected_unit
 			self.mark_edited()
+			self.update_jump_buttons()

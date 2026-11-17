@@ -52,6 +52,7 @@ class SMKSettings(PyMSDialog, MainDelegate):
 		UI.Entry(textframe, textvariable=self.filename, font=UI.Font.fixed()).pack(side=UI.LEFT, fill=UI.X, expand=1)
 		button = UI.Button(textframe, image=Assets.get_image('find'), width=20, height=20, command=self.find_smk)
 		button.pack(side=UI.LEFT)
+		UI.Tooltip(button, 'Select SMK')
 		textframe.grid(row=0,column=0, padx=2,pady=2, sticky=UI.NSEW)
 
 		overlayframe = UI.LabelFrame(self, text='Overlay SMK')

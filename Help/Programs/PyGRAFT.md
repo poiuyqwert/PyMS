@@ -21,8 +21,14 @@ The list on the left shows the entries of the active tab, and selecting an entry
 
 The status bar shows the path of the active tab's file, an indicator for unsaved changes, and how many entries the active tab has.
 
+### Jump To
+A field that references an entry of another tab (or another entry of the same tab) has a **Jump To** button after it. Clicking it selects that entry in its tab, switching tabs when needed. Hover over it to see which tab it jumps to. The button is greyed out when the field doesn't reference an entry that exists (such as **None**, or an ID past the end of the tab's list). If the entry you're leaving has changes that haven't been applied, you're asked whether to apply them first, just like selecting another entry.
+
 ## Button Sets
 The **Button Sets** tab edits the selected button set. Like the [requirements editor](#requirements), it has two modes, chosen by the tabs at its top: **Builder** (shown first) and **Script**.
+
+### Used By
+Under the editor (in both modes), the **Used By** section lists the button cards that show the selected button set, and its header shows how many there are. Double-click a button card (or select it and press `Return`) to [jump to it](#jump-to) in the **Button Cards** tab. Click the arrow before the header to collapse or expand the list. PyGRAFT remembers whether it's collapsed.
 
 ### Button Set Builder
 The **Builder** mode edits the selected button set without writing code. Unlike the other editors, every change is made to the button set right away: there is nothing to apply, the file is marked as edited as soon as you change something (save the file to keep the changes), and leaving the Builder never asks anything.
@@ -40,6 +46,8 @@ The **Button Settings** edit the selected button:
 - **Enabled String** and **Disabled String**: The `stat_txt.tbl` strings of the button's tooltip when it's enabled and when it's greyed (**None** for no string). Under each string is a preview of its tooltip the way the game draws it. The enabled string is a hotkey string, previewed with its text colors and the cost line of its [hotkey type](/Help/Files/TBL.md#hotkey-types). Like the game, the hotkey type chooses which `.dat` the button's action parameter is an entry of: the minerals, gas, and supply of a unit (`<1>`, with the icons of the unit's race), the minerals and gas of a unit without its supply (`<5>`), the minerals and gas of the first level of an upgrade (`<2>`, with the next level when it has more than one), the energy of a technology (`<3>`, with the icons of the race of the first unit whose button card uses the button set), or the minerals and gas of a technology (`<4>`). Costs of 0 aren't shown, so an SCV has no gas and a building has no supply, and there's no cost line when every cost is 0. When the entry isn't found, example costs are shown. The disabled string (usually what the button requires, like `Research at Academy`) is previewed as plain text, without a hotkey or cost line. The enabled string's preview isn't shown when it isn't a hotkey string, and neither preview is shown when the preview files aren't found (see [Settings](#settings)).
 
 Hover over the **?** after a setting to see its help, the same help the **Script** mode shows for its command (for the condition and action, the help of the one chosen).
+
+When the chosen condition or action uses its parameter, a **Jump To** button after the parameter [jumps](#jump-to) to what the parameter references. A unit jumps to its **Unit Training Reqs.** (such as for **Train**, **Build Terran Building**, **Morph Unit**, or **Can Create/Morph Unit**), an upgrade to its **Upgrade Research Reqs.** (**Upgrade** and **Can Upgrade**), a technology being researched to its **Tech Research Reqs.** (**Research Tech** and **Can Research Tech**), a technology being used to its **Tech Usage Reqs.** (such as **Use Tech**, **Can Player Use Tech**, or **Can Cloak**), and **Show Button Card**'s button card to it in the **Button Cards** tab. Conditions and actions whose parameter is unused (such as **Siege** or **Build Subunit**) have no **Jump To** button.
 
 ### Button Set Script
 The **Script** mode edits the selected button set as code. The code is only the set's `button` blocks, without the `button_set 0 {` style header used in exported text, since the code is always for the selected button set. For example:
@@ -65,6 +73,8 @@ Each button card picks what the command card shows for its unit (or, for the car
 - **Button Set**: The button set the card shows, or **None** for no buttons.
 - **Connected Unit**: When units with this card are selected together with the connected unit, the group uses the connected unit's button card instead of the generic group card (such as Kerrigan connected to the Ghost), or **None**. Choose a unit from the dropdown, or type a unit ID in the entry (anything that isn't a unit, or `65535` for **None**, is undone). A card connected to a unit ID past the units that are loaded keeps it, shown as **Unit** followed by its ID.
 
+The **Jump To** button after **Button Set** [jumps](#jump-to) to the button set in the **Button Sets** tab, and the one after **Connected Unit** jumps to the connected unit's button card.
+
 ## Unit Stat Info
 Each unit's stat info picks the functions the game uses for that unit's stat panel when it's the only unit selected:
 
@@ -86,6 +96,7 @@ Each row shows, from left to right:
 - The row's line number.
 - The opcode, chosen from a dropdown of the opcodes of the tab's file. Hover over the **?** after it to see what the opcode does, the same help the **Script** mode shows for its command (its code name and parameter, its description, and what the parameter is).
 - The opcode's parameter, if it has one: a unit (for opcodes like **Has Completed** or **Must Have**) or a technology (for **Is Researched**). Choose one from the dropdown, or type its ID in the entry.
+- A **Jump To** button, for opcodes with a parameter, which [jumps](#jump-to) to the unit's **Unit Training Reqs.** or the technology's **Tech Research Reqs.**.
 - While hovering over the row, its actions: **Move Up**, **Move Down**, **Delete**, and **Add Opcode Below** (which adds a **Has Completed** row just below it).
 
 The rows that belong to a **Level 1 Requires...** or **Level 2 Requires...** (up to and including its **End Level Requirements**), and every row after a **Level 3 Requires...**, are indented, like they are in the code.

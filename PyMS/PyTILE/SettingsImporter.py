@@ -47,7 +47,9 @@ class SettingsImporter(PyMSDialog):
 		entryframe = UI.Frame(f)
 		self.settings_entry = UI.Entry(entryframe, textvariable=self.settings_path, state=UI.DISABLED)
 		self.settings_entry.pack(side=UI.LEFT, fill=UI.X, expand=1)
-		UI.Button(entryframe, image=Assets.get_image('find'), width=20, height=20, command=self.select_path).pack(side=UI.LEFT, padx=(1,0))
+		button = UI.Button(entryframe, image=Assets.get_image('find'), width=20, height=20, command=self.select_path)
+		button.pack(side=UI.LEFT, padx=(1,0))
+		UI.Tooltip(button, 'Select TXT')
 		entryframe.pack(side=UI.TOP, fill=UI.X, expand=1)
 		f.pack(side=UI.TOP, fill=UI.X, padx=3)
 

@@ -32,21 +32,27 @@ class GraphicsUnitsTab(DATUnitsTab):
 
 		l = UI.LabelFrame(scrollview.content_view, text='Sprite Graphics:')
 		s = UI.Frame(l)
-		def add_dropdown(title: str, *, entry_variable: UI.IntegerVar, dropdown_variable: UI.IntVar, hint_name: str, values: Sequence[str], none_value: int | None = None, jump_dat_id: DATID | None = None) -> UI.DropDown:
+		def add_dropdown(title: str, *, entry_variable: UI.IntegerVar, dropdown_variable: UI.IntVar, hint_name: str, values: Sequence[str], none_value: int | None = None, jump: tuple[DATID, str] | None = None) -> UI.DropDown:
+			# `jump` is the DAT the field references, and the tooltip of its Jump To button
 			f = UI.Frame(s)
-			UI.Label(f, text=title + ':', width=13, anchor=UI.E).pack(side=UI.LEFT)
-			UI.Entry(f, textvariable=entry_variable, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT)
-			UI.Label(f, text='=').pack(side=UI.LEFT)
-			dropdown = UI.DropDown(f, dropdown_variable, values, entry_variable, width=30, none_value=none_value)
+			field = UI.Frame(f)
+			UI.Label(field, text=title + ':', width=13, anchor=UI.E).pack(side=UI.LEFT)
+			UI.Entry(field, textvariable=entry_variable, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT)
+			UI.Label(field, text='=').pack(side=UI.LEFT)
+			dropdown = UI.DropDown(field, dropdown_variable, values, entry_variable, width=30, none_value=none_value)
 			dropdown.pack(side=UI.LEFT, fill=UI.X, expand=1, padx=2)
-			if jump_dat_id:
-				UI.Button(f, text='Jump ->', command=lambda: self.jump(jump_dat_id, dropdown_variable.get())).pack(side=UI.LEFT)
-			self.tip(f, title, hint_name)
+			self.tip(field, title, hint_name)
+			field.pack(side=UI.LEFT, fill=UI.X, expand=1)
+			if jump:
+				jump_dat_id, jump_tooltip = jump
+				button = UI.Button(f, image=Assets.get_image('jump'), width=20, height=20, command=lambda: self.jump(jump_dat_id, dropdown_variable.get()))
+				button.pack(side=UI.LEFT, padx=2)
+				UI.Tooltip(button, jump_tooltip)
 			f.pack(fill=UI.X)
 			return dropdown
-		self.graphics_ddw = add_dropdown('Graphics', entry_variable=self.graphicsentry, dropdown_variable=self.graphicsdd, hint_name='UnitGfx', values=[], jump_dat_id=DATID.flingy)
-		self.construction_ddw = add_dropdown('Construction', entry_variable=self.constructionentry, dropdown_variable=self.constructiondd, hint_name='UnitConstruction', values=[], jump_dat_id=DATID.images)
-		self.portraits_ddw = add_dropdown('Portraits', entry_variable=self.portraitsentry, dropdown_variable=self.portraitsdd, hint_name='UnitPortrait', values=[], none_value=65535, jump_dat_id=DATID.portdata)
+		self.graphics_ddw = add_dropdown('Graphics', entry_variable=self.graphicsentry, dropdown_variable=self.graphicsdd, hint_name='UnitGfx', values=[], jump=(DATID.flingy, 'Jump To Flingy'))
+		self.construction_ddw = add_dropdown('Construction', entry_variable=self.constructionentry, dropdown_variable=self.constructiondd, hint_name='UnitConstruction', values=[], jump=(DATID.images, 'Jump To Image'))
+		self.portraits_ddw = add_dropdown('Portraits', entry_variable=self.portraitsentry, dropdown_variable=self.portraitsdd, hint_name='UnitPortrait', values=[], none_value=65535, jump=(DATID.portdata, 'Jump To Portrait'))
 		self.elevation_ddw = add_dropdown('Elevation', entry_variable=self.elevationentry, dropdown_variable=self.elevationdd, hint_name='UnitElevationLevel', values=Assets.data_cache(Assets.DataReference.ElevationLevels))
 		f = UI.Frame(s)
 		UI.Label(f, text='Direction:', width=13, anchor=UI.E).pack(side=UI.LEFT)

@@ -1,6 +1,7 @@
 
 from .Config import PyGRAFTConfig
 from .Delegates import MainDelegate
+from .JumpTarget import JumpTarget
 from .GraftData import UnitsGraftData, UpgradesGraftData, ResearchGraftData, TechGraftData, OrdersGraftData, ButtonsGraftData, AnyGraftData
 from .Tabs import GraftTab, ReqGraftTab, ButtonCardsTab, ButtonSetsTab, StatInfoTab
 from .SettingsUI.SettingsDialog import SettingsDialog
@@ -150,6 +151,15 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		tab_titles = ('Button Sets', 'Button Cards', 'Unit Stat Info', 'Unit Training Reqs.', 'Upgrade Research Reqs.', 'Tech Research Reqs.', 'Tech Usage Reqs.', 'Order Reqs.')
 		for tab, title in zip(self.tabs, tab_titles):
 			self.notebook.add_tab(tab, title)
+		# The tabs (and their titles) that the Jump To buttons jump to
+		self.jump_tabs: dict[JumpTarget, tuple[str, GraftTab]] = {
+			JumpTarget.button_sets: (tab_titles[0], self.tabs[0]),
+			JumpTarget.button_cards: (tab_titles[1], self.tabs[1]),
+			JumpTarget.unit_reqs: (tab_titles[3], self.tabs[3]),
+			JumpTarget.upgrade_reqs: (tab_titles[4], self.tabs[4]),
+			JumpTarget.research_reqs: (tab_titles[5], self.tabs[5]),
+			JumpTarget.tech_reqs: (tab_titles[6], self.tabs[6]),
+		}
 		self.notebook.bind(UI.WidgetEvent.Notebook.TabActivated(), lambda _: self.refresh())
 		self.hor_pane.add(self.notebook.notebook, sticky=UI.NSEW)
 		self.hor_pane.pack(fill=UI.BOTH, expand=1)
@@ -217,11 +227,37 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		elif index == tab.selected:
 			return
 		# Confirming can refresh the list (by applying changes), so (re)select the entry in the list
+		self.select_list_index(index)
+		if index != tab.selected:
+			tab.select(index)
+
+	def select_list_index(self, index: int) -> None:
 		self.listbox.select_clear(0, UI.END)
 		self.listbox.select_set(index)
 		self.listbox.see(index)
-		if index != tab.selected:
-			tab.select(index)
+
+	def can_jump(self, target: JumpTarget, entry_id: int) -> bool:
+		_, tab = self.jump_tabs[target]
+		return tab.index_of_entry(entry_id) is not None
+
+	def jump(self, target: JumpTarget, entry_id: int) -> None:
+		# Selects the entry in the target's tab, switching to the tab if needed
+		title, tab = self.jump_tabs[target]
+		index = tab.index_of_entry(entry_id)
+		if index is None:
+			self.bell()
+			return
+		# The entry being edited is left, so its unapplied changes are asked about first
+		if not self.confirm_leave():
+			return
+		if tab is self.active_tab():
+			if index != tab.selected:
+				tab.select(index)
+			self.select_list_index(index)
+		else:
+			# Activating the tab refreshes it (loading the selected entry) and the list
+			tab.selected = index
+			self.notebook.display(title)
 
 	def confirm_leave(self) -> bool:
 		# Only the active tab can have unapplied changes, since leaving a tab asks to apply them

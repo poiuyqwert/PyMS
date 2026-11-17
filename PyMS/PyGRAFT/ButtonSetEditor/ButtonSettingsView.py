@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from .ButtonRow import ButtonRow, draw_icon
 from .. import ParamEntries
+from ..JumpTarget import JumpTarget
 
 from ...FileFormats.Graft import Button
 from ...FileFormats.Graft.CodeHandlers import ButtonCodeCommands, ButtonsLanguage
@@ -34,6 +35,12 @@ class ButtonSettingsDelegate(Protocol):
 	def icon_select_geometry(self) -> WindowGeometry:
 		...
 
+	def can_jump(self, target: JumpTarget, entry_id: int) -> bool:
+		...
+
+	def jump(self, target: JumpTarget, entry_id: int) -> None:
+		...
+
 # A value of 0 to 65535 (the size of every button field the settings edit with an `EntryDropDown`)
 U16_RANGE = [0, 0xFFFF]
 
@@ -47,13 +54,15 @@ def help_label(parent: UI.Misc, cmd_def: CodeCommandDefinition | None = None) ->
 
 # Edits a condition or action of a button: the function, and its parameter (if it has one)
 class FunctionEditor(UI.Frame):
-	def __init__(self, parent: UI.Misc, functions: list[GraftCommandDefinition], data_context: DataContext, changed: Callable[[int, int], None]) -> None:
+	def __init__(self, parent: UI.Misc, functions: list[GraftCommandDefinition], delegate: ButtonSettingsDelegate, changed: Callable[[int, int], None]) -> None:
 		super().__init__(parent)
 		self.functions = functions
-		self.data_context = data_context
+		self.delegate = delegate
+		self.data_context = delegate.data_context
 		self.changed = changed
 		self.function_index = 0
 		self.param = 0
+		self.enabled = True
 		# Set while the function is being loaded, so loading isn't reported as a change
 		self.loading = False
 
@@ -70,8 +79,29 @@ class FunctionEditor(UI.Frame):
 		self.param_value: UI.IntegerVar | None = None
 		self.param_editor: UI.EntryDropDown | None = None
 
+		# Only shown while the function's parameter references something that can be jumped to
+		self.jump_button = UI.Button(self, image=Assets.get_image('jump'), command=self.jump, width=20, height=20)
+		self.jump_tooltip = UI.Tooltip(self.jump_button) # Names the target of the chosen function
+		self.jump_target: JumpTarget | None = None
+
 	def definition(self) -> GraftCommandDefinition:
 		return self.functions[self.function_index]
+
+	def update_jump_button(self) -> None:
+		target = JumpTarget.for_button_function(self.definition())
+		if target != self.jump_target:
+			self.jump_target = target
+			if target is None:
+				self.jump_button.pack_forget()
+			else:
+				self.jump_tooltip.text = target.tooltip
+				self.jump_button.pack(side=UI.LEFT, padx=2, after=self.param_frame)
+		if target is not None:
+			self.jump_button['state'] = UI.NORMAL if self.enabled and self.delegate.can_jump(target, self.param) else UI.DISABLED
+
+	def jump(self) -> None:
+		if self.jump_target is not None:
+			self.delegate.jump(self.jump_target, self.param)
 
 	def load(self, function_index: int, param: int) -> None:
 		self.loading = True
@@ -86,6 +116,7 @@ class FunctionEditor(UI.Frame):
 				self.param_value.set(param)
 		finally:
 			self.loading = False
+		self.update_jump_button()
 
 	def update_param_editor(self) -> None:
 		# Rebuilds the parameter editor if the function's kind of parameter changed
@@ -113,6 +144,8 @@ class FunctionEditor(UI.Frame):
 		# The names of the units/techs/upgrades may have changed (a different dat file was loaded)
 		if self.param_editor is not None and self.param_type is not None:
 			self.param_editor.set_entries(ParamEntries.param_entries(self.data_context, ButtonsLanguage(), self.param_type))
+		# The entries that can be jumped to may have changed too
+		self.update_jump_button()
 
 	def function_chosen(self, function_index: int) -> None:
 		cmd_def = self.functions[function_index]
@@ -134,14 +167,17 @@ class FunctionEditor(UI.Frame):
 		if self.loading or self.param == value:
 			return
 		self.param = value
+		self.update_jump_button()
 		self.changed(self.function_index, value)
 
 	def set_enabled(self, enabled: bool) -> None:
+		self.enabled = enabled
 		state = UI.NORMAL if enabled else UI.DISABLED
 		self.function_dropdown['state'] = state
 		if self.param_editor is not None:
 			self.param_editor.entry['state'] = state
 			self.param_editor.dropdown['state'] = state
+		self.update_jump_button()
 
 # A preview of a tooltip like the game draws it, hidden while there's nothing to show
 class TooltipPreview:
@@ -209,10 +245,10 @@ class ButtonSettingsView(UI.Frame):
 
 		# The function editors have their own `?` (for the chosen function), before their parameter
 		field = add_field(2, 'Condition')
-		self.condition_editor = FunctionEditor(field, ButtonCodeCommands.condition_commands, delegate.data_context, self.condition_changed)
+		self.condition_editor = FunctionEditor(field, ButtonCodeCommands.condition_commands, delegate, self.condition_changed)
 		self.condition_editor.pack(side=UI.LEFT)
 		field = add_field(3, 'Action')
-		self.action_editor = FunctionEditor(field, ButtonCodeCommands.action_commands, delegate.data_context, self.action_changed)
+		self.action_editor = FunctionEditor(field, ButtonCodeCommands.action_commands, delegate, self.action_changed)
 		self.action_editor.pack(side=UI.LEFT)
 
 		field = add_field(4, 'Enabled String')

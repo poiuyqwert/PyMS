@@ -4,6 +4,7 @@ from .OpcodeEditorView import OpcodeEditorView
 from ..EditorModeView import EditorModeView
 from ..GraftData import ReqGraftData
 from .. import ParamEntries
+from ..JumpTarget import JumpTarget
 
 from ...FileFormats.Graft import ReqScript
 from ...FileFormats.Graft.CodeHandlers import RequirementCodeCommands
@@ -167,6 +168,12 @@ class ReqBuilderView(EditorModeView):
 
 	def param_entries(self, param_type: IntCodeType) -> list[tuple[str, int | None]]:
 		return ParamEntries.param_entries(self.delegate.data_context, self.language(), param_type)
+
+	def can_jump(self, target: JumpTarget, entry_id: int) -> bool:
+		return self.delegate.can_jump(target, entry_id)
+
+	def jump(self, target: JumpTarget, entry_id: int) -> None:
+		self.delegate.jump(target, entry_id)
 
 	# Actions
 

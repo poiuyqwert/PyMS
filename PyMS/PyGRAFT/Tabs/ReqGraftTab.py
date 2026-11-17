@@ -39,6 +39,12 @@ class ReqGraftTab(GraftTab):
 		keyword = self.graft_data.graft_type.LANGUAGE.HEADER_KEYWORD
 		return [GraftTab.format_entry(entry_id, max_id, self.graft_data.entry_name(self.delegate.data_context, entry_id) or f'{keyword} {entry_id}') for entry_id in entry_ids]
 
+	def index_of_entry(self, entry_id: int) -> int | None:
+		entry_ids = self.entry_ids()
+		if entry_id in entry_ids:
+			return entry_ids.index(entry_id)
+		return None
+
 	def dimmed_entries(self) -> set[int]:
 		return {index for index, entry_id in enumerate(self.entry_ids()) if not self.graft_data.has_script(entry_id)}
 

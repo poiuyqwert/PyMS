@@ -92,4 +92,5 @@ class PyGRAFTConfig(Config.Config):
 		self.settings = PyGRAFTConfig.Settings()
 		self.code = PyGRAFTConfig.Code()
 		self.list_size = Config.PaneSizes(defaults=(300,))
+		self.show_used_by = Config.Boolean(default=True)
 		super().__init__()

@@ -30,6 +30,12 @@ class GraftTab(UI.NotebookTab):
 	def entry_names(self) -> list[str]:
 		raise NotImplementedError(self.__class__.__name__ + '.entry_names()')
 
+	def index_of_entry(self, entry_id: int) -> int | None:
+		# The index in `entry_names()` of the entry with the ID (`None` when there is no such entry)
+		if 0 <= entry_id < len(self.entry_names()):
+			return entry_id
+		return None
+
 	def dimmed_entries(self) -> set[int]:
 		# Indexes in `entry_names()` that the main window's list shows dimmed
 		return set()

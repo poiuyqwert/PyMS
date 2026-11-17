@@ -36,10 +36,12 @@ class FileSettingView(SettingView):
 		self.entry.pack(side=UI.LEFT, fill=UI.X, expand=1)
 		self.find_button = UI.Button(entry_frame, image=Assets.get_image('find'), width=20, height=20, command=self.select_file)
 		self.find_button.pack(side=UI.LEFT)
+		UI.Tooltip(self.find_button, 'Select File')
 		self.find_mpq_button: UI.Button | None = None
 		if self.mpq_handler is not None:
 			self.find_mpq_button = UI.Button(entry_frame, image=Assets.get_image('openmpq'), width=20, height=20, command=self.select_mpq)
 			self.find_mpq_button.pack(side=UI.LEFT)
+			UI.Tooltip(self.find_mpq_button, 'Select File From MPQs')
 		entry_frame.pack(fill=UI.X, expand=1)
 
 	def _update_state(self) -> None:
