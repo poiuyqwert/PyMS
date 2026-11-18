@@ -1,5 +1,5 @@
 
-from ...Utilities.DataContext import DataContext, IconFrame, Race
+from ...Utilities.DataContext import DataContext, IconFrame, Race, CmdIconState
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.TextPreview.Layout import TextStyle
 from ...FileFormats.TBL import TBL
@@ -361,9 +361,10 @@ def _icons_grp(frames: int) -> CacheGRP:
 	grp.height = 30
 	return grp
 
+# A ticon.pcx with `remap` after its enabled row (so from the disabled row on)
 def _ticon_pcx(remap: list[int]) -> PCX:
 	pcx = PCX()
-	pcx.image = [[0] * 32 + remap]
+	pcx.image = [[0] * 16 + remap]
 	return pcx
 
 FRAME_TO_PHOTO = 'PyMS.Utilities.DataContext.GRP.frame_to_photo'
@@ -408,14 +409,24 @@ class Test_Icons(unittest.TestCase):
 				self.assertIsNot(data_context.get_cmdicon(1), image)
 				image = data_context.get_cmdicon(1)
 
-	def test_highlighted_icons_remap_with_ticon(self) -> None:
-		data_context = DataContext(cmdicons_grp=_icons_grp(3), palettes={'Icons': self.PALETTE}, ticon_pcx=_ticon_pcx([200, 201]))
+	def test_icon_states_remap_with_their_ticon_row(self) -> None:
+		# ticon.pcx has a row of 16 remap colors per state: enabled (unused, the palette is drawn as it is), disabled, then highlighted
+		data_context = DataContext(cmdicons_grp=_icons_grp(3), palettes={'Icons': self.PALETTE}, ticon_pcx=_ticon_pcx([100, 101] + [0] * 14 + [200, 201]))
 		with patch(FRAME_PIXELS, return_value=([[1]], 0)), patch(IMAGE_BOUNDS), patch(FRAME_TO_PHOTO) as frame_to_photo:
 			data_context.get_cmdicon(0)
 			self.assertEqual(frame_to_photo.call_args.args[0], self.PALETTE)
-			data_context.get_cmdicon(0, highlighted=True)
-			palette = frame_to_photo.call_args.args[0]
-		self.assertEqual(palette[:3], [(200, 200, 200), (201, 201, 201), (2, 2, 2)])
+			data_context.get_cmdicon(0, CmdIconState.disabled)
+			# Color 2 is remapped to color 0 as it was before the remap
+			self.assertEqual(frame_to_photo.call_args.args[0][:3], [(100, 100, 100), (101, 101, 101), (0, 0, 0)])
+			self.assertEqual(frame_to_photo.call_args.args[0][16], (16, 16, 16))
+			data_context.get_cmdicon(0, CmdIconState.highlighted)
+			self.assertEqual(frame_to_photo.call_args.args[0][:2], [(200, 200, 200), (201, 201, 201)])
+
+	def test_states_past_the_end_of_ticon_are_not_remapped(self) -> None:
+		data_context = DataContext(cmdicons_grp=_icons_grp(3), palettes={'Icons': self.PALETTE}, ticon_pcx=_ticon_pcx([100, 101]))
+		with patch(FRAME_PIXELS, return_value=([[1]], 0)), patch(IMAGE_BOUNDS), patch(FRAME_TO_PHOTO) as frame_to_photo:
+			data_context.get_cmdicon(0, CmdIconState.highlighted)
+			self.assertEqual(frame_to_photo.call_args.args[0], self.PALETTE)
 
 def _resource_icons_grp(frames: int) -> CacheGRP:
 	grp = CacheGRP()

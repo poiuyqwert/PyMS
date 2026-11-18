@@ -150,6 +150,35 @@ class Test_DropDown(UITestCase):
 			dropdown.choose()
 		self.assertEqual(dropdown.variable.get(), 0)
 
+	def test_typing_selects_a_matching_entry_without_reaching_the_window(self) -> None:
+		dropdown = self._dropdown(['apple', 'banana', 'cherry'])
+		window = dropdown.winfo_toplevel()
+		assert isinstance(window, UI.WindowExtensions)
+		window_keys: list[str] = []
+		window.bind(UI.Key.Pressed(), lambda event: window_keys.append(event.keysym), '+')
+		self.show(window)
+		dropdown.entry.focus_force()
+		self.pump(window)
+		dropdown.entry.event_generate(UI.Key.Pressed.event(), keysym='c')
+		self.pump(window)
+		self.assertEqual(dropdown.variable.get(), 2)
+		self.assertEqual(window_keys, [])
+
+	def test_keys_that_dont_type_reach_the_window(self) -> None:
+		dropdown = self._dropdown(['apple', 'banana', 'cherry'])
+		window = dropdown.winfo_toplevel()
+		assert isinstance(window, UI.WindowExtensions)
+		window_keys: list[str] = []
+		window.bind(UI.Key.Pressed(), lambda event: window_keys.append(event.keysym), '+')
+		self.show(window)
+		dropdown.entry.focus_force()
+		self.pump(window)
+		for keysym in ('Control_L', 'Shift_L'):
+			dropdown.entry.event_generate(UI.Key.Pressed.event(), keysym=keysym)
+		self.pump(window)
+		self.assertEqual(window_keys, ['Control_L', 'Shift_L'])
+		self.assertEqual(dropdown.variable.get(), 0)
+
 
 class Test_EntryDropDown(UITestCase):
 	def _entry_dropdown(self, entries, *, value=0, callback=None) -> UI.EntryDropDown:

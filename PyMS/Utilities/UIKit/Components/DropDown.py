@@ -138,6 +138,9 @@ class DropDown(Frame):
 				self.display(n)
 
 	def key_pressed(self, event: Event) -> str:
+		# Keys that don't type (like the modifiers) are left to the other bindings
+		if not event.char and Keysym(event.keysym) != Key.Backspace:
+			return EventPropogation.Continue
 		if self._typed_timer:
 			self.after_managed_cancel(self._typed_timer)
 			self._typed_timer = None

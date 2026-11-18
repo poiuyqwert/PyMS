@@ -24,9 +24,29 @@ class TextPreviewTooltip(UI.Tooltip):
 			return
 		self.tip = UI.TooltipWindow(self.parent, relief=UI.SOLID, borderwidth=1)
 		self.tip.make_frameless(self.parent.winfo_toplevel())
-		padding = TextPreviewTooltip.PADDING
-		self.canvas = UI.Canvas(self.tip, width=drawing.width + padding * 2, height=drawing.height + padding * 2, background='#000000', highlightthickness=0, borderwidth=0, theme_tag='preview') # type: ignore[call-arg]
+		self.canvas = UI.Canvas(self.tip, background='#000000', highlightthickness=0, borderwidth=0, theme_tag='preview') # type: ignore[call-arg]
 		self.canvas.pack()
+		self._show_drawing(drawing)
+
+	def refresh(self) -> None:
+		# Shows the tip (right away) with what `drawing_lookup` returns now.
+		# A shown tip is redrawn in its window: closing it and opening another makes Tk send the parent a Leave event, which would hide the new tip.
+		self.unschedule()
+		if not self.tip:
+			self.showtip()
+			return
+		drawing = self.drawing_lookup()
+		if drawing is None:
+			self.hidetip()
+			return
+		if self.drawing:
+			self.drawing.delete()
+		self._show_drawing(drawing)
+
+	def _show_drawing(self, drawing: TextDrawing) -> None:
+		assert self.canvas is not None
+		padding = TextPreviewTooltip.PADDING
+		self.canvas.config(width=drawing.width + padding * 2, height=drawing.height + padding * 2)
 		drawing.draw(self.canvas, padding, padding)
 		self.drawing = drawing
 		self.position_tip()

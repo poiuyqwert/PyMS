@@ -13,7 +13,7 @@ from ...FileFormats.TBL import end_at_null, simplify_string
 from ...Utilities import UIKit as UI
 from ...Utilities import Assets
 from ...Utilities.Config import WindowGeometry
-from ...Utilities.DataContext import DataContext
+from ...Utilities.DataContext import DataContext, CmdIconState
 from ...Utilities.IconSelectDialog import ImageWithBounds
 from ...Utilities.TextPreview.HotkeyString import HotkeyString, TooltipCosts
 from ...Utilities.TextPreview.TextDrawing import TextDrawing
@@ -190,8 +190,8 @@ class ButtonSetBuilderView(UI.NotebookTab):
 		position = next((position for position in range(1, 10) if position not in used), 1)
 		return Button(position=position, condition=ButtonCodeCommands.Always.function_index, action=ButtonCodeCommands.Nothing.function_index)
 
-	def button_icon(self, icon: int) -> ImageWithBounds | None:
-		return self.data_context.get_cmdicon(icon)
+	def button_icon(self, icon: int, state: CmdIconState = CmdIconState.enabled) -> ImageWithBounds | None:
+		return self.data_context.get_cmdicon(icon, state)
 
 	def button_set_unit_id(self) -> int | None:
 		if self.entry_id is None:

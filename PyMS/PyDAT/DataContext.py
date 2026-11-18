@@ -17,7 +17,7 @@ from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.Callback import Callback
 from ..Utilities.IconSelectDialog import ImageWithBounds
-from ..Utilities.DataContext import render_cmdicon
+from ..Utilities.DataContext import render_cmdicon, CmdIconState
 
 from typing import Any, Sequence, assert_never
 
@@ -250,15 +250,15 @@ class DataContext:
 	def icon_names(self) -> Sequence[str]:
 		return self.cmdicons.names
 
-	def get_cmdicon(self, index: int, highlighted: bool = False) -> ImageWithBounds | None:
+	def get_cmdicon(self, index: int, state: CmdIconState = CmdIconState.enabled) -> ImageWithBounds | None:
 		if not 'Icons' in self.palettes or not self.cmdicons.grp or index >= self.cmdicons.grp.frames:
 			return None
-		if highlighted in self.cmdicons.images and index in self.cmdicons.images[highlighted]:
-			return self.cmdicons.images[highlighted][index]
-		image = render_cmdicon(self.cmdicons.grp, self.palettes['Icons'], self.cmdicons.ticon_pcx, index, highlighted)
-		if not highlighted in self.cmdicons.images:
-			self.cmdicons.images[highlighted] = {}
-		self.cmdicons.images[highlighted][index] = image
+		if state in self.cmdicons.images and index in self.cmdicons.images[state]:
+			return self.cmdicons.images[state][index]
+		image = render_cmdicon(self.cmdicons.grp, self.palettes['Icons'], self.cmdicons.ticon_pcx, index, state)
+		if not state in self.cmdicons.images:
+			self.cmdicons.images[state] = {}
+		self.cmdicons.images[state][index] = image
 		return image
 
 	def get_grp_frame(self, path: str, *, draw_function: int | None = None, remapping: int | None = None, draw_info: Any | None = None, palette: str | None = None, frame: int = 0, is_full_path: bool = False) -> ImageWithBounds | None:

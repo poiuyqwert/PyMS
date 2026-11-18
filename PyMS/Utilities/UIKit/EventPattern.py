@@ -213,6 +213,9 @@ class Key(Events):
 	BraceRight = EventPattern(Keysym('braceright', '}'))
 	BracketLeft = EventPattern(Keysym('bracketleft', '['))
 	BracketRight = EventPattern(Keysym('bracketright', ']'))
+	# The physical Control keys (Control on macOS too, unlike the `Ctrl` modifier)
+	Control_L = EventPattern(Keysym('Control_L', 'Left Control'))
+	Control_R = EventPattern(Keysym('Control_R', 'Right Control'))
 
 	F1 = EventPattern(Keysym('F1'))
 	F2 = EventPattern(Keysym('F2'))

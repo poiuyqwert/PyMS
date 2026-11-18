@@ -3,6 +3,7 @@ from __future__ import annotations
 from . import UIKit as UI
 from .PyMSDialog import PyMSDialog
 from .Config import WindowGeometry
+from .DataContext import CmdIconState
 
 from ..FileFormats.Images import Bounds
 
@@ -24,7 +25,7 @@ class IconSource(Protocol):
 	def icon_names(self) -> Sequence[str]:
 		...
 
-	def get_cmdicon(self, index: int, highlighted: bool = False) -> ImageWithBounds | None:
+	def get_cmdicon(self, index: int, state: CmdIconState = CmdIconState.enabled) -> ImageWithBounds | None:
 		...
 
 class IconSelectDialog(PyMSDialog):
@@ -185,7 +186,7 @@ class IconSelectDialog(PyMSDialog):
 				x = ((index - visible_start_index) % columns) * icon_size[0]
 				y = start_y + floor((index - visible_start_index) / float(columns)) * icon_size[1]
 				frame_index = self._display_index_to_frame_index(index)
-				image_with_bounds = self.icon_source.get_cmdicon(frame_index, highlighted=(self._display_index_to_selected_index(index) == self.selected_index))
+				image_with_bounds = self.icon_source.get_cmdicon(frame_index, CmdIconState.highlighted if self._display_index_to_selected_index(index) == self.selected_index else CmdIconState.enabled)
 				if not image_with_bounds:
 					continue
 				icon, bounds = image_with_bounds
@@ -207,14 +208,14 @@ class IconSelectDialog(PyMSDialog):
 			old_display_index = self._selected_index_to_display_index(old_selection)
 			if start_index <= old_display_index <= end_index:
 				frame_index = self._display_index_to_frame_index(old_display_index)
-				image_with_bounds = self.icon_source.get_cmdicon(frame_index, highlighted=False)
+				image_with_bounds = self.icon_source.get_cmdicon(frame_index, CmdIconState.enabled)
 				if image_with_bounds:
 					icon, _ = image_with_bounds
 					self.scrolled_canvas.canvas.itemconfigure(self._display_index_to_tag(old_display_index), image=icon)
 		new_display_index = self._selected_index_to_display_index(new_selection)
 		if start_index <= new_display_index <= end_index:
 			frame_index = self._display_index_to_frame_index(new_display_index)
-			image_with_bounds = self.icon_source.get_cmdicon(frame_index, highlighted=True)
+			image_with_bounds = self.icon_source.get_cmdicon(frame_index, CmdIconState.highlighted)
 			if image_with_bounds:
 				icon, _ = image_with_bounds
 				self.scrolled_canvas.canvas.itemconfigure(self._display_index_to_tag(new_display_index), image=icon)

@@ -22,15 +22,24 @@ if TYPE_CHECKING:
 	# Only for typing, the UIKit barrel imports this module
 	from .IconSelectDialog import ImageWithBounds
 
-def render_cmdicon(grp: GRP.CacheGRP, palette: RawPalette, ticon_pcx: PCX | None, index: int, highlighted: bool) -> ImageWithBounds:
-	# Draws a cmdicons.grp frame. Highlighted icons remap the first 16 palette colors with ticon.pcx (from its 33rd pixel on), like the game.
-	if highlighted and ticon_pcx:
+# The draw states of cmdicons.grp frames. The value is the row of 16 remap colors in ticon.pcx (enabled icons are drawn with the palette as it is).
+class CmdIconState(IntEnum):
+	enabled = 0
+	disabled = 1
+	highlighted = 2
+
+def render_cmdicon(grp: GRP.CacheGRP, palette: RawPalette, ticon_pcx: PCX | None, index: int, state: CmdIconState) -> ImageWithBounds:
+	# Draws a cmdicons.grp frame. Disabled and highlighted icons remap the first 16 palette colors with the row of their state in ticon.pcx, like the game.
+	if state != CmdIconState.enabled and ticon_pcx:
 		ticon = ticon_pcx.image[0]
-		remap_count = max(0, min(16, len(ticon) - 32))
+		start = state * 16
+		remap_count = max(0, min(16, len(ticon) - start))
 		if remap_count:
+			# Remapped from the original colors (a remapped color can point at another remapped color)
+			original = palette
 			palette = list(palette)
 			for i in range(remap_count):
-				palette[i] = palette[ticon[32+i]]
+				palette[i] = original[ticon[start + i]]
 	pixels, transindex = GRP.frame_pixels(grp, index)
 	return (GRP.frame_to_photo(palette, pixels, transindex=transindex), GRP.image_bounds(pixels, transindex))
 
@@ -82,7 +91,7 @@ class DataContext:
 		self.cmdicons_grp = cmdicons_grp
 		self.ticon_pcx = ticon_pcx
 		self._icon_names: tuple[str, ...] | None = None
-		self._cmdicon_images: dict[bool, dict[int, ImageWithBounds]] = {}
+		self._cmdicon_images: dict[CmdIconState, dict[int, ImageWithBounds]] = {}
 		# Palettes by name (`Units`, `Icons`, `Terrain`, `ofire`, `gfire`, `bfire`, ...)
 		self.palettes: dict[str, RawPalette] = dict(palettes or {})
 		self.icons_grp = icons_grp
@@ -800,13 +809,13 @@ class DataContext:
 			self._icon_names = names
 		return self._icon_names
 
-	def get_cmdicon(self, index: int, highlighted: bool = False) -> ImageWithBounds | None:
+	def get_cmdicon(self, index: int, state: CmdIconState = CmdIconState.enabled) -> ImageWithBounds | None:
 		palette = self.palettes.get('Icons')
 		if palette is None or self.cmdicons_grp is None or not 0 <= index < self.cmdicons_grp.frames:
 			return None
-		images = self._cmdicon_images.setdefault(highlighted, {})
+		images = self._cmdicon_images.setdefault(state, {})
 		if index not in images:
-			images[index] = render_cmdicon(self.cmdicons_grp, palette, self.ticon_pcx, index, highlighted)
+			images[index] = render_cmdicon(self.cmdicons_grp, palette, self.ticon_pcx, index, state)
 		return images[index]
 
 	# Icons (icons.grp, the resource/supply/energy icons of tooltips and the resource bar)

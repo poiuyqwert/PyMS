@@ -13,6 +13,7 @@ from ..Utilities import IO
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from .DataContext import DataContext
+	from ..Utilities.DataContext import CmdIconState
 	from ..Utilities.IconSelectDialog import ImageWithBounds
 
 class IconData:
@@ -21,7 +22,7 @@ class IconData:
 		self.grp: CacheGRP | None = None
 		self.ticon_pcx: PCX | None = None
 		self.names: tuple[str, ...] = ()
-		self.images: dict[bool, dict[int, ImageWithBounds]] = {}
+		self.images: dict[CmdIconState, dict[int, ImageWithBounds]] = {}
 
 		self.update_cb: Callback[DataID] = Callback()
 

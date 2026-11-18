@@ -19,7 +19,7 @@ class FileSettingsTab(SettingsTab):
 			('techdata.dat', 'Used to look up Technology names in stat_txt.tbl', config.settings.files.dat.techdata),
 			('orders.dat', 'Used to look up Order names in stat_txt.tbl', config.settings.files.dat.orders),
 			('cmdicons.grp', 'Contains the button icons (optional, icons are not shown when it is not found)', config.settings.files.cmdicons),
-			('ticon.pcx', 'Used to draw highlighted button icons (optional)', config.settings.files.ticon),
+			('ticon.pcx', 'Used to draw highlighted and disabled button icons (optional)', config.settings.files.ticon),
 			('tfontgam.pcx', 'The text colors of the tooltip previews (optional, tooltips are not previewed when it is not found)', config.settings.files.tfontgam),
 			('font8.fnt', 'The font of the tooltip previews (optional, tooltips are not previewed when it is not found)', config.settings.files.font8),
 			('icons.grp', 'The mineral, gas, supply, and energy icons of the tooltip previews (optional)', config.settings.files.icons),

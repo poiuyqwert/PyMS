@@ -6,6 +6,7 @@ from ...FileFormats.Graft.CodeHandlers.CodeTypes import ButtonPositionCodeType
 from ...Utilities import UIKit as UI
 from ...Utilities import Assets
 from ...Utilities.IconSelectDialog import ImageWithBounds
+from ...Utilities.DataContext import CmdIconState
 
 from typing import Protocol
 
@@ -22,7 +23,7 @@ class ButtonRowDelegate(Protocol):
 	def add_button_after(self, index: int) -> None:
 		...
 
-	def button_icon(self, icon: int) -> ImageWithBounds | None:
+	def button_icon(self, icon: int, state: CmdIconState = CmdIconState.enabled) -> ImageWithBounds | None:
 		...
 
 	def string_text(self, string_id: int) -> str:

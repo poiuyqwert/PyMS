@@ -5,6 +5,7 @@ from ...PyDAT.DataID import DataID
 from ...PyDAT.DataContext import DataContext
 from ...FileFormats.GRP import CacheGRP
 from ...FileFormats.PCX import PCX
+from ...Utilities.DataContext import CmdIconState
 
 import unittest
 from unittest.mock import Mock, patch
@@ -117,7 +118,7 @@ class Test_update_names(unittest.TestCase):
 class Test_load_grp(unittest.TestCase):
 	def test_success_sets_grp_clears_images_and_updates_names(self) -> None:
 		icon = IconData(_context())
-		icon.images = {True: {}}
+		icon.images = {CmdIconState.highlighted: {}}
 		grp = _grp(frames=2)
 		with patch.object(IconDataMod, 'CacheGRP', return_value=grp):
 			with patch.object(IconDataMod.Assets, 'data_cache', return_value=('a', 'b', 'c')):
@@ -128,16 +129,16 @@ class Test_load_grp(unittest.TestCase):
 
 	def test_failure_leaves_grp_none_and_images_intact(self) -> None:
 		icon = IconData(_failing_context())
-		icon.images = {False: {}}
+		icon.images = {CmdIconState.enabled: {}}
 		icon.load_grp()
 		self.assertIsNone(icon.grp)
-		self.assertEqual(icon.images, {False: {}})
+		self.assertEqual(icon.images, {CmdIconState.enabled: {}})
 
 
 class Test_load_ticon_pcx(unittest.TestCase):
 	def test_success_sets_pcx_and_clears_images(self) -> None:
 		icon = IconData(_context())
-		icon.images = {True: {}}
+		icon.images = {CmdIconState.highlighted: {}}
 		pcx = cast(PCX, Mock())
 		with patch.object(IconDataMod, 'PCX', return_value=pcx):
 			icon.load_ticon_pcx()

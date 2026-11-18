@@ -6,6 +6,7 @@ from ...FileFormats.Graft import Button
 
 from ...Utilities import UIKit as UI
 from ...Utilities.IconSelectDialog import ImageWithBounds
+from ...Utilities.DataContext import CmdIconState
 from ...Utilities.TextPreview.TextDrawing import TextDrawing
 from ...Utilities.TextPreview.TextPreviewTooltip import TextPreviewTooltip
 
@@ -15,7 +16,7 @@ class PreviewGridDelegate(Protocol):
 	def select_button(self, index: int) -> None:
 		...
 
-	def button_icon(self, icon: int) -> ImageWithBounds | None:
+	def button_icon(self, icon: int, state: CmdIconState = CmdIconState.enabled) -> ImageWithBounds | None:
 		...
 
 	def button_tooltip(self, button: Button, *, enabled: bool = True) -> TextDrawing | None:
@@ -24,6 +25,7 @@ class PreviewGridDelegate(Protocol):
 # A preview of the button set like the game's command card: a slot for each position, showing the icon of a button at that position.
 # When several buttons are at the same position, the slot shows which of them it's showing (`x/y`), and clicking it again selects the next one.
 # Hovering over a slot shows the tooltip of its button like the game does.
+# Holding Control (on every platform) shows the buttons disabled: their greyed icons and the tooltips of their disabled strings.
 class PreviewGrid(UI.Frame):
 	def __init__(self, parent: UI.Misc, delegate: PreviewGridDelegate) -> None:
 		super().__init__(parent)
@@ -38,6 +40,10 @@ class PreviewGrid(UI.Frame):
 		# The buttons the slots show
 		self.slot_shown: dict[int, Button] = {}
 		self.tooltips: dict[int, TextPreviewTooltip] = {}
+		# Whether the buttons are shown disabled (while Control is held)
+		self.show_disabled = False
+		# The position of the slot under the mouse
+		self.hovered: int | None = None
 		# A slot for each of the 9 positions, in 3 columns
 		for position in range(1, 10):
 			# Larger than an icon, so the labels in its corners overlap the (centered) icon less
@@ -46,7 +52,31 @@ class PreviewGrid(UI.Frame):
 			canvas.grid(row=row, column=column, padx=1, pady=1)
 			canvas.bind(UI.Mouse.Click_Left(), lambda _, position=position: self.slot_clicked(position)) # type: ignore[misc]
 			self.slots[position] = canvas
+			# Bound before the tooltip, which adds its own bindings for these events
+			canvas.bind(UI.Cursor.Enter(), lambda _, position=position: setattr(self, 'hovered', position)) # type: ignore[misc]
+			canvas.bind(UI.Cursor.Leave(), lambda _: setattr(self, 'hovered', None))
 			self.tooltips[position] = TextPreviewTooltip(canvas, lambda position=position: self.slot_tooltip(position)) # type: ignore[misc]
+		toplevel = self.winfo_toplevel()
+		toplevel.bind(UI.Key.Pressed(), lambda event: self.control_key(event, True), '+')
+		toplevel.bind(UI.Key.Released(), lambda event: self.control_key(event, False), '+')
+		toplevel.bind(UI.Focus.Out(), lambda _: self.set_show_disabled(False), '+')
+
+	def control_key(self, event: UI.Event, pressed: bool) -> None:
+		# The physical Control key on every platform (not Command on macOS)
+		keysym = UI.Keysym(event.keysym)
+		if keysym in (UI.Key.Control_L, UI.Key.Control_R):
+			self.set_show_disabled(pressed)
+
+	def set_show_disabled(self, show_disabled: bool) -> None:
+		if show_disabled == self.show_disabled:
+			return
+		self.show_disabled = show_disabled
+		# (Only the slots drawn by `update_buttons`)
+		for position in self.slot_buttons:
+			self.draw_slot(position, self.slot_shown.get(position))
+		# The tooltip of the hovered slot switches to the other string right away (even when the string it showed had no tooltip)
+		if self.hovered is not None:
+			self.tooltips[self.hovered].refresh()
 
 	def update_buttons(self, buttons: list[Button], selected: int | None) -> None:
 		self.selected = selected
@@ -77,7 +107,7 @@ class PreviewGrid(UI.Frame):
 		height = int(canvas.cget('height'))
 		canvas.delete(UI.ALL)
 		indexes = self.slot_buttons[position]
-		draw_icon(canvas, self.delegate.button_icon(button.icon) if button else None)
+		draw_icon(canvas, self.delegate.button_icon(button.icon, CmdIconState.disabled if self.show_disabled else CmdIconState.enabled) if button else None)
 		self.draw_label(canvas, 2, 0, str(position), anchor=UI.NW, tag='number')
 		if len(indexes) > 1:
 			shown = self.shown_buttons[position]
@@ -92,11 +122,11 @@ class PreviewGrid(UI.Frame):
 		canvas.create_text(x, y, text=text, anchor=anchor, fill='#7C8DD4', font=self.font, tags=tag)
 
 	def slot_tooltip(self, position: int) -> TextDrawing | None:
-		# The enabled string of the slot's button (the string shown when it can be used)
+		# The enabled string of the slot's button (the string shown when it can be used), or its disabled string while the buttons are shown disabled
 		button = self.slot_shown.get(position)
 		if button is None:
 			return None
-		return self.delegate.button_tooltip(button)
+		return self.delegate.button_tooltip(button, enabled=not self.show_disabled)
 
 	def slot_clicked(self, position: int) -> None:
 		indexes = self.slot_buttons.get(position)

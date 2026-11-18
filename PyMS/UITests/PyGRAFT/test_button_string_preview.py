@@ -9,6 +9,10 @@ from ...FileFormats.FNT import FNT
 from ...FileFormats.PCX import PCX
 from ...FileFormats.TBL import TBL
 from ...Utilities import Assets
+from ...Utilities import UIKit as UI
+from ...Utilities.DataContext import CmdIconState
+
+from unittest import mock
 
 class Test_PyGRAFT_button_string_preview(PyGRAFTTestCase):
 	def open_builder(self, *, fonts: bool = True) -> tuple[PyGRAFT, ButtonSetBuilderView]:
@@ -124,6 +128,138 @@ class Test_PyGRAFT_button_string_preview(PyGRAFTTestCase):
 		for position in (2, 3):
 			view.preview.tooltips[position].showtip()
 			self.assertIsNone(view.preview.tooltips[position].tip)
+
+	def press_control(self, gui: PyGRAFT, pattern: UI.EventPattern) -> None:
+		gui.event_generate(pattern.event(), keysym='Control_L')
+		self.pump(gui)
+
+	def test_holding_control_shows_the_disabled_tooltips(self) -> None:
+		gui, view = self.open_builder()
+		self.show(gui)
+		self.press_control(gui, UI.Key.Pressed)
+		self.assertTrue(view.preview.show_disabled)
+		# Slot 2's button has a disabled string, slot 1's doesn't
+		tooltip = view.preview.tooltips[2]
+		tooltip.showtip()
+		self.assertIsNotNone(tooltip.tip)
+		assert tooltip.drawing is not None
+		disabled = view.button_tooltip(view.buttons()[1], enabled=False)
+		assert disabled is not None
+		self.assertEqual((tooltip.drawing.width, tooltip.drawing.height), (disabled.width, disabled.height))
+		view.preview.tooltips[1].showtip()
+		self.assertIsNone(view.preview.tooltips[1].tip)
+		tooltip.hidetip()
+		self.press_control(gui, UI.Key.Released)
+		self.assertFalse(view.preview.show_disabled)
+		view.preview.tooltips[1].showtip()
+		self.assertIsNotNone(view.preview.tooltips[1].tip)
+		view.preview.tooltips[1].hidetip()
+
+	def test_control_switches_the_hovered_slots_tooltip(self) -> None:
+		gui, view = self.open_builder()
+		self.show(gui)
+		slot = view.preview.slots[1]
+		slot.event_generate(UI.Cursor.Enter.event(), state=0)
+		self.pump(gui)
+		tooltip = view.preview.tooltips[1]
+		tooltip.showtip()
+		self.assertIsNotNone(tooltip.tip)
+		# Slot 1's button has no disabled string, so its tooltip goes away while Control is held, and comes back when it's released
+		self.press_control(gui, UI.Key.Pressed)
+		self.assertIsNone(tooltip.tip)
+		self.press_control(gui, UI.Key.Released)
+		self.assertIsNotNone(tooltip.tip)
+		# Other slots' tooltips aren't shown
+		self.assertIsNone(view.preview.tooltips[2].tip)
+		slot.event_generate(UI.Cursor.Leave.event())
+		self.pump(gui)
+		self.assertIsNone(tooltip.tip)
+		self.assertIsNone(view.preview.hovered)
+
+	def test_control_redraws_the_hovered_slots_tooltip_in_its_window(self) -> None:
+		gui, view = self.open_builder()
+		self.show(gui)
+		# Slot 2's button gets both strings
+		view.buttons()[1].enabled_string = 2
+		view.sync()
+		view.preview.slots[2].event_generate(UI.Cursor.Enter.event(), state=0)
+		self.pump(gui)
+		tooltip = view.preview.tooltips[2]
+		tooltip.showtip()
+		tip = tooltip.tip
+		self.assertIsNotNone(tip)
+		for pattern, enabled in ((UI.Key.Pressed, False), (UI.Key.Released, True)):
+			self.press_control(gui, pattern)
+			# Redrawn in the same window, which closing and opening a window under the mouse would hide
+			self.assertIs(tooltip.tip, tip)
+			expected = view.button_tooltip(view.buttons()[1], enabled=enabled)
+			assert tooltip.drawing is not None and expected is not None
+			self.assertEqual((tooltip.drawing.width, tooltip.drawing.height), (expected.width, expected.height))
+		tooltip.hidetip()
+
+	def test_holding_control_shows_the_disabled_icons(self) -> None:
+		gui, view = self.open_builder()
+		with mock.patch.object(view, 'button_icon', wraps=view.button_icon) as button_icon:
+			view.preview.set_show_disabled(True)
+			self.assertEqual(set(call.args[1] for call in button_icon.call_args_list), {CmdIconState.disabled})
+			self.assertEqual(button_icon.call_count, 2)
+			button_icon.reset_mock()
+			view.preview.set_show_disabled(False)
+			self.assertEqual(set(call.args[1] for call in button_icon.call_args_list), {CmdIconState.enabled})
+			# Changing the buttons keeps drawing the current state
+			view.preview.set_show_disabled(True)
+			button_icon.reset_mock()
+			view.sync()
+			self.assertEqual(set(call.args[1] for call in button_icon.call_args_list if len(call.args) > 1), {CmdIconState.disabled})
+		self.pump(gui)
+
+	def test_control_shows_disabled_while_a_settings_dropdown_has_the_focus(self) -> None:
+		gui, view = self.open_builder()
+		self.show(gui)
+		entry = view.settings_view.position_dropdown.entry
+		entry.focus_force()
+		self.pump(gui)
+		entry.event_generate(UI.Key.Pressed.event(), keysym='Control_L')
+		self.pump(gui)
+		self.assertTrue(view.preview.show_disabled)
+		entry.event_generate(UI.Key.Released.event(), keysym='Control_L')
+		self.pump(gui)
+		self.assertFalse(view.preview.show_disabled)
+
+	def test_losing_the_focus_stops_showing_disabled(self) -> None:
+		gui, view = self.open_builder()
+		self.show(gui)
+		self.press_control(gui, UI.Key.Pressed)
+		self.assertTrue(view.preview.show_disabled)
+		gui.event_generate(UI.Focus.Out.event())
+		self.pump(gui)
+		self.assertFalse(view.preview.show_disabled)
+
+	def test_other_keys_dont_show_disabled(self) -> None:
+		gui, view = self.open_builder()
+		self.show(gui)
+		gui.event_generate(UI.Key.Pressed.event(), keysym='Shift_L')
+		self.pump(gui)
+		self.assertFalse(view.preview.show_disabled)
+
+	def test_mouse_events_dont_change_showing_disabled(self) -> None:
+		# Only the Control key events show disabled: Tk sends a Leave and Enter without the modifiers when a tooltip window opens or closes under the mouse
+		gui, view = self.open_builder()
+		self.show(gui)
+		slot = view.preview.slots[2]
+		slot.event_generate(UI.Cursor.Enter.event(), state=0)
+		self.press_control(gui, UI.Key.Pressed)
+		self.assertTrue(view.preview.show_disabled)
+		slot.event_generate(UI.Cursor.Leave.event(), state=0)
+		slot.event_generate(UI.Cursor.Enter.event(), state=0)
+		self.pump(gui)
+		self.assertTrue(view.preview.show_disabled)
+		self.press_control(gui, UI.Key.Released)
+		self.assertFalse(view.preview.show_disabled)
+		# Control held from another window isn't used
+		slot.event_generate(UI.Cursor.Enter.event(), state=UI.Modifier.Mac.Ctrl.state)
+		self.pump(gui)
+		self.assertFalse(view.preview.show_disabled)
 
 def gui_font_height(view: ButtonSetBuilderView) -> int:
 	font = view.data_context.font8_fnt

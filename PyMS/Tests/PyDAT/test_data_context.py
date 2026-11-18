@@ -2,6 +2,7 @@
 from ...PyDAT.DataContext import DataContext, TicksPerSecond
 from ...PyDAT.DataID import DATID, DataID
 from ...FileFormats.DAT import DATImage
+from ...Utilities.DataContext import CmdIconState
 from ...FileFormats.IScriptBIN.IScriptBIN import IScriptBIN
 
 import unittest
@@ -125,7 +126,7 @@ class Test_image_frame_helpers(unittest.TestCase):
 	def test_get_cmdicon_none_without_icon_palette(self) -> None:
 		self.assertEqual(self.dc.palettes, {})
 		self.assertIsNone(self.dc.get_cmdicon(0))
-		self.assertIsNone(self.dc.get_cmdicon(0, highlighted=True))
+		self.assertIsNone(self.dc.get_cmdicon(0, CmdIconState.highlighted))
 
 	def test_icon_source_uses_the_icon_data(self) -> None:
 		self.dc.cmdicons.names = ('A', 'B')
