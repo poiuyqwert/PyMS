@@ -55,6 +55,7 @@ EXPECTED_TOOLBAR: ToolbarLayout = [
 	GAP,
 	('Import from TXT', UI.Ctrl.i),
 	('Export to TXT', UI.Ctrl.e),
+	('Import FireGraft Project', UI.Shift.Ctrl.i),
 	SECTION,
 	('Manage Settings', UI.Ctrl.m),
 	('Reload Data Files', None),

@@ -5,12 +5,13 @@ from ...PyGRAFT.Tabs import ReqGraftTab
 from ...PyGRAFT.RequirementsEditor.ReqBuilderView import ReqBuilderView
 from ...PyGRAFT.RequirementsEditor.OpcodeEditorView import OpcodeEditorView
 from ...FileFormats.Graft import ReqScript
-from ...FileFormats.Graft.CodeHandlers import RequirementCodeCommands
+from ...FileFormats.Graft.CodeHandlers import GraftSerializeContext, RequirementCodeCommands
 from ...FileFormats.Graft.CodeHandlers.RequirementCodeCommands import ReqCommandDefinition
 from ...Utilities.CodeHandlers.CodeCommand import CodeCommand
 from ...Utilities import UIKit as UI
 from ...Utilities.utils import fit
 
+import io
 from unittest import mock
 
 from typing import Any
@@ -498,3 +499,87 @@ class Test_PyGRAFT_requirements_builder(PyGRAFTTestCase):
 		assert script is not None
 		self.assertEqual(script.commands[0].params, [111])
 		self.assertIsInstance(view.commands[0], CodeCommand)
+
+	# Copy and paste
+
+	def decompiled_script(self, gui: PyGRAFT, entry_id: int) -> str:
+		output = io.StringIO()
+		gui.units_data.graft.decompile_script(GraftSerializeContext(output, gui.data_context), entry_id)
+		return output.getvalue()
+
+	def test_copy_puts_the_scripts_code_on_the_clipboard(self) -> None:
+		gui, _, view = self.open_builder()
+		view.copy_button.invoke()
+		self.assertEqual(view.clipboard_get(), self.decompiled_script(gui, 0))
+
+	def test_copy_includes_changes_not_applied(self) -> None:
+		_, _, view = self.open_builder()
+		self.set_commands(view, [(R.HasCompleted, [3]), (R.MustHave, [7])])
+		view.copy_button.invoke()
+		self.assertEqual(view.clipboard_get(), 'has_completed 3 # Terran Vulture\nmust_have 7 # Terran SCV\n')
+
+	def test_paste_replaces_the_rows_without_applying(self) -> None:
+		gui, _, view = self.open_builder()
+		view.clipboard_set('has_completed 3\nmust_have 7\n')
+		view.paste_button.invoke()
+		self.pump(view)
+		self.assertEqual(self.names(view), ['has_completed', 'must_have'])
+		self.assertEqual(self.row_names(view), ['has_completed', 'must_have'])
+		self.assertEqual([command.params for command in view.commands], [[3], [7]])
+		self.assertTrue(view.is_edited())
+		self.assertFalse(gui.units_data.edited)
+		view.revert_button.invoke()
+		self.pump(view)
+		self.assertEqual(self.names(view)[0], 'has_completed')
+		self.assertNotEqual(self.names(view), ['has_completed', 'must_have'])
+
+	def test_copied_script_pastes_into_another_entry(self) -> None:
+		gui, _, view = self.open_builder()
+		view.copy_button.invoke()
+		self.select_in_list(gui, UNSCRIPTED_UNIT)
+		self.assertEqual(view.commands, [])
+		view.paste_button.invoke()
+		self.assertTrue(view.apply())
+		self.pump(gui)
+		self.assertEqual(self.decompiled_script(gui, UNSCRIPTED_UNIT), self.decompiled_script(gui, 0))
+
+	def test_paste_error_changes_nothing(self) -> None:
+		_, _, view = self.open_builder()
+		names = self.names(view)
+		view.clipboard_set('not_a_command 1\n')
+		with mock.patch(ERROR_DIALOG) as error_dialog:
+			view.paste_button.invoke()
+		error_dialog.assert_called_once()
+		self.assertIn('Unknown command `not_a_command`', str(error_dialog.call_args.args[1]))
+		self.assertEqual(self.names(view), names)
+		self.assertFalse(view.is_edited())
+
+	def test_copy_and_paste_are_disabled_without_an_entry(self) -> None:
+		_, _, view = self.open_builder()
+		view.load(None, '')
+		self.assertEqual(str(view.copy_button['state']), UI.DISABLED)
+		self.assertEqual(str(view.paste_button['state']), UI.DISABLED)
+
+	def test_clipboard_shortcuts_copy_and_paste_the_script(self) -> None:
+		gui, _, view = self.open_builder()
+		self.show(gui)
+		view.focus_force()
+		self.pump(gui)
+		self.shortcut(view, UI.Ctrl.c)
+		self.assertEqual(view.clipboard_get(), self.decompiled_script(gui, 0))
+		view.clipboard_set('must_have 7\n')
+		self.shortcut(view, UI.Ctrl.v)
+		self.assertEqual(self.names(view), ['must_have'])
+
+	def test_clipboard_shortcuts_are_left_to_a_focused_text_field(self) -> None:
+		gui, _, view = self.open_builder()
+		names = self.names(view)
+		self.show(gui)
+		entry = view.rows[0].opcode_dropdown.entry
+		entry.focus_force()
+		self.pump(gui)
+		view.clipboard_set('must_have 7\n')
+		self.shortcut(entry, UI.Ctrl.c)
+		self.assertEqual(view.clipboard_get(), 'must_have 7\n')
+		self.shortcut(entry, UI.Ctrl.v)
+		self.assertEqual(self.names(view), names)

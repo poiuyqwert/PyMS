@@ -1,6 +1,7 @@
 
 from ...PyGRAFT.GraftData import ReqGraftData, UnitsGraftData, UpgradesGraftData, ResearchGraftData, TechGraftData, OrdersGraftData, ButtonsGraftData, AnyGraftData
-from ...FileFormats.Graft import ReqScript, ButtonsGraft, FGP
+from ...FileFormats.Graft import ReqScript, ButtonsGraft, UnitsGraft, Button, ButtonSet, FGP
+from ...Utilities import IO
 from ...Utilities.DataContext import DataContext
 from ...Utilities.PyMSError import PyMSError
 
@@ -91,8 +92,44 @@ class Test_GraftData(unittest.TestCase):
 		for graft_data in all_graft_data():
 			with self.subTest(file=graft_data.file_name):
 				graft_data.new()
-				self.assertEqual(graft_data.import_fgp(FGP()), [])
+				warnings, commit = graft_data.import_fgp(FGP())
+				self.assertEqual(warnings, [])
+				commit()
 				self.assertFalse(graft_data.edited)
+
+	def test_fgp_import_applies_only_on_commit(self) -> None:
+		graft_data = UnitsGraftData()
+		graft_data.new()
+		graft = graft_data.graft
+		before = graft_data.save_bytes()
+		fgp = FGP()
+		fgp.requirements[UnitsGraft] = {0: [0xFF11, 0xFFFF]}
+		warnings, commit = graft_data.import_fgp(fgp)
+		self.assertEqual(warnings, [])
+		self.assertIs(graft_data.graft, graft)
+		self.assertEqual(graft_data.save_bytes(), before)
+		self.assertFalse(graft_data.edited)
+		commit()
+		expected = UnitsGraft()
+		expected.new()
+		expected.import_fgp(fgp)
+		self.assertNotEqual(graft_data.save_bytes(), before)
+		self.assertEqual(graft_data.save_bytes(), IO.output_to_bytes(expected.save))
+		self.assertTrue(graft_data.edited)
+
+	def test_failed_fgp_import_leaves_file_unchanged(self) -> None:
+		graft_data = ButtonsGraftData()
+		graft_data.new()
+		graft = graft_data.graft
+		before = graft_data.save_bytes()
+		fgp = FGP()
+		fgp.button_sets = {0: ButtonSet([Button(condition=3, action=600)])}
+		with self.assertRaises(PyMSError) as cm:
+			graft_data.import_fgp(fgp)
+		self.assertIn('uses unknown button action 600', str(cm.exception))
+		self.assertIs(graft_data.graft, graft)
+		self.assertEqual(graft_data.save_bytes(), before)
+		self.assertFalse(graft_data.edited)
 
 	def test_req_entry_ids_are_every_dat_entry(self) -> None:
 		expected_counts: dict[Callable[[], ReqGraftData], int] = {UnitsGraftData: 228, UpgradesGraftData: 61, ResearchGraftData: 44, TechGraftData: 44, OrdersGraftData: 189}

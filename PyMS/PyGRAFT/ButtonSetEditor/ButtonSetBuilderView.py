@@ -7,7 +7,7 @@ from ..GraftData import ButtonsGraftData
 from ..JumpTarget import JumpTarget
 
 from ...FileFormats.Graft import Button, ButtonSet
-from ...FileFormats.Graft.CodeHandlers import ButtonCodeCommands
+from ...FileFormats.Graft.CodeHandlers import GraftLexer, GraftParseContext, GraftSerializeContext, ButtonsLanguage, ButtonCodeCommands
 from ...FileFormats.TBL import end_at_null, simplify_string
 
 from ...Utilities import UIKit as UI
@@ -17,8 +17,13 @@ from ...Utilities.DataContext import DataContext, CmdIconState
 from ...Utilities.IconSelectDialog import ImageWithBounds
 from ...Utilities.TextPreview.HotkeyString import HotkeyString, TooltipCosts
 from ...Utilities.TextPreview.TextDrawing import TextDrawing
+from ...Utilities.PyMSError import PyMSError
+from ...Utilities.ErrorDialog import ErrorDialog
+from ...Utilities.WarningDialog import WarningDialog
 
-from typing import TYPE_CHECKING
+import io
+
+from typing import TYPE_CHECKING, Callable
 if TYPE_CHECKING:
 	from ..Delegates import MainDelegate
 
@@ -46,6 +51,9 @@ class ButtonSetBuilderView(UI.NotebookTab):
 		buttons_frame = UI.LabelFrame(top, text='Buttons')
 		self.toolbar = UI.Toolbar(buttons_frame)
 		self.add_button_button = self.toolbar.add_button(Assets.get_image('add'), self.add_button, 'Add Button')
+		self.toolbar.add_section()
+		self.copy_button = self.add_clipboard_button('copy', self.copy, 'Copy Buttons', UI.Ctrl.c)
+		self.paste_button = self.add_clipboard_button('paste', self.paste, 'Paste Buttons', UI.Ctrl.v)
 		self.toolbar.pack(side=UI.TOP, fill=UI.X, padx=2, pady=2)
 		self.scroll_view = UI.ScrollView(buttons_frame, viewport_height=round(ButtonSetBuilderView.VISIBLE_ROWS * ButtonRow.ROW_HEIGHT), fill_width=True)
 		self.scroll_view.pack(fill=UI.BOTH, expand=1, padx=2, pady=(0, 2))
@@ -59,6 +67,16 @@ class ButtonSetBuilderView(UI.NotebookTab):
 		settings_frame.pack(side=UI.TOP, anchor=UI.W, padx=2, pady=2)
 
 		self.update_read_only()
+
+	def add_clipboard_button(self, icon: str, callback: Callable[[], None], tooltip: str, shortcut: UI.EventPattern) -> UI.Button:
+		button = self.toolbar.add_button(Assets.get_image(icon), callback, tooltip, shortcut, bind_shortcut=False)
+		# The Button Sets tab is one of the window's tabs, so the shortcut is added to the window (not replacing the others), and only the visible Builder runs it.
+		# It's left to a focused text field (like a setting's entry, or the Script mode's code), which copies and pastes its own text.
+		def triggered(_event: UI.Event) -> None:
+			if button['state'] != UI.DISABLED and button.winfo_viewable() and not self.focus_has_clipboard():
+				callback()
+		self.winfo_toplevel().bind(shortcut(), triggered, True)
+		return button
 
 	@property
 	def data_context(self) -> DataContext:
@@ -93,7 +111,10 @@ class ButtonSetBuilderView(UI.NotebookTab):
 
 	def update_read_only(self) -> None:
 		# Without a selected button set there is nothing to add to
-		self.add_button_button['state'] = UI.DISABLED if self.button_set() is None else UI.NORMAL
+		state = UI.DISABLED if self.button_set() is None else UI.NORMAL
+		self.add_button_button['state'] = state
+		self.copy_button['state'] = state
+		self.paste_button['state'] = state
 
 	def sync(self) -> None:
 		# Shows the buttons in the rows (reusing the rows already made), the preview, and the settings of the selected button
@@ -179,6 +200,37 @@ class ButtonSetBuilderView(UI.NotebookTab):
 			return
 		button_set.buttons.insert(index, ButtonSetBuilderView.new_button(button_set.buttons))
 		self.selected = index
+		self.sync()
+		self.edited()
+		self.scroll_to_selected()
+
+	def copy(self) -> None:
+		# The buttons as code, like the Script mode shows them
+		button_set = self.button_set()
+		if button_set is None:
+			return
+		output = io.StringIO()
+		button_set.serialize(GraftSerializeContext(output, self.data_context))
+		self.clipboard_set(output.getvalue())
+
+	def paste(self) -> None:
+		# Replaces the buttons with the buttons of the code on the clipboard
+		if self.entry_id is None or self.button_set() is None:
+			return
+		try:
+			code = self.clipboard_get()
+		except UI.TclError:
+			return
+		parse_context = GraftParseContext(GraftLexer(code), self.data_context, ButtonsLanguage())
+		try:
+			button_set = ButtonSet.compile(parse_context, self.entry_id)
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		if parse_context.warnings and not WarningDialog(self, parse_context.warnings, True).cont:
+			return
+		self.graft_data.graft.set_button_set(self.entry_id, button_set)
+		self.selected = 0 if button_set.buttons else None
 		self.sync()
 		self.edited()
 		self.scroll_to_selected()

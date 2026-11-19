@@ -1,13 +1,20 @@
 
 from .utils import PyGRAFTTestCase, TAB_TITLES, SELECT_OPEN, ASK_YES_NO_CANCEL
 
+from ...PyGRAFT.PyGRAFT import PyGRAFT
+from ...PyGRAFT.GraftData import AnyGraftData
 from ...PyGRAFT.Tabs import ReqGraftTab, ButtonCardsTab, ButtonSetsTab, StatInfoTab
-from ...FileFormats.Graft import ButtonsGraft
+from ...FileFormats.Graft import ButtonsGraft, UnitsGraft, UpgradesGraft, ResearchGraft, TechGraft, OrdersGraft, Button, ButtonSet, FGP
+from ...Utilities.PyMSWarning import PyMSWarning
 from ...Utilities import UIKit as UI
 
 import io
 
 from unittest import mock
+
+ASK_YES_NO = 'tkinter.messagebox.askyesno'
+SHOW_ERROR = 'tkinter.messagebox.showerror'
+WARNING_DIALOG = 'PyMS.PyGRAFT.PyGRAFT.WarningDialog'
 
 class Test_PyGRAFT_tabs(PyGRAFTTestCase):
 	def test_tabs_in_order(self) -> None:
@@ -122,6 +129,83 @@ class Test_PyGRAFT_tabs(PyGRAFTTestCase):
 		self.assertIsNone(gui.upgrades_data.file_path)
 		self.assertEqual(str(gui.editstatus['state']), UI.NORMAL)
 		self.assertFalse(gui.units_data.edited)
+
+	def import_fgp(self, gui: PyGRAFT, fgp_contents: FGP, *, continue_import: bool = False) -> dict[str, mock.MagicMock]:
+		def load(fgp: FGP, _path: str) -> list[PyMSWarning]:
+			fgp.requirements = fgp_contents.requirements
+			fgp.button_sets = fgp_contents.button_sets
+			fgp.units = fgp_contents.units
+			return []
+		with mock.patch(SELECT_OPEN, return_value='project.fgp'), \
+				mock.patch.object(FGP, 'load', autospec=True, side_effect=load), \
+				mock.patch(ASK_YES_NO, return_value=continue_import) as ask_yes_no, \
+				mock.patch(SHOW_ERROR) as show_error, \
+				mock.patch(WARNING_DIALOG) as warning_dialog:
+			gui.import_fgp()
+		self.pump(gui)
+		return {'ask_yes_no': ask_yes_no, 'show_error': show_error, 'warning_dialog': warning_dialog}
+
+	def assert_unchanged(self, gui: PyGRAFT, before: dict[str, bytes], *, skip: AnyGraftData | None = None) -> None:
+		for graft_data in gui.all_graft_data():
+			if graft_data is not skip:
+				self.assertFalse(graft_data.edited, graft_data.file_name)
+				self.assertEqual(graft_data.save_bytes(), before[graft_data.file_name], graft_data.file_name)
+
+	def test_import_fgp_marks_only_changed_files_edited(self) -> None:
+		gui = self.open_pygraft()
+		fgp = FGP()
+		fgp.requirements[UnitsGraft] = {0: [0xFF11, 0xFFFF]}
+		before = {graft_data.file_name: graft_data.save_bytes() for graft_data in gui.all_graft_data()}
+		dialogs = self.import_fgp(gui, fgp)
+		for dialog in dialogs.values():
+			dialog.assert_not_called()
+		self.assertTrue(gui.units_data.edited)
+		self.assertNotEqual(gui.units_data.save_bytes(), before['Units.graft'])
+		self.assert_unchanged(gui, before, skip=gui.units_data)
+
+	def invalid_buttons_fgp(self) -> FGP:
+		fgp = FGP()
+		fgp.requirements[UnitsGraft] = {0: [0xFF11, 0xFFFF]}
+		fgp.button_sets = {0: ButtonSet([Button(condition=3, action=600)])}
+		return fgp
+
+	def test_import_fgp_with_failed_files_asks_to_continue(self) -> None:
+		gui = self.open_pygraft()
+		dialogs = self.import_fgp(gui, self.invalid_buttons_fgp())
+		dialogs['ask_yes_no'].assert_called_once()
+		message = dialogs['ask_yes_no'].call_args.kwargs['message']
+		self.assertIn('Buttons.graft: Button set 0 uses unknown button action 600', message)
+		self.assertNotIn('Units.graft', message)
+
+	def test_aborted_import_fgp_changes_no_files(self) -> None:
+		gui = self.open_pygraft()
+		before = {graft_data.file_name: graft_data.save_bytes() for graft_data in gui.all_graft_data()}
+		self.import_fgp(gui, self.invalid_buttons_fgp(), continue_import=False)
+		self.assert_unchanged(gui, before)
+
+	def test_continued_import_fgp_applies_the_other_files(self) -> None:
+		gui = self.open_pygraft()
+		before = {graft_data.file_name: graft_data.save_bytes() for graft_data in gui.all_graft_data()}
+		self.import_fgp(gui, self.invalid_buttons_fgp(), continue_import=True)
+		self.assertTrue(gui.units_data.edited)
+		self.assertNotEqual(gui.units_data.save_bytes(), before['Units.graft'])
+		self.assert_unchanged(gui, before, skip=gui.units_data)
+
+	def test_import_fgp_with_every_file_failed_is_an_error(self) -> None:
+		gui = self.open_pygraft()
+		fgp = FGP()
+		for graft_type in (UnitsGraft, UpgradesGraft, ResearchGraft, TechGraft, OrdersGraft):
+			fgp.requirements[graft_type] = {0: [0xFF1F, 0xFFFF]}
+		fgp.button_sets = {0: ButtonSet([Button(condition=3, action=600)])}
+		before = {graft_data.file_name: graft_data.save_bytes() for graft_data in gui.all_graft_data()}
+		dialogs = self.import_fgp(gui, fgp)
+		dialogs['ask_yes_no'].assert_not_called()
+		dialogs['show_error'].assert_called_once()
+		message = dialogs['show_error'].call_args.kwargs['message']
+		self.assertIn('None of the files could be imported', message)
+		for graft_data in gui.all_graft_data():
+			self.assertIn(f'{graft_data.file_name}: ', message)
+		self.assert_unchanged(gui, before)
 
 	def test_check_saved_only_asks_about_edited_files(self) -> None:
 		gui = self.open_pygraft()

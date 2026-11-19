@@ -37,6 +37,8 @@ The **Builder** mode edits the selected button set without writing code. Unlike 
 
 The **Buttons** list has a row for each button of the set, in their order in the file. Each row shows the button's position (hover over it to see the slot's name), its icon, and its enabled string (as plain text, without its hotkey or color codes). Click a row to select its button. While hovering over a row, its actions are shown: **Move Up**, **Move Down**, **Delete**, and **Add Button Below**. The **Add Button** button above the list adds a button to the end of the set, which is how buttons are added to an empty set. A new button is placed in the first slot no other button uses (or the top left slot when all of them are used), is always shown, does nothing, and has no strings.
 
+The **Copy Buttons** (`Ctrl+C`) and **Paste Buttons** (`Ctrl+V`) buttons above the list copy and paste the whole button set as code, which is how a button set is copied into another one (or into another file). Copying puts the set's code on the clipboard, the same code the [Script](#button-set-script) mode shows. Pasting compiles the code on the clipboard and replaces all of the set's buttons with it right away (like the other changes in the Builder). If the code has an error, it's shown and nothing is changed, and if it has warnings, they're shown and you can choose to paste anyway. The shortcuts don't copy or paste the button set while you're typing in a text field (like a setting's ID entry), where they copy and paste its text instead.
+
 The **Preview** shows the button set like the game's command card: a slot for each position, numbered from 1 (top left) to 9 (bottom right), showing the icon of the button at that position. The slot of the selected button has a white border, and clicking a slot selects its button. When more than one button is at the same position, the slot shows which of them it's showing (such as `1/2`), and clicking the slot of the selected button selects the next one. Hover over a slot to see the tooltip of its button (its enabled string) the way the game draws it. Hold the **Control** key (also on macOS, not Command) to see the buttons disabled: their icons are greyed like the game draws them, and the tooltips show their disabled strings (a button without a disabled string has no tooltip).
 
 The **Button Settings** edit the selected button:
@@ -109,6 +111,10 @@ The toolbar above the rows has these buttons:
 - **Revert Changes**: Discards the changes to the rows since they were loaded or last applied.
 - **Test Script** (`Ctrl+T`): Checks the script for errors without applying it.
 - **Add Opcode**: Adds a **Has Completed** row to the end of the script.
+- **Copy Script** (`Ctrl+C`): Copies the rows to the clipboard as code, the same code the [Script](#script) mode shows (including changes that haven't been applied yet). This is how a script is copied into another entry (or into another file).
+- **Paste Script** (`Ctrl+V`): Compiles the code on the clipboard and replaces the rows with its commands. Like any other change to the rows, it isn't stored until it's applied, and **Revert Changes** undoes it. If the code has an error, it's shown and the rows aren't changed, and if it has warnings, they're shown and you can choose to paste anyway.
+
+The **Copy Script** and **Paste Script** shortcuts don't copy or paste the script while you're typing in a text field (like a parameter's ID entry), where they copy and paste its text instead.
 
 The status bar under the rows shows an indicator for changes that haven't been applied. Like the **Script** mode, changes must be applied or discarded before leaving them, and saving asks whether to apply them first (see [Script](#script)).
 
@@ -140,7 +146,7 @@ These commands are in the **File** menu and on the toolbar. Unless noted otherwi
 - **Save MPQ...** (`Ctrl+Alt+M`): Saves all six Graft files into the `datreq` folder of an MPQ.
 - **Import from TXT...** (`Ctrl+I`): Replaces the file's contents with code from a text file.
 - **Export to TXT...** (`Ctrl+E`): Saves the file's contents as code in a text file.
-- **Import FireGraft Project...** (`Ctrl+Shift+I`): Lays the requirements and buttons of a FireGraft `.fgp` project over all of the open Graft files.
+- **Import FireGraft Project...** (`Ctrl+Shift+I`): Lays the requirements and buttons of a FireGraft `.fgp` project over all of the open Graft files. If the project can't be imported into some of the files, a message lists those files and their errors and asks whether to import into the other files anyway: **Yes** imports into the other files and leaves the failed ones unchanged, and **No** changes none of the files.
 - **Check for Updates...**: Checks GitHub for a newer version of PyGRAFT and PyMS, and shows the result.
 - **Set as Default `*.graft` Editor** (Windows Only, in the **Settings** menu and on the toolbar): Associates `.graft` files with PyGRAFT, so they open in PyGRAFT when double clicked.
 

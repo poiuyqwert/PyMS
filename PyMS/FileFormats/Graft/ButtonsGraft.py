@@ -67,6 +67,14 @@ class ButtonsGraft:
 		# The vanilla StarCraft buttons
 		self.load(self.default_path())
 
+	def copy(self) -> ButtonsGraft:
+		# Button cards and stat info are replaced rather than changed in place, so the copy can share them
+		graft = ButtonsGraft()
+		graft.button_sets = [button_set.copy() for button_set in self.button_sets]
+		graft.button_cards = list(self.button_cards)
+		graft.stat_info = list(self.stat_info)
+		return graft
+
 	def load(self, any_input: IO.AnyInputBytes) -> list[PyMSWarning]:
 		with IO.InputBytes(any_input) as f:
 			data = f.read()

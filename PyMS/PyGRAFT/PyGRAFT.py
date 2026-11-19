@@ -117,6 +117,7 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import from TXT', UI.Ctrl.i, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export to TXT', UI.Ctrl.e, bind_shortcut=False)
+		self.toolbar.add_button(Assets.get_image('importfgp'), self.import_fgp, 'Import FireGraft Project', UI.Shift.Ctrl.i, bind_shortcut=False)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage Settings', UI.Ctrl.m, bind_shortcut=False)
 		self.toolbar.add_button(Assets.get_image('debug'), self.reload_files, 'Reload Data Files')
@@ -570,12 +571,29 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		fgp = FGP()
 		try:
 			warnings = fgp.load(path)
-			for graft_data in self.all_graft_data():
-				warnings.extend(graft_data.import_fgp(fgp))
 		except PyMSError as e:
 			ErrorDialog(self, e)
-			self.refresh()
 			return
+		# Every file is imported before any are applied, so the user can abort if some of them fail
+		commits: list[Callable[[], None]] = []
+		failures: list[str] = []
+		for graft_data in self.all_graft_data():
+			try:
+				file_warnings, commit = graft_data.import_fgp(fgp)
+			except PyMSError as e:
+				failures.append(f'{graft_data.file_name}: {e.error}')
+				continue
+			warnings.extend(file_warnings)
+			commits.append(commit)
+		if failures:
+			details = '\n'.join(failures)
+			if not commits:
+				UI.MessageBox.showerror(parent=self, title='Import Failed', message=f'None of the files could be imported:\n\n{details}')
+				return
+			if not UI.MessageBox.askyesno(parent=self, title='Import Problems', message=f'The following files could not be imported:\n\n{details}\n\nImport the other files anyway?'):
+				return
+		for commit in commits:
+			commit()
 		self.refresh()
 		self.show_warnings(warnings)
 

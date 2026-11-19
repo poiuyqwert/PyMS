@@ -79,6 +79,11 @@ class MiscExtensions(_Tk.Misc):
 		self.clipboard_clear()
 		self.clipboard_append(text)
 
+	def focus_has_clipboard(self) -> bool:
+		# Whether the focused widget handles Copy/Paste itself (a text field), so window-wide clipboard shortcuts should leave it alone
+		focus = self.focus_get()
+		return focus is not None and focus.winfo_class() in ('Entry', 'TEntry', 'Text', 'Spinbox', 'TSpinbox', 'TCombobox')
+
 class WindowExtensions(MiscExtensions, _Tk.Wm):
 	def make_active(self) -> None:
 		if self.state() == 'withdrawn':

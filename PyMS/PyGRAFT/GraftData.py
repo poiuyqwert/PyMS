@@ -6,7 +6,7 @@ from ..Utilities.DataContext import DataContext
 from ..Utilities.PyMSWarning import PyMSWarning
 from ..Utilities import IO
 
-from typing import Generic, TypeVar
+from typing import Callable, Generic, TypeVar
 
 ReqGraftT = TypeVar('ReqGraftT', bound=AbstractReqGraft)
 
@@ -63,13 +63,17 @@ class ReqGraftData(Generic[ReqGraftT]):
 		self.graft.replace_scripts(scripts)
 		self.edited = True
 
-	def import_fgp(self, fgp: FGP) -> list[PyMSWarning]:
-		# Projects don't have to include every file, so only mark edited if it changed
-		before = self.save_bytes()
-		warnings = self.graft.import_fgp(fgp)
-		if self.save_bytes() != before:
-			self.edited = True
-		return warnings
+	def import_fgp(self, fgp: FGP) -> tuple[list[PyMSWarning], Callable[[], None]]:
+		# Imports into a copy and returns a commit that applies it, so a project can be applied to every file only once all of them have imported
+		graft = self.graft.copy()
+		warnings = graft.import_fgp(fgp)
+		def commit() -> None:
+			# Projects don't have to include every file, so only mark edited if it changed
+			before = self.save_bytes()
+			self.graft = graft
+			if self.save_bytes() != before:
+				self.edited = True
+		return (warnings, commit)
 
 	def entry_count(self, data_context: DataContext) -> int:
 		# The number of entries in the dat file the scripts are for
@@ -171,12 +175,16 @@ class ButtonsGraftData:
 		self.graft = ButtonsGraft.compile(GraftParseContext(GraftLexer(code), data_context, ButtonsLanguage()))
 		self.edited = True
 
-	def import_fgp(self, fgp: FGP) -> list[PyMSWarning]:
-		# Projects don't have to include every file, so only mark edited if it changed
-		before = self.save_bytes()
-		warnings = self.graft.import_fgp(fgp)
-		if self.save_bytes() != before:
-			self.edited = True
-		return warnings
+	def import_fgp(self, fgp: FGP) -> tuple[list[PyMSWarning], Callable[[], None]]:
+		# Imports into a copy and returns a commit that applies it, so a project can be applied to every file only once all of them have imported
+		graft = self.graft.copy()
+		warnings = graft.import_fgp(fgp)
+		def commit() -> None:
+			# Projects don't have to include every file, so only mark edited if it changed
+			before = self.save_bytes()
+			self.graft = graft
+			if self.save_bytes() != before:
+				self.edited = True
+		return (warnings, commit)
 
 AnyGraftData = ReqGraftData | ButtonsGraftData

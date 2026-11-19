@@ -231,6 +231,18 @@ class Test_Scripts(unittest.TestCase):
 		self.assertIsNotNone(removed)
 		self.assertEqual(graft.list_ids(), [2])
 
+	def test_copy_is_independent(self) -> None:
+		data = words(7, 9, 0xFFFF, 2, 0xFFFF, 0xFFFF)
+		graft = _load(UnitsGraft, data)
+		graft_copy = graft.copy()
+		self.assertIsInstance(graft_copy, UnitsGraft)
+		self.assertEqual(IO.output_to_bytes(graft_copy.save), data)
+		graft_copy.remove_script(9)
+		graft_copy.set_script(ReqScript(15))
+		self.assertEqual(graft_copy.list_ids(), [2, 15])
+		self.assertEqual(graft.list_ids(), [9, 2])
+		self.assertEqual(IO.output_to_bytes(graft.save), data)
+
 class Test_Compile(unittest.TestCase):
 	def test_numbers_and_names(self) -> None:
 		scripts = compile_req('Unit 0:\n\tcurrent_unit_is 111\n\thas_completed "Terran Academy"\n\thas_completed 0x75\n', UnitsGraft)

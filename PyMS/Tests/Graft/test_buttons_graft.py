@@ -260,6 +260,21 @@ class Test_Save(unittest.TestCase):
 		self.assertIn('Button card 0 uses button set 4, which does not exist', str(cm.exception))
 
 class Test_Editing(unittest.TestCase):
+	def test_copy_is_independent(self) -> None:
+		graft = ButtonsGraft()
+		graft.button_sets = [ButtonSet([Button.unpack(MOVE)])]
+		graft.button_cards = [ButtonCard(0)]
+		graft.stat_info = [StatInfo(0, 1, 0)]
+		graft_copy = graft.copy()
+		self.assertEqual((graft_copy.button_sets, graft_copy.button_cards, graft_copy.stat_info), (graft.button_sets, graft.button_cards, graft.stat_info))
+		graft_copy.button_sets[0].buttons.append(Button.unpack(STOP))
+		graft_copy.button_sets.append(ButtonSet())
+		graft_copy.button_cards[0] = ButtonCard(None)
+		graft_copy.stat_info.append(StatInfo(1, 2, 1))
+		self.assertEqual(graft.button_sets, [ButtonSet([Button.unpack(MOVE)])])
+		self.assertEqual(graft.button_cards, [ButtonCard(0)])
+		self.assertEqual(graft.stat_info, [StatInfo(0, 1, 0)])
+
 	def test_remove_button_set_renumbers_references(self) -> None:
 		graft = ButtonsGraft()
 		graft.button_sets = [ButtonSet([Button.unpack(MOVE)]), ButtonSet([Button.unpack(STOP)]), ButtonSet([Button.unpack(TRAIN_MARINE)])]

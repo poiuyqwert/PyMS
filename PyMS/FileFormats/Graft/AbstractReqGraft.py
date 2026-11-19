@@ -19,7 +19,7 @@ from ...Utilities import IO
 from collections import OrderedDict
 import os
 
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, Self
 if TYPE_CHECKING:
 	from .FGP import FGP
 
@@ -52,6 +52,13 @@ class AbstractReqGraft:
 	def new(self) -> None:
 		# The vanilla StarCraft requirements
 		self.load(self.default_path())
+
+	def copy(self) -> Self:
+		# Scripts are replaced rather than changed in place, so the copy can share them
+		graft = type(self)()
+		graft.header_word = self.header_word
+		graft.replace_scripts(self._scripts.values())
+		return graft
 
 	def load(self, any_input: IO.AnyInputBytes) -> list[PyMSWarning]:
 		with IO.InputBytes(any_input) as f:

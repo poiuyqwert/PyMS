@@ -7,7 +7,7 @@ from .. import ParamEntries
 from ..JumpTarget import JumpTarget
 
 from ...FileFormats.Graft import ReqScript
-from ...FileFormats.Graft.CodeHandlers import RequirementCodeCommands
+from ...FileFormats.Graft.CodeHandlers import GraftLexer, GraftParseContext, GraftSerializeContext, RequirementCodeCommands
 from ...FileFormats.Graft.CodeHandlers.RequirementCodeCommands import ReqCommandDefinition
 
 from ...Utilities import UIKit as UI
@@ -17,6 +17,9 @@ from ...Utilities.CodeHandlers.CodeType import IntCodeType
 from ...Utilities.EditedState import EditedState
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.ErrorDialog import ErrorDialog
+from ...Utilities.WarningDialog import WarningDialog
+
+import io
 
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
@@ -49,6 +52,9 @@ class ReqBuilderView(EditorModeView):
 		self.test_button = self.add_button('test', self.test, 'Test Script', UI.Ctrl.t)
 		self.toolbar.add_section()
 		self.add_opcode_button = self.add_button('add', self.add_opcode, 'Add Opcode')
+		self.toolbar.add_section()
+		self.copy_button = self.add_button('copy', self.copy, 'Copy Script', UI.Ctrl.c, clipboard_shortcut=True)
+		self.paste_button = self.add_button('paste', self.paste, 'Paste Script', UI.Ctrl.v, clipboard_shortcut=True)
 		self.toolbar.pack(side=UI.TOP, fill=UI.X, padx=2, pady=2)
 
 		# The entry is selected in the main window's list, so the status bar only shows the edited state
@@ -64,12 +70,15 @@ class ReqBuilderView(EditorModeView):
 		self.update_edited(False)
 		self.update_read_only()
 
-	def add_button(self, icon: str, callback: Callable[[], Any], tooltip: str, shortcut: UI.EventPattern | None = None) -> UI.Button:
+	def add_button(self, icon: str, callback: Callable[[], Any], tooltip: str, shortcut: UI.EventPattern | None = None, clipboard_shortcut: bool = False) -> UI.Button:
 		button = self.toolbar.add_button(Assets.get_image(icon), callback, tooltip, shortcut, bind_shortcut=False)
 		if shortcut:
 			# Every requirements tab has a Builder, so the shortcuts are added to the window (not replacing the others), and only the visible Builder runs them.
 			# The Script mode's shortcuts are bound on its text and stop there, so they don't reach these.
+			# Clipboard shortcuts are left to a focused text field (like a parameter's entry), which copies and pastes its own text.
 			def triggered(_event: UI.Event) -> None:
+				if clipboard_shortcut and self.focus_has_clipboard():
+					return
 				if button['state'] != UI.DISABLED and button.winfo_viewable():
 					callback()
 			self.winfo_toplevel().bind(shortcut(), triggered, True)
@@ -91,6 +100,8 @@ class ReqBuilderView(EditorModeView):
 		state = UI.DISABLED if self.entry_id is None else UI.NORMAL
 		self.test_button['state'] = state
 		self.add_opcode_button['state'] = state
+		self.copy_button['state'] = state
+		self.paste_button['state'] = state
 
 	def mark_edited(self) -> None:
 		self.sync_rows()
@@ -186,6 +197,33 @@ class ReqBuilderView(EditorModeView):
 		self.commands.insert(index, CodeCommand(RequirementCodeCommands.HasCompleted, [0]))
 		self.mark_edited()
 		self.scroll_to_row(index)
+
+	def copy(self) -> None:
+		# The rows as code, like the Script mode shows them (including changes not applied yet)
+		if self.entry_id is None:
+			return
+		output = io.StringIO()
+		ReqScript(self.entry_id, self.commands).serialize(GraftSerializeContext(output, self.delegate.data_context))
+		self.clipboard_set(output.getvalue())
+
+	def paste(self) -> None:
+		# Replaces the rows with the commands of the code on the clipboard (as changes to apply)
+		if self.entry_id is None:
+			return
+		try:
+			code = self.clipboard_get()
+		except UI.TclError:
+			return
+		parse_context = GraftParseContext(GraftLexer(code), self.delegate.data_context, self.language())
+		try:
+			script = ReqScript.compile(parse_context, self.entry_id, self.language)
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		if parse_context.warnings and not WarningDialog(self, parse_context.warnings, True).cont:
+			return
+		self.commands = script.commands
+		self.mark_edited()
 
 	def scroll_to_row(self, index: int) -> None:
 		UI.Misc.update_idletasks(self)
