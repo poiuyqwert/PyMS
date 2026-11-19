@@ -15,7 +15,7 @@ from typing import Callable, TypeVar
 T = TypeVar('T')
 
 class UpdateDialog(PyMSDialog):
-	BRANCH = 'master' # Default to `master` branch, but can be update for long-lived branches
+	BRANCH = 'PyGRAFT' # Default to `master` branch, but can be update for long-lived branches
 	POLL_MS = 100
 
 	@staticmethod
