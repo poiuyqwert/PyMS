@@ -133,7 +133,7 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 		self.hor_pane = UI.PanedWindow(self, orient=UI.HORIZONTAL)
 		left = UI.Frame(self.hor_pane)
-		self.listbox = UI.ScrolledListbox(left, scroll_speed=2, font=UI.Font.fixed(), width=45, height=1)
+		self.listbox = UI.ScrolledListbox(left, font=UI.Font.fixed(), width=45, height=1)
 		self.listbox.pack(side=UI.TOP, fill=UI.BOTH, padx=2, pady=2, expand=1)
 		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), lambda *_: self.select_entry())
 		self.hor_pane.add(left, sticky=UI.NSEW, minsize=300)
@@ -173,6 +173,8 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		statusbar.add_label(self.entry_count)
 		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
+		# Room for the entry list and the Builders' toolbars (the Builders scroll when there isn't room for all of them)
+		self.minsize(800, 500)
 		self.config_.windows.main.load_size(self)
 		self.config_.list_size.load_size(self.hor_pane)
 

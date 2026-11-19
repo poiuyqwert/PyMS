@@ -36,6 +36,10 @@ Every new function, class, type, constant or table must have a concrete reason t
 - **No speculative machinery.** No caching, fallback/escape-hatch types (`Raw`, `RawCondition`), duplicate validation stages or unused fields without a concrete, current need. Prefer reporting an error, and validate in one place (when parsing, not again on load).
 - **Self-audit before reporting.** For each new function/class/type/constant/table in the diff, ask: "if the user asks *why does this exist?*, is the answer more than naming or tidiness?" If not, inline or remove it before finishing. If you keep it, state the concrete reason in the report.
 
+## Scrolling
+
+Every UIKit `Tk` root installs `UIKit/MouseWheel.py`, which routes all wheel/trackpad scrolling: the innermost scrollable widget under the pointer that can move wins, a gesture stays latched to its widget, and nested scrollers chain outwards at their edges. It finds targets from widget state (any `Text`/`Listbox`/`Treeview`, a `Canvas` with a `scrollregion` larger than its view, a `Scrollbar`), so new scrollable views need no wiring. Never bind `Mouse.Scroll`/`Mouse.TouchpadScroll` to scroll something — not with `bind_all`, on a toplevel, or on a widget. To make one widget scroll as another (e.g. a line-number gutter), use `root.mouse_wheel.forward(source, target)`. Value widgets that step with the wheel must only do so while focused, returning `EventPropogation.Continue` otherwise (see `DropDown`).
+
 ## Key events
 
 Key event checks compare keysyms: `Keysym(event.keysym) == Key.Return` (via the barrel: `UI.Keysym(...) == UI.Key.Return`). Never compare `event.keycode` to numbers (platform-specific — Return is 13 on Windows, 36 on macOS) or `event.keysym` to `.name()`/string literals. A keysym alone can't verify modifiers, so `== Ctrl.Return` is always False — modifier combos need real event bindings.

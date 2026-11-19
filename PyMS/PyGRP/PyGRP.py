@@ -110,7 +110,7 @@ class PyGRP(UI.MainWindow):
 		UI.Label(f, text='Frames:', anchor=UI.W).pack(side=UI.LEFT)
 		UI.Checkbutton(f, text='Hex', variable=self.hex, command=self.update_list).pack(side=UI.RIGHT)
 		f.pack(side=UI.TOP, fill=UI.X)
-		self.listbox = UI.ScrolledListbox(leftframe, scroll_speed=2, selectmode=UI.EXTENDED, width=15, height=17)
+		self.listbox = UI.ScrolledListbox(leftframe, selectmode=UI.EXTENDED, width=15, height=17)
 		self.listbox.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X, expand=1)
 		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), self.preview)
 

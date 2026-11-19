@@ -23,13 +23,6 @@ class PaletteTab(UI.NotebookTab):
 
 		scrollframe = UI.Frame(self, bd=2, relief=UI.SUNKEN)
 		self.starsCanvas = UI.Canvas(scrollframe, background='#000000', highlightthickness=0, width=PaletteTab.MAX_SIZE+PaletteTab.PAD*2, theme_tag='preview') # type: ignore[call-arg]
-		def scroll_palette(event: UI.Event) -> None:
-			if self.delegate.spk:
-				if event.delta > 0:
-					self.starsCanvas.yview('scroll', -1, 'units')
-				else:
-					self.starsCanvas.yview('scroll', 1, 'units')
-		self.starsCanvas.bind(UI.Mouse.Scroll(), scroll_palette)
 		self.starsCanvas.bind(UI.Mouse.Click_Left(), self.palette_select)
 		self.starsCanvas.pack(side=UI.LEFT, fill=UI.Y, expand=1)
 		scrollbar = UI.Scrollbar(scrollframe, command=self.starsCanvas.yview)

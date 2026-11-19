@@ -3,28 +3,48 @@ from .AutohideScrollbar import AutohideScrollbar
 from ..Widgets import Canvas, Frame, Misc, Scrollbar, Toplevel
 from ..Constants import EW, HORIZONTAL, NS, NSEW, NW
 from ..Event import Event
-from ..EventPattern import Focus, Modifier, Mouse, WidgetEvent
+from ..EventPattern import Focus, WidgetEvent
+
+from enum import Enum
 
 from typing import Callable, Any
 
-# TODO: PyDAT switching units tabs to a tab that was already displyed before, nothing is displayed, unless clicked again
-
 # WARNING: You must use the `scrollView.content_view` as the master of the widgets placed into a ScrollView
-# WARNING: ScrollView relies on `bind_all` for scrolling, only 1 can be used per window
 # `viewport_height` sets the height of the visible area (instead of the default canvas height)
-# `fill_width` makes the `content_view` as wide as the visible area (so its contents can fill the width, and it only scrolls vertically)
+# `fill_width` and `fill_height` set how the `content_view` is sized to the visible area on each axis (see `ScrollView.Fill`)
 class ScrollView(Frame):
-	def __init__(self, parent: Misc, *, viewport_height: int | None = None, fill_width: bool = False, **config: Any) -> None:
+	class Fill(Enum):
+		# The size its contents request, scrolling when that's bigger than the visible area
+		none = 0
+		# The size of the visible area, so its contents can fill it, but it never scrolls
+		exact = 1
+		# At least the size of the visible area, so its contents can fill it, scrolling when its contents request more
+		minimum = 2
+
+	def __init__(self, parent: Misc, *, viewport_height: int | None = None, fill_width: Fill = Fill.none, fill_height: Fill = Fill.none, **config: Any) -> None:
 		Frame.__init__(self, parent, **config)
 
 		self._content_area = Canvas(self, scrollregion=(0,0,0,0), highlightthickness=0)
 		if viewport_height is not None:
 			self._content_area.config(height=viewport_height)
-		self.content_view = Frame(self._content_area)
-		self.content_view_id = self._content_area.create_window(0, 0, window=self.content_view, anchor=NW)
-		if fill_width:
+		# The `content_view` fills a frame that is the canvas' window, so `Fill.minimum` can give that frame's grid cell a minimum size,
+		# making the `content_view` the bigger of the visible area and the size its contents request
+		fill_view = Frame(self._content_area)
+		fill_view.grid_rowconfigure(0, weight=1)
+		fill_view.grid_columnconfigure(0, weight=1)
+		self.content_view = Frame(fill_view)
+		self.content_view.grid(sticky=NSEW)
+		self.content_view_id = self._content_area.create_window(0, 0, window=fill_view, anchor=NW)
+		if fill_width != ScrollView.Fill.none or fill_height != ScrollView.Fill.none:
 			def fill(event: Event) -> None:
-				self.content_view_id.config(width=event.width)
+				if fill_width == ScrollView.Fill.exact:
+					self.content_view_id.config(width=event.width)
+				elif fill_width == ScrollView.Fill.minimum:
+					fill_view.grid_columnconfigure(0, minsize=event.width)
+				if fill_height == ScrollView.Fill.exact:
+					self.content_view_id.config(height=event.height)
+				elif fill_height == ScrollView.Fill.minimum:
+					fill_view.grid_rowconfigure(0, minsize=event.height)
 			self._content_area.bind(WidgetEvent.Configure(), fill, True)
 		self._content_area.grid(sticky=NSEW)
 		xscrollbar = AutohideScrollbar(self, orient=HORIZONTAL, command=self._content_area.xview)
@@ -36,34 +56,12 @@ class ScrollView(Frame):
 				bar.set(l,h)
 			return scrolled
 		self._content_area.config(xscrollcommand=scrolled_callback(xscrollbar),yscrollcommand=scrolled_callback(yscrollbar))
-		def scroll(event: Event) -> None:
-			horizontal = False
-			if hasattr(event, 'state') and getattr(event, 'state', 0) & Modifier.Shift.state:
-				horizontal = True
-			view = self._content_area.yview
-			if horizontal:
-				view = self._content_area.xview
-			cur = view()
-			if event.delta > 0 and cur[0] > 0:
-				view('scroll', -1, 'units')
-			elif event.delta <= 0 and cur[1] < 1:
-				view('scroll', 1, 'units')
-		# self.bind(Mouse.Scroll, scroll)
 		self.grid_rowconfigure(0,weight=1)
 		self.grid_columnconfigure(0,weight=1)
 
 		def resize(*_: Any) -> None:
 			self._content_area.config(scrollregion=self._content_area.bbox("all"))
-		self.content_view.bind(WidgetEvent.Configure(), resize)
-
-		def bind_scroll(*_: Any) -> None:
-			self.bind_all(Mouse.Scroll(), scroll)
-		def unbind_scroll(*_: Any) -> None:
-			self.unbind_all(Mouse.Scroll())
-		self.bind(WidgetEvent.Activate(), bind_scroll)
-		self.bind(WidgetEvent.Deactivate(), unbind_scroll)
-		self.bind(WidgetEvent.Map(), bind_scroll, True)
-		self.bind(WidgetEvent.Unmap(), unbind_scroll)
+		fill_view.bind(WidgetEvent.Configure(), resize)
 
 		self._focus_bind_info = None
 		def check_focus() -> None:

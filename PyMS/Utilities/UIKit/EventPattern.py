@@ -237,8 +237,9 @@ class Mouse(Events):
 	Click_Left = EventPattern(Field('Button-1', 'Left-Click'))
 	Click_Middle = EventPattern(Field(f'Button-{_MIDDLE_BUTTON}', 'Middle-Click'))
 	Click_Right = EventPattern(Field(f'Button-{_RIGHT_BUTTON}', 'Right-Click'))
-	# 4
-	# 5
+	# X11 delivers the wheel as buttons 4/5 before Tk 9 (Tk 9 turns them into `MouseWheel`)
+	Wheel_Up = EventPattern(Field('Button-4'))
+	Wheel_Down = EventPattern(Field('Button-5'))
 
 	Motion = EventPattern(Field('Motion'))
 
@@ -249,6 +250,8 @@ class Mouse(Events):
 	ButtonPress = EventPattern(Field('ButtonPress'))
 	ButtonRelease = EventPattern(Field('ButtonRelease'))
 	Scroll = EventPattern(Field('MouseWheel'))
+	# Tk 9 delivers trackpad scrolling as its own event, with pixel deltas for both axes
+	TouchpadScroll = EventPattern(Field('TouchpadScroll'))
 
 class ButtonRelease(Events):
 	Click_Left = EventPattern(Field('1', 'Left-Click'))

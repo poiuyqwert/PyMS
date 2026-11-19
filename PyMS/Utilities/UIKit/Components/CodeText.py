@@ -1,9 +1,9 @@
 
-from ..Widgets import Frame, Menu, Misc, Scrollbar, Text
+from ..Widgets import Frame, Menu, Misc, Scrollbar, Text, Tk
 from ..Colors import Colors
 from ..Constants import BOTH, END, EW, HORIZONTAL, INSERT, LEFT, MOVETO, NONE, NORMAL, NS, NSEW, SUNKEN, Y
 from ..Event import Event
-from ..EventPattern import Alt, ButtonRelease, Ctrl, CustomEventPattern, EventPropogation, Field, Focus, Key, Mouse, Shift, WidgetEvent
+from ..EventPattern import Alt, ButtonRelease, Ctrl, CustomEventPattern, EventPropogation, Field, Focus, Key, Shift, WidgetEvent
 from ..Font import Font
 from ..SyntaxHighlighting import SyntaxHighlighting, HighlightComponent
 from ..Types import Comparitors
@@ -143,7 +143,10 @@ class CodeText(Frame):
 
 		self.lines.insert('1.0', '      1')
 
-		self.lines.bind(Mouse.Scroll(), lambda _: EventPropogation.Break)
+		# The line numbers follow the text's scrolling, so scrolling over them scrolls the text
+		root = self.nametowidget('.')
+		if isinstance(root, Tk):
+			root.mouse_wheel.forward(self.lines, self.text)
 		self.lines.bind(Focus.In(), self.selectline)
 
 		self.after_id: str | None = None

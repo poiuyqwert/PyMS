@@ -3,7 +3,7 @@ from .AutohideScrollbar import AutohideScrollbar
 from ..Widgets import Canvas, Frame, Misc, Scrollbar, Widget
 from ..Constants import EW, HORIZONTAL, NS, NSEW, NW
 from ..Event import Event
-from ..EventPattern import Focus, Modifier, Mouse, WidgetEvent
+from ..EventPattern import Focus, WidgetEvent
 from ..Utils import remove_bind
 
 from dataclasses import dataclass
@@ -30,19 +30,6 @@ class FlowView(Frame):
 				# self.update_viewport()
 			return scrolled
 		self._content_area.config(xscrollcommand=scrolled_callback(xscrollbar),yscrollcommand=scrolled_callback(yscrollbar))
-		def scroll(event: Event) -> None:
-			horizontal = False
-			if hasattr(event, 'state') and getattr(event, 'state', 0) & Modifier.Shift.state:
-				horizontal = True
-			view = self._content_area.yview
-			if horizontal:
-				view = self._content_area.xview
-			cur = view()
-			if event.delta > 0 and cur[0] > 0:
-				view('scroll', -1, 'units')
-			elif event.delta <= 0 and cur[1] < 1:
-				view('scroll', 1, 'units')
-		self.bind_all(Mouse.Scroll(), scroll)
 		self.grid_rowconfigure(0,weight=1)
 		self.grid_columnconfigure(0,weight=1)
 

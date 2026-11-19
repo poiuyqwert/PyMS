@@ -4,13 +4,13 @@ from ..Widgets import Frame, Listbox, Misc, Scrollbar
 from ..Constants import DOTBOX, END, EW, HORIZONTAL, MULTIPLE, NS, NSEW, SUNKEN
 from ..Event import Event
 from ..ShowScrollbar import ShowScrollbar
-from ..EventPattern import EventPropogation, Key, Modifier, Mouse, WidgetEvent
+from ..EventPattern import EventPropogation, Key, Modifier, WidgetEvent
 
 from typing import Literal, Any
 
 class ScrolledListbox(Frame):
-	# `auto_bind` can be `True` to bind to the internal `Listbox`, or can be any `Widget` to bind to
-	def __init__(self, parent: Misc, *, frame_config: dict[str, Any] | None = None, horizontal: ShowScrollbar = ShowScrollbar.when_needed, vertical: ShowScrollbar = ShowScrollbar.when_needed, auto_bind: Misc | bool = True, scroll_speed: int = 1, **kwargs: Any) -> None:
+	# `auto_bind` binds the list's navigation keys, it can be `True` to bind to the internal `Listbox`, or can be any `Widget` to bind to
+	def __init__(self, parent: Misc, *, frame_config: dict[str, Any] | None = None, horizontal: ShowScrollbar = ShowScrollbar.when_needed, vertical: ShowScrollbar = ShowScrollbar.when_needed, auto_bind: Misc | bool = True, **kwargs: Any) -> None:
 		frame_config = frame_config if frame_config is not None else {'bd': 2, 'relief': SUNKEN}
 		Frame.__init__(self, parent, **frame_config)
 
@@ -83,19 +83,6 @@ class ScrolledListbox(Frame):
 			bind_to: Misc = self.listbox
 			if isinstance(auto_bind, Misc):
 				bind_to = auto_bind
-			def scroll(event: Event) -> str:
-				horizontal = False
-				if hasattr(event, 'state') and getattr(event, 'state', 0) & Modifier.Shift.state:
-					horizontal = True
-				view = self.yview
-				if horizontal:
-					view = self.xview
-				cur = view()
-				if event.delta > 0 and cur[0] > 0:
-					view('scroll', -1 * scroll_speed, 'units')
-				elif event.delta <= 0 and cur[1] < 1:
-					view('scroll', scroll_speed, 'units')
-				return EventPropogation.Break
 			def move(event: Event, offset: int | Literal['end']) -> str:
 				if self.listbox['selectmode'] == MULTIPLE:
 					return EventPropogation.Continue
@@ -113,7 +100,6 @@ class ScrolledListbox(Frame):
 				self.listbox.focus_set()
 				return EventPropogation.Break
 			bind = [
-				(Mouse.Scroll(), scroll),
 				(Key.Home(), lambda event: move(event, 0)),
 				(Key.End(), lambda event: move(event, END)),
 				(Key.Up(), lambda event: move(event, -1)),

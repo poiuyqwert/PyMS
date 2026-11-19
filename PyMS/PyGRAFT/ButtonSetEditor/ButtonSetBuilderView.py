@@ -42,7 +42,11 @@ class ButtonSetBuilderView(UI.NotebookTab):
 		self.selected: int | None = None
 		self.rows: list[ButtonRow] = []
 
-		top = UI.Frame(self)
+		# Scrolls when the window is too small to show the whole Builder
+		outer_scroll_view = UI.ScrollView(self, fill_width=UI.ScrollView.Fill.minimum)
+		outer_scroll_view.pack(fill=UI.BOTH, expand=1)
+
+		top = UI.Frame(outer_scroll_view.content_view)
 		preview_frame = UI.LabelFrame(top, text='Preview')
 		self.preview = PreviewGrid(preview_frame, self)
 		self.preview.pack(padx=5, pady=5)
@@ -55,12 +59,12 @@ class ButtonSetBuilderView(UI.NotebookTab):
 		self.copy_button = self.add_clipboard_button('copy', self.copy, 'Copy Buttons', UI.Ctrl.c)
 		self.paste_button = self.add_clipboard_button('paste', self.paste, 'Paste Buttons', UI.Ctrl.v)
 		self.toolbar.pack(side=UI.TOP, fill=UI.X, padx=2, pady=2)
-		self.scroll_view = UI.ScrollView(buttons_frame, viewport_height=round(ButtonSetBuilderView.VISIBLE_ROWS * ButtonRow.ROW_HEIGHT), fill_width=True)
+		self.scroll_view = UI.ScrollView(buttons_frame, viewport_height=round(ButtonSetBuilderView.VISIBLE_ROWS * ButtonRow.ROW_HEIGHT), fill_width=UI.ScrollView.Fill.exact)
 		self.scroll_view.pack(fill=UI.BOTH, expand=1, padx=2, pady=(0, 2))
 		buttons_frame.pack(side=UI.LEFT, fill=UI.BOTH, expand=1)
 		top.pack(side=UI.TOP, fill=UI.X, padx=2, pady=2)
 
-		settings_frame = UI.LabelFrame(self, text='Button Settings')
+		settings_frame = UI.LabelFrame(outer_scroll_view.content_view, text='Button Settings')
 		self.settings_view = ButtonSettingsView(settings_frame, self)
 		self.settings_view.pack(padx=5, pady=5)
 		# Sized to fit the settings, not the width of the Builder

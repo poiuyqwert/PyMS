@@ -51,6 +51,12 @@ class DropDown(Frame):
 		self.entry.bind(Key.Next(), move_callback(10))
 		self.entry.bind(Key.Pressed(), self.key_pressed)
 		self.entry.bind(Key.Return(), self.choose)
+		# While focused the wheel steps through the entries, otherwise it scrolls the dropdown's container
+		def wheel_step(event: Event) -> str:
+			if self.focus_get() is not self.entry or not event.delta:
+				return EventPropogation.Continue
+			return self.move(event, -1 if event.delta > 0 else 1)
+		self.entry.bind(Mouse.Scroll(), wheel_step)
 		self.setentries(entries)
 		self.button = Button(self, image=Assets.get_image('arrow'), command=self.choose, state=state)
 		self.button.pack(side=RIGHT, fill=Y)

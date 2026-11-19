@@ -158,7 +158,7 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.hor_pane = UI.PanedWindow(self,orient=UI.HORIZONTAL)
 
 		# listbox
-		self.listbox = UI.ScrolledListbox(self.hor_pane, scroll_speed=2, width=35, height=1)
+		self.listbox = UI.ScrolledListbox(self.hor_pane, width=35, height=1)
 		self.listbox.pack(side=UI.LEFT, fill=UI.BOTH, expand=1)
 		self.hor_pane.add(self.listbox, sticky=UI.NSEW, minsize=200)
 		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), lambda e: self.update_string())

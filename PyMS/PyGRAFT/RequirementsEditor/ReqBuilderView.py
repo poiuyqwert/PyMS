@@ -45,7 +45,11 @@ class ReqBuilderView(EditorModeView):
 		self.edited_state = EditedState()
 		self.edited_state.callback += self.update_edited
 
-		self.toolbar = UI.Toolbar(self)
+		# Scrolls when the window is too small to show the whole Builder
+		outer_scroll_view = UI.ScrollView(self, fill_width=UI.ScrollView.Fill.minimum, fill_height=UI.ScrollView.Fill.minimum)
+		outer_scroll_view.pack(fill=UI.BOTH, expand=1)
+
+		self.toolbar = UI.Toolbar(outer_scroll_view.content_view)
 		self.apply_button = self.add_button('save', self.apply_changes, 'Apply Changes', UI.Ctrl.Return)
 		self.revert_button = self.add_button('reset', self.revert, 'Revert Changes')
 		self.toolbar.add_gap()
@@ -58,13 +62,13 @@ class ReqBuilderView(EditorModeView):
 		self.toolbar.pack(side=UI.TOP, fill=UI.X, padx=2, pady=2)
 
 		# The entry is selected in the main window's list, so the status bar only shows the edited state
-		statusbar = UI.StatusBar(self)
+		statusbar = UI.StatusBar(outer_scroll_view.content_view)
 		statusbar.add_spacer(weight=0.5)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
 		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
-		self.scroll_view = UI.ScrollView(self)
+		self.scroll_view = UI.ScrollView(outer_scroll_view.content_view)
 		self.scroll_view.pack(fill=UI.BOTH, expand=1, padx=1, pady=1)
 
 		self.update_edited(False)

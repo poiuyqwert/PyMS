@@ -1,16 +1,14 @@
 
 from .AutohideScrollbar import AutohideScrollbar
-from ..Widgets import Canvas, Frame, Misc, Scrollbar, Widget
+from ..Widgets import Canvas, Frame, Misc, Scrollbar
 from ..Constants import EW, HORIZONTAL, NS, NSEW, SUNKEN
-from ..Event import Event
 from ..ShowScrollbar import ShowScrollbar
-from ..EventPattern import EventPropogation, Modifier, Mouse, WidgetEvent
+from ..EventPattern import WidgetEvent
 
 from typing import Callable, Any
 
 class ScrolledCanvas(Frame):
-	# `auto_bind` can be `True` to bind to the internal `Listbox`, or can be any `Widget` to bind to
-	def __init__(self, parent: Misc, *, frame_config: dict[str, Any] | None = None, horizontal: ShowScrollbar = ShowScrollbar.when_needed, vertical: ShowScrollbar = ShowScrollbar.when_needed, auto_bind: bool = True, scroll_speed: int = 1, **kwargs: Any) -> None:
+	def __init__(self, parent: Misc, *, frame_config: dict[str, Any] | None = None, horizontal: ShowScrollbar = ShowScrollbar.when_needed, vertical: ShowScrollbar = ShowScrollbar.when_needed, **kwargs: Any) -> None:
 		frame_config = frame_config if frame_config is not None else {'bd': 2, 'relief': SUNKEN}
 		Frame.__init__(self, parent, **frame_config)
 
@@ -45,45 +43,3 @@ class ScrolledCanvas(Frame):
 
 		self.grid_columnconfigure(0, weight=1)
 		self.grid_rowconfigure(0, weight=1)
-
-		if auto_bind:
-			bind_to = self.canvas
-			if isinstance(auto_bind, Widget):
-				bind_to = auto_bind
-			def scroll(event: Event) -> str:
-				horizontal = False
-				if hasattr(event, 'state') and getattr(event, 'state', 0) & Modifier.Shift.state:
-					horizontal = True
-				view = self.canvas.yview
-				if horizontal:
-					view = self.canvas.xview
-				cur = view()
-				if event.delta > 0 and cur[0] > 0:
-					view('scroll', -1 * scroll_speed, 'units')
-				elif event.delta <= 0 and cur[1] < 1:
-					view('scroll', scroll_speed, 'units')
-				return EventPropogation.Break
-			# def move(event, offset):
-			# 	index = 0
-			# 	if offset == END:
-			# 		index = self.size()-2
-			# 	elif offset not in [0,END] and self.curselection():
-			# 		index = max(min(self.size()-1, int(self.curselection()[0]) + offset),0)
-			# 	self.select_clear(0,END)
-			# 	self.select_set(index)
-			# 	self.see(index)
-			# 	self.listbox.event_generate(WidgetEvent.Listbox.Select)
-			# 	return EventPropogation.Break
-			bind = [
-				(Mouse.Scroll(), scroll),
-				# (Key.Home, lambda event: move(event, 0)),
-				# (Key.End, lambda event: move(event, END)),
-				# (Key.Up, lambda event: move(event, -1)),
-				# (Key.Left, lambda event: move(event, -1)),
-				# (Key.Down, lambda event: move(event, 1)),
-				# (Key.Right, lambda event: move(event, 1)),
-				# (Key.Prior, lambda event: move(event, -10)),
-				# (Key.Next, lambda event: move(event, 10)),
-			]
-			for b in bind:
-				bind_to.bind(*b, add=True)

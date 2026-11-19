@@ -73,6 +73,25 @@ class Test_PyGRAFT_requirements_builder(PyGRAFTTestCase):
 		self.assertFalse(view.is_edited())
 		self.assertEqual(view.apply_button['state'], UI.DISABLED)
 
+	def outer_scroll_view(self, view: ReqBuilderView) -> UI.ScrollView:
+		return next(child for child in view.winfo_children() if isinstance(child, UI.ScrollView))
+
+	def test_builder_fills_a_big_window(self) -> None:
+		_, _, view = self.open_builder()
+		scroll_view = self.outer_scroll_view(view)
+		self.assertEqual((scroll_view.content_view.winfo_width(), scroll_view.content_view.winfo_height()), scroll_view.viewport_size())
+
+	def test_builder_scrolls_when_too_small(self) -> None:
+		gui, _, view = self.open_builder()
+		gui.minsize(0, 0)
+		gui.geometry('500x250')
+		self.pump(gui)
+		scroll_view = self.outer_scroll_view(view)
+		viewport_width, viewport_height = scroll_view.viewport_size()
+		content_width, content_height = scroll_view.content_size()
+		self.assertGreater(content_width, viewport_width)
+		self.assertGreater(content_height, viewport_height)
+
 	def test_unavailable_loaded_opcode_is_shown_and_reported(self) -> None:
 		# A file can use an opcode its requirements don't have, which is shown (marked as not available) and reported as an error
 		gui, _, view = self.open_builder('Tech Usage Reqs.')

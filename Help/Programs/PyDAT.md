@@ -23,7 +23,7 @@ Below the entry list is a collapsible options panel:
 - **ID Jump**: Jumps straight to an entry by its ID (hex values are accepted).
 - **Names**: Chooses how entry names are displayed — **Basic** uses the standard names bundled with PyMS, **TBL** uses the strings from your [TBL files](#data-files), and **Combined** shows both. **Simple TBL Names** hides the extra data in TBL strings (like hotkeys and formatting codes), for the DAT types whose names come from `stat_txt.tbl`.
 
-The right side of the window shows the settings of the selected entry, grouped into labeled sections. Hover over any field for a tooltip explaining what it does. Fields that reference an entry in another DAT file have a dropdown to pick the entry by name and a **Jump To** button (the arrow icon after the dropdown) to go edit it. Hover over the button to see which kind of entry it jumps to.
+The right side of the window shows the settings of the selected entry, grouped into labeled sections. Hover over any field for a tooltip explaining what it does. Fields that reference an entry in another DAT file have a dropdown to pick the entry by name and a **Jump To** button (the arrow icon after the dropdown) to go edit it. While a dropdown has keyboard focus (for example after tabbing to it), the mouse wheel steps through its entries; otherwise the wheel scrolls the page. Hover over the button to see which kind of entry it jumps to.
 The status bar shows the file path of the active tabs file, an indicator for unsaved changes, and whether the file is [expanded](#expanded-dat-files).
 
 ## Managing Files

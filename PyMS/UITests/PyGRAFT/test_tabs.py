@@ -21,6 +21,10 @@ class Test_PyGRAFT_tabs(PyGRAFTTestCase):
 		gui = self.open_pygraft()
 		self.assertEqual(tuple(sorted(gui.notebook.pages, key=lambda title: gui.notebook.pages[title][1])), TAB_TITLES)
 
+	def test_window_has_a_minimum_size(self) -> None:
+		gui = self.open_pygraft()
+		self.assertEqual(gui.minsize(), (800, 500))
+
 	def test_list_starts_with_button_sets(self) -> None:
 		gui = self.open_pygraft()
 		self.assertIsInstance(gui.active_tab(), ButtonSetsTab)

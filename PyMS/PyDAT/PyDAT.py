@@ -140,7 +140,7 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 		self.hor_pane = UI.PanedWindow(self, orient=UI.HORIZONTAL)
 		left = UI.Frame(self.hor_pane)
-		self.listbox = UI.ScrolledListbox(left, scroll_speed=2, font=UI.Font.fixed(), width=45, height=1)
+		self.listbox = UI.ScrolledListbox(left, font=UI.Font.fixed(), width=45, height=1)
 		self.listbox.pack(side=UI.TOP, fill=UI.BOTH, padx=2, pady=2, expand=1)
 		self.listbox.bind(UI.ButtonRelease.Click_Right(), self.popup)
 		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), lambda *e: self.changeid())

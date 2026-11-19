@@ -1,5 +1,5 @@
 
-from ..Widgets import Listbox, Misc, Scrollbar, Toplevel
+from ..Widgets import Listbox, Misc, Scrollbar, Tk, Toplevel
 from ..Constants import BOTH, DOTBOX, END, LEFT, RIGHT, SINGLE, SOLID, Y
 from ..Event import Event
 from ..Font import Font
@@ -37,7 +37,6 @@ class DropDownChooser(Toplevel):
 			(Mouse.Click_Left(), self.focusout),
 			(Key.Return(), self.select),
 			(Key.Escape(), self.close),
-			(Mouse.Scroll(), self.scroll),
 			(Key.Home(), lambda e: self.move(0)),
 			(Key.End(), lambda e: self.move(END)),
 			(Key.Up(), lambda e: self.move(-1)),
@@ -65,6 +64,9 @@ class DropDownChooser(Toplevel):
 		self.focus_binding = None
 		self.focus_binding = parent_toplevel.bind(Mouse.ButtonPress(), self.select, True)
 		self.bind(Focus.Out(), self.select)
+		root = self.nametowidget('.')
+		if isinstance(root, Tk):
+			root.mouse_wheel.popup = self
 		self.focus_set()
 		self.wait_window(self)
 
@@ -87,12 +89,6 @@ class DropDownChooser(Toplevel):
 		self.listbox.select_clear(0,END)
 		self.listbox.select_set(index)
 		self.listbox.see(index)
-
-	def scroll(self, event: Event) -> None:
-		if event.delta > 0:
-			self.listbox.yview('scroll', -2, 'units')
-		else:
-			self.listbox.yview('scroll', 2, 'units')
 
 	def home(self, _event: Event) -> None:
 		self.listbox.yview('moveto', 0.0)
@@ -119,6 +115,9 @@ class DropDownChooser(Toplevel):
 		self.close()
 
 	def close(self, _event: Event | None = None) -> None:
+		root = self.nametowidget('.')
+		if isinstance(root, Tk) and root.mouse_wheel.popup is self:
+			root.mouse_wheel.popup = None
 		self.parent.focus_set()
 		self.withdraw()
 		self.update_idletasks()

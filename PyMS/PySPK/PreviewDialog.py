@@ -36,24 +36,18 @@ class PreviewDialog(PyMSDialog):
 		self.grid_columnconfigure(0,weight=1)
 
 		self.canvas.focus_set()
-		def scroll_map(event: UI.Event | None = None, horizontal: bool = False, units: int = 0) -> None:
+		def scroll_map(horizontal: bool, units: int) -> None:
 			# `units` is the scroll direction/amount: negative scrolls up/left,
 			# positive scrolls down/right.
-			if event:
-				horizontal = False
-				if hasattr(event, 'state') and getattr(event, 'state', 0) & UI.Modifier.Shift.state:
-					horizontal = True
-				units = -1 if event.delta > 0 else 1
 			view = self.canvas.yview
 			if horizontal:
 				view = self.canvas.xview
 			view('scroll', units, 'units')
 			self.update_viewport()
-		self.canvas.bind(UI.Mouse.Scroll(), scroll_map)
-		self.bind(UI.Key.Up(), lambda e: scroll_map(None, False, -1))
-		self.bind(UI.Key.Down(), lambda e: scroll_map(None, False, 1))
-		self.bind(UI.Key.Left(), lambda e: scroll_map(None, True, -1))
-		self.bind(UI.Key.Right(), lambda e: scroll_map(None, True, 1))
+		self.bind(UI.Key.Up(), lambda e: scroll_map(False, -1))
+		self.bind(UI.Key.Down(), lambda e: scroll_map(False, 1))
+		self.bind(UI.Key.Left(), lambda e: scroll_map(True, -1))
+		self.bind(UI.Key.Right(), lambda e: scroll_map(True, 1))
 
 		return None
 

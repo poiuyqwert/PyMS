@@ -46,7 +46,6 @@ class TilePaletteView(UI.Frame):
 			self.update_size()
 		self.canvas.bind(UI.WidgetEvent.Configure(), canvas_resized)
 		binding_widget = self.delegate.tile_palette_binding_widget()
-		binding_widget.bind(UI.Mouse.Scroll(), lambda e: self.canvas.yview('scroll', -(e.delta // abs(e.delta)) if e.delta else 0,'units'))
 		if self.delegate.tile_palette_bind_updown():
 			binding_widget.bind(UI.Key.Down(), lambda e: self.canvas.yview('scroll', 1,'units'))
 			binding_widget.bind(UI.Key.Up(), lambda e: self.canvas.yview('scroll', -1,'units'))

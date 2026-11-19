@@ -1,6 +1,7 @@
 
 from .. import Theme as _Theme
 from .Extensions import MiscExtensions, WindowExtensions
+from ..MouseWheel import MouseWheel
 
 import tkinter as _Tk
 
@@ -34,6 +35,7 @@ class Tk(_Tk.Tk, WindowExtensions):
 	def __init__(self, *args: Any, **kwargs: Any) -> None:
 		_Tk.Tk.__init__(self, *args, **kwargs)
 		_Theme.apply_theme(self)
+		self.mouse_wheel = MouseWheel(self)
 
 class Toplevel(_Tk.Toplevel, WindowExtensions):
 	def __init__(self, *args: Any, **kwargs: Any) -> None:

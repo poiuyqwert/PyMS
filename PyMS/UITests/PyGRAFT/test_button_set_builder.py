@@ -103,6 +103,15 @@ class Test_PyGRAFT_button_set_builder(PyGRAFTTestCase):
 		self.assertEqual(view.scroll_view.winfo_reqheight(), round(ButtonSetBuilderView.VISIBLE_ROWS * ButtonRow.ROW_HEIGHT))
 		self.assertEqual(view.rows[0].winfo_reqheight(), ButtonRow.ROW_HEIGHT)
 
+	def test_builder_scrolls_when_the_window_is_too_small(self) -> None:
+		gui, view = self.open_builder()
+		gui.geometry('800x500')
+		self.pump(gui)
+		scroll_view = next(child for child in view.winfo_children() if isinstance(child, UI.ScrollView))
+		_, viewport_height = scroll_view.viewport_size()
+		_, content_height = scroll_view.content_size()
+		self.assertGreater(content_height, viewport_height)
+
 	def test_no_button_sets_is_read_only(self) -> None:
 		gui, view = self.open_builder()
 		gui.buttons_data.graft.button_sets = []

@@ -379,6 +379,9 @@ class Test_event_groups(unittest.TestCase):
 
 	def test_mouse_scroll(self) -> None:
 		self.assertEqual(Mouse.Scroll.event(), '<MouseWheel>')
+		self.assertEqual(Mouse.TouchpadScroll.event(), '<TouchpadScroll>')
+		self.assertEqual(Mouse.Wheel_Up.event(), '<Button-4>')
+		self.assertEqual(Mouse.Wheel_Down.event(), '<Button-5>')
 
 	def test_mouse_drag_left(self) -> None:
 		self.assertEqual(Mouse.Drag_Left.name(), 'B1-Motion')

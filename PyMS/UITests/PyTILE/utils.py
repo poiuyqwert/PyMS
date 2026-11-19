@@ -10,8 +10,6 @@ from ...Utilities import UIKit as UI
 import tkinter
 from unittest import mock
 
-from typing import Any
-
 # These tests drive PyTILE through its real menubar, toolbar and shortcuts. The
 # harness already neutralizes settings I/O, analytics, the update check, and the
 # tracer for construction. Opening a tileset goes through the real Open flow with
@@ -22,12 +20,12 @@ TILESET_LOAD = 'PyMS.PyTILE.PyTILE.Tileset.load'
 GET_TILE = 'PyMS.PyTILE.PyTILE.PyTILE.get_tile'
 
 
-def _fill_tileset(tileset: Tileset, *_args: Any, **_kwargs: Any) -> None:
+def _fill_tileset(tileset: Tileset, group_count: int) -> None:
 	tileset.new_file()
 	for _ in range(2):
 		tileset.vf4.add_megatile(VF4Megatile())
 		tileset.vx4.add_megatile(VX4Megatile())
-	for _ in range(20):
+	for _ in range(group_count):
 		group = CV5Group()
 		group.megatile_ids = [0] * 16
 		tileset.cv5.add_group(group)
@@ -37,13 +35,13 @@ class PyTILETestCase(UITestCase):
 	def open_pytile(self) -> PyTILE:
 		return self.make_window(PyTILE)
 
-	def with_open_tileset(self) -> PyTILE:
+	def with_open_tileset(self, group_count: int = 20) -> PyTILE:
 		gui = self.open_pytile()
 		blank = tkinter.PhotoImage(master=gui, width=32, height=32)
 		patcher = mock.patch(GET_TILE, return_value=blank)
 		patcher.start()
 		self.addCleanup(patcher.stop)
-		with mock.patch(TILESET_LOAD, autospec=True, side_effect=_fill_tileset):
+		with mock.patch(TILESET_LOAD, autospec=True, side_effect=lambda tileset, *_args, **_kwargs: _fill_tileset(tileset, group_count)):
 			gui.open(file='test.cv5')
 		self.pump(gui)
 		return gui
