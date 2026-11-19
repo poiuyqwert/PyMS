@@ -1,6 +1,8 @@
 # PyGRAFT
 PyGRAFT is a tool used for editing the `.graft` files of the GPTP Graft Hook, a replacement for FireGraft. The Graft Hook loads six files from the `datreq` folder of your mod's MPQ: the requirements for training or building units (`Units.graft`), researching upgrades (`Upgrades.graft`), researching technologies (`Research.graft`), using technologies (`Tech.graft`), and using orders (`Orders.graft`), along with the command card buttons (`Buttons.graft`).
 
+PyGRAFT doesn't create an executable mod. The `.graft` files it saves must be loaded into StarCraft by a plugin, such as DatExtend or the GPTP Graft Hooks (both by FaRTy1billion). PyGRAFT reminds you of this when it opens, until you check **Don't warn me again**.
+
 ## Main Window
 The menubar holds every command, in the **File**, **Settings**, and **Help** menus, and the toolbar under it has buttons for the file actions and settings (hover over a button to see its name and shortcut).
 

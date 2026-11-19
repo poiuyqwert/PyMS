@@ -85,6 +85,15 @@ class PyGRAFTConfig(Config.Config):
 			self.highlights = PyGRAFTConfig.Code.Highlights()
 			super().__init__()
 
+	class DontWarn(Config.Group):
+		def __init__(self) -> None:
+			self.plugin_required = Config.Warn(message=(
+				"PyGRAFT does not create executable mods.\n\n"
+				"Instead it creates .graft files, which must be loaded into StarCraft by a plugin,\n"
+				"such as DatExtend or the GPTP Graft Hooks (both by FaRTy1billion)."
+			))
+			super().__init__()
+
 	def __init__(self) -> None:
 		self.theme = Config.String()
 		self.windows = PyGRAFTConfig.Windows()
@@ -93,4 +102,5 @@ class PyGRAFTConfig(Config.Config):
 		self.code = PyGRAFTConfig.Code()
 		self.list_size = Config.PaneSizes(defaults=(300,))
 		self.show_used_by = Config.Boolean(default=True)
+		self.dont_warn = PyGRAFTConfig.DontWarn()
 		super().__init__()

@@ -183,6 +183,7 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.settings(err=e)
 		if self.guifile:
 			self.open(file_path=self.guifile)
+		self.config_.dont_warn.plugin_required.present(self)
 		UpdateDialog.check_update(self, 'PyGRAFT')
 
 	def all_graft_data(self) -> tuple[AnyGraftData, ...]:
@@ -593,7 +594,11 @@ class PyGRAFT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyGRAFT.md')
 
 	def about(self, _event: UI.Event | None = None) -> None:
-		AboutDialog(self, 'PyGRAFT', LONG_VERSION)
+		thanks = [
+			('FaRTy1billion', 'Graft plugins and file specs'),
+			('Ojan', 'Suggestions and some feature designs from AxeGraft'),
+		]
+		AboutDialog(self, 'PyGRAFT', LONG_VERSION, thanks)
 
 	def sponsor(self) -> None:
 		SponsorDialog(self)

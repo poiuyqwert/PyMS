@@ -7,7 +7,7 @@ class WarnDialog(PyMSDialog):
 		self.message = message
 		self.dont_warn = UI.IntVar()
 		self.show_dont_warn = show_dont_warn
-		PyMSDialog.__init__(self, parent, title, resizable=(False, False))
+		PyMSDialog.__init__(self, parent, title, grabwait=True, escape=True, resizable=(False, False))
 
 	def widgetize(self) -> UI.Misc | None:
 		UI.Label(self, text=self.message).pack(side=UI.TOP, padx=20,pady=10)
@@ -21,3 +21,5 @@ class WarnDialog(PyMSDialog):
 
 	def setup_complete(self) -> None:
 		self.minsize(300, 100)
+		# Keep the dialog above its window, which can otherwise be raised over it (e.g. when the app activates at launch)
+		self.transient(self.parent.winfo_toplevel())
