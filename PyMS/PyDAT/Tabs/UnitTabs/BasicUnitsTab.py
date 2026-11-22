@@ -277,7 +277,7 @@ class BasicUnitsTab(DATUnitsTab):
 
 	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if DATID.upgrades in ids:
-			self.armor_upgrade_ddw.setentries(self.delegate.data_context.upgrades.names + ('None',))
+			self.armor_upgrade_ddw.setentries(self.delegate.data_context.upgrades.names)
 		if DATID.weapons in ids:
 			self.ground_weapon_ddw.setentries(self.delegate.data_context.weapons.names + ('None',))
 			self.air_weapon_ddw.setentries(self.delegate.data_context.weapons.names + ('None',))

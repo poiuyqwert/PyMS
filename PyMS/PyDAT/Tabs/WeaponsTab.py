@@ -299,7 +299,7 @@ class WeaponsTab(DATTab):
 		if DATID.techdata in ids:
 			self.unused_ddw.setentries(self.delegate.data_context.technology.names + ('None',))
 		if DATID.upgrades in ids:
-			self.upgrade_ddw.setentries(self.delegate.data_context.upgrades.names + ('None',))
+			self.upgrade_ddw.setentries(self.delegate.data_context.upgrades.names)
 		if DATID.flingy in ids:
 			self.graphics_ddw.setentries(self.delegate.data_context.flingy.names)
 
