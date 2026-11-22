@@ -37,12 +37,12 @@ class DATImage(AbstractDAT.AbstractDATEntry):
 		use_remapping           = 9
 		shadow                  = 10
 		hp_bar                  = 11
-		warp_flash              = 12 # crashes staredit
+		warp_texture            = 12 # Warp-in texture; set by the game at run time; crashes StarEdit
 		selection_circle        = 13
 		player_color_override   = 14 # Flag
 		hide_gfx_show_size_rect = 15
 		hallucination           = 16
-		warp_flash              = 17
+		warp_fade               = 17 # Warp-in fade
 
 	class Remapping:
 		none     = 0
