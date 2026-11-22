@@ -1,4 +1,4 @@
-Independent
+Independent (0% damage)
 Small
 Medium
 Large

@@ -1,18 +1,18 @@
 Normal
-Normal (No Hallucination)
+Normal (No Cloak/Hallucination)
 Non-Vision Cloaking
 Non-Vision Cloaked
 Non-Vision Decloaking
 Vision Cloaking
 Vision Cloaked
-Vision Decloaking (Crash?)
+Vision Decloaking
 EMP Shockwave
 Use Remapping
 Shadow
 HP Bar
-Warp Flash (StarEdit crash)
-Seletion Circle
+Warp Texture (StarEdit crash)
+Selection Circle
 Player Color Override
 Hide GFX, Show Size Rect
 Hallucination
-Warp Flash
+Warp Fade

@@ -66,7 +66,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		self.humanidle_ddw = add_dropdown('Human Idle', self.humanidleentry, self.humanidle, 'UnitAIHumanIdle')
 		self.returntoidle_ddw = add_dropdown('Return to Idle', self.returntoidleentry, self.returntoidle, 'UnitAIReturn')
 		self.attackunit_ddw = add_dropdown('Attack Unit', self.attackunitentry, self.attackunit, 'UnitAIAttackUnit')
-		self.attackmove_ddw = add_dropdown('Attack Move', self.attackmoveentry, self.attackmove, 'UnitAIAttackMove')
+		self.attackmove_ddw = add_dropdown('Attack Location', self.attackmoveentry, self.attackmove, 'UnitAIAttackMove')
 		f = UI.Frame(s)
 		UI.Label(f, text='Right-Click Action:', width=16, anchor=UI.E).pack(side=UI.LEFT)
 		UI.DropDown(f, self.rightclick, Assets.data_cache(Assets.DataReference.Rightclick), width=30).pack(side=UI.LEFT, fill=UI.X, expand=1, padx=2)
@@ -75,8 +75,8 @@ class AIActionsUnitsTab(DATUnitsTab):
 
 		f = UI.Frame(s)
 		# AI Flags
-		self.makeCheckbox(f, self.AI_NoSuicide, 'Ignore Strategic Suicide missions', 'UnitAINoSuicide').pack(side=UI.LEFT)
-		self.makeCheckbox(f, self.AI_NoGuard, 'Don\'t become a guard', 'UnitAINoGuard').pack(side=UI.LEFT)
+		self.makeCheckbox(f, self.AI_NoSuicide, 'Not in AI attack groups', 'UnitAINoSuicide').pack(side=UI.LEFT)
+		self.makeCheckbox(f, self.AI_NoGuard, 'Join town, not guard', 'UnitAINoGuard').pack(side=UI.LEFT)
 
 		f.pack(fill=UI.X)
 		s.pack(fill=UI.BOTH, padx=5, pady=(0,5))

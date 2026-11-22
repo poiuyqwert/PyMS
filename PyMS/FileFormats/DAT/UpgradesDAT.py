@@ -155,7 +155,7 @@ class UpgradesDAT(AbstractDAT.AbstractDAT):
 					"type": "short"
 				},
 				{
-					"name": "requirements",
+					"name": "requirements", # Index into the built-in requirement list; 0xFFFF = filled in by the game
 					"type": "short"
 				},
 				{
@@ -167,15 +167,15 @@ class UpgradesDAT(AbstractDAT.AbstractDAT):
 					"type": "short"
 				},
 				{
-					"name": "staredit_race",
+					"name": "staredit_race", # Only read by StarEdit (3 = hidden)
 					"type": "byte"
 				},
 				{
-					"name": "max_repeats",
+					"name": "max_repeats", # Max level
 					"type": "byte"
 				},
 				{
-					"name": "broodwar_only",
+					"name": "broodwar_only", # Only read by StarEdit
 					"type": "byte"
 				}
 			]

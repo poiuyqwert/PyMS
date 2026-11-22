@@ -253,11 +253,11 @@ class WeaponsDAT(AbstractDAT.AbstractDAT):
 					"type": "short"
 				},
 				{
-					"name": "graphics", # Pointer to flingy.dat
+					"name": "graphics", # Pointer to flingy.dat (only the low 16 bits are used; 0 = fires no bullet)
 					"type": "long"
 				},
 				{
-					"name": "unused_technology", # Pointer to techdata.dat
+					"name": "unused_technology", # Pointer to techdata.dat; never read by StarCraft or StarEdit
 					"type": "byte"
 				},
 				{
@@ -265,11 +265,11 @@ class WeaponsDAT(AbstractDAT.AbstractDAT):
 					"type": "short"
 				},
 				{
-					"name": "minimum_range",
+					"name": "minimum_range", # Pixels, 0 = no minimum
 					"type": "long"
 				},
 				{
-					"name": "maximum_range",
+					"name": "maximum_range", # Pixels
 					"type": "long"
 				},
 				{
@@ -277,19 +277,19 @@ class WeaponsDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "weapon_type",
+					"name": "weapon_type", # Damage class (DamTypes.txt)
 					"type": "byte"
 				},
 				{
-					"name": "weapon_behavior",
+					"name": "weapon_behavior", # Bullet fire type (Behaviours.txt); 10 or more creates no bullet
 					"type": "byte"
 				},
 				{
-					"name": "remove_after",
+					"name": "remove_after", # Bullet lifetime in frames
 					"type": "byte"
 				},
 				{
-					"name": "explosion_type",
+					"name": "explosion_type", # Damage type / hit effect (Explosions.txt); 19, 20, 23 and above 24 are fatal errors
 					"type": "byte"
 				},
 				{
@@ -313,15 +313,15 @@ class WeaponsDAT(AbstractDAT.AbstractDAT):
 					"type": "short"
 				},
 				{
-					"name": "weapon_cooldown",
+					"name": "weapon_cooldown", # Frames; the game clamps the modified value to 5..250
 					"type": "byte"
 				},
 				{
-					"name": "damage_factor",
+					"name": "damage_factor", # Launch count: only 2 fires a second bullet; also a display multiplier
 					"type": "byte"
 				},
 				{
-					"name": "attack_angle",
+					"name": "attack_angle", # 256ths of a turn
 					"type": "byte"
 				},
 				{

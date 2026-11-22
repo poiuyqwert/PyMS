@@ -6,12 +6,13 @@ Edited by [PyDAT](/Help/Programs/PyDAT.md) on the [Weapons Tab](/Help/Programs/P
 ## Format
 The file has 130 entries, one per weapon ID. Each entry holds the weapons damage settings (amount, bonus per upgrade level, type, explosion, factor, cooldown), targeting settings (min/max range, target flags, error message), splash radii, projectile settings (behaviour, offsets, attack angle, launch spin), and display settings (label, icon) — see the [Weapons Tab](/Help/Programs/PyDAT/Weapons.md) for the full breakdown.
 References to weapons in other DAT files use the value 130 (one past the last weapon ID) to mean no weapon.
+A map's unit settings can replace the damage Amount and Bonus of the weapons of the units it customizes.
 
 ## References
 - Damage [Upgrade](/Help/Files/DAT/upgrades.dat.md)
-- Related [Technology](/Help/Files/DAT/techdata.dat.md) (Note: This is unused, it is now just a hint to the related technology)
+- Related [Technology](/Help/Files/DAT/techdata.dat.md) (Note: This is unused: neither StarCraft nor StarEdit reads it, it is just a hint to the related technology)
 - Name and Targeting Error [Strings](/Help/Files/TBL.md#stat_txttbl)
-- Graphics [Flingy](/Help/Files/DAT/flingy.dat.md)
+- Graphics [Flingy](/Help/Files/DAT/flingy.dat.md) (0 means the weapon fires no bullet)
 - [Icon](/Help/Files/GRP.md#cmdicongrp)
 
 ## Names

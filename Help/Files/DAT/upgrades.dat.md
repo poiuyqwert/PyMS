@@ -4,8 +4,9 @@
 Edited by [PyDAT](/Help/Programs/PyDAT.md) on the [Upgrades Tab](/Help/Programs/PyDAT/Upgrades.md)
 
 ## Format
-The file has 61 entries, one per upgrade ID. Each entry holds the base and per-level factor costs (minerals, vespene, research time), the maximum number of levels, the requirements index, race, and BroodWar flag, plus the icon and label references — see the [Upgrades Tab](/Help/Programs/PyDAT/Upgrades.md) for the full breakdown.
-References to upgrades in other DAT files use the value 61 (one past the last upgrade ID) to mean no upgrade.
+The file has 61 entries, one per upgrade ID. Each entry holds the base and per-level factor costs (minerals, vespene, research time), the maximum number of levels, the requirements index, the race and BroodWar flag (only read by StarEdit), plus the icon and label references — see the [Upgrades Tab](/Help/Programs/PyDAT/Upgrades.md) for the full breakdown.
+References to upgrades in other DAT files ([units.dat](/Help/Files/DAT/units.dat.md) armor upgrade, weapons.dat damage upgrade) use upgrade 60, which no one can research, to mean no upgrade; the game has no special value for it.
+A map's upgrade settings can replace the six costs.
 
 ## References
 - [Icon](/Help/Files/GRP.md#cmdicongrp)

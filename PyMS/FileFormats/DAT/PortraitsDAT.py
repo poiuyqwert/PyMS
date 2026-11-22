@@ -9,6 +9,9 @@ from collections import OrderedDict
 
 from typing import cast, Any
 
+# The file is 6 arrays of 110 entries: fidget (idle) SMK prefix, talking SMK prefix, then the chances of fidget videos 0, 1, 2 and 3.
+# PyMS groups them as idle = (fidget prefix, fidget 0 chance, fidget 2 chance) and talking = (talking prefix, fidget 1 chance, fidget 3 chance).
+# The names smk_change and unknown are kept for compatibility; all four are fidget chances, and talking videos have none.
 class DATPortrait:
 	def __init__(self) -> None:
 		self.portrait_file: int = 0
@@ -89,27 +92,27 @@ class PortraitsDAT(AbstractDAT.AbstractDAT):
 			"expanded_max_entries": 65535,
 			"properties": [
 				{
-					"name": "idle_portrait_file", # Pointer to portdata.tbl
+					"name": "idle_portrait_file", # 1-based index into portdata.tbl: fidget SMK prefix (portrait\<string><0-3>.smk)
 					"type": "long"
 				},
 				{
-					"name": "talking_portrait_file", # Pointer to portdata.tbl
+					"name": "talking_portrait_file", # 1-based index into portdata.tbl: talking SMK prefix (portrait\<string><0-2>.smk)
 					"type": "long"
 				},
 				{
-					"name": "idle_smk_change",
+					"name": "idle_smk_change", # Fidget 0 chance
 					"type": "byte"
 				},
 				{
-					"name": "talking_smk_change",
+					"name": "talking_smk_change", # Fidget 1 chance
 					"type": "byte"
 				},
 				{
-					"name": "idle_unknown",
+					"name": "idle_unknown", # Fidget 2 chance
 					"type": "byte"
 				},
 				{
-					"name": "talking_unknown",
+					"name": "talking_unknown", # Fidget 3 chance
 					"type": "byte"
 				}
 			]

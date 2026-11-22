@@ -64,9 +64,9 @@ class SoundsTab(DATTab):
 		f.pack(fill=UI.X)
 
 		f = UI.Frame(s)
-		UI.Label(f, text='Minimum Volume %:', width=17, anchor=UI.E).pack(side=UI.LEFT)
+		UI.Label(f, text='Minimum Volume:', width=17, anchor=UI.E).pack(side=UI.LEFT)
 		UI.Entry(f, textvariable=self.minimum_volume, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT)
-		self.tip(f, 'Minimum Volume %', 'SoundMinimumVolume')
+		self.tip(f, 'Minimum Volume', 'SoundMinimumVolume')
 		f.pack(fill=UI.X)
 
 		s.pack(fill=UI.BOTH, padx=5, pady=5)

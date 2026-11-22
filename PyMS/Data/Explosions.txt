@@ -17,8 +17,8 @@ Yamato Gun
 Restoration
 Disruption Web
 Corrosive Acid
-Mind Control
-Feedback
+Mind Control (Crash)
+Feedback (Crash)
 Optical Flare
 Maelstrom
 Unknown (Crash)

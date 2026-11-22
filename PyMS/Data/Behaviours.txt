@@ -6,5 +6,5 @@ Appear on Target Site
 Appear on Attacker
 Attack & Self-Destruct
 Bounce
-Attack Target 3x3 Area
+Spread Around Target
 Go to Max. Range

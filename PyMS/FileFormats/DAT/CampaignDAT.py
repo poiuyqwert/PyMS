@@ -35,7 +35,7 @@ class CampaignDAT(AbstractDAT.AbstractDAT):
 			"entries": 65,
 			"properties": [
 				{
-					"name": "map_file", # Pointer to mapdata.tbl
+					"name": "map_file", # 1-based index into mapdata.tbl (low 16 bits used): the mission folder
 					"type": "long"
 				}
 			]

@@ -91,27 +91,27 @@ class FlingyDAT(AbstractDAT.AbstractDAT):
 					"type": "short"
 				},
 				{
-					"name": "speed",
+					"name": "speed", # Top speed, in 1/256 pixels per frame
 					"type": "long"
 				},
 				{
-					"name": "acceleration",
+					"name": "acceleration", # In 1/256 pixels per frame, per frame
 					"type": "short"
 				},
 				{
-					"name": "halt_distance",
+					"name": "halt_distance", # In 1/256 pixels; cached speed^2/(2*acceleration)
 					"type": "long"
 				},
 				{
-					"name": "turn_radius",
+					"name": "turn_radius", # Actually a turn rate: 1/256 of a full turn per frame
 					"type": "byte"
 				},
 				{
-					"name": "iscript_mask",
+					"name": "iscript_mask", # Unused: never read by the game (no iscript connection)
 					"type": "byte"
 				},
 				{
-					"name": "movement_control",
+					"name": "movement_control", # 0 = flingy.dat, 1 = flingy.dat without braking, 2 = iscript
 					"type": "byte"
 				}
 			]
