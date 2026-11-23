@@ -501,9 +501,9 @@ SoundNeverPreempt=Will not be interrupted by new sounds when all sound channels 
 PortFile=Base path to different portrait SMK (Smacker) animations. Consecutive animations takes increasing, 0-based indexes appended to this path. Putting 0 here will result in a frozen static image. [1-based pointer to portdata.tbl]
 PortFileList=Base path to different portrait SMK (Smacker) animations. Consecutive animations takes increasing, 0-based indexes appended to this path. Putting 0 here will result in a frozen static image. [1-based pointer to portdata.tbl]
 
-PortSMKChange=Controls how often the first SMK animation, with the index of 0, will be overlooked and a portrait with different index will be played. The higher the value and the more it gets near 100, the more often will the first SMK be skipped. Values over 100 make the game use only the first portrait.
+PortSMKChange=How likely this fidget (idle) video is picked, out of 101. The game rolls 0-100 and adds the four chances up in order 0, 1, 2, 3 until the total reaches the roll. Make the four add up to at least 100: a roll above the total most likely crashes the game. Shipped: 85/5/5/5 for most units, 100/0/0/0 for fidget 0 only. Talking videos have no chance setting.
 
-PortUnk1=Unknown.
+PortUnk1=How likely this fidget (idle) video is picked, out of 101. The game rolls 0-100 and adds the four chances up in order 0, 1, 2, 3 until the total reaches the roll. Make the four add up to at least 100: a roll above the total most likely crashes the game. Shipped: 85/5/5/5 for most units, 100/0/0/0 for fidget 0 only. Talking videos have no chance setting.
 
 
 
