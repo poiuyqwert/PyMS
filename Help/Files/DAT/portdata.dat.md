@@ -4,7 +4,7 @@
 Edited by [PyDAT](/Help/Programs/PyDAT.md) on the [Portdata Tab](/Help/Programs/PyDAT/Portdata.md)
 
 ## Format
-The file has 110 entries, one per portrait ID. Each entry holds two sets of settings — one for the idle portrait and one for the talking portrait — each with an SMK folder reference, an SMK change value, and an unknown value — see the [Portdata Tab](/Help/Programs/PyDAT/Portdata.md) for the full breakdown.
+The file has 110 entries, one per portrait ID, stored as 6 lists one after another: the fidget (idle) SMK prefix, the talking SMK prefix, and the chances of fidget videos 0, 1, 2 and 3. PyDAT shows the fidget prefix with the four chances as the idle portrait, and the talking prefix as the talking portrait. Its export format still groups them the old way: `idle` holds the fidget prefix with the fidget 0 (`smk_change`) and 2 (`unknown`) chances, and `talking` holds the talking prefix with the fidget 1 and 3 chances — see the [Portdata Tab](/Help/Programs/PyDAT/Portdata.md) for the full breakdown.
 References to portraits in [units.dat](/Help/Files/DAT/units.dat.md) use the value 65535 to mean no portrait.
 
 ## References
