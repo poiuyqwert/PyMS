@@ -5,8 +5,8 @@ The Flingy tab of [PyDAT](/Help/Programs/PyDAT.md) edits [flingy.dat](/Help/File
 - **Sprite**: The [Sprite](/Help/Programs/PyDAT/Sprites.md) the flingy displays.
 - **Top Speed**: The maximum movement speed in 1/256 pixels per frame, shown as the raw value and converted to pixels per frame.
 - **Acceleration**: How much the speed changes each frame when speeding up or braking, in 1/256 pixels per frame.
-- **Halt Distance**: The distance from the target, in 1/256 pixels, at which the flingy starts braking, shown as the raw value and converted to pixels. It is only a stored shortcut for speed² ÷ (2 × acceleration), used while the flingy moves at exactly its Top Speed and Acceleration.
-- **Turn Rate**: How far the flingy can turn each frame, in 1/256 of a full turn. Keep it between 1 and 127.
+- **Halt Distance**: How far from its destination the flingy starts braking, in 1/256 pixels, shown as the raw value and converted to pixels. The game only uses this stored value while the flingy moves at exactly this file's Top Speed with exactly its Acceleration. At any other speed or acceleration (while speeding up, or with a speed upgrade, Stim Packs or Ensnare) it works the distance out itself as speed² ÷ (2 × acceleration). Set it to that formula with this file's values, or the flingy brakes too early or too late at full speed.
+- **Turn Rate**: How far the flingy can turn each frame, in 1/256 of a full turn. Keep it between 1 and 127. The game reads it as a signed number, so 128 to 255 act as negative turn rates and the flingy never settles on a direction. With 0 it cannot turn, and a moving flingy with "Flingy.dat Control" (with or without braking) crashes the game when it comes within 32 pixels of a target it is not facing.
 - **Move Control**: How movement is controlled — by the flingy.dat values, by the flingy.dat values without braking (bullets, and some units), or by the [IScript](/Help/Files/iscript.bin.md).
 - **Unused**: Never read by the game.
 

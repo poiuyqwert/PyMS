@@ -8,7 +8,7 @@ The core gameplay statistics of the unit:
 
 - **Vital Statistics**: Hit Points (with a Fraction field for the hidden fractional part), Shields (and whether they are enabled), and Armor with its armor [Upgrade](/Help/Programs/PyDAT/Upgrades.md).
 - **Build Cost**: Minerals, Vespene, and build Time (shown in game frames and in seconds on Fastest game speed), plus the BroodWar flag, which only StarEdit reads (the game uses the BroodWar Only flag on the [StarEdit](#staredit) sub-tab).
-- **Weapons**: The Ground and Air [Weapons](/Help/Programs/PyDAT/Weapons.md) (130 = none) and the Max Hits for each (only shown by StarEdit; the game never reads them).
+- **Weapons**: The Ground and Air [Weapons](/Help/Programs/PyDAT/Weapons.md) (130 = none) and the Max Hits for each. The game reads neither Max Hits value; only StarEdit uses them, to show the weapon's damage times Max Hits times the weapon's Damage Factor.
 - **Supply**: The supply the unit requires and provides (the game counts in halves; the `+0.5` checkboxes add a half, like Zerglings), and Zerg/Terran/Protoss checkboxes setting which race the unit belongs to, and so which supply pool it uses (shared with the Group flags on the [StarEdit](#staredit) sub-tab).
 - **Space**: The transport space the unit requires and provides.
 - **Score**: The score awarded for building and for destroying the unit.

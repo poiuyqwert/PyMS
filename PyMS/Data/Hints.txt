@@ -144,7 +144,7 @@ UnitMov40=Movement flags: no separate effect. The game only tests the whole valu
 
 UnitMov80=Movement flags: no separate effect. The game only tests the whole value 193 (0xC1: 0x01, 0x40 and 0x80): Spider Mines ignore such units, and they hatch 7 pixels higher from an egg.
 
-UnitReq=Holds the index to the internal requirement for the unit. Keep 65535 so the game fills it in from its built-in requirements. Do not change unless you REALLY know what you're doing.
+UnitReq=Position of the unit's entry in the unit requirement list built into StarCraft.exe; the requirements themselves cannot be edited in the dat files. Keep 65535: as soon as the game checks a unit holding 65535, it stores the position of every unit that has an entry in that list, replacing what the file had, and sets the rest to 0 (never allowed). Until then, and always if no unit holds 65535, values are used as they are: 0 = never allowed, any other value is read as requirements from that position in the list (the start of another unit's entry gives its requirements; the end of an entry gives none). Nothing checks it. See the Help for details.
 
 #####SOUND TAB#####
 
@@ -340,7 +340,7 @@ FlingySpeed=Maximum speed, in 1/256 pixels per frame (1280 = 5 pixels per frame)
 
 FlingyAcceleration=How much the speed changes each frame when speeding up or braking, in 1/256 pixels per frame. Used by "Flingy.dat Control" and "Flingy.dat Control, No Braking", not by "Iscript.bin Control". Doubled by speed upgrades and Stim Packs, 3/4 with Ensnare. 0 means the flingy never gets going.
 
-FlingyHaltDist=Distance from its destination at which the sprite will begin to decelerate from its Top Speed to a complete halt. Measured in 1/256 pixels. Only used with "Flingy.dat Control", and only while moving at exactly the Top Speed and Acceleration in this file; otherwise it is computed as (speed^2)/(2*acceleration).
+FlingyHaltDist=How far from its destination the flingy starts braking, in 1/256 pixels. Only used with "Flingy.dat Control". The game only uses this stored value while the flingy moves at exactly this file's Top Speed with exactly its Acceleration; at any other speed or acceleration (speeding up, speed upgrades, Stim Packs, Ensnare) it works the distance out itself as speed^2 / (2 * acceleration). So set it to that formula with this file's values, or the flingy brakes too early or too late at full speed.
 
 FlingyMoveControl=How the flingy's movement is controlled. "Flingy.dat Control" accelerates to Top Speed, brakes at the Halt Distance and stops once slow at the target. "Flingy.dat Control, No Braking" accelerates the same way but never brakes and stops dead on arrival (bullets, High Templar, flying Terran buildings, Nuke). "Iscript.bin Control" moves by the distances the Iscript animation gives each frame, without acceleration, and only once facing its target; Top Speed is replaced from the Walking animation, but Turn Rate is still used.
 
@@ -428,7 +428,7 @@ UpgRace=The race StarEdit lists the upgrade under. "None" hides it in StarEdit. 
 
 UpgRepeats=Highest level of the upgrade; every player starts a new game with this as their maximum (the map can change it). StarEdit hides upgrades with 0.
 
-UpgReq=Position of the upgrade's requirements in the game's built-in requirement list. Leave it at 65535 (0xFFFF), which makes the game fill it in; 0 means the upgrade is never allowed.
+UpgReq=Position of the upgrade's entry in the upgrade requirement list built into StarCraft.exe; the requirements themselves cannot be edited in the dat files. Keep 65535: as soon as the game checks an upgrade holding 65535, it stores the position of every upgrade that has an entry in that list, replacing what the file had, and sets the rest to 0 (never allowed). Until then, and always if no upgrade holds 65535, values are used as they are: 0 = never allowed, any other value is read as requirements from that position in the list (the start of another upgrade's entry gives its requirements; the end of an entry gives none). Nothing checks it. See the Help for details.
 
 UpgMinerals=Minerals cost of the first level of the upgrade. Level n+1 costs this plus the Factor times n.
 
@@ -466,11 +466,11 @@ TechBW=StarEdit only shows the technology for Brood War maps. The game itself ig
 
 TechRace=The race StarEdit lists the technology under. "None" hides it in StarEdit. The game itself ignores this.
 
-TechUnused=Unused: neither the game nor StarEdit reads it. Which technologies a player starts with is set by the map.
+TechUnused=Unused: neither the game nor StarEdit reads it. It looks like a "starts researched" flag (the shipped file has 1 for the technologies that need no research, such as Scanner Sweep and Healing), but changing it does nothing.
 
-TechReq=Position of the technology's research requirements in the game's built-in requirement list. Leave it at 65535 (0xFFFF), which makes the game fill it in; 0 means it can never be researched.
+TechReq=Position of the technology's entry in the research requirement list built into StarCraft.exe; the requirements themselves cannot be edited in the dat files. Keep 65535: as soon as the game checks a technology holding 65535, it stores the position of every technology that has an entry in that list, replacing what the file had, and sets the rest to 0 (can never be researched). Until then, and always if no technology holds 65535, values are used as they are: 0 = can never be researched, any other value is read as requirements from that position in the list (the start of another technology's entry gives its requirements; the end of an entry gives none). Nothing checks it. See the Help for details.
 
-TechUseReq=Position of the technology's usage requirements in the game's built-in requirement list. Leave it at 65535 (0xFFFF), which makes the game fill it in; 0 means it can never be used.
+TechUseReq=Position of the technology's entry in the use requirement list built into StarCraft.exe; the requirements themselves cannot be edited in the dat files. Keep 65535: as soon as the game checks a technology holding 65535, it stores the position of every technology that has an entry in that list, replacing what the file had, and sets the rest to 0 (can never be used). Until then, and always if no technology holds 65535, values are used as they are: 0 = can never be used, any other value is read as requirements from that position in the list (the start of another technology's entry gives its requirements; the end of an entry gives none). Nothing checks it. See the Help for details.
 
 
 
@@ -556,4 +556,4 @@ OrdRequiresMovableUnit=Order requires a unit that is able to move. (Unused, was 
 OrdHighlight=Determines which icon on the button panel is highlightened while the unit does the order. If the selected icon is not present, no icon is highlightened. 65535 = none (a unit with a turret then shows the turret's order icon). Only orders with an icon count toward the limit of 8 queued orders. [pointer to cmdicons.grp]
 OrdHighlightList=Determines which icon on the button panel is highlightened while the unit does the order. If the selected icon is not present, no icon is highlightened. 65535 = none (a unit with a turret then shows the turret's order icon). Only orders with an icon count toward the limit of 8 queued orders. [pointer to cmdicons.grp]
 
-OrdReq=Where the order's requirements start in the game's built-in order requirement list (inside the exe, not a data file). Keep 65535: the first time the game checks an order holding 65535, it fills in the value of every order itself. Other values are only used if no order holds 65535, and can then only pick (part of) an existing built-in entry; 0 = never allowed. Orders with a Technology use its requirements instead.
+OrdReq=Position of the order's entry in the order requirement list built into StarCraft.exe; the requirements themselves cannot be edited in the dat files. Keep 65535: as soon as the game checks an order holding 65535, it stores the position of every order that has an entry in that list, replacing what the file had, and sets the rest to 0 (never allowed). Until then, and always if no order holds 65535, values are used as they are: 0 = never allowed, any other value is read as requirements from that position in the list (the start of another order's entry gives its requirements; the end of an entry gives none). Nothing checks it. See the Help for details. Orders with a Technology use that technology's use requirements instead.

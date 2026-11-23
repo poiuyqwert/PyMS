@@ -9,7 +9,9 @@ The **Base Cost** is the Minerals, Vespene, and research Time of the first level
 
 ## Misc.
 - **Max Repeats**: The number of levels the upgrade can be researched. StarEdit hides upgrades with 0.
-- **ReqIndex**: Position in the games built-in upgrade requirement list. Leave it at 65535 (0xFFFF), which makes the game fill it in; 0 means never allowed.
+- **ReqIndex**: Where the upgrade's requirements start in the upgrade requirement list built into StarCraft.exe. The requirements themselves (such as which buildings are needed) are in that list and cannot be edited in the dat files; this value only picks a position in it. Keep 65535 (0xFFFF).
+  - **65535**: As soon as the game checks an upgrade that holds 65535, it looks up every upgrade that has an entry in the built-in list and stores the position of that entry, replacing what the file had. Every upgrade still holding 65535 is then set to 0. So once that has happened, the file's value only survives for upgrades that have no entry in the list.
+  - **Other values**: Until the game checks an upgrade holding 65535, and always if none holds 65535, each value is used as it is. 0 means the upgrade is never allowed. Any other number is a position in the built-in list, and the game reads conditions from there until it reaches the end of an entry. The start of the upgrade's own entry gives its normal requirements, and the start of another upgrade's entry gives that upgrade's requirements. A position inside an entry gives the rest of that entry, and may read a unit number meant for one condition as a condition of its own. A position on the end of an entry gives no requirements, so the upgrade is allowed whenever the game's other checks pass. A position past the end of the list reads whatever memory follows it. Nothing checks the value, and PyDAT cannot show the built-in list.
 - **Race**: The race StarEdit lists the upgrade under (None hides it in StarEdit). The game ignores it.
 - **BroodWar**: StarEdit only shows the upgrade for BroodWar maps. The game ignores it.
 
