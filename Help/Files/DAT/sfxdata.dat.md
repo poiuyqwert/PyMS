@@ -4,7 +4,7 @@
 Edited by [PyDAT](/Help/Programs/PyDAT.md) on the [Sfxdata Tab](/Help/Programs/PyDAT/Sfxdata.md)
 
 ## Format
-The file has 1144 entries, one per sound ID. Each entry holds the sound file reference, priority, flags (preload, unit speech, one at a time, never preempt), portrait length adjust, and minimum volume — see the [Sfxdata Tab](/Help/Programs/PyDAT/Sfxdata.md) for the full breakdown.
+The file has 1144 entries, one per sound ID. Each entry holds the sound file reference, priority, flags (preload, unit speech, one at a time, never preempt, two bits the game sets itself while it runs, and two unused bits), portrait length adjust, and minimum volume — see the [Sfxdata Tab](/Help/Programs/PyDAT/Sfxdata.md) for the full breakdown.
 
 ## References
 - A reference to a string in [sfxdata.tbl](/Help/Files/TBL.md#sfxdatatbl), which contains the path in the [MPQ's](/Help/Files/MPQ.md) for the [WAV](/Help/Files/WAV.md) file played by the sound

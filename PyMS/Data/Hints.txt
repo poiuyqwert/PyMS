@@ -493,6 +493,12 @@ SoundOneAtATime=Will not play if an instance of the sound is already playing.
 
 SoundNeverPreempt=Will not be interrupted by new sounds when all sound channels are being used.
 
+SoundRecentlyUsed=Bit 0x04. The game sets it itself when the sound plays, to mark it as recently used: when the game frees sound memory, it skips a marked sound once and clears the bit. Set in the file, it only spares the sound the first time memory is freed. Shipped files never set it.
+
+SoundLoading=Bit 0x08. The game sets it itself while it loads the sound. Set in the file, the sound NEVER plays: the game's play routine returns at once for a sound with this bit, and only a load started by that routine clears it. Leave it off.
+
+SoundUnused=Not used by the game.
+
 
 
 
