@@ -76,22 +76,36 @@ class SoundsTab(DATTab):
 		self.unit_speech = UI.IntVar()
 		self.one_at_a_time = UI.IntVar()
 		self.never_preempt = UI.IntVar()
+		self.recently_used = UI.IntVar()
+		self.loading = UI.IntVar()
+		self.unused_0x40 = UI.IntVar()
+		self.unused_0x80 = UI.IntVar()
 
 		l = UI.LabelFrame(m, text='Flags:')
 		s = UI.Frame(l)
 
-		f = UI.Frame(s)
-		self.makeCheckbox(f, self.preload, 'Preload', 'SoundPreload').pack(side=UI.LEFT)
-		f.pack(side=UI.TOP, fill=UI.X)
-		f = UI.Frame(s)
-		self.makeCheckbox(f, self.unit_speech, 'Unit Speech', 'SoundUnitSpeech').pack(side=UI.LEFT)
-		f.pack(side=UI.TOP, fill=UI.X)
-		f = UI.Frame(s)
-		self.makeCheckbox(f, self.one_at_a_time, 'One at a Time', 'SoundOneAtATime').pack(side=UI.LEFT)
-		f.pack(side=UI.TOP, fill=UI.X)
-		f = UI.Frame(s)
-		self.makeCheckbox(f, self.never_preempt, 'Never Preempt', 'SoundNeverPreempt').pack(side=UI.LEFT)
-		f.pack(side=UI.TOP, fill=UI.X)
+		# Left column: the flags meant to be set in the file. Right column: bits the game sets itself while it runs, and unused bits.
+		columns = (
+			(
+				(self.preload, 'Preload', 'SoundPreload'),
+				(self.unit_speech, 'Unit Speech', 'SoundUnitSpeech'),
+				(self.one_at_a_time, 'One at a Time', 'SoundOneAtATime'),
+				(self.never_preempt, 'Never Preempt', 'SoundNeverPreempt'),
+			),
+			(
+				(self.recently_used, 'Recently Used (game)', 'SoundRecentlyUsed'),
+				(self.loading, 'Loading (game)', 'SoundLoading'),
+				(self.unused_0x40, 'Unused (0x40)', 'SoundUnused'),
+				(self.unused_0x80, 'Unused (0x80)', 'SoundUnused'),
+			),
+		)
+		for column in columns:
+			c = UI.Frame(s)
+			for (variable, text, hint) in column:
+				f = UI.Frame(c)
+				self.makeCheckbox(f, variable, text, hint).pack(side=UI.LEFT)
+				f.pack(side=UI.TOP, fill=UI.X)
+			c.pack(side=UI.LEFT, fill=UI.Y, anchor=UI.N)
 
 		s.pack(fill=UI.BOTH, padx=5, pady=5)
 		l.pack(side=UI.LEFT, padx=2)
@@ -140,7 +154,11 @@ class SoundsTab(DATTab):
 			(self.preload, DATSound.Flag.preload),
 			(self.unit_speech, DATSound.Flag.unit_speech),
 			(self.one_at_a_time, DATSound.Flag.one_at_a_time),
-			(self.never_preempt, DATSound.Flag.never_preempt)
+			(self.never_preempt, DATSound.Flag.never_preempt),
+			(self.recently_used, DATSound.Flag.recently_used),
+			(self.loading, DATSound.Flag.loading),
+			(self.unused_0x40, DATSound.Flag.unused_0x40),
+			(self.unused_0x80, DATSound.Flag.unused_0x80)
 		)
 		for (variable, flag) in flags_fields:
 			variable.set(entry.flags & flag == flag)
@@ -166,7 +184,11 @@ class SoundsTab(DATTab):
 			(self.preload, DATSound.Flag.preload),
 			(self.unit_speech, DATSound.Flag.unit_speech),
 			(self.one_at_a_time, DATSound.Flag.one_at_a_time),
-			(self.never_preempt, DATSound.Flag.never_preempt)
+			(self.never_preempt, DATSound.Flag.never_preempt),
+			(self.recently_used, DATSound.Flag.recently_used),
+			(self.loading, DATSound.Flag.loading),
+			(self.unused_0x40, DATSound.Flag.unused_0x40),
+			(self.unused_0x80, DATSound.Flag.unused_0x80)
 		)
 		for (variable, flag) in flags_fields:
 			if variable.get():

@@ -16,12 +16,16 @@ class DATSound(AbstractDAT.AbstractDATEntry):
 		minimum_volume = 'minimum_volume'
 
 	class Flag:
-		preload       = 1 << 0
-		unit_speech   = 1 << 1
-		one_at_a_time = 1 << 4
-		never_preempt = 1 << 5
+		preload       = 1 << 0 # Loaded ahead of time and kept loaded
+		unit_speech   = 1 << 1 # Not played while a sound with this flag plays for a unit of the same type
+		recently_used = 1 << 2 # Set by the game when the sound plays; spared once when sound memory is freed
+		loading       = 1 << 3 # Set by the game while the sound loads; set in the file, the sound never plays
+		one_at_a_time = 1 << 4 # Not played while the same sound is playing
+		never_preempt = 1 << 5 # Never stopped to free a channel for a new sound
+		unused_0x40   = 1 << 6 # Not used
+		unused_0x80   = 1 << 7 # Not used
 
-		ALL_FLAGS = (preload | unit_speech | one_at_a_time | never_preempt)
+		ALL_FLAGS = (preload | unit_speech | recently_used | loading | one_at_a_time | never_preempt | unused_0x40 | unused_0x80)
 
 	def __init__(self) -> None:
 		self.sound_file: int = 0
@@ -74,7 +78,7 @@ class DATSound(AbstractDAT.AbstractDATEntry):
 			self.minimum_volume = minimum_volume
 
 class _SoundPropertyCoder:
-	flags = DATCoders.DATFlagsCoder(6, {
+	flags = DATCoders.DATFlagsCoder(8, {
 		DATSound.Flag.preload: 'preload',
 		DATSound.Flag.unit_speech: 'unit_speech',
 		DATSound.Flag.one_at_a_time: 'one_at_a_time',
