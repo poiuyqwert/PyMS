@@ -4,7 +4,7 @@
 Edited by [PyDAT](/Help/Programs/PyDAT.md) on the [Sprites Tab](/Help/Programs/PyDAT/Sprites.md)
 
 ## Format
-The file has 517 entries, one per sprite ID. Each entry holds the image reference, a visibility flag, and an unused flag. The health bar size, selection circle image, and selection circle offset are only stored for sprite IDs 130 to 516 (the sprites used by selectable units) — see the [Sprites Tab](/Help/Programs/PyDAT/Sprites.md) for the full breakdown.
+The file has 517 entries, one per sprite ID. Each entry holds the image reference, a visibility flag, and an unused flag (never read by the game). The health bar size, selection circle image, and selection circle offset are only stored for sprite IDs 130 to 516 (sprites 0 to 129 are tileset doodads); a doodad sprite given to a unit would read garbage for them — see the [Sprites Tab](/Help/Programs/PyDAT/Sprites.md) for the full breakdown.
 
 ## References
 - [Image](/Help/Files/DAT/images.dat.md)

@@ -4,8 +4,9 @@
 Edited by [PyDAT](/Help/Programs/PyDAT.md) on the [Techdata Tab](/Help/Programs/PyDAT/Techdata.md)
 
 ## Format
-The file has 44 entries, one per technology ID. Each entry holds the research costs (minerals, vespene, time), the energy cost of using the ability, the research and use requirement indexes, race, an unused flag, and the BroodWar flag, plus the icon and label references — see the [Techdata Tab](/Help/Programs/PyDAT/Techdata.md) for the full breakdown.
+The file has 44 entries, one per technology ID. Each entry holds the research costs (minerals, vespene, time), the energy cost of using the ability, the research and use requirement indexes, the race and BroodWar flag (only read by StarEdit), an unused "researched" flag, plus the icon and label references — see the [Techdata Tab](/Help/Programs/PyDAT/Techdata.md) for the full breakdown.
 References to technologies in other DAT files use the value 44 (one past the last technology ID) to mean no technology.
+A map's technology settings can replace the four costs.
 
 ## References
 - [Icon](/Help/Files/GRP.md#cmdicongrp)

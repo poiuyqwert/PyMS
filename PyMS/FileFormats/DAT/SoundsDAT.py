@@ -16,10 +16,11 @@ class DATSound(AbstractDAT.AbstractDATEntry):
 		minimum_volume = 'minimum_volume'
 
 	class Flag:
-		preload       = 1 << 0
-		unit_speech   = 1 << 1
-		one_at_a_time = 1 << 4
-		never_preempt = 1 << 5
+		preload       = 1 << 0 # Loaded ahead of time and kept loaded
+		unit_speech   = 1 << 1 # Not played while a sound with this flag plays for a unit of the same type
+		# 1 << 2 and 1 << 3 are set and cleared by the game at run time (recently used, loading)
+		one_at_a_time = 1 << 4 # Not played while the same sound is playing
+		never_preempt = 1 << 5 # Never stopped to free a channel for a new sound
 
 		ALL_FLAGS = (preload | unit_speech | one_at_a_time | never_preempt)
 
@@ -88,7 +89,7 @@ class SoundsDAT(AbstractDAT.AbstractDAT):
 			"expanded_max_entries": 65536,
 			"properties": [
 				{
-					"name": "sound_file", # Pointer to sfxdata.tbl
+					"name": "sound_file", # 1-based index into sfxdata.tbl (low 16 bits used)
 					"type": "long"
 				},
 				{
@@ -100,11 +101,11 @@ class SoundsDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "portrait_length_adjust",
+					"name": "portrait_length_adjust", # Signed milliseconds
 					"type": "short"
 				},
 				{
-					"name": "minimum_volume",
+					"name": "minimum_volume", # Game volume scale 0-99, not a percentage
 					"type": "byte"
 				}
 			]

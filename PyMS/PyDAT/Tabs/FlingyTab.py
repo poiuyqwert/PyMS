@@ -24,7 +24,7 @@ class FlingyTab(DATTab):
 		self.spriteentry = UI.IntegerVar(0, [0,516])
 		self.spritedd = UI.IntVar()
 		self.topspeed = UI.IntegerVar(0, [0,4294967294], callback=lambda n,i=0: self.updatespeed(n,i))
-		self.speed = UI.FloatVar(1, [0,40265318.381], callback=lambda n,i=1: self.updatespeed(n,i), precision=3)
+		self.speed = UI.FloatVar(1, [0,16777215.9921], callback=lambda n,i=1: self.updatespeed(n,i), precision=3)
 		self.acceleration = UI.IntegerVar(0, [0,65535])
 		self.haltdistance = UI.IntegerVar(0, [0,4294967294], callback=lambda n,i=0: self.updatehalt(n,i))
 		self.halt = UI.FloatVar(1, [0,16777215.9921], callback=lambda n,i=1: self.updatehalt(n,i), precision=4)
@@ -65,9 +65,9 @@ class FlingyTab(DATTab):
 		self.tip(f, 'Halt Distance', 'FlingyHaltDist')
 		f.pack(fill=UI.X)
 		f = UI.Frame(s)
-		UI.Label(f, text='Turn Radius:', width=12, anchor=UI.E).pack(side=UI.LEFT)
+		UI.Label(f, text='Turn Rate:', width=12, anchor=UI.E).pack(side=UI.LEFT)
 		UI.Entry(f, textvariable=self.turnradius, font=UI.Font.fixed(), width=10).pack(side=UI.LEFT, padx=2)
-		self.tip(f, 'Turn Radius', 'FlingyTurnRad')
+		self.tip(f, 'Turn Rate', 'FlingyTurnRad')
 		f.pack(fill=UI.X)
 		f = UI.Frame(s)
 		UI.Label(f, text='Move Control:', width=12, anchor=UI.E).pack(side=UI.LEFT)
@@ -75,9 +75,9 @@ class FlingyTab(DATTab):
 		self.tip(f, 'Move Control', 'FlingyMoveControl')
 		f.pack(fill=UI.X)
 		f = UI.Frame(s)
-		UI.Label(f, text='IScript Mask:', width=12, anchor=UI.E).pack(side=UI.LEFT)
+		UI.Label(f, text='Unused:', width=12, anchor=UI.E).pack(side=UI.LEFT)
 		UI.Entry(f, textvariable=self.unused, font=UI.Font.fixed(), width=10).pack(side=UI.LEFT, padx=2)
-		self.tip(f, 'IScript Mask', 'FlingyUnused')
+		self.tip(f, 'Unused', 'FlingyUnused')
 		f.pack(fill=UI.X)
 		s.pack(fill=UI.BOTH, padx=5, pady=5)
 		l.pack(fill=UI.X)
@@ -103,12 +103,13 @@ class FlingyTab(DATTab):
 				self.spriteentry.range[1] = 65535
 
 	def updatespeed(self, num: int, basic: bool) -> None:
+		# Top speed is in 1/256 pixels per frame
 		if basic:
 			# self.topspeed.check = False
-			self.topspeed.set(int((float(num) * 320 / 3.0)))
+			self.topspeed.set(int((float(num) * 256)))
 		else:
 			self.speed.check = False
-			s = str(int(num) * 3 / 320.0)
+			s = str(int(num) / 256.0)
 			if s.endswith('.0'):
 				s = s[:-2]
 			elif len(s.split('.')[1]) > 3:

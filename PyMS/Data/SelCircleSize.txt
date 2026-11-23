@@ -1,6 +1,6 @@
 22 pixels
 32 pixels
-46 pixels
+48 pixels
 62 pixels
 72 pixels
 94 pixels
@@ -10,7 +10,7 @@
 224 pixels
 22 pixels [Dashed]
 32 pixels [Dashed]
-46 pixels [Dashed]
+48 pixels [Dashed]
 62 pixels [Dashed]
 72 pixels [Dashed]
 94 pixels [Dashed]

@@ -7,7 +7,7 @@ Edited by [PyDAT](/Help/Programs/PyDAT.md) on the [Sfxdata Tab](/Help/Programs/P
 The file has 1144 entries, one per sound ID. Each entry holds the sound file reference, priority, flags (preload, unit speech, one at a time, never preempt), portrait length adjust, and minimum volume — see the [Sfxdata Tab](/Help/Programs/PyDAT/Sfxdata.md) for the full breakdown.
 
 ## References
-- A reference to a string in [sfxdata.tbl](/Help/Files/TBL.md#sfxdatatbl), which contains the path in the [MPQ's](/Help/Files/MPQ.md) for the [WAV](/Help/Files/WAV.md) file played by the sound
+- A reference to a string in [sfxdata.tbl](/Help/Files/TBL.md#sfxdatatbl) (1-based, 0 means no file), which contains the path in the [MPQ's](/Help/Files/MPQ.md) (under `sound\`) for the [WAV](/Help/Files/WAV.md) file played by the sound
 
 ## Names
 Sounds have no name setting — PyDAT names them after their [WAV](/Help/Files/WAV.md) file path.

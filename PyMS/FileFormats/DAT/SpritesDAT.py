@@ -115,7 +115,7 @@ class SpritesDAT(AbstractDAT.AbstractDAT):
 					"entry_count": 387
 				},
 				{
-					"name": "unused",
+					"name": "unused", # Never read by the game
 					"type": "byte"
 				},
 				{
@@ -129,7 +129,7 @@ class SpritesDAT(AbstractDAT.AbstractDAT):
 					"entry_count": 387
 				},
 				{
-					"name": "selection_circle_offset",
+					"name": "selection_circle_offset", # Signed: 128-255 are above the sprite
 					"type": "byte",
 					"entry_offset": 130,
 					"entry_count": 387

@@ -1,167 +1,167 @@
 [Units editor]
 #####BASIC TAB#####
-UnitHP=Unit Hit Points (HP) or "life" amount. Values over "9999" will be accepted in-game, but they will not be displayed.
+UnitHP=Unit Hit Points (HP) or "life" amount. Stored in 1/256 HP (this field is the whole part, Fraction the rest). Values over "9999" will be accepted in-game, but they will not be displayed. A unit being built starts at a tenth of it. Map unit settings can replace it.
 
-UnitHPFraction=Fractional portion of HP (0-255). Instead of using decimals, SC uses a whole number and a fractional number. To represent "1.5" HP, you would use 1 for the HP, and 127 for the fraction.
+UnitHPFraction=Fractional portion of HP (0-255), in 1/256 HP. Instead of using decimals, SC uses a whole number and a fractional number. To represent "1.5" HP, you would use 1 for the HP, and 128 for the fraction.
 
-UnitShieldEnable=Enables Shields for the unit. Works for any unit, not only Protoss. Terran and zerg buildings with shields do NOT acquire full shield capacity during construction.
+UnitShieldEnable=Enables Shields for the unit. Works for any unit, not only Protoss. Without it the Shields amount is ignored: shields do not absorb damage, regenerate or show. Terran and zerg buildings with shields do NOT acquire full shield capacity during construction.
 
-UnitSP=Amount of Shield Points the unit has. Shields are reduced before the unit's Hit Points are affected.
+UnitSP=Maximum Shield Points, in whole points. Only used if shields are Enabled. Shields absorb damage before the unit's Hit Points and regenerate slowly. Values over "9999" hide the numbers in the status panel. Map unit settings can replace it.
 
-UnitArmor=Unit's basic Armor level. Armor is subtracted from damage caused by every attack from another unit. If Armor is higher than the attack damage, the unit will act as if was of "Independent" Unit Size.
+UnitArmor=Unit's basic Armor, in whole points. Armor plus the Armor Upgrade level is subtracted from every hit that gets past the shields; weapons with the Ignore Armor damage type skip it. A hit that shields did not touch still does at least 0.5 HP. Map unit settings can replace it.
 
-UnitArmorUpgrade=Researching this upgrade will improve the unit's Armor by 1. [pointer to upgrades.dat]
+UnitArmorUpgrade=The upgrade whose level is added to the unit's Armor (any upgrade works). Its icon and name are shown for the armor in the status panel; upgrade 60 (None) hides the armor icon. [pointer to upgrades.dat]
 
-UnitMinerals=Amount of minerals needed to train/build the unit.
+UnitMinerals=Amount of minerals needed to train/build/morph into the unit. Zerglings and Scourge pay once per pair. Cancelling a unit in training or an egg refunds it all; cancelling a building under construction or a Zerg building morph refunds 75%. Map unit settings can replace it.
 
-UnitVespene=Amount of Vespene Gas needed to train/build the unit.
+UnitVespene=Amount of Vespene Gas needed to train/build/morph into the unit, paid and refunded like minerals. Map unit settings can replace it.
 
-UnitTime=Amount of time it takes to train/build the unit, in 1/24ths of a second (at Fastest speed). A value of 0 will crash the game.
+UnitTime=Amount of time it takes to train/build the unit, in game frames (1/24ths of a second at Fastest speed). A building gains its HP and shields over this time. A value of 0 is treated as 1, but a progress bar for the unit would divide by zero. Map unit settings can replace it.
 
-UnitIsBW=Makes the unit available only while playing BroodWar expansion set.
+UnitIsBW=Marks the unit as BroodWar-only for StarEdit, which only offers it on BroodWar maps and warns about it otherwise. The game itself ignores this; it uses the "BroodWar Only" StarEdit availability flag instead.
 
-UnitWeaponGround=Weapon used for attacking "ground" units - those with the "Flying Target" advanced flag unchecked. [pointer to weapons.dat]
-UnitWeaponGroundList=Weapon used for attacking "ground" units - those with the "Flying Target" advanced flag unchecked. [pointer to weapons.dat]
+UnitWeaponGround=Weapon used against units on the ground (not flying). 130 = None; the unit then uses its Subunit 1's ground weapon, if it has one. The Lurker only has its ground weapon while burrowed. [pointer to weapons.dat]
+UnitWeaponGroundList=Weapon used against units on the ground (not flying). 130 = None; the unit then uses its Subunit 1's ground weapon, if it has one. The Lurker only has its ground weapon while burrowed. [pointer to weapons.dat]
 
-UnitGroundMax=Max number of times unit hits its target per Ground attack. This value is for statistics purposes only. Changing it only affects the value displayed in StarEdit.
+UnitGroundMax=Max number of times unit hits its target per Ground attack. This value is for statistics purposes only: the game never reads it. StarEdit shows the weapon's damage times this value times the weapon's damage factor (using the subunit's values if the unit has a subunit).
 
-UnitWeaponAir=Weapon used for attacking "air" or "flying" units - those with the "Flying Target" advanced flag checked. [pointer to weapons.dat]
-UnitWeaponAirList=Weapon used for attacking "air" or "flying" units - those with the "Flying Target" advanced flag checked. [pointer to weapons.dat]
+UnitWeaponAir=Weapon used against flying units. 130 = None; the unit then uses its Subunit 1's air weapon, if it has one. [pointer to weapons.dat]
+UnitWeaponAirList=Weapon used against flying units. 130 = None; the unit then uses its Subunit 1's air weapon, if it has one. [pointer to weapons.dat]
 
-UnitAirMax=Max number of times unit hits its target per Air attack. This value is for statistics purposes only. Changing it only affects the value displayed in StarEdit.
+UnitAirMax=Max number of times unit hits its target per Air attack. This value is for statistics purposes only: the game never reads it. StarEdit shows the weapon's damage times this value times the weapon's damage factor (using the subunit's values if the unit has a subunit).
 
-UnitScoreBuild=Amount of points given for training/building the unit, counted to the total score after the end of a game.
+UnitScoreBuild=Amount of points given to the owner when the unit is completed, counted as unit score (Men group) or structure score (Building group).
 
 UnitScoreDestroy=Amount of points given for destroying the unit, counted to the total score after the end of a game. It is also used by the AI for targeting purposes. Units with a higher destroy score will be targeted first.
 
-UnitSpaceProv=Amout of loading space the unit has. Used with dropships. This IS NOT the number of units the transporting unit may carry as different unit may take up different amount of loading space.
+UnitSpaceProv=Amount of loading space the unit has; any value above 0 makes it a transport (Overlords also need the transport upgrade). This IS NOT the number of units it may carry, as different units take up different amounts of space. Values above 8 are unsafe: a transport has only 8 passenger slots.
 
-UnitSpaceReq=Amount of loading space the unit takes up in a transport. If it is higher than the transport's loading space, the unit cannot be loaded. It DOES NOT resize the unit's wireframe when inside the transport.
+UnitSpaceReq=Amount of loading space the unit takes up in a transport. If it is higher than the transport's free space, the unit cannot be loaded (255 = never). Bunkers only take Terran units with 1. The transport's status panel only shows passengers with 1, 2 or 4.
 
-UnitSupProv=Amount of Supply/Psi/Control the unit adds to the total pool. Halves are rounded down for the display, but calculated normally.
-UnitSupProv05=Amount of Supply/Psi/Control the unit adds to the total pool. Halves are rounded down for the display, but calculated normally.
+UnitSupProv=Amount of Supply/Psi/Control the unit adds to its race's pool (from its Zerg/Terran/Protoss flag) when completed, taken away when it is lost. The game counts in halves (the +0.5 box); displays round halves up. A race can have at most 200.
+UnitSupProv05=Amount of Supply/Psi/Control the unit adds to its race's pool (from its Zerg/Terran/Protoss flag) when completed, taken away when it is lost. The game counts in halves (the +0.5 box); displays round halves up. A race can have at most 200.
 
-UnitSupReq=Amount of Supply/Psi/Control required to train/build the unit. Halves are rounded down for the display, but calculated normally.
-UnitSupReq05=Amount of Supply/Psi/Control required to train/build the unit. Halves are rounded down for the display, but calculated normally.
+UnitSupReq=Amount of Supply/Psi/Control required to train/build the unit, from its race's pool (Zerg/Terran/Protoss flag). The game counts in halves (the +0.5 box); displays round halves up. Doubled for "Two Units in One Egg". Not checked with "Ignore Supply Check".
+UnitSupReq05=Amount of Supply/Psi/Control required to train/build the unit, from its race's pool (Zerg/Terran/Protoss flag). The game counts in halves (the +0.5 box); displays round halves up. Doubled for "Two Units in One Egg". Not checked with "Ignore Supply Check".
 
-UnitSize=Used to calculate the "Explosive" and "Concussive" weapons damage: Explosive (50% to Small, 75% to Medium), Concussive (50% to Medium, 25% to Large). "Independent" - the unit will lose 1 HP every second attack it takes (no matter by what unit or weapon and regardless of its Armor. Spell effects may vary, e.g. Plague works normally, but Irradiate doesn't).
+UnitSize=Sets how much damage the unit takes, by the weapon's damage type: Explosive (50% to Small, 75% to Medium, 100% to Large), Concussive (100% to Small, 50% to Medium, 25% to Large), Normal 100%. "Independent" (0) takes 0% from every weapon, so each hit only does the 0.5 HP minimum (nothing if shields took part of it). Values above 3 are not checked.
 
-UnitSight=Range (in matrices) indicating how much Fog-Of-War will the unit clear up. IMPORTANT: values larger than 11 will CRASH the game!
+UnitSight=Sight range, in tiles (32 pixels), indicating how much Fog-Of-War the unit clears. Valid values are 0-11: the game looks the value up in a table of 12 sight shapes without checking it, so larger values read past the table and can CRASH the game. Buildings under construction see 4, blinded units 2.
 
-UnitSEGroupProtoss=Unit is treated as a Protoss unit. Changes food type used and Advisor portrait.
+UnitSEGroupProtoss=Unit is treated as a Protoss unit: race for its supply pool (Psi), race-specific sounds and messages, and status panel graphics. In StarEdit, the race decides which players may own it (unless "All Races" is set).
 
-UnitSEGroupTerran=Unit is treated as a Teran unit. Changes food type used and Advisor portrait. Unit has its Sublabel displayed. If a building is Terran ONLY, it will slowly burn down when its health reaches red.
+UnitSEGroupTerran=Unit is treated as a Terran unit: race for its supply pool, race-specific sounds and messages, and status panel graphics. Terran units show their Rank/Sublabel under their name. A damaged Terran building burns. In StarEdit, the race decides which players may own it.
 
-UnitSEGroupZerg=Unit is treated as a Zerg unit. Changes food type used and Advisor portrait. Allows a building to be placed on the creep.
+UnitSEGroupZerg=Unit is treated as a Zerg unit: race for its supply pool (Control), race-specific sounds and messages, and status panel graphics. Used by Zerg creep placement rules. In StarEdit, the race decides which players may own it.
 
-UnitTAR=Range at which the Carrier will launch Interceptors and Reaver Scarabs. Also determines the range at which melee units and Medics will pickup targets. Value of 0 makes the game use the Weapons.dat for range data. 1 range unit here equals 2 range units in weapons.dat.
+UnitTAR=How far, in tiles (32 pixels), the unit looks for targets to attack by itself. Used by every unit, not only turrets and Carriers/Reavers. When the game loads, it raises this to at least the unit's weapon ranges (weapons.dat range / 32), and a unit with a subunit uses the subunit's value. Range upgrades add to it.
 
 #####ADVANCED TAB#####
-UnitAdvAddon=Makes the building placeable in a special way, dependent on the main building. If unchecked, the building will still use the standard way of placing the addon, but after lift-off, it will be inaccessible.
+UnitAdvAddon=Unit is a Terran add-on: placed and attached next to its parent building, at its Addon Position.
 
-UnitAdvAnimIdle=The unit has a unique animated overlay. For example, the turret on science vessels, missile turrets, and the being inside archons.
+UnitAdvAnimIdle=The unit can be clicked on any clickable image of its sprite (overlays such as the Science Vessel's turret or the Archon's inner image), not only its main image. Nothing to do with idle animations.
 
-UnitAdvAutoAttack=Unit will attack any enemy that enters its firing range. If unchecked, unit will attack the enemy ONLY if it is facing its direction, e.g. because it has an animated idle state. 
+UnitAdvAutoAttack="Can Turn": the unit can turn. It gets its starting Direction when completed and skips the facing check when it looks for targets. Turrets and static defences have it without "Can Move".
 
-UnitAdvBattleReactions=Unit will show battle reactions, i.e. if it sees an enemy it will move to it and attack, if it is attacked by an unreachable enemy (e.g. an Air unit and it doesn't have an Air weapon) it will run away. Works ONLY if the unit's Idle AI Orders are set to Guard.
+UnitAdvBattleReactions="Can Move": the unit can move. Without it the unit is a stationary object for pathing (buildings, turrets, sieged tanks, eggs).
 
 UnitAdvBuilding=Unit is considered as a building for targeting purposes, and affects Addons-related properties. Also allows for other units to be built/trained 'inside' the unit and makes the unit placement dependent on the "Placement Box" property instead of the "Unit Dimensions".
 
-UnitAdvBurrow=Allows/Disallows the unit to use the Burrow technology. It does NOT give/remove the "Burrow" button.
+UnitAdvBurrow=Allows the unit to use the Burrow button (the button's requirement checks this flag). It does NOT give/remove the "Burrow" button.
 
-UnitAdvCloak=Allows/Disallows the unit to use the Cloak technology. It does NOT give/remove the "Cloak" button but allows the unit to display the "Group (Cloakers)" button set when selected in a group.
+UnitAdvCloak=Does NOT let the unit cloak (that is decided by its buttons and orders). Only gives the "Group (Cloakers)" button set when every selected unit has it, lets the computer AI decloak the unit, and allows the "Cloaked" property in StarEdit.
 
-UnitAdvReqCreep=Building MUST be built on creep. It will also get a creep outline around it.
+UnitAdvReqCreep=Building MUST be built on creep, and creep is filled in under it when it is created.
 
 UnitAdvResDepot=Makes a building (and ONLY a building) a place workers can return resources to. Also makes it impossible to place/land the building next to a unit with the "Resource Container" property.
 
-UnitAdvDetector=Unit can detect cloaked enemy units and receives the "Detector" title under its name.
+UnitAdvDetector=Unit can detect cloaked enemy units (while completed and not disabled, locked down, in stasis, maelstromed or blinded) and receives the "Detector" title under its name.
 
-UnitAdvFlyBuilding=Allows/Disallows the unit to be in the "In Transit" (or "Flying") state both in the game and in StarEdit, but it will crash if the unit does not have a Lift-off and Landing animations (in Iscript.bin). Does not affect buttons available for the unit.
+UnitAdvFlyBuilding=Allows the building to lift off (to be in the "In Transit" or "Flying" state both in the game and in StarEdit), but it will crash if the unit does not have a Lift-off and Landing animations (in Iscript.bin). A damaged Terran unit with this flag burns. Does not give the unit its buttons.
 
-UnitAdvFlyer=If unchecked, the unit is targeted by Ground weapons. If checked, unit can be targeted by Air weapons. It also makes the unit "fly" in the way that it chooses the shortest path to its destination, moving over terrain and other units.
+UnitAdvFlyer=Unit is created flying: it is hit by Air weapons instead of Ground weapons. Only read when the unit is created. Whether it moves over terrain and other units like an air unit is set by its Elevation level (12 or more).
 
-UnitAdvResContainer=Unit does not generate an error message if targeted for Gathering by a worker. Allows/Disallows to set unit's resources capacity in StarEdit, but does not make a unit other than original resource actually store resources in-game. Unchecked, makes the original resources capacity equal to 0, although workers will still try to harvest it. Prevents "Resource Depots" from being located next to it.
+UnitAdvResContainer=Unit holds resources, minerals or gas (mineral fields, geysers and refineries). Gives the unit a resource amount (settable in StarEdit), and is used for harvesting and the status panel. Prevents "Resource Depots" from being located next to it.
 
-UnitAdvHero=Unit has all its upgrades researched from the start and receives a white wireframe box (instead of the standard blue one). If a unit is also a spellcaster, it will have 250 energy points, regardless if there is an energy upgrade for it or not. 
+UnitAdvHero=Unit is a hero: 250 maximum energy, full Carrier/Reaver hangar without the capacity upgrade, Ultralisk +2 armor without the armor upgrade, and hero wireframe colours. The computer does not target heroes with some spells.
 
-UnitAdvIgnoreSupply=Even if you don't have the supply available to build the unit, the engine will still build it and add that to your supply.
+UnitAdvIgnoreSupply=The unit is made without checking supply (used for morphed units such as the Guardian, and Zerg buildings); its supply is still added to the used count.
 
-UnitAdvInvincible=Unit cannot be a target of any sort of weapons or abilities. It also hides the unit's Hit Points value.
+UnitAdvInvincible=Unit cannot be a target of any sort of weapons or abilities, and triggers cannot change its invincibility. It also hides the unit's Hit Points value.
 
-UnitAdvMechanical=Unit is treated as a mechanical-type target for weapons and abilities (e.g. Lockdown). It can also be repaired by SCVs.
+UnitAdvMechanical=Unit is treated as a mechanical-type target for weapons and abilities (weapons.dat target flags Mechanical and Organic or Mechanical, e.g. Lockdown). It can also be repaired by SCVs.
 
-UnitAdvSingleEntity=Unit cannot be selected in a group, but only as a single unit. Unit cannot be selected by dragging a selection box, by a SHIFT-Click nor a double-click.
+UnitAdvSingleEntity=Unit is a powerup (Flag, Data Disc, Khaydarin Crystal, mineral and gas pickups) that workers carry. It cannot be selected with other units and is left out of collision, attacks, cloaking and giving to another player.
 
-UnitAdvOrganic=Unit is treated as an organic-type target for weapons and abilities (e.g. Maelstrom).
+UnitAdvOrganic=Unit is treated as an organic-type target for weapons and abilities (weapons.dat target flags Organic and Organic or Mechanical, Maelstrom, Irradiate) and can be healed by Medics.
 
-UnitAdvOverlayLarge=Unit will use large spell overlay graphics.
+UnitAdvOverlayLarge=Unit will use large spell overlay graphics (Lockdown, Ensnare, Plague, Defensive Matrix etc.). Has nothing to do with the damage Unit Size. If both overlay flags are set, Medium wins.
 
-UnitAdvOverlayMed=Unit will use medium spell overlay graphics.
+UnitAdvOverlayMed=Unit will use medium spell overlay graphics (Lockdown, Ensnare, Plague, Defensive Matrix etc.). Has nothing to do with the damage Unit Size. With neither overlay flag the overlays are small.
 
-UnitAdvPermaCloak=Unit is constantly cloaked. If the unit is also a Spellcaster, giving this property will make it lose energy until 0.
+UnitAdvPermaCloak=Unit cloaks when it is completed or warped in. If the unit is also a Spellcaster, giving this property will make it lose energy until 0.
 
-UnitAdvPickup=The unit is a powerup that can be carried by any worker unit.
+UnitAdvPickup=Unused: nothing in the game or StarEdit tests this flag (it is set on the pickups 216-227).
 
-UnitAdvProducesUnits=Unknown.
+UnitAdvProducesUnits=Larger creep: a Zerg town hall (Hatchery, Lair, Hive) with this flag gets a larger first creep patch when it is placed. Nothing to do with producing units.
 
-UnitAdvReqPsi=Unit must be built within a PSI field, like that produced by pylons. If it is not within a PSI field, it will become "Disabled" and not function. Can be given to any unit. You can also disable it on Protoss buildings so they can be built anywhere. 
+UnitAdvReqPsi=Unit must be built within a PSI field, like that produced by pylons. If it is not within a PSI field, it will become "Disabled" and not function. Can be given to any unit. You can also disable it on Protoss buildings so they can be built anywhere.
 
-UnitAdvRegenerate=Unit will slowly regain Hit Points, until its full HP capacity.
+UnitAdvRegenerate=Unit will slowly regain Hit Points (4/256 HP per frame) once completed, until its full HP capacity. Works for any race.
 
-UnitAdvRobotic=Unit is treated as a robotic-type target for weapons and abilities (e.g. it cannot be targeted with Spawn Broodlings)
+UnitAdvRobotic=Unit is treated as a robotic-type target: weapons with the Non-Robotic target flag (e.g. Spawn Broodlings) cannot hit it.
 
-UnitAdvSpellcaster=Unit receives an energy bar and will slowly regain energy points through time. Combined with the Permanent Cloak property, will prevent unit from regaining energy.
+UnitAdvSpellcaster=Unit has energy: receives an energy bar and will slowly regain energy points through time. Combined with the Permanent Cloak property, will prevent unit from regaining energy.
 
 UnitAdvSubunit=Makes the unit a "sub-unit", i.e. allows it to be a part of another unit (like the tank turret to the tank body) through the Subunit property (see Graphics tab). A non-subunit-type unit used as a subunit will crash the game. To have a sub-unit properly placed on a unit, you also require altering the images.dat properties of the base sprite as well as certain other settings. Expect crashes more than often while working with this property.
 
 UnitAdvTwoInEgg=2 units will come out of one Zerg Egg instead of just one. The cost for morphing will NOT be doubled, but the amount of the used supplies will equal 2 times the normal amount. To accomplish the full effect you will also have to add a "Construction" graphics and set a "Landing Dust" overlay to it.
 
-UnitAdvUnused=Unknown.
+UnitAdvUnused=Unused: nothing in the game or StarEdit tests this flag.
 
-UnitAdvWorker=Unit can gather/return resources. Does NOT affect building construction abilities (except a tiny Drone glitch if you cancel a building morph). Requires a .LOO file pointed from the Special Overlay property in Images.dat to work. Vespene Gas harvesting seems good for all units, but Minerals may cause crashes, depending on the unit you use (e.g. Marine is OK, but the Firebat will crash)
+UnitAdvWorker=Unit can gather/return resources and carry powerups and flags. Does NOT affect building construction abilities (except a tiny Drone glitch if you cancel a building morph). Requires a .LOO file pointed from the Special Overlay property in Images.dat to work. Vespene Gas harvesting seems good for all units, but Minerals may cause crashes, depending on the unit you use (e.g. Marine is OK, but the Firebat will crash)
 
-UnitSub1=Main subunit to the unit. Various turrets mostly. [pointer to units.dat]
+UnitSub1=Main subunit to the unit, mostly turrets. 228 = None. Only created for units 0-105; if it cannot be created, the unit dies. The unit uses the subunit's weapons when it has none of its own, and its Target Acquisition Range. [pointer to units.dat]
 
-UnitSub2=Secondary subunit. Unused. [pointer to units.dat]
+UnitSub2=Not used: nothing in the game or StarEdit reads it. [pointer to units.dat]
 
-UnitInfestation=Unit to transform into after Infestation. Exists only for units of ID 106-201 (buildings). [pointer to units.dat]
-UnitInfestationList=Unit to transform into after Infestation. Exists only for units of ID 106-201 (buildings). [pointer to units.dat]
+UnitInfestation=Unit to transform into when a Queen infests the building. Exists only for units of ID 106-201 (buildings). The game only lets Queens infest the Command Center, so only its entry is used. [pointer to units.dat]
+UnitInfestationList=Unit to transform into when a Queen infests the building. Exists only for units of ID 106-201 (buildings). The game only lets Queens infest the Command Center, so only its entry is used. [pointer to units.dat]
 
-UnitMov01=If unit has "Animation level" of 4 or lower, and this is not checked, the unit is unplaceable in StarEdit.
+UnitMov01=Movement flags: the game only tests the whole value 193 (0xC1). In StarEdit, a non-building with 0x01 must be placed where every tile under it can be walked on.
 
-UnitMov02=Unknown.
+UnitMov02=Movement flags: no separate effect. The game only tests the whole value 193 (0xC1: 0x01, 0x40 and 0x80): Spider Mines ignore such units, and they hatch 7 pixels higher from an egg.
 
-UnitMov04=Unknown.
+UnitMov04=Movement flags: no separate effect. The game only tests the whole value 193 (0xC1: 0x01, 0x40 and 0x80): Spider Mines ignore such units, and they hatch 7 pixels higher from an egg.
 
-UnitMov08=Unknown.
+UnitMov08=Movement flags: no separate effect. The game only tests the whole value 193 (0xC1: 0x01, 0x40 and 0x80): Spider Mines ignore such units, and they hatch 7 pixels higher from an egg.
 
-UnitMov10=Unknown.
+UnitMov10=Movement flags: no separate effect. The game only tests the whole value 193 (0xC1: 0x01, 0x40 and 0x80): Spider Mines ignore such units, and they hatch 7 pixels higher from an egg.
 
-UnitMov20=Unknown.
+UnitMov20=Movement flags: no separate effect. The game only tests the whole value 193 (0xC1: 0x01, 0x40 and 0x80): Spider Mines ignore such units, and they hatch 7 pixels higher from an egg.
 
-UnitMov40=Unknown.
+UnitMov40=Movement flags: no separate effect. The game only tests the whole value 193 (0xC1: 0x01, 0x40 and 0x80): Spider Mines ignore such units, and they hatch 7 pixels higher from an egg.
 
-UnitMov80=Unit's movement does not activate Spider Mines.
+UnitMov80=Movement flags: no separate effect. The game only tests the whole value 193 (0xC1: 0x01, 0x40 and 0x80): Spider Mines ignore such units, and they hatch 7 pixels higher from an egg.
 
-UnitReq=Holds the index to the internal requirement for the unit. Do not change unless you REALLY know what you're doing.
+UnitReq=Position of the unit's entry in the unit requirement list built into StarCraft.exe; the requirements themselves cannot be edited in the dat files. Keep 65535: as soon as the game checks a unit holding 65535, it stores the position of every unit that has an entry in that list, replacing what the file had, and sets the rest to 0 (never allowed). Until then, and always if no unit holds 65535, values are used as they are: 0 = never allowed, any other value is read as requirements from that position in the list (the start of another unit's entry gives its requirements; the end of an entry gives none). Nothing checks it. See the Help for details.
 
 #####SOUND TAB#####
 
-UnitSndReady=Sound played after the unit is trained/built. 0=No sound.[pointer to sfxdata.dat] 
-UnitSndReadyList=Sound played after the unit is trained/built. 0=No sound.[pointer to sfxdata.dat] 
+UnitSndReady=Sound played when your unit is completed (it also makes the portrait talk). 0=No sound. Buildings, Interceptors and Scarabs never play it. [pointer to sfxdata.dat]
+UnitSndReadyList=Sound played when your unit is completed (it also makes the portrait talk). 0=No sound. Buildings, Interceptors and Scarabs never play it. [pointer to sfxdata.dat]
 
-UnitSndAnnStart=First of the "Annoyed" sounds - played when you click multiple times on the same unit.  0=No sound. [pointer to sfxdata.dat]
-UnitSndAnnStartList=First of the "Annoyed" sounds - played when you click multiple times on the same unit.  0=No sound. [pointer to sfxdata.dat]
+UnitSndAnnStart=First of the "Annoyed" sounds - played in order, from the fifth click on, when you keep clicking the same unit; then the What sounds start again. Buildings never play them. 0=No sound. [pointer to sfxdata.dat]
+UnitSndAnnStartList=First of the "Annoyed" sounds - played in order, from the fifth click on, when you keep clicking the same unit; then the What sounds start again. Buildings never play them. 0=No sound. [pointer to sfxdata.dat]
 
-UnitSndAnnEnd=Last of the "Annoyed" sounds - played when you click multiple times on the same unit.  0=No sound. [pointer to sfxdata.dat]
-UnitSndAnnEndList=Last of the "Annoyed" sounds - played when you click multiple times on the same unit.  0=No sound. [pointer to sfxdata.dat]
+UnitSndAnnEnd=Last of the "Annoyed" sounds - played in order, from the fifth click on, when you keep clicking the same unit. [pointer to sfxdata.dat]
+UnitSndAnnEndList=Last of the "Annoyed" sounds - played in order, from the fifth click on, when you keep clicking the same unit. [pointer to sfxdata.dat]
 
-UnitSndWhatStart=First of the "What" sounds - played when you select the unit.  0=No sound. [pointer to sfxdata.dat]
-UnitSndWhatStartList=First of the "What" sounds - played when you select the unit.  0=No sound. [pointer to sfxdata.dat]
+UnitSndWhatStart=First of the "What" sounds - one from First to Last is picked at random when you select the unit. 0 and 0 = No sound. Doors (205-208) play it when they open. [pointer to sfxdata.dat]
+UnitSndWhatStartList=First of the "What" sounds - one from First to Last is picked at random when you select the unit. 0 and 0 = No sound. Doors (205-208) play it when they open. [pointer to sfxdata.dat]
 
-UnitSndWhatEnd=Last of the "What" sounds - played when you select the unit.  0=No sound. [pointer to sfxdata.dat]
-UnitSndWhatEndList=Last of the "What" sounds - played when you select the unit.  0=No sound. [pointer to sfxdata.dat]
+UnitSndWhatEnd=Last of the "What" sounds - one from First to Last is picked at random when you select the unit. Doors (205-208) play it when they close. [pointer to sfxdata.dat]
+UnitSndWhatEndList=Last of the "What" sounds - one from First to Last is picked at random when you select the unit. Doors (205-208) play it when they close. [pointer to sfxdata.dat]
 
 UnitSndYesStart=First of the "Yes" sounds - played when you give the unit an order.  0=No sound. [pointer to sfxdata.dat]
 UnitSndYesStartList=First of the "Yes" sounds - played when you give the unit an order.  0=No sound. [pointer to sfxdata.dat]
@@ -174,20 +174,20 @@ UnitSndYesEndList=Last of the "Yes" sounds - played when you give the unit an or
 UnitGfx=Unit's main graphics object. [pointer to flingy.dat]
 UnitGfxList=Unit's main graphics object. [pointer to flingy.dat]
 
-UnitConstruction=Construction graphics of the unit (used mostly with buildings). 0-Scourge = No graphics. [pointer to images.dat]
-UnitConstructionList=Construction graphics of the unit (used mostly with buildings). 0-Scourge = No graphics. [pointer to images.dat]
+UnitConstruction=Image shown on the unit while it is being built, or while a Zerg unit morphs in its egg. 0 = use the unit's own image (not Scourge). [pointer to images.dat]
+UnitConstructionList=Image shown on the unit while it is being built, or while a Zerg unit morphs in its egg. 0 = use the unit's own image (not Scourge). [pointer to images.dat]
 
-UnitPortrait=Unit's Idle and Talking portraits. [pointer to portdata.dat]
-UnitPortraitList=Unit's Idle portrait. Talking Portraits are determined by adding 110 to this value, so any "Talking" portraits here will almost always crash the game! (Ghost's and Vulture's for some reasons won't) [pointer to portdata.dat]
+UnitPortrait=Unit's portrait in the status panel. Each portdata.dat entry has its own idle (fidget) and talking videos. 65535 = None. [pointer to portdata.dat]
+UnitPortraitList=Unit's portrait in the status panel. Each portdata.dat entry has its own idle (fidget) and talking videos. 65535 = None. [pointer to portdata.dat]
 
-UnitElevationLevel=The elevation level at which the unit moves. It can be used to make units moves like flyers, but still be attacked by ground weapons and act as ground units to specific special abilities (like Recall). Higher values puts the unit higher over terrain and other units.
-UnitElevationLevelList=The elevation level at which the unit moves. It can be used to make units moves like flyers, but still be attacked by ground weapons and act as ground units to specific special abilities (like Recall). Higher values puts the unit higher over terrain and other units.
+UnitElevationLevel=Sets the order in which sprites are drawn (higher in front) and whether the unit moves and collides like a ground unit (below 12) or an air unit (12 and up). Air weapons are still decided by the Flyer flag. At 4 and below, sprites are also sorted top to bottom. Values above 31 wrap.
+UnitElevationLevelList=Sets the order in which sprites are drawn (higher in front) and whether the unit moves and collides like a ground unit (below 12) or an air unit (12 and up). Air weapons are still decided by the Flyer flag. At 4 and below, sprites are also sorted top to bottom. Values above 31 wrap.
 
-UnitDirection=Direction unit will face after it is created. Values start at 0 (the unit will face the top of the screen) and go on clockwise through subsequent turning stages until 31 (unit will face a little left from the complete turn). Value of 32 means unit will face a random direction.
+UnitDirection=Direction a unit with "Can Turn" will face after it is completed. Values start at 0 (the unit will face the top of the screen) and go on clockwise through subsequent turning stages until 31 (unit will face a little left from the complete turn). Value of 32 means unit will face a random direction. Siege Tanks also turn to it when they change mode.
 
-UnitAddPosX=Horizontal distance in pixels at which an addon will be placed. Exists only for units of ID 106-201 (buildings).
+UnitAddPosX=Add-ons only: horizontal distance in pixels from the parent building's placement box to the add-on's placement box (left edges). Exists only for units of ID 106-201 (buildings).
 
-UnitAddPosY=Vertical distance in pixels at which an addon will be placed. Exists only for units of ID 106-201 (buildings).
+UnitAddPosY=Add-ons only: vertical distance in pixels from the parent building's placement box to the add-on's placement box (top edges). Exists only for units of ID 106-201 (buildings).
 
 UnitDimUp=Space the unit takes upward from its position. Measured in pixels.
 
@@ -203,15 +203,15 @@ UnitSENonLoc=Unit appears in the unit selection box when using Non-locational tr
 
 UnitSELoc=Unit appears in the unit selection box when using locational triggers (Remove at, Kill at etc.). Even if unchecked, the unit WILL appear for selection when using the "Create at" trigger action.
 
-UnitSENonNeutral=Unit belongs to a 1-8 Player, takes its corresponding color and appears in the player's corresponding menu in the unit listing on the left. If unchecked, the unit belongs to the 12th Player (neutral), takes the dark aqua color and appears under the "Neutral" menu in the unit listing.
+UnitSENonNeutral=Unit has an owner: in StarEdit it belongs to a 1-8 Player, takes its corresponding color and gets the owner property. If unchecked, it takes the neutral color. The game also uses it to decide which sprites need the visibility check.
 
-UnitSEAllRaces=Unit is available for all races in the unit list in StarEdit.
+UnitSEAllRaces=Unit can be owned by a player of any race in StarEdit. If unchecked, only players of the unit's race (from its Zerg/Terran/Protoss/Independent flags).
 
-UnitSEBriefing=Unit's portrait is available in Mission Briefing.
+UnitSEBriefing=Unit is listed for portrait arguments of triggers (such as Transmission).
 
-UnitSEBW=Unit is available only if BroodWar Expansion is installed.
+UnitSEBW=The game does not create preplaced units of this type in a game without the BroodWar expansion. StarEdit uses the "BroodWar" flag on the Basic tab instead.
 
-UnitSEListing=Unit is availabe in the unit listing on the left and in the Brush Palette.
+UnitSEListing=Unit is availabe in the unit listing on the left and in the Brush Palette. The game also refuses to create units without it through the Create Unit triggers.
 
 UnitSEUnitHero=Unit is available in Unit&Hero Settings.
 
@@ -219,42 +219,42 @@ UnitSEPlayerSet=Unit is available in the Player Settings.
 
 UnitSEDoodadState=Unit is available for the "Set Doodad State" trigger.
 
-UnitSEGroupBuilding=Unit is a "Building"-type unit for triggers.
+UnitSEGroupBuilding=Unit is a "Building"-type unit for triggers, and counts in the structure score.
 
 UnitSEGroupFactory=Unit is a "Factory"-type unit for triggers.
 
-UnitSEGroupInd=Unit is treated as an Independent unit (abandoned unit type).
+UnitSEGroupInd=Unit is an Independent unit in StarEdit (its race for ownership). The game itself does not read it.
 
-UnitSEGroupMen=Unit is a "Men"-type unit for triggers.
+UnitSEGroupMen=Unit is a "Men"-type unit for triggers, and counts in the unit score.
 
-UnitSEGroupNeutral=Unit is treated as a Neutral unit. Will crash StarEdit if checked together with the "Non-Neutral" property.
+UnitSEGroupNeutral=In a game using the map's settings, preplaced units of players with a selectable race are only created if they have this flag (so resources and critters stay). StarEdit does not read it.
 
-UnitMapString=If this property is different from 0, the unit's name will be read from the strings stored within the map (CHK) that is currently loaded, instead of the stat_txt.tbl file.
+UnitMapString=If this property is different from 0, the unit's name will be read from the strings stored within the map (CHK) that is currently loaded, counting from 1, instead of the stat_txt.tbl file. Map unit settings set it.
 
-UnitRank=Controls ground units movement: units with lower Rank will stop and wait to allow units with higher Rank to continue movement. Has no effects on air units. Also the order this unit is displayed in its folder in StarEdit. Max of 255.
-UnitRankList=Used only with Terran units. The text displayed under the unit's name. Dependent on the Rank property.
+UnitRank=For Terran units, the rank shown under the name in the status panel (plus the unit's promotions). For all units, the highest value picks which unit of a selection the status panel shows. StarEdit does not use it.
+UnitRankList=Used only with Terran units. The text displayed under the unit's name (plus the unit's promotions). Dependent on the Rank property.
 
-UnitSEPlaceWidth=Width of the green placement rectangle in StarEdit, in pixels. Used instead of "Unit Dimensions" in StarEdit, but only if the unit is a "Building".
+UnitSEPlaceWidth=Width of the placement box, in pixels, centred on the unit. Used by the game and StarEdit to place units; for buildings it is divided by 32 to give the tiles they take up (placement, collision, creep), so use multiples of 32.
 
-UnitSEPlaceHeight=Height of the green placement rectangle in StarEdit, in pixels. Used instead of "Unit Dimensions" in StarEdit, but only if the unit is a "Building".
+UnitSEPlaceHeight=Height of the placement box, in pixels, centred on the unit. Used by the game and StarEdit to place units; for buildings it is divided by 32 to give the tiles they take up (placement, collision, creep), so use multiples of 32.
 
 #####AI/ORDERS TAB#####
 
-UnitAICompIdle=Order given to the unit if it is under computer control and does nothing. [pointer to orders.dat]
+UnitAICompIdle=First order of a unit owned by a computer player, when it is completed or given to that player. [pointer to orders.dat]
 
-UnitAIHumanIdle=Order given to the unit if it is under a human player's control and does nothing. [pointer to orders.dat]
+UnitAIHumanIdle=First order of a unit owned by a human player (not neutral or rescuable), when it is completed or given to that player. Powerups always use it. [pointer to orders.dat]
 
-UnitAINoSuicide=The AI will ignore this unit if a script sends all units on strategic suicide missions.
+UnitAINoSuicide=The AI never puts this unit into the groups it attacks and harasses with.
 
-UnitAINoGuard=The AI will not treat this unit as a standard military guard. A military guard moves to attack units that are in sight range and returns to their guard post when the enemy has left the area.
+UnitAINoGuard=When the unit comes under a computer player's control, it joins the AI's town instead of becoming a guard at the place where it is.
 
-UnitAIReturn=Order executed after the unit has finished executing another order and returns to Idle state. [pointer to orders.dat]
+UnitAIReturn=Order executed after the unit has finished executing another order and returns to Idle state (in a Bunker, the Bunker guard order instead). [pointer to orders.dat]
 
-UnitAIAttackMove=Order executed if the unit is ordered to Attack Ground. [pointer to orders.dat]
+UnitAIAttackMove=Order executed if the unit is ordered to attack a location rather than a unit. Nothing (23) = it cannot. [pointer to orders.dat]
 
-UnitAIAttackUnit=Order executed if the units is ordered to attack an enemy unit, also through the Right-Click action. [pointer to orders.dat]
+UnitAIAttackUnit=Order executed if the unit attacks an enemy unit (ground or air): when ordered to, through the Right-Click action, or when it picks a target by itself. Nothing (23) = it cannot attack. [pointer to orders.dat]
 
-UnitAIRightClick=Determines what actions may, or may not be taken by the unit if it is given an order through the Right-Click action.
+UnitAIRightClick=What the unit does when you right-click. Units with "None" or "No movement" get no Move or Patrol and cannot move by right-clicking. A burrowed Lurker always acts as "No movement/Attack". Values above 6 crash the game on right-click.
 
 
 
@@ -262,70 +262,70 @@ UnitAIRightClick=Determines what actions may, or may not be taken by the unit if
 
 [weapons Editor]
 
-WeapDamageAmount=The basic amount of damage the weapon will inflict when it hits.
+WeapDamageAmount=Damage of one hit, in hit points, before upgrades, armor and size. Irradiate (weapon 34) and Plague (weapon 60) read it as their total damage over time; the Nuclear Missile damage type ignores it. A map's unit settings can replace it.
 
-WeapDamageBonus=The amount of damage added to the basic value for each level of the upgrade.
+WeapDamageBonus=Damage added for each level of the Damage Upgrade. A map's unit settings can replace it.
 
-WeapDamageCooldown="Reload time" - time delay between two attacks. Depends on the game speed used. 1 game second equals: on Fastest-24, on Faster-21, on Fast-18, on Normal-15, on Slow-12, on Slower-9 and on Slowest-6. Value of 0 will crash the game.
+WeapDamageCooldown="Reload time": frames between two attacks. The game multiplies it by 1.25 when slowed (Ensnare) or 0.5 when sped up (Stim Packs, Adrenal Glands), adds a little for acid spores, keeps the result between 5 and 250 and then adds a random -1 to +2. 1 game second equals: on Fastest-24, on Faster-21, on Fast-18, on Normal-15, on Slow-12, on Slower-9 and on Slowest-6. A value of 0 makes the AI code divide by zero (crash).
 
-WeapDamageExplosion=Effect the weapon has on the area around the target after hitting its target. Used to determine different type of spell effects and splash damage.
+WeapDamageExplosion=What happens when the bullet hits (for "Persist on Target Site" bullets, every 7 frames): damage the target, a splash, or a spell effect. Spells that are weapons (Lockdown, EMP Shockwave and so on) are cast through this. Mind Control, Feedback and value 23 have no handler and stop the game with a fatal error.
 
-WeapDamageFactor=Usually, multiple this value by the Damage Amount to get the total damage that is DISPLAYED for the weapon. To a degree also the number of weapons used per attack, but anything other than 2 will result in 1 weapon being used. (e.g. Goliath, Scout and Valkyrie use 2 missiles per attack).
+WeapDamageFactor=Only the value 2 does anything in the game: each attack fires a second bullet right after the first (e.g. Goliath and Scout air missiles, Valkyrie). Any other value fires one bullet. The status bar multiplies the shown damage by it (but always uses 2 for Firebat and Zealot and 1 for Valkyrie).
 
 WeapUnused=This property does NOTHING. It was thought to be related to what technology is used together with the weapon, but it turned out to be just a designer's hint.
 
-WeapDamageType=The type of damage the weapon does. Normal, Explosive and Concussive do different amount of damage to units of different Size (Small, Medium or Large): Normal does equal damage to Small, Medium and Large. Explosive does 50% to Small and 75% to Medium. Concussive does 50% to Medium and 25% to Large.  Independent deals 1 point of damage every second attack, regardless of target's armor.
+WeapDamageType=How the damage is scaled by the target's size, and whether armor applies. Normal does 100% to Small, Medium and Large. Explosive does 50% to Small and 75% to Medium. Concussive does 50% to Medium and 25% to Large. Ignore Armor does 100% and skips armor and shield upgrades. Independent does 0%, so each hit deals only the minimum of half a hit point (shields still take the full damage). Units of Independent size take half a hit point from every type.
 
-WeapDamageUpgrade=The upgrade that will increase the damage dealt by the weapon by the "Bonus" value.
+WeapDamageUpgrade=The upgrade whose level multiplies the "Bonus" value. Its level is also shown on the weapon's icon. Upgrade 60 is used for no upgrade (nobody can research it); StarEdit hides the bonus for it.
 
 WeapLabel=The name of the weapon, displayed when you highlight its icon in the control bar. [pointer to stat_txt.tbl]
 
 WeapError=The line displayed when the weapon is to acquire an invalid target (e.g. attacking a Mutalisk with a ground-only weapon, like Flamethrower) [pointer to stat_txt.tbl]
 
-WeapAttackAngle=Angle within which the weapon can be fired without waiting for the unit's graphics to turn. 128 = 180 degrees.
+WeapAttackAngle=How far the unit may face away from its target and still fire, in 256ths of a turn. 128 or more = any direction, 0 = must face it exactly. Lurkers ignore it. Workers also use their ground weapon's value when facing a building to repair or construct it.
 
-WeapBehaviour=Determines how the weapon sprite will "behave" when it attacks the target. Weapon behaviours that "Follow" will track the target as it moves, those that "Don't Follow" will strike the place where the target was at the moment of attack.
+WeapBehaviour=How the bullet is created and moves. "Fly & Don't Follow" goes to where the target was when it fired, "Fly & Follow" homes on it. "Fly", "Appear on Target Unit" and "Bounce" shots can miss (e.g. up a cliff), landing 30 pixels short and dealing no damage to the target.
 
-WeapGraphics=The main graphics that the weapon uses. 0-Scourge = No graphics.[pointer to flingy.dat]
-WeapGraphicsList=The main graphics that the weapon uses. 0-Scourge = No graphics.[pointer to flingy.dat]
+WeapGraphics=The bullet the weapon fires; only the low 16 bits are used. 0 means no bullet: melee weapons (claws, blades, Psi Blades) use 0 and deal damage from the unit's iscript. [pointer to flingy.dat]
+WeapGraphicsList=The bullet the weapon fires; only the low 16 bits are used. 0 means no bullet: melee weapons (claws, blades, Psi Blades) use 0 and deal damage from the unit's iscript. [pointer to flingy.dat]
 
-WeapIcon=The icon used for the weapon. [pointer to a frame in unit\cmdbtns\cmdicons.grp]
-WeapIconList=The icon used for the weapon. [pointer to a frame in unit\cmdbtns\cmdicons.grp]
+WeapIcon=The icon shown for the weapon in a selected unit's status panel. [pointer to a frame in unit\cmdbtns\cmdicons.grp]
+WeapIconList=The icon shown for the weapon in a selected unit's status panel. [pointer to a frame in unit\cmdbtns\cmdicons.grp]
 
-WeapLaunchSpin=Angle by which the weapon's sprite will spin after it is spawned. 128 = 180 degrees.
+WeapLaunchSpin=Turns the bullet's starting direction by this angle (128 = 180 degrees), to the left and to the right in turn for successive bullets, which makes homing missiles curve. 0 = straight.
 
-WeapRemoveAfter=Time until the weapon is removed if it does not hit a target. 1 game second equals: on Fastest-24, on Faster-21, on Fast-18, on Normal-15, on Slow-12, on Slower-9 and on Slowest-6.
+WeapRemoveAfter=Bullet lifetime, in frames. A flying bullet is removed when it arrives or when this runs out; a "Persist on Target Site" bullet (Psionic Storm) lasts this long, dealing its damage every 7 frames. Other behaviours ignore it. 1 game second equals: on Fastest-24, on Faster-21, on Fast-18, on Normal-15, on Slow-12, on Slower-9 and on Slowest-6.
 
-WeapOffsetUpward=Distance (in pixels) from the top of the attacking unit, at which the weapon's sprite will be spawned.
-WeapOffsetForward=Distance (in pixels) from the front of the attacking unit (depending on which direction it is facing), at which the weapon's sprite will be spawned.
+WeapOffsetUpward=Distance (in pixels) above the attacking unit's position at which the bullet is spawned. Not used by the "Appear on Target" behaviours.
+WeapOffsetForward=Distance (in pixels) in front of the attacking unit's position (in the direction it is facing) at which the bullet is spawned. Not used by the "Appear on Target" behaviours. The iscript attkshiftproj command changes it for the rest of the game.
 
-WeapRangeMin=Minimal range from which the weapon can be used, in pixels.
+WeapRangeMin=Minimal range from which the weapon can be used, in pixels, measured between the edges of the attacker's and target's unit dimensions. 0 = no minimum.
 
-WeapRangeMax=Maximal range from which the weapon can be used, in pixels.
+WeapRangeMax=Maximal range from which the weapon can be used, in pixels, measured between the edges of the attacker's and target's unit dimensions. Range upgrades and Bunkers add to it. It also raises the unit's Target Acquisition Range to at least this / 32.
 
-WeapSplashInner=Distance from the target at which the weapon will deal 100% of its base damage. Works ONLY if the "Explosion" is set to "Nuclear Missile", "Splash (Radial)", "Splash (Enemy)" or "Splash (Air)".
+WeapSplashInner=Distance (in pixels) from the bullet to the edge of a unit within which it takes 100% of the damage. Burrowed units are only hit inside this radius. Works ONLY if the "Explosion" is a splash or Nuclear Missile (Splash (Air) works differently: see the Weapons help). EMP Shockwave always uses weapon 33's value as its radius.
 
-WeapSplashMed=Distance from the target at which the weapon will deal 50% of its base damage. Works ONLY if the "Explosion" is set to "Nuclear Missile", "Splash (Radial)", "Splash (Enemy)" or "Splash (Air)".
+WeapSplashMed=Distance (in pixels) from the bullet to the edge of a unit within which it takes 50% of the damage. Works ONLY if the "Explosion" is a splash or Nuclear Missile.
 
-WeapSplashOuter=Distance from the target at which the weapon will deal 25% of its base damage. Works ONLY if the "Explosion" is set to "Nuclear Missile", "Splash (Radial)", "Splash (Enemy)" or "Splash (Air)".
+WeapSplashOuter=Distance (in pixels) from the bullet to the edge of a unit within which it takes 25% of the damage. Works ONLY if the "Explosion" is a splash or Nuclear Missile. The Infested Terran walks to within this distance of weapon 54 before exploding.
 
-WeapTarget001=Weapon attacks air targets, i.e. units with the "Flying Target" flag set.
+WeapTarget001=Weapon can hit units in the air. A weapon with neither Air nor Ground can never hit a unit. All the other checked flags are extra conditions the target must also meet; they limit splash victims too.
 
-WeapTarget002=Weapon attacks ground targets, i.e. units without the "Flying Target" flag set.
+WeapTarget002=Weapon can hit units on the ground. A weapon with neither Air nor Ground can never hit a unit. All the other checked flags are extra conditions the target must also meet; they limit splash victims too.
 
-WeapTarget004=Weapon attacks mechanical targets, i.e. units with the "Mechanical" flag set. (e.g. Lockdown)
+WeapTarget004=Target must be mechanical, i.e. have the "Mechanical" flag set (e.g. Lockdown).
 
-WeapTarget008=Weapon attacks organic targets, i.e. units with the "Organic" flag set. (e.g. Irradiate)
+WeapTarget008=Target must be organic, i.e. have the "Organic" flag set (e.g. Consume).
 
-WeapTarget010=Weapon attacks non-building targets, i.e. units without the "Building" flag set. (e.g. Parasite)
+WeapTarget010=Target must not be a building, i.e. must not have the "Building" flag set (e.g. Parasite).
 
-WeapTarget020=Weapon attacks non-Robotic targets, i.e. units without the "Robotic" flag set. (e.g. Spawn Broodlings)
+WeapTarget020=Target must not be robotic, i.e. must not have the "Robotic" flag set (e.g. Spawn Broodlings).
 
-WeapTarget040=Weapon attacks terrain, i.e. it does not require a unit-type target (e.g. Plague).
+WeapTarget040=Weapon can be aimed at a spot on the ground, without a target unit (e.g. Plague).
 
-WeapTarget080=Weapon attacks mechanical or organic targets, i.e. units with either the "Organic" or "Mechanical" flag set. (e.g. Consume).
+WeapTarget080=Target must be mechanical or organic, i.e. have either the "Organic" or "Mechanical" flag set (e.g. Spawn Broodlings).
 
-WeapTarget100=Weapon attacks only player's own units (e.g. Consume).
+WeapTarget100=Target must belong to the attacking player (e.g. Consume).
 
 
 
@@ -336,17 +336,17 @@ WeapTarget100=Weapon attacks only player's own units (e.g. Consume).
 FlingySprite=The sprites.dat entry corresponding to the flingy.dat entry. [pointer to sprites.dat]
 FlingySpriteList=The sprites.dat entry corresponding to the flingy.dat entry. [pointer to sprites.dat]
 
-FlingySpeed=Maximum speed at which the sprite will move. Measured in pixels-per-frame, but written as "Speed*(320/3)" (rounded up, it's weird, but that's how it works). Works ONLY if "Move Control" is set to "Flingy.dat Control".
+FlingySpeed=Maximum speed, in 1/256 pixels per frame (1280 = 5 pixels per frame). With "Flingy.dat Control" and "Flingy.dat Control, No Braking", speed upgrades and Stim Packs raise it by half (at least 853) and Ensnare halves it. For "Iscript.bin Control" it is only a starting value: when the unit is created the game replaces it with the average distance its Walking animation moves per frame. 0 never moves.
 
-FlingyAcceleration=How fast the sprite speeds up or slows down. Added to or subtracted from current speed until it reaches the Top Speed or 0. Measured in pixels-per-frame.  Works ONLY if "Move Control" is set to "Flingy.dat Control".
+FlingyAcceleration=How much the speed changes each frame when speeding up or braking, in 1/256 pixels per frame. Used by "Flingy.dat Control" and "Flingy.dat Control, No Braking", not by "Iscript.bin Control". Doubled by speed upgrades and Stim Packs, 3/4 with Ensnare. 0 means the flingy never gets going.
 
-FlingyHaltDist=Distance from its destination at which the sprite will begin to deccelerate from its Top Speed to a complete halt. Measured in pixels*256. This value is only used when already going top speed, otherwise it is automatically computed as (top speed^2)/(2*acceleration)
+FlingyHaltDist=How far from its destination the flingy starts braking, in 1/256 pixels. Only used with "Flingy.dat Control". The game only uses this stored value while the flingy moves at exactly this file's Top Speed with exactly its Acceleration; at any other speed or acceleration (speeding up, speed upgrades, Stim Packs, Ensnare) it works the distance out itself as speed^2 / (2 * acceleration). So set it to that formula with this file's values, or the flingy brakes too early or too late at full speed.
 
-FlingyMoveControl=Indicates the mechanism that is used to control the movement of the flingy.dat entry. "Flingy.dat Control" makes use of the Acceleration, Speed, Turn Style and Turn Radius properties, i.e. the values in this editor will be used. "Iscript.bin Control" ignores these properties and follows only the Iscript opcode sequence. "Partially Mobile/Weapon" is used for various weapons sprites, seems the same as "Flingy.dat Control" but without deccelerating (useful for bullets)
+FlingyMoveControl=How the flingy's movement is controlled. "Flingy.dat Control" accelerates to Top Speed, brakes at the Halt Distance and stops once slow at the target. "Flingy.dat Control, No Braking" accelerates the same way but never brakes and stops dead on arrival (bullets, High Templar, flying Terran buildings, Nuke). "Iscript.bin Control" moves by the distances the Iscript animation gives each frame, without acceleration, and only once facing its target; Top Speed is replaced from the Walking animation, but Turn Rate is still used.
 
 FlingyUnused=Unused.
 
-FlingyTurnRad=The distance the sprite requires to "wipe around" to turn to another direction. Works ONLY if "Move Control" is set to "Flingy.dat Control".
+FlingyTurnRad=How far the flingy may turn per frame, in 1/256 of a full turn (40 turns half way round in 4 frames). Used by all Move Controls. Except with "Iscript.bin Control", the direction of travel follows at half this rate. Keep it between 1 and 127: 128-255 act as negative and the flingy never settles, and 0 on a moving flingy not under "Iscript.bin Control" can crash the game (division by zero).
 
 
 
@@ -357,13 +357,13 @@ FlingyTurnRad=The distance the sprite requires to "wipe around" to turn to anoth
 SpriteImage=The images.dat entry corresponding to the sprites.dat entry [pointer to images.dat]
 SpriteImageList=The images.dat entry corresponding to the sprites.dat entry [pointer to images.dat]
 
-SpriteHPBar=The length of the Hit Points/Shields/Energy bar below the sprite, in pixels. The way the actual number of "boxes" is calculated is the following: substract 1 from the value, divide the result by 3 and round it down. Even though a sprite may actually USE less than 6 boxes, 6 boxes is the minimal amount that will be SHOWN in-game (just that some will not be functional). Values below 6 will all result in 1 box being USED.
+SpriteHPBar=The width of the Hit Points/Shields/Energy bar below the sprite, in pixels. The bar is drawn in 3-pixel boxes, so the number of boxes is the value minus 1, divided by 3 and rounded down. The bar is never narrower than 19 pixels (6 boxes); smaller values are still shown with 6 boxes. Only stored for sprites 130 and up.
 
 SpriteUnused=Unused.
 
 SpriteVisible=Sprite will start as visible. Unchecked, used to hide the "White Circle", the Zerg Beacon used by Subterranean Spines, and few other things.
 
-SpriteCircleOff=The vertical position of the in-game selection circle and the Health/Shield/Energy bar. The higher the number, the more downwards from the main sprite will they be positioned. Around 127 the display "loops back" and appears actually ABOVE the main sprite. 255 will put it back in its original position.
+SpriteCircleOff=The vertical position of the in-game selection circle, in pixels below the sprite; the Health/Shield/Energy bar is drawn 8 pixels below the circle. It is a signed byte: 128-255 move them above the sprite instead (255 is 1 pixel up).
 
 SpriteSelCircle=The size of the in-game selection circle. The different sizes are actually different images.dat entries, so in order to use custom ones you need to replace them. The "Dashed" selection circles are used to mark allied units in multiplayer games, but if used on the players own units they will not disappear after deselecting the unit, and also they will NOT be removed on its death, still providing limited vision to the player.[pointer to images.dat, starting at ID#561 as 0]
 SpriteSelCircleList=The size of the in-game selection circle. The different sizes are actually different images.dat entries, so in order to use custom ones you need to replace them. The "Dashed" selection circles are used to mark allied units in multiplayer games, but if used on the players own units they will not disappear after deselecting the unit, and also they will NOT be removed on its death, still providing limited vision to the player.[pointer to images.dat, starting at ID#561 as 0]
@@ -373,25 +373,25 @@ SpriteSelCircleList=The size of the in-game selection circle. The different size
 
 [Images Editor]
 
-ImgGRP=Indicates the GRP graphics used by the current images.dat entry. If the value exceeds the number of lines in images.tbl, SC won't load. [pointer to images.tbl, -1 based]
-ImgGRPList=Indicates the GRP graphics used by the current images.dat entry. If the value exceeds the number of lines in images.tbl, SC won't load. [pointer to images.tbl, -1 based]
+ImgGRP=Indicates the GRP graphics used by the current images.dat entry. Counted from 1; 0 means no GRP (and drawing the image will most likely crash). If the value exceeds the number of lines in images.tbl, SC won't load. Outside Brood War only images 0-754 get their graphics. [pointer to images.tbl, 1 based]
+ImgGRPList=Indicates the GRP graphics used by the current images.dat entry. Counted from 1; 0 means no GRP (and drawing the image will most likely crash). If the value exceeds the number of lines in images.tbl, SC won't load. Outside Brood War only images 0-754 get their graphics. [pointer to images.tbl, 1 based]
 
-ImgIscriptID=Indicates the animation ID in the Iscript.bin file used to manage the animation of the current entry's GRP graphics. [pointer to Iscript.bin]
-ImgIscriptIDList=Indicates the animation ID in the Iscript.bin file used to manage the animation of the current entry's GRP graphics. [pointer to Iscript.bin]
+ImgIscriptID=Indicates the animation ID in the Iscript.bin file used to manage the animation of the current entry's GRP graphics. It is an ID, not a position: an ID missing from iscript.bin stops the game with a fatal error. [pointer to Iscript.bin]
+ImgIscriptIDList=Indicates the animation ID in the Iscript.bin file used to manage the animation of the current entry's GRP graphics. It is an ID, not a position: an ID missing from iscript.bin stops the game with a fatal error. [pointer to Iscript.bin]
 
-ImgGfxTurns=Determines if the game engine dynamically adds up to 16 frames and/or mirror them during animations, depending on what direction the sprite is facing. Unchecked, makes the sprite follow its Iscript animation with exactly the frame numbers contained in it.
+ImgGfxTurns=Determines if the game engine adds up to 16 frames to the current frame and/or mirrors it, depending on what direction the sprite is facing (17 frames per frameset: the right half, with the left half mirrored). Unchecked, makes the sprite follow its Iscript animation with exactly the frame numbers contained in it.
 
-ImgClickable=Determines if the graphics can be selected using the mouse cursor. Also determines the presence (or lack of) the cursor selection graphics. DOES NOT make the unit not at all selectable - it is still possible using the selection box.
+ImgClickable=Determines if the graphics can be selected using the mouse cursor: the click area of a unit is the box around all its clickable images (if none is, clicking it is unreliable). Also determines the presence (or lack of) the cursor selection graphics. DOES NOT make the unit not at all selectable - it is still possible using the selection box.
 
 ImgUseFullIscript=Allows running for Iscript animations other than the Initial and Death animations. Unchecked, prevents the sprite movement, attack, spellcasting etc. If the Movement Control for the corresponding flingy.dat entry is set to "Flingy.dat Control", the sprite movement WILL take place, but without any animation.
 
-ImgDrawCloaked=Makes the image appear/disappear when cloacked.
+ImgDrawCloaked=Unchecked, the image is hidden while its unit is cloaked (shadows, engine glows), and Iscript sprul/spruluselo will not create a sprite with this image while the unit is cloaked. Only images with Draw Function 0 get the cloaked look; others keep drawing normally.
 
 ImgOL1=This one usually controls a part of the attack animation. Except for the Bunker (which is hardcoded), the use of this property is not specific, but removing it will hang the game if unit's Iscript animation calls for the overlay with the opcodes: 0xD(imgoluselo), 0xE(imguluselo) or 0x15(sproluselo).[pointer to a LOG\LOL\LOX\LOA file in images.tbl]
 ImgOL1List=This one usually controls a part of the attack animation. Except for the Bunker (which is hardcoded), the use of this property is not specific, but removing it will hang the game if unit's Iscript animation calls for the overlay with the opcodes: 0xD(imgoluselo), 0xE(imguluselo) or 0x15(sproluselo).[pointer to a LOG\LOL\LOX\LOA file in images.tbl]
 
-ImgOL2=The "Flames/Bleeding" overlay control, dependent on the current HP value. If the number of frames of the used GRP file is higher than the number of frames of the overlay, the game will crash.[pointer to a LOF file in images.tbl]
-ImgOL2List=The "Flames/Bleeding" overlay control, dependent on the current HP value. If the number of frames of the used GRP file is higher than the number of frames of the overlay, the game will crash.[pointer to a LOF file in images.tbl]
+ImgOL2=The "Flames/Bleeding" overlay control: where fires appear on a damaged building, none above 2/3 of its HP and more as the HP drops. 0 = no fires. If the number of frames of the used GRP file is higher than the number of frames of the overlay, the game will crash.[pointer to a LOF file in images.tbl, 1 based]
+ImgOL2List=The "Flames/Bleeding" overlay control: where fires appear on a damaged building, none above 2/3 of its HP and more as the HP drops. 0 = no fires. If the number of frames of the used GRP file is higher than the number of frames of the overlay, the game will crash.[pointer to a LOF file in images.tbl, 1 based]
 
 ImgOL3=This one is used for various purposes: for "Resource Miners", it controls where they "hold" the resources;for the gas-containers, it controls the placement of the smoke graphics (iscript connection via the "creategasoverlays" (0x38) opcode); for the base-turret units, it controls the placement of the turret (also "imgoluselo" connection); for the Battlecruiser, it is the location of the Yamato Gun graphics.[pointer to a LOS\LOL\LOO\LOA\LOB file in images.tbl]
 ImgOL3List=This one is used for various purposes: for "Resource Miners", it controls where they "hold" the resources;for the gas-containers, it controls the placement of the smoke graphics (iscript connection via the "creategasoverlays" (0x38) opcode); for the base-turret units, it controls the placement of the turret (also "imgoluselo" connection); for the Battlecruiser, it is the location of the Yamato Gun graphics.[pointer to a LOS\LOL\LOO\LOA\LOB file in images.tbl]
@@ -406,41 +406,41 @@ ImgShield=Overlay used to place the Images.dat entry #424 ("Shield Overlay"), if
 ImgShieldList=Overlay used to place the Images.dat entry #424 ("Shield Overlay"), if the unit has shields and is hit. [pointer to images.tbl]
 ImgShieldOL=Overlay used to place the Images.dat entry #424 ("Shield Overlay"), if the unit has shields and is hit. [pointer to images.tbl]
 
-ImgDrawFunction=The drawing function used for the image. This property has rather various effects and not all options works with all entries so expect crashes. It can produce very interesting effects though, especially spell-related.
-ImgDrawFunctionList=The drawing function used for the image. This property has rather various effects and not all options works with all entries so expect crashes. It can produce very interesting effects though, especially spell-related.
+ImgDrawFunction=The drawing function used for the image. Values 2-7, 12 and 16 are states the game sets while it runs (cloaking, warp-in, hallucination). Only 0 is changed by cloaking and hallucination; 1 is the same but stays normal on cloaked or hallucinated units. Values above 17 will most likely crash. Not all options work with all entries, so expect crashes.
+ImgDrawFunctionList=The drawing function used for the image. Values 2-7, 12 and 16 are states the game sets while it runs (cloaking, warp-in, hallucination). Only 0 is changed by cloaking and hallucination; 1 is the same but stays normal on cloaked or hallucinated units. Values above 17 will most likely crash. Not all options work with all entries, so expect crashes.
 
-ImgRemap=An additional remapping "palette" that is to be used. Each tileset has its own files responsible for remapping. Used only if the "Function" property is set to "Use Remapping". Values 8 and 9 produce a weird effect and most probably are a result of an error in Starcraft.
-ImgRemapList=An additional remapping "palette" that is to be used. Each tileset has its own files responsible for remapping. Used only if the "Function" property is set to "Use Remapping". Values 8 and 9 produce a weird effect and most probably are a result of an error in Starcraft.
+ImgRemap=An additional remapping table that is to be used. Each tileset has its own files responsible for remapping (Tileset\<tileset>\<name>.pcx). Used only if the "Function" property is set to "Use Remapping", and then 0 will most likely crash. 6 and 7 (red, green) have one row only, so most GRP colours read past them. Values 8 and up read past the list of tables.
+ImgRemapList=An additional remapping table that is to be used. Each tileset has its own files responsible for remapping (Tileset\<tileset>\<name>.pcx). Used only if the "Function" property is set to "Use Remapping", and then 0 will most likely crash. 6 and 7 (red, green) have one row only, so most GRP colours read past them. Values 8 and up read past the list of tables.
 
 
 
 [Upgrades Editor]
 
-UpgIcon=Icon displayed for the upgrade. [pointer to a frame in unit\cmdbtns\cmdicons.grp]
-UpgIconList=Icon displayed for the upgrade. [pointer to a frame in unit\cmdbtns\cmdicons.grp]
+UpgIcon=Icon shown in the status panel while the upgrade is researched, and as a selected unit's armor icon (for its armor upgrade). Command buttons don't use it. [pointer to a frame in unit\cmdbtns\cmdicons.grp]
+UpgIconList=Icon shown in the status panel while the upgrade is researched, and as a selected unit's armor icon (for its armor upgrade). Command buttons don't use it. [pointer to a frame in unit\cmdbtns\cmdicons.grp]
 
 UpgLabel=The name of the upgrade. Displayed in StarEdit and when you highlight the upgrade's icon during research. [pointer to stat_txt.tbl]
 UpgLabelList=The name of the upgrade. Displayed in StarEdit and when you highlight the upgrade's icon during research. [pointer to stat_txt.tbl]
 
-UpgIsBW=Makes the upgrade available only while playing the BroodWar expansion set.
+UpgIsBW=StarEdit only shows the upgrade for Brood War maps. The game itself ignores this flag.
 
-UpgRace=Determines which race can use/research the upgrade. "All" will disable the tech in StarEdit (but not in-game).
+UpgRace=The race StarEdit lists the upgrade under. "None" hides it in StarEdit. The game itself ignores this.
 
-UpgRepeats=Total number of times the upgrade can be researched.
+UpgRepeats=Highest level of the upgrade; every player starts a new game with this as their maximum (the map can change it). StarEdit hides upgrades with 0.
 
-UpgReq=Holds the index to the internal requirement for the upgrade. Do not change unless you REALLY know what you're doing.
+UpgReq=Position of the upgrade's entry in the upgrade requirement list built into StarCraft.exe; the requirements themselves cannot be edited in the dat files. Keep 65535: as soon as the game checks an upgrade holding 65535, it stores the position of every upgrade that has an entry in that list, replacing what the file had, and sets the rest to 0 (never allowed). Until then, and always if no upgrade holds 65535, values are used as they are: 0 = never allowed, any other value is read as requirements from that position in the list (the start of another upgrade's entry gives its requirements; the end of an entry gives none). Nothing checks it. See the Help for details.
 
-UpgMinerals=Basic minerals cost for the upgrade.
+UpgMinerals=Minerals cost of the first level of the upgrade. Level n+1 costs this plus the Factor times n.
 
-UpgVespene=Basic Vespene gas cost for the upgrade.
+UpgVespene=Vespene gas cost of the first level of the upgrade. Level n+1 costs this plus the Factor times n.
 
-UpgTime=Basic research time for the upgrade, in 1/24ths of a second (at Fastest speed). A value of 0 will crash the game.
+UpgTime=Research time of the first level, in game frames (1/24ths of a second at Fastest speed). Level n+1 takes this plus the Factor times n. A value of 0 will crash the game.
 
 UpgFactorMinerals=Additional cost in minerals, per level of the upgrade.
 
 UpgFactorVespene=Additional cost in Vespene gas, per level of the upgrade.
 
-UpgFactorTime=Additional time the research takes, per level of the upgrade, in 1/24ths of a second (at Fastest speed).
+UpgFactorTime=Additional research time, in game frames (1/24ths of a second at Fastest speed), per level the player already has.
 
 
 
@@ -448,62 +448,62 @@ UpgFactorTime=Additional time the research takes, per level of the upgrade, in 1
 
 [Techdata Editor]
 
-TechIcon=Icon displayed for the technology. [pointer to a frame in unit\cmdbtns\cmdicons.grp]
-TechIconList=Icon displayed for the technology. [pointer to a frame in unit\cmdbtns\cmdicons.grp]
+TechIcon=Icon shown in the status panel while the technology is researched. Command buttons don't use it. [pointer to a frame in unit\cmdbtns\cmdicons.grp]
+TechIconList=Icon shown in the status panel while the technology is researched. Command buttons don't use it. [pointer to a frame in unit\cmdbtns\cmdicons.grp]
 
 TechLabel=The name of the technology. Displayed in StarEdit and when you highlight the tech's icon during research. [pointer to stat_txt.tbl]
 TechLabelList=The name of the technology. Displayed in StarEdit and when you highlight the tech's icon during research. [pointer to stat_txt.tbl]
 
-TechEnergy=Energy cost for using the technology.
+TechEnergy=Energy cost for using the technology, in whole energy points. Some of the game's checks use only the low byte, so keep it at 255 or less (units hold at most 250).
 
 TechMinerals=Minerals cost for the research of the technology.
 
 TechVespene=Vespene gas cost for the research of the technology.
 
-TechTime=Research time of the technology in 1/24ths of a second (at Fastest speed). Value of 0 will crash the game.
+TechTime=Research time of the technology, in game frames (1/24ths of a second at Fastest speed). Value of 0 will crash the game.
 
-TechBW=Makes the technology available only while playing the BroodWar expansion set.
+TechBW=StarEdit only shows the technology for Brood War maps. The game itself ignores this flag.
 
-TechRace=Determines which race can use/research the technology. "All" will disable the tech in StarEdit (but not in-game).
+TechRace=The race StarEdit lists the technology under. "None" hides it in StarEdit. The game itself ignores this.
 
-TechUnused=Unused.
+TechUnused=Unused: neither the game nor StarEdit reads it. It looks like a "starts researched" flag (the shipped file has 1 for the technologies that need no research, such as Scanner Sweep and Healing), but changing it does nothing.
 
-TechReq=Holds the index to the internal requirement for the research of the technology. Do not change unless you REALLY know what you're doing.
+TechReq=Position of the technology's entry in the research requirement list built into StarCraft.exe; the requirements themselves cannot be edited in the dat files. Keep 65535: as soon as the game checks a technology holding 65535, it stores the position of every technology that has an entry in that list, replacing what the file had, and sets the rest to 0 (can never be researched). Until then, and always if no technology holds 65535, values are used as they are: 0 = can never be researched, any other value is read as requirements from that position in the list (the start of another technology's entry gives its requirements; the end of an entry gives none). Nothing checks it. See the Help for details.
 
-TechUseReq=Holds the index to the internal requirement for the usage of the ability. Do not change unless you REALLY know what you're doing.
+TechUseReq=Position of the technology's entry in the use requirement list built into StarCraft.exe; the requirements themselves cannot be edited in the dat files. Keep 65535: as soon as the game checks a technology holding 65535, it stores the position of every technology that has an entry in that list, replacing what the file had, and sets the rest to 0 (can never be used). Until then, and always if no technology holds 65535, values are used as they are: 0 = can never be used, any other value is read as requirements from that position in the list (the start of another technology's entry gives its requirements; the end of an entry gives none). Nothing checks it. See the Help for details.
 
 
 
 [Sfxdata Editor]
 
-SoundFile=The actual wave file associated with the sfxdata entry. [pointer to sfxdata.tbl]
-SoundFileList=The actual wave file associated with the sfxdata entry. [pointer to sfxdata.tbl]
+SoundFile=The WAV file the sound plays: the game plays sound\<string>. Several sounds can share a file. 0 = no file (the sound is silent). [1-based pointer to sfxdata.tbl]
+SoundFileList=The WAV file the sound plays: the game plays sound\<string>. Several sounds can share a file. 0 = no file (the sound is silent). [1-based pointer to sfxdata.tbl]
 
-SoundPriority=Sounds with higher priority are allowed to override lower priority ones that are already playing, if BW doesn't have enough sound channels available.
+SoundPriority=Only matters when all 8 sound channels are busy: the new sound then stops the playing sound with the lowest priority that is strictly lower than its own (sounds with Never Preempt are never stopped). If there is none, the new sound is not played. So equal priority never wins, and priority 0 never replaces anything.
 
-SoundPortraitLengthAdjust=Can be used to modify the duration of talking portrait animation (Milliseconds) when the related sound is played as a unit response.
+SoundPortraitLengthAdjust=Milliseconds added to how long the talking portrait animates when this sound is played as a unit response. The portrait talks for the sound's length rounded down to whole seconds plus this value; the adjustment is skipped if the sound was not loaded yet. Signed: 65535 = -1, 65036 = -500.
 
-SoundMinimumVolume=The minimum volume percentage the sound plays at. For example it causes explosion sounds to be heard regardless of how far the screen is from the explosion.
+SoundMinimumVolume=The lowest volume the sound plays at however far away it happens, on the game's 0-99 volume scale (not a percentage). Sounds fade from 99 at the screen edge to 0 about 512 pixels away, and sounds quieter than 11 are not played at all, so 10 or less has no effect. Used so large explosions are heard regardless of distance. Values above 99 can read past the game's volume table.
 
-SoundPreload=Preload
+SoundPreload=Loaded ahead of time (the sounds of the player's race when a game starts, and the menu sounds) and kept loaded, outside the game's 4 MB sound cache.
 
-SoundUnitSpeech=Will not play if the "Mute Unit Speech" trigger action is on, or if the "Unit Speech", "Unit Acknowledgements", or "Building Sounds" settings are turned off, depending on the sound's source.
+SoundUnitSpeech=Will not play while a sound with this flag is still playing for a unit of the same unit type (per type, not per unit); the new sound is dropped. Set for all unit speech. No effect when the sound is not played for a unit. Muting and the speech settings do not depend on this flag.
 
 SoundOneAtATime=Will not play if an instance of the sound is already playing.
 
-SoundNeverPreempt=Will not be interrupted by new sounds when all sound channels are being used.
+SoundNeverPreempt=Will not be stopped by new sounds when all 8 sound channels are busy (see Priority).
 
 
 
 
 [Portdata Editor]
 
-PortFile=Base path to different portrait SMK (Smacker) animations. Consecutive animations takes increasing, 0-based indexes appended to this path. Putting 0 here will result in a frozen static image. [1-based pointer to portdata.tbl]
-PortFileList=Base path to different portrait SMK (Smacker) animations. Consecutive animations takes increasing, 0-based indexes appended to this path. Putting 0 here will result in a frozen static image. [1-based pointer to portdata.tbl]
+PortFile=Folder and start of the file name of the portrait's SMK (Smacker) videos: the game plays portrait\<string><n>.smk, with n = 0-3 for the fidget videos (Idle box) and 0-2 for the talking videos (Talking box). If a video is missing, the next lower number is tried. E.g. tmarine\TMaFid0 gives TMaFid00.smk to TMaFid03.smk. Putting 0 here will result in a frozen static image. [1-based pointer to portdata.tbl]
+PortFileList=Folder and start of the file name of the portrait's SMK (Smacker) videos: the game plays portrait\<string><n>.smk, with n = 0-3 for the fidget videos (Idle box) and 0-2 for the talking videos (Talking box). If a video is missing, the next lower number is tried. E.g. tmarine\TMaFid0 gives TMaFid00.smk to TMaFid03.smk. Putting 0 here will result in a frozen static image. [1-based pointer to portdata.tbl]
 
-PortSMKChange=Controls how often the first SMK animation, with the index of 0, will be overlooked and a portrait with different index will be played. The higher the value and the more it gets near 100, the more often will the first SMK be skipped. Values over 100 make the game use only the first portrait.
+PortSMKChange=How likely this fidget (idle) video is picked, out of 101. The four chances are Fidget 0 and 2 (Idle box) and Fidget 1 and 3 (Talking box); the game rolls 0-100 and adds them up in order 0, 1, 2, 3 until the total reaches the roll. Make the four add up to at least 100: a roll above the total most likely crashes the game. Shipped: 85/5/5/5 for most units, 100/0/0/0 for fidget 0 only. Talking videos have no chance setting.
 
-PortUnk1=Unknown.
+PortUnk1=How likely this fidget (idle) video is picked, out of 101. The four chances are Fidget 0 and 2 (Idle box) and Fidget 1 and 3 (Talking box); the game rolls 0-100 and adds them up in order 0, 1, 2, 3 until the total reaches the roll. Make the four add up to at least 100: a roll above the total most likely crashes the game. Shipped: 85/5/5/5 for most units, 100/0/0/0 for fidget 0 only. Talking videos have no chance setting.
 
 
 
@@ -511,39 +511,39 @@ PortUnk1=Unknown.
 
 [Mapdata Editor]
 
-MapFile=Path where the game will look for the original campaigns map file ("staredit/scenario.chk") and the WAV files ("staredit/wav/").
-MapFileList=Path where the game will look for the original campaigns map file ("staredit/scenario.chk") and the WAV files ("staredit/wav/").
+MapFile=Folder of the campaign mission with this mission number. The game loads the map from <folder>\staredit\scenario.chk and the briefing and trigger WAV files from <folder>\<file name stored in the map> ("staredit\wav\..."). Which missions make up each campaign is fixed in the game. [1-based pointer to mapdata.tbl]
+MapFileList=Folder of the campaign mission with this mission number. The game loads the map from <folder>\staredit\scenario.chk and the briefing and trigger WAV files from <folder>\<file name stored in the map> ("staredit\wav\..."). Which missions make up each campaign is fixed in the game. [1-based pointer to mapdata.tbl]
 
 
 
 
 [Orders Editor]
 
-OrdAnimation=Unit Iscript animation to use while calling the order.
+OrdAnimation=Unit Iscript animation played when the order is cast as a spell. Only the spell orders use it (Cast Spell); the others have No Animation and never reach it.
 
-OrdObscured=Order to be run if the target is obscured by the Fog-of-War. [pointer to orders.dat]
+OrdObscured=Used on the orders a unit gets for a target hidden by the Fog-of-War (the button picks that order): once the unit sees the target, it is given this order on it (Attack becomes the unit's own Attack Unit order). None (189) makes the order unable to target units under the fog, so the click counts as a ground click. Shipped: every order holds itself, except the fog orders, which hold the order they turn into. [pointer to orders.dat]
 
-OrdLabel=Probably the label of the order. Doesn't do anything - used only for convenience.[pointer to stat_txt.tbl?]
+OrdLabel=The label of the order. Doesn't do anything - used only for convenience. [1-based pointer to stat_txt.tbl]
 
-OrdEnergy=Technology used to determine the energy cost of calling the order. [pointer to techdata.dat]
+OrdEnergy=Technology of a spell or ability, None (44) for others. Sets the energy the order costs, the target rules of spells without Use Weapon Targeting, and replaces the order's own requirements with the technology's use requirements. Values 45-255 make the order impossible to use by clicking a target. [pointer to techdata.dat]
 
-OrdTargeting=Weapon used by the order to determine the targeting rules, if "Use Weapon Targeting" is checked. [pointer to weapons.dat]
+OrdTargeting=Weapon of a spell or ability, None (130) for others. It is the weapon fired by the iscript castspell command and gives the casting range and cooldown; with Use Weapon Targeting checked it also gives the targeting rules (any value but 130 is then used without a check). [pointer to weapons.dat]
 
-OrdWeapTarg=Order will use the weapons.dat targeting settings.
+OrdWeapTarg=Marks an attack order. For spells and target clicks, the target is checked with the Weapon's targeting rules if set, and with the Technology's target rules otherwise. Units doing an attack order also drop a target that becomes allied, keep their current target when picking a new one, and are not counted as idle by the computer AI.
 
 OrdSecondaryOrder=The order is a secondary order. (Unused, was for debugging)
 
 OrdAllowNonSubunits=Non-subunits should be able to execute this order. (Unused, was for debugging)
 
-OrdChangesSubunitOrder=If set, overrides subunit's order as well when the main unit is ordered. Otherwise subunit's order doesn't change when issuing this order to the main unit.
+OrdChangesSubunitOrder=If set, a unit with a subunit (turret) passes this order and its target on to the turret when the order starts from its queue. Otherwise the turret keeps its order. The unit's own Guard and Attack orders (units.dat) are always passed on as the turret's Guard and Attack orders, whatever this says.
 
 OrdAllowSubunits=Subunits should be able to execute this order. (Unused, was for debugging)
 
-OrdInterrupt=Order's execution can be interrupted by calling another order (e.g. movement or something). Does not work for the "Die" order.
+OrdInterrupt=If unchecked, the order runs until it ends by itself: orders given meanwhile wait in the queue (a Die order always goes through). When a new order is given, interruptible orders at the end of the queue are dropped, but a non-interruptible one stays and the new order goes after it.
 
-OrdWaypointsSlowdown=If set, and the unit is shift-queued a waypoint path, the unit will slow down at each waypoint. Otherwise the unit only slows down at the end. (The exact behaviour is to slow down if there are no additional waypoints when the current order is started to be executed.)
+OrdWaypointsSlowdown=Checked for the next order in the unit's queue each time the unit gets a move target: if that order has this unchecked, the unit does not brake at the end of its move but goes through the point at speed. Move has it unchecked, so a shift-queued waypoint path is not slowed down at each waypoint. With nothing queued the unit always brakes.
 
-OrdQueue=Order execution can be queued using the SHIFT+click combination, up to 16 times.
+OrdQueue=Order execution can be queued using the SHIFT+click combination. A unit can have at most 8 queued orders that have a Highlight icon (orders without one don't count). If the unit is guarding, doing nothing, picking up, patrolling or acting as a Medic, the order replaces the current one instead.
 
 OrdDisabledMaintainUnitTarget=If the unit is disabled with a spell (Lockdown/Maelstrom/Stasis), it is targeting a unit, and this flag is set, it will keep targeting once the spell wears off. Otherwise it will lose its target. If the unit is targeting terrain, it will keep the target regardless of this flag's state.
 
@@ -553,7 +553,7 @@ OrdFleeUnreturnableDamage=If the unit is damaged by an attacker which it cannot 
 
 OrdRequiresMovableUnit=Order requires a unit that is able to move. (Unused, was for debugging)
 
-OrdHighlight=Determines which icon on the button panel is highlightened when the order is being called. If the selected icon is not present, no icon is highlightened. 65535 = no highlight at all [pointer to cmdicons.grp]
-OrdHighlightList=Determines which icon on the button panel is highlightened when the order is being called. If the selected icon is not present, no icon is highlightened. 65535 = no highlight at all [pointer to cmdicons.grp]
+OrdHighlight=Determines which icon on the button panel is highlightened while the unit does the order. If the selected icon is not present, no icon is highlightened. 65535 = none (a unit with a turret then shows the turret's order icon). Only orders with an icon count toward the limit of 8 queued orders. [pointer to cmdicons.grp]
+OrdHighlightList=Determines which icon on the button panel is highlightened while the unit does the order. If the selected icon is not present, no icon is highlightened. 65535 = none (a unit with a turret then shows the turret's order icon). Only orders with an icon count toward the limit of 8 queued orders. [pointer to cmdicons.grp]
 
-OrdReq=Holds the offset to the dat requirement for the order. Do not change unless you REALLY know what you're doing.
+OrdReq=Position of the order's entry in the order requirement list built into StarCraft.exe; the requirements themselves cannot be edited in the dat files. Keep 65535: as soon as the game checks an order holding 65535, it stores the position of every order that has an entry in that list, replacing what the file had, and sets the rest to 0 (never allowed). Until then, and always if no order holds 65535, values are used as they are: 0 = never allowed, any other value is read as requirements from that position in the list (the start of another order's entry gives its requirements; the end of an entry gives none). Nothing checks it. See the Help for details. Orders with a Technology use that technology's use requirements instead.

@@ -26,23 +26,23 @@ class DATImage(AbstractDAT.AbstractDATEntry):
 
 	class DrawFunction:
 		normal                  = 0
-		normal_no_hallucination = 1
+		normal_no_hallucination = 1 # Also not changed by cloaking
 		non_vision_cloaking     = 2
 		non_vision_cloaked      = 3
 		non_vision_decloaking   = 4
 		vision_cloaking         = 5
 		vision_cloaked          = 6
-		vision_decloaking       = 7 # Crashes?
+		vision_decloaking       = 7
 		emp_shockwave           = 8
 		use_remapping           = 9
 		shadow                  = 10
 		hp_bar                  = 11
-		warp_flash              = 12 # crashes staredit
+		warp_flash              = 12 # Warp-in texture; set by the game at run time; crashes StarEdit
 		selection_circle        = 13
 		player_color_override   = 14 # Flag
 		hide_gfx_show_size_rect = 15
 		hallucination           = 16
-		warp_flash              = 17
+		warp_flash              = 17 # Warp-in fade (this name shadows 12's)
 
 	class Remapping:
 		none     = 0
@@ -50,11 +50,11 @@ class DATImage(AbstractDAT.AbstractDATEntry):
 		gfire    = 2 # Green
 		bfire    = 3 # Blue
 		bexpl    = 4 # Blue2
-		special  = 5 # Own cloak
-		_crash   = 6
-		_crash2  = 7
-		unknown8 = 8
-		uknonwn9 = 9
+		special  = 5 # trans50 (50% translucency, also used by cloaking)
+		_crash   = 6 # red: one row only, so most pixel values read past it
+		_crash2  = 7 # green: one row only, like red
+		unknown8 = 8 # Out of range: reads past the list of tables
+		uknonwn9 = 9 # Out of range
 
 	def __init__(self) -> None:
 		self.grp_file: int = 0
@@ -178,11 +178,11 @@ class _ImagePropertyCoder:
 # images.dat file handler
 class ImagesDAT(AbstractDAT.AbstractDAT):
 	FORMAT = DATFormat.DATFormat({
-			"entries": 999,
+			"entries": 999, # Outside Brood War the game only loads the files of images 0-754
 			"expanded_max_entries": 65536,
 			"properties": [
 				{
-					"name": "grp_file", # Pointer to images.tbl
+					"name": "grp_file", # Pointer to images.tbl, 1-based (0 = none)
 					"type": "long"
 				},
 				{
@@ -210,31 +210,31 @@ class ImagesDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "iscript_id", # Pointer to iscript.bin
+					"name": "iscript_id", # ID looked up in iscript.bin's header, not an index
 					"type": "long"
 				},
 				{
-					"name": "shield_overlay", # Pointer to images.tbl
+					"name": "shield_overlay", # Pointer to images.tbl, 1-based (0 = none)
 					"type": "long"
 				},
 				{
-					"name": "attack_overlay", # Pointer to images.tbl
+					"name": "attack_overlay", # Pointer to images.tbl, 1-based (0 = none)
 					"type": "long"
 				},
 				{
-					"name": "damage_overlay", # Pointer to images.tbl
+					"name": "damage_overlay", # Pointer to images.tbl, 1-based (0 = none)
 					"type": "long"
 				},
 				{
-					"name": "special_overlay", # Pointer to images.tbl
+					"name": "special_overlay", # Pointer to images.tbl, 1-based (0 = none)
 					"type": "long"
 				},
 				{
-					"name": "landing_dust_overlay", # Pointer to images.tbl
+					"name": "landing_dust_overlay", # Pointer to images.tbl, 1-based (0 = none)
 					"type": "long"
 				},
 				{
-					"name": "lift_off_dust_overlay", # Pointer to images.tbl
+					"name": "lift_off_dust_overlay", # Pointer to images.tbl, 1-based (0 = none)
 					"type": "long"
 				}
 			]

@@ -73,31 +73,32 @@ class DATUnit(AbstractDAT.AbstractDATEntry):
 		flying_building      = 1 << 5
 		hero                 = 1 << 6
 		regenerate           = 1 << 7
-		animated_idle        = 1 << 8
+		animated_idle        = 1 << 8 # Clickable on any image of its sprite, not idle animation
 		cloakable            = 1 << 9
 		two_units_in_one_egg = 1 << 10
-		single_entity        = 1 << 11
+		single_entity        = 1 << 11 # Powerup (carried by workers)
 		resource_depot       = 1 << 12
 		resource_container   = 1 << 13
 		robotic              = 1 << 14
 		detector             = 1 << 15
 		organic              = 1 << 16
 		requires_creep       = 1 << 17
-		unused               = 1 << 18
+		unused               = 1 << 18 # Never tested
 		requires_psi         = 1 << 19
 		burrowable           = 1 << 20
-		spellcaster          = 1 << 21
+		spellcaster          = 1 << 21 # Has energy
 		permanent_cloak      = 1 << 22
-		pickup_item          = 1 << 23
-		ignores_supply_check = 1 << 24
-		use_medium_overlays  = 1 << 25
+		pickup_item          = 1 << 23 # Never tested (set on pickups 216-227)
+		ignores_supply_check = 1 << 24 # Skips the supply check
+		use_medium_overlays  = 1 << 25 # Spell overlay size only, not damage size
 		use_large_overlays   = 1 << 26
-		battle_reactions     = 1 << 27
-		full_auto_attack     = 1 << 28
+		battle_reactions     = 1 << 27 # Can move
+		full_auto_attack     = 1 << 28 # Can turn
 		invincible           = 1 << 29
 		mechanical           = 1 << 30
-		produces_units       = 1 << 31
+		produces_units       = 1 << 31 # Larger initial Zerg creep
 
+	# Movement flags: the game only tests the whole value 0xC1 (Spider Mines ignore it, hatch offset), StarEdit tests 0x01 (needs walkable ground)
 	class UnknownFlags:
 		unknown0x01 = 1 << 0
 		unknown0x02 = 1 << 1
@@ -134,8 +135,8 @@ class DATUnit(AbstractDAT.AbstractDATEntry):
 		ALL_FLAGS             = (non_neutral | unit_listing | mission_briefing | player_settings | all_races | set_doodad_state | non_location_triggers | unit_hero_settings | location_triggers | broodwar_only)
 
 	class AIInternalFlag:
-		no_suicide = 1 << 0
-		no_guard   = 1 << 1
+		no_suicide = 1 << 0 # Left out of AI attack/harass groups
+		no_guard   = 1 << 1 # Joins the AI town instead of becoming a guard
 		ALL_FLAGS  = (no_suicide | no_guard)
 
 	def __init__(self) -> None:
@@ -149,7 +150,7 @@ class DATUnit(AbstractDAT.AbstractDATEntry):
 		self.shield_amount: int = 0
 		self.hit_points: DATFormat.DATTypeHitPoints = DATFormat.DATTypeHitPoints()
 		self.elevation_level: int = 0
-		# TODO: Get more info
+		# Movement flags (see UnknownFlags)
 		self.unknown_flags: int = 0
 		self.sublabel: int = 0
 		self.comp_ai_idle: int = 0
@@ -686,7 +687,7 @@ class UnitsDAT(AbstractDAT.AbstractDAT):
 					"type": "short"
 				},
 				{
-					"name": "subunit2", # Pointer to units.dat
+					"name": "subunit2", # Pointer to units.dat (never read by the game or StarEdit)
 					"type": "short"
 				},
 				{
@@ -696,7 +697,7 @@ class UnitsDAT(AbstractDAT.AbstractDAT):
 					"entry_count": 96
 				},
 				{
-					"name": "construction_animation", # Pointer to images.dat
+					"name": "construction_animation", # Pointer to images.dat (0 = own image)
 					"type": "long"
 				},
 				{

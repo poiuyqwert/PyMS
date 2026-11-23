@@ -198,11 +198,11 @@ class OrdersDAT(AbstractDAT.AbstractDAT):
 			"expanded_max_entries": 255,
 			"properties": [
 				{
-					"name": "label", # Pointer to stat_txt.tbl
+					"name": "label", # 1-based index into stat_txt.tbl, not read by the game
 					"type": "short"
 				},
 				{
-					"name": "use_weapon_targeting",
+					"name": "use_weapon_targeting", # Attack order: targets are checked with the weapon, not the technology
 					"type": "byte"
 				},
 				{
@@ -226,7 +226,7 @@ class OrdersDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "waypoints_slowdown",
+					"name": "waypoints_slowdown", # Read for the next queued order: 0 = don't brake before it
 					"type": "byte"
 				},
 				{
@@ -250,11 +250,11 @@ class OrdersDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "targeting", # Pointer to weapons.dat
+					"name": "targeting", # Pointer to weapons.dat (130 = none): spell weapon, range and cooldown
 					"type": "byte"
 				},
 				{
-					"name": "technology_energy", # Pointer to techdata.dat
+					"name": "technology_energy", # Pointer to techdata.dat (44 = none): energy cost and use requirements
 					"type": "byte"
 				},
 				{
@@ -262,15 +262,15 @@ class OrdersDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "highlight_icon", # Pointer to cmdicon.grp
+					"name": "highlight_icon", # Pointer to cmdicons.grp (65535 = none); only orders with an icon count toward the 8 queued orders
 					"type": "short"
 				},
 				{
-					"name": "requirements",
+					"name": "requirements", # Offset into the exe's order requirement list; 65535 = filled in by the game
 					"type": "short"
 				},
 				{
-					"name": "obscured_order", # Pointer to orders.dat
+					"name": "obscured_order", # Pointer to orders.dat (189 = none): for a fog order, the order given once the target is seen
 					"type": "byte"
 				}
 			]
