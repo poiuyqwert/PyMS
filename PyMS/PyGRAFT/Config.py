@@ -90,7 +90,7 @@ class PyGRAFTConfig(Config.Config):
 			self.plugin_required = Config.Warn(message=(
 				"PyGRAFT does not create executable mods.\n\n"
 				"Instead it creates .graft files, which must be loaded into StarCraft by a plugin,\n"
-				"such as DatExtend or the GPTP Graft Hooks (both by FaRTy1billion)."
+				"such as GPTP Graft Hooks (both by FaRTy1billion)."
 			))
 			super().__init__()
 
