@@ -323,7 +323,7 @@ class Test_Decompile(unittest.TestCase):
 	def test_duplicate_names_are_written_as_ids(self) -> None:
 		graft = _load(UnitsGraft, words(0, 2, 0, 1, 2, 0xFFFF, 0xFFFF))
 		text = decompile_req(graft, _duplicate_names_context())
-		self.assertEqual(text, "Unit 2:\t# Terran Vulture (Other)\n\thas_completed 0\t# Terran Marine (Same)\n\thas_completed 1\t# Terran Ghost (Same)\n\thas_completed 'Other'\n")
+		self.assertEqual(text, "Unit 2:\t# Terran Vulture [Other]\n\thas_completed 0\t# Terran Marine [Same]\n\thas_completed 1\t# Terran Ghost [Same]\n\thas_completed 'Other'\n")
 		graft.replace_scripts(compile_req(text, UnitsGraft, _duplicate_names_context()))
 		self.assertEqual(IO.output_to_bytes(graft.save), words(0, 2, 0, 1, 2, 0xFFFF, 0xFFFF))
 

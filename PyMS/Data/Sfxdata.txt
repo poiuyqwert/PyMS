@@ -1,8 +1,8 @@
 No sound
-Zerg\Drone\ZDrErr00.WAV
+Zerg\Drone\ZDrErr00.WAV (1)
 Misc\Buzz.wav (1)
-Misc\PError.WAV
-Misc\ZBldgPlc.wav (1)
+Misc\PError.WAV (1)
+Misc\ZBldgPlc.wav
 Misc\TBldgPlc.wav
 Misc\PBldgPlc.wav
 Misc\ExploLrg.wav
@@ -13,7 +13,7 @@ Misc\Explo2.wav
 Misc\Explo3.wav
 Misc\Explo4.wav
 Misc\Explo5.wav
-Misc\Button.wav
+Misc\Button.wav (1)
 Misc\BurrowDn.wav
 Misc\BurrowUp.wav
 Misc\OnFirSml.wav
@@ -71,7 +71,7 @@ Bullet\TMaFir00.wav
 Bullet\TGoFir00.wav
 Bullet\ZGuFir00.wav
 Bullet\ZGuHit00.wav
-Bullet\LASERB.wav
+Bullet\LASERB.wav (1)
 Bullet\TPhFi100.wav
 Bullet\LASRHIT1.wav
 Bullet\LASRHIT2.wav
@@ -80,9 +80,9 @@ Bullet\ZLuFir00.wav
 Bullet\ZLuHit00.wav
 Bullet\HKMISSLE.wav
 Bullet\TGoFi200.wav
-Bullet\TPhFi200.wav
-Bullet\TNsFir00.wav (1)
-Bullet\TNsFir00.wav (2)
+Bullet\TPhFi200.wav (1)
+Bullet\TPhFi200.wav (2)
+Bullet\TNsFir00.wav
 Bullet\TNsHit00.wav
 Bullet\PhoAtt00.wav
 Bullet\PhoHit00.wav
@@ -99,7 +99,7 @@ Bullet\SHCKLNCH.wav
 Bullet\TGhFir00.wav
 Bullet\DragBull.wav
 Bullet\psaHit00.wav
-Bullet\LaserB.wav
+Bullet\LaserB.wav (2)
 Bullet\pTrFir00.wav
 Bullet\pTrFir01.wav
 Bullet\pzeFir00.wav
@@ -121,31 +121,31 @@ Protoss\Advisor\PAdUpd00.WAV
 Zerg\Advisor\ZAdUpd01.WAV
 Terran\Advisor\TAdUpd01.WAV
 Protoss\Advisor\PAdUpd01.WAV
-Zerg\Advisor\ZAdUpd02.WAV
-Terran\Advisor\TAdUpd02.WAV (1)
+Zerg\Advisor\ZAdUpd02.WAV (1)
+Terran\Advisor\TAdUpd02.WAV
 Protoss\Advisor\PAdUpd02.WAV
 Terran\Advisor\TAdUpd03.WAV
 Zerg\Advisor\ZAdUpd04.WAV
 Terran\Advisor\TAdUpd04.WAV
 Protoss\Advisor\PAdUpd04.WAV
 Terran\Advisor\TAdUpd05.WAV
+Zerg\Advisor\ZAdUpd02.WAV (2)
 Terran\Advisor\TAdUpd06.WAV
-Terran\Advisor\TAdUpd02.WAV (2)
 Protoss\Advisor\PAdUpd06.WAV
 Terran\Advisor\TAdUpd07.WAV
 Zerg\Bldg\ZChRdy00.WAV
-Terran\SCV\TSCUpd00.WAV
-Zerg\DRONE\ZDrErr00.WAV (1)
-Zerg\DRONE\ZDrErr00.WAV (2)
+Terran\SCV\TSCUpd00.WAV (1)
+Terran\SCV\TSCUpd00.WAV (2)
+Zerg\Drone\ZDrErr00.WAV (2)
 Misc\Buzz.wav (2)
-Misc\PError.wav
-Misc\ZBldgPlc.wav (2)
-Terran\Advisor\tAdErr04.WAV [1]
+Misc\PError.WAV (2)
+Zerg\DRONE\ZDrErr00.WAV (3)
+Terran\Advisor\tAdErr04.WAV (1)
+Terran\Advisor\tAdErr04.WAV (2)
+Zerg\DRONE\ZDrErr00.WAV (4)
 Terran\Advisor\tAdErr03.WAV (1)
 Terran\Advisor\tAdErr03.WAV (2)
-Terran\Advisor\tAdErr04.WAV [2]
-Zerg\Advisor\ZAdErr00.WAV (1)
-Zerg\Advisor\ZAdErr00.WAV (2)
+Zerg\Advisor\ZAdErr00.WAV
 Terran\Advisor\tAdErr00.WAV
 Protoss\Advisor\PAdErr00.WAV
 Zerg\Advisor\ZAdErr01.WAV
@@ -157,11 +157,11 @@ Protoss\Advisor\PAdErr02.WAV
 Zerg\Advisor\ZAdErr06.WAV
 Terran\Advisor\tAdErr06.WAV
 Protoss\Advisor\PAdErr06.WAV
+Zerg\DRONE\ZDrErr00.WAV (5)
 Terran\SCV\TSCErr01.WAV
-Terran\Advisor\tAdErr04.WAV [3]
 Protoss\PROBE\PPrErr00.WAV
+Zerg\DRONE\ZDrErr00.WAV (6)
 Terran\SCV\TSCErr00.WAV
-Terran\Advisor\tAdErr04.WAV [4]
 Protoss\PROBE\PPrErr01.WAV
 glue\mousedown2.wav
 glue\mouseover.wav
@@ -397,7 +397,7 @@ Terran\bldg\tRlWht00.WAV
 Terran\bldg\tnswht00.WAV
 Terran\bldg\tpgwht00.WAV
 Terran\bldg\tplwht00.WAV
-Misc\button.wav
+Misc\button.wav (2)
 Terran\bldg\trewht00.WAV
 Terran\bldg\trfwht00.WAV
 Terran\bldg\twpwht00.WAV
@@ -480,8 +480,8 @@ Protoss\Bldg\pFoWht00.WAV
 Protoss\Bldg\pGaWht00.WAV
 Protoss\Bldg\pGcWht00.WAV
 Protoss\Bldg\PbaAct00.wav
-Misc\Button.WAV
-Protoss\Bldg\pNaWht00.WAV (1)
+Misc\Button.WAV (3)
+Protoss\Bldg\pNaWht00.WAV
 Protoss\Bldg\pNeWht00.WAV
 Protoss\Bldg\pPBWht00.WAV
 Misc\UTmWht00.WAV
@@ -599,8 +599,8 @@ Protoss\PROBE\PPrRdy00.WAV
 Protoss\PROBE\PPrDth00.WAV
 Protoss\PROBE\PPrAtt00.WAV
 Protoss\PROBE\PPrAtt01.WAV
-Protoss\PROBE\PPrMin00.WAV
-Protoss\PROBE\PPrPss00.WAV (1)
+Protoss\PROBE\PPrMin00.WAV (1)
+Protoss\PROBE\PPrPss00.WAV
 Protoss\PROBE\PPrPss01.WAV
 Protoss\PROBE\PPrPss02.WAV
 Protoss\PROBE\PPrPss03.WAV
@@ -612,10 +612,10 @@ Protoss\PROBE\PPrYes00.WAV
 Protoss\PROBE\PPrYes01.WAV
 Protoss\PROBE\PPrYes02.WAV
 Protoss\PROBE\PPrYes03.WAV
-Protoss\INTERCEP\PInLau00.WAV
-Protoss\PROBE\PPrPss00.WAV (2)
-Protoss\TEMPLAR\PTeSum00.WAV (1)
-Protoss\TEMPLAR\PTeSum00.WAV (2)
+Protoss\PROBE\PPrMin00.WAV (2)
+Protoss\INTERCEP\PInLau00.WAV (1)
+Protoss\INTERCEP\PInLau00.WAV (2)
+Protoss\TEMPLAR\PTeSum00.WAV
 Protoss\TEMPLAR\PTeHal00.WAV
 Protoss\TEMPLAR\PTeHal01.WAV
 Protoss\TEMPLAR\PTeSto00.WAV
@@ -762,8 +762,8 @@ Zerg\Bldg\ZHiWht00.WAV
 Zerg\Bldg\ZIgWht00.WAV
 Zerg\Bldg\ZLrWht00.WAV
 Zerg\Bldg\ZLuWht00.WAV
+Misc\Button.WAV (4)
 Zerg\Bldg\ZMcWht00.WAV
-Protoss\Bldg\pNaWht00.WAV (2)
 Zerg\Bldg\ZMhWht00.WAV
 Zerg\Bldg\ZNeWht00.WAV
 Zerg\Bldg\ZNyWht00.WAV
@@ -796,9 +796,9 @@ Zerg\BROODLING\ZBrWht02.WAV
 Zerg\BROODLING\ZBrWht03.WAV
 Zerg\BROODLING\ZBrYes00.WAV
 Zerg\BROODLING\ZBrYes01.WAV
-Zerg\BROODLING\ZBrYes02.WAV
-Zerg\BUGGUY\ZBGRdy00.wav (1)
-Zerg\BUGGUY\ZBGRdy00.wav (2)
+Zerg\BROODLING\ZBrYes02.WAV (1)
+Zerg\BROODLING\ZBrYes02.WAV (2)
+Zerg\BUGGUY\ZBGRdy00.wav
 Zerg\BUGGUY\ZBGPss00.wav
 Zerg\BUGGUY\ZBGPss01.wav
 Zerg\BUGGUY\ZBGPss02.wav
@@ -846,8 +846,8 @@ Zerg\DRONE\ZDrYes02.WAV
 Zerg\DRONE\ZDrYes03.WAV
 Zerg\DRONE\ZDrYes04.WAV
 Zerg\DRONE\ZDrMin00.wav
+Zerg\DRONE\ZDrErr00.WAV (7)
 Zerg\Larva\ZLaDth00.WAV
-Terran\Advisor\tAdErr04.WAV [5]
 Zerg\Larva\ZLaPss00.WAV
 Zerg\Larva\ZLaWht00.WAV
 Zerg\Guardian\ZGuDth00.WAV

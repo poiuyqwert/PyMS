@@ -147,7 +147,7 @@ class Test_Units(unittest.TestCase):
 		self.assertIsNone(data_context.unit_name(0))
 		self.assertIsNone(data_context.unit_name(1))
 		self.assertEqual(data_context.unit_name(2), 'Other')
-		self.assertEqual(data_context.unit_display_name(0), 'Terran Marine (Same)')
+		self.assertEqual(data_context.unit_display_name(0), 'Terran Marine [Same]')
 
 	def test_out_of_range_ids_have_no_names(self) -> None:
 		data_context = DataContext(stat_txt_tbl=_vanilla_stat_txt())

@@ -11,7 +11,7 @@ Cloaking Field
 Personnel Cloaking
 Burrowing
 Infestation
-Spawn Broodlings
+Spawn Broodling
 Dark Swarm
 Plague
 Consume

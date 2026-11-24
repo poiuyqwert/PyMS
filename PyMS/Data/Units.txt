@@ -218,8 +218,8 @@ Young Chrysalis
 Psi Emitter
 Data Disc
 Khaydarin Crystal
-Mineral Cluster Type 1
-Mineral Cluster Type 2
+Mineral Chunk (Type 1)
+Mineral Chunk (Type 2)
 Protoss Vespene Gas Orb Type 1
 Protoss Vespene Gas Orb Type 2
 Zerg Vespene Gas Sac Type 1

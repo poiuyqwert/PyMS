@@ -14,15 +14,15 @@ Attack Ground (Unused)
 Hover (Unused)
 Attack Move
 Building Is Being Infested
-Nothing 1 (Unused)
+Nothing (Unused 1)
 Power-Up (Unused)
 Guard (Building)
 Attack (Building)
 Script (Spider Mine)
 Stay In Range
 Attack (Subunit)
-Nothing 2 (Normal)
-Nothing 3 (Unused)
+Nothing (Normal)
+Nothing (Unused 2)
 Drone Start Mutate
 Drone Mutate
 Use Ability (Infest 1)
@@ -53,7 +53,7 @@ Move (Carrier&Reaver)
 Stop (Carrier)
 Attack (Carrier)
 Attack Obscured (Carrier)
-Ignore 2 (Carrier)
+Ignore (Carrier)
 Attack Unit (Carrier)
 Hold Position (Carrier)
 Idle (Reaver)
@@ -87,7 +87,7 @@ Move to Harvest Minerals
 Can Harvest Minerals
 Harvesting Minerals
 Harvesting Minerals Interrupted
-Harvest 4 (Unknown)
+Harvest (Unknown)
 Return Minerals
 Harvesting Interrupted - Recharge Shields
 Move/Enter Transport

@@ -2,7 +2,7 @@ Terran Infantry Armor
 Terran Vehicle Plating 
 Terran Ship Plating 
 Zerg Carapace 
-Zerg Flyer Caparace 
+Zerg Flyer Carapace 
 Protoss Armor 
 Protoss Plating 
 Terran Infantry Weapons 

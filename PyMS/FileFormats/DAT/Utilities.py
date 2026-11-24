@@ -29,8 +29,10 @@ class DataNamesUsage(Enum):
 	"""Ignore Data Name, use TBL Name if available"""
 	combine = 'combine'
 	"""Combine the Data Name with the TBL Name:
-	
-	Data Name (TBL Name)"""
+
+	Data Name [TBL Name]
+
+	The TBL Name is left out when the Data Name already contains it as whole words"""
 
 class DATEntryName:
 	RE_NAME_OVERRIDE = re.compile(r'\s*(\d{1,5})\s*(\+?)\s*:(.*)')
@@ -65,10 +67,11 @@ class DATEntryName:
 		if data_names_usage == DataNamesUsage.combine and tbl_name:
 			if data_name is None:
 				data_name = default_name
-			if data_name == tbl_name:
+			# Leave out the TBL name when the data name already contains it as whole words (`Idle (Medic)`, not `Idle (Medic) [Medic]`)
+			if re.search(rf'(?<!\w){re.escape(tbl_name.strip())}(?!\w)', data_name, re.IGNORECASE):
 				name = data_name
 			else:
-				name = f'{data_name} ({tbl_name})'
+				name = f'{data_name} [{tbl_name}]'
 		elif data_names_usage != DataNamesUsage.ignore and data_name:
 			name = data_name
 		elif data_names_usage != DataNamesUsage.use and tbl_name:

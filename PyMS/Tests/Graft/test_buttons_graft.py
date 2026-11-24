@@ -50,7 +50,7 @@ class Test_Defaults(unittest.TestCase):
 		graft.new()
 		text = decompile_buttons(graft)
 		# The vanilla game leaves the unused unit as 0 for unused units
-		self.assertIn("unit_stat_info 91 {\t# Cargo Ship (Unused) (Unused)\n\tdebug_id 'Terran Marine'\n\tchanged_never\n\tdraw_none\n}\n", text)
+		self.assertIn("unit_stat_info 91 {\t# Cargo Ship (Unused)\n\tdebug_id 'Terran Marine'\n\tchanged_never\n\tdraw_none\n}\n", text)
 		self.assertIn("unit_stat_info 120 {\t# Terran Machine Shop\n\tdebug_id 'Terran Machine Shop'\n\tchanged_building\n\tdraw_building\n}\n", text)
 
 	def test_vanilla_function_params(self) -> None:

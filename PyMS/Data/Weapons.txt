@@ -1,7 +1,7 @@
 Gauss Rifle (Normal)
 Gauss Rifle (Jim Raynor-Marine)
-C-10 Concussion Rifle (Normal)
-C-10 Concussion Rifle (Sarah Kerrigan)
+C-10 Canister Rifle (Normal)
+C-10 Canister Rifle (Sarah Kerrigan)
 Fragmentation Grenade (Normal)
 Fragmentation Grenade (Jim Raynor-Vulture)
 Spider Mines
@@ -27,7 +27,7 @@ Flame Thrower (Normal)
 Flame Thrower (Gui Montag)
 Arclite Shock Cannon (Normal)
 Arclite Shock Cannon (Edmund Duke)
-Longbolt Missiles
+Longbolt Missile
 Yamato Gun
 Nuclear Missile
 Lockdown
@@ -86,12 +86,12 @@ Psi Storm
 Warp Blades (Zeratul)
 Warp Blades (Dark Templar Hero)
 Missiles (Unused)
-Laser Battery1 (Unused)
+Laser Battery (Unused1)
 Tormentor Missiles (Unused)
 Bombs (Unused)
 Raider Gun (Unused)
-Laser Battery2 (Unused)
-Laser Battery3 (Unused)
+Laser Battery (Unused2)
+Laser Battery (Unused3)
 Dual Photon Blasters (Unused)
 Flechette Grenade (Unused)
 Twin Autocannons (Floor Trap)
@@ -108,13 +108,13 @@ Feedback
 Optical Flare
 Maelstrom
 Subterranean Spines
-Gauss Rifle0 (Unused)
+Gauss Rifle (Unused)
 Warp Blades (Normal)
-C-10 Concussion Rifle (Samir Duran)
-C-10 Concussion Rifle (Infested Duran)
+C-10 Canister Rifle (Samir Duran)
+C-10 Canister Rifle (Infested Duran)
 Dual Photon Blasters (Artanis)
 Anti-matter Missiles (Artanis)
-C-10 Concussion Rifle (Alexei Stukov)
+C-10 Canister Rifle (Alexei Stukov)
 Unknown117
 Unknown118
 Unknown119

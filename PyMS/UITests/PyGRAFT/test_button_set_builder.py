@@ -14,6 +14,9 @@ from ...Utilities import IO
 from unittest import mock
 
 ICON_SELECT_DIALOG = 'PyMS.PyGRAFT.ButtonSetEditor.ButtonSettingsView.IconSelectDialog'
+ERROR_DIALOG = 'PyMS.PyGRAFT.ButtonSetEditor.ButtonSetBuilderView.ErrorDialog'
+MOVE_CODE = 'button {\n\tposition TL\n\ticon 228\n\talways\n\tmove\n\tenabled_str 664\n\tdisabled_str 0\n}\n'
+MOVE_BUTTON = Button(position=1, icon=228, condition=3, action=9, enabled_string=664)
 
 def icons_grp(frames: int = 4) -> CacheGRP:
 	# A small cmdicons.grp, so the icons can be drawn without the game's files
@@ -415,6 +418,130 @@ class Test_PyGRAFT_button_set_builder(PyGRAFTTestCase):
 		editor.function.set(ButtonCodeCommands.CanUpgrade.function_index)
 		self.pump(view)
 		self.assertTrue(editor.help_tooltip.text.startswith('can_upgrade(upgrade)'))
+
+	# Copy and paste
+
+	def two_buttons(self, gui: PyGRAFT, view: ButtonSetBuilderView) -> list[Button]:
+		buttons = [Button(position=2, icon=1, enabled_string=1), Button(position=3, icon=2, enabled_string=2)]
+		self.set_buttons(gui, view, [button.copy() for button in buttons])
+		return buttons
+
+	def test_clipboard_buttons_have_tooltips(self) -> None:
+		_, view = self.open_builder()
+		self.assertTrue(getattr(view.copy_button, '_tooltip_Tooltip').text.startswith('Copy Button, hold Shift to copy button set ('))
+		self.assertTrue(getattr(view.paste_button, '_tooltip_Tooltip').text.startswith('Paste Button, hold Shift to paste button set ('))
+
+	def test_copy_puts_the_selected_buttons_code_on_the_clipboard(self) -> None:
+		gui, view = self.open_builder()
+		self.set_buttons(gui, view, [Button(position=2), MOVE_BUTTON.copy()])
+		view.select_button(1)
+		self.invoke(view.copy_button)
+		self.assertEqual(view.clipboard_get(), MOVE_CODE)
+
+	def test_shift_click_copies_the_button_set(self) -> None:
+		gui, view = self.open_builder()
+		self.set_buttons(gui, view, [MOVE_BUTTON.copy(), MOVE_BUTTON.copy()])
+		view.clipboard_set('')
+		self.click(view.copy_button, 2, 2, UI.Shift.Click_Left)
+		self.assertEqual(view.clipboard_get(), MOVE_CODE * 2)
+
+	def test_paste_replaces_the_selected_button(self) -> None:
+		gui, view = self.open_builder()
+		buttons = self.two_buttons(gui, view)
+		view.select_button(1)
+		view.clipboard_set(MOVE_CODE)
+		self.invoke(view.paste_button)
+		self.assertEqual(gui.buttons_data.graft.button_sets[0].buttons, [buttons[0], MOVE_BUTTON])
+		self.assertEqual(view.selected, 1)
+		self.assertEqual(view.rows[1].position_text.get(), '1')
+		self.assert_edited(gui)
+
+	def test_paste_adds_the_button_to_an_empty_set(self) -> None:
+		gui, view = self.open_builder()
+		self.set_buttons(gui, view, [])
+		view.clipboard_set(MOVE_CODE)
+		self.invoke(view.paste_button)
+		self.assertEqual(gui.buttons_data.graft.button_sets[0].buttons, [MOVE_BUTTON])
+		self.assertEqual(view.selected, 0)
+		self.assertIs(view.settings_view.button, gui.buttons_data.graft.button_sets[0].buttons[0])
+
+	def test_paste_of_more_than_one_button_changes_nothing(self) -> None:
+		gui, view = self.open_builder()
+		buttons = self.two_buttons(gui, view)
+		view.clipboard_set(MOVE_CODE * 2)
+		with mock.patch(ERROR_DIALOG) as error_dialog:
+			self.invoke(view.paste_button)
+		error_dialog.assert_called_once()
+		self.assertIn('The clipboard has 2 buttons', str(error_dialog.call_args.args[1]))
+		self.assertEqual(gui.buttons_data.graft.button_sets[0].buttons, buttons)
+		self.assertFalse(gui.buttons_data.edited)
+
+	def test_paste_error_changes_nothing(self) -> None:
+		gui, view = self.open_builder()
+		buttons = self.two_buttons(gui, view)
+		view.clipboard_set('not_a_button\n')
+		with mock.patch(ERROR_DIALOG) as error_dialog:
+			self.invoke(view.paste_button)
+		error_dialog.assert_called_once()
+		self.assertEqual(gui.buttons_data.graft.button_sets[0].buttons, buttons)
+		self.assertFalse(gui.buttons_data.edited)
+
+	def test_shift_click_pastes_the_button_set(self) -> None:
+		gui, view = self.open_builder()
+		self.two_buttons(gui, view)
+		view.clipboard_set(MOVE_CODE * 3)
+		self.click(view.paste_button, 2, 2, UI.Shift.Click_Left)
+		self.assertEqual(gui.buttons_data.graft.button_sets[0].buttons, [MOVE_BUTTON] * 3)
+		self.assertEqual(len(view.rows), 3)
+		self.assertEqual(view.selected, 0)
+		self.assert_edited(gui)
+
+	def test_clipboard_shortcuts_copy_and_paste_the_selected_button(self) -> None:
+		gui, view = self.open_builder()
+		buttons = self.two_buttons(gui, view)
+		self.show(gui)
+		view.focus_force()
+		self.pump(gui)
+		view.select_button(1)
+		self.shortcut(view, UI.Ctrl.c)
+		self.assertEqual(view.clipboard_get().count('button {'), 1)
+		view.select_button(0)
+		self.shortcut(view, UI.Ctrl.v)
+		self.assertEqual(gui.buttons_data.graft.button_sets[0].buttons, [buttons[1], buttons[1]])
+
+	def test_shift_clipboard_shortcuts_copy_and_paste_the_button_set(self) -> None:
+		gui, view = self.open_builder()
+		self.two_buttons(gui, view)
+		self.show(gui)
+		view.focus_force()
+		self.pump(gui)
+		self.shortcut(view, UI.Shift.Ctrl.c)
+		self.assertEqual(view.clipboard_get().count('button {'), 2)
+		view.clipboard_set(MOVE_CODE * 3)
+		self.shortcut(view, UI.Shift.Ctrl.v)
+		self.assertEqual(gui.buttons_data.graft.button_sets[0].buttons, [MOVE_BUTTON] * 3)
+
+	def test_clipboard_shortcuts_are_left_to_a_focused_text_field(self) -> None:
+		gui, view = self.open_builder()
+		buttons = self.two_buttons(gui, view)
+		self.show(gui)
+		entry = view.settings_view.position_dropdown.entry
+		entry.focus_force()
+		self.pump(gui)
+		view.clipboard_set(MOVE_CODE * 3)
+		for pattern in (UI.Ctrl.c, UI.Shift.Ctrl.c, UI.Ctrl.v, UI.Shift.Ctrl.v):
+			self.shortcut(entry, pattern)
+		self.assertEqual(view.clipboard_get(), MOVE_CODE * 3)
+		self.assertEqual(gui.buttons_data.graft.button_sets[0].buttons, buttons)
+
+	def test_copy_and_paste_are_disabled_without_a_button_set(self) -> None:
+		gui, view = self.open_builder()
+		gui.buttons_data.graft.button_sets = []
+		gui.buttons_data.graft.button_cards = []
+		gui.refresh()
+		self.pump(gui)
+		self.assertEqual(str(view.copy_button['state']), UI.DISABLED)
+		self.assertEqual(str(view.paste_button['state']), UI.DISABLED)
 
 	# Leaving
 

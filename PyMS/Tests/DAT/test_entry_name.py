@@ -195,9 +195,9 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'Terran Marine (Terran Marine<0>*<0>Ground Units)',
-			'Terran Starport (Terran Starport<0>*<0>Buildings)',
-			'Terran Vespene Gas Tank Type 2 (Vespene Tank<0>Terran Type 2<0>Resources)',
+			'Terran Marine [Terran Marine<0>*<0>Ground Units]',
+			'Terran Starport [Terran Starport<0>*<0>Buildings]',
+			'Terran Vespene Gas Tank Type 2 [Vespene Tank<0>Terran Type 2<0>Resources]',
 			'Reserved Unit #228',
 			'Reserved Unit #250',
 			'Expanded Unit #251'
@@ -209,12 +209,12 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'Terran Marine (Terran Marine<0>*<0>Ground Units)',
-			'Terran Starport (Terran Starport<0>*<0>Buildings)',
-			'Terran Vespene Gas Tank Type 2 (Vespene Tank<0>Terran Type 2<0>Resources)',
+			'Terran Marine [Terran Marine<0>*<0>Ground Units]',
+			'Terran Starport [Terran Starport<0>*<0>Buildings]',
+			'Terran Vespene Gas Tank Type 2 [Vespene Tank<0>Terran Type 2<0>Resources]',
 			'Reserved Unit #228',
 			'Reserved Unit #250',
-			'Expanded Unit #251 (My Cool Unit<0>*<0>My Cool Race)'
+			'Expanded Unit #251 [My Cool Unit<0>*<0>My Cool Race]'
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -225,10 +225,10 @@ class Test_Entry_Name(unittest.TestCase):
 		expected_names = (
 			'Terran Marine',
 			'Terran Starport',
-			'Terran Vespene Gas Tank Type 2 (Vespene Tank (Terran Type 2))',
+			'Terran Vespene Gas Tank Type 2 [Vespene Tank (Terran Type 2)]',
 			'Reserved Unit #228',
 			'Reserved Unit #250',
-			'Expanded Unit #251 (My Cool Unit)'
+			'Expanded Unit #251 [My Cool Unit]'
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -239,7 +239,7 @@ class Test_Entry_Name(unittest.TestCase):
 		expected_names = (
 			'My Other Cool Unit',
 			'My Last Cool Unit',
-			'Terran Vespene Gas Tank Type 2 (Vespene Tank (Terran Type 2))',
+			'Terran Vespene Gas Tank Type 2 [Vespene Tank (Terran Type 2)]',
 			'Reserved Unit #228',
 			'Reserved Unit #250',
 			'Not A Cool Unit'
@@ -259,10 +259,10 @@ class Test_Entry_Name(unittest.TestCase):
 		expected_names = (
 			'Terran Marine [V1]',
 			'Terran Starport [V2]',
-			'Terran Vespene Gas Tank Type 2 (Vespene Tank (Terran Type 2))',
+			'Terran Vespene Gas Tank Type 2 [Vespene Tank (Terran Type 2)]',
 			'Reserved Unit #228',
 			'Reserved Unit #250',
-			'Expanded Unit #251 (My Cool Unit) [V3]'
+			'Expanded Unit #251 [My Cool Unit] [V3]'
 		)
 		name_overrides = {
 			0: (True, '[V1]'),
@@ -288,6 +288,26 @@ class Test_Entry_Name(unittest.TestCase):
 			DAT.DATEntryName.unit(0, stat_txt=['Unit 0\x00'], data_names_usage=DAT.DataNamesUsage.ignore, tbl_decompile=False),
 			'Unit 0'
 		)
+
+	def test_combine_leaves_out_tbl_name_contained_as_whole_words(self) -> None:
+		cases = (
+			# (data name, tbl name, combined name)
+			('Idle (Medic)', 'Medic', 'Idle (Medic)'),
+			('Burst Lasers (Unused)', 'Burst Lasers', 'Burst Lasers (Unused)'),
+			('Mutalisk Cocoon', 'Cocoon', 'Mutalisk Cocoon'),
+			('Floor Hatch (Unused)', 'Floor Hatch (UNUSED)', 'Floor Hatch (Unused)'),
+			('Maelstrom', 'Maelstrom ', 'Maelstrom'),
+			('Move&Attack (A+B)', 'A+B', 'Move&Attack (A+B)'),
+			('Is Building (SCV)', 'Build', 'Is Building (SCV) [Build]'),
+			('Bad Rifle0 (Unused)', 'Bad Rifle', 'Bad Rifle0 (Unused) [Bad Rifle]'),
+			('Edmund Duke (Tank Mode)', 'Edmund Duke (Siege Tank)', 'Edmund Duke (Tank Mode) [Edmund Duke (Siege Tank)]'),
+		)
+		for (data_name, tbl_name, expected_name) in cases:
+			with self.subTest(data_name=data_name, tbl_name=tbl_name):
+				self.assertEqual(
+					DAT.DATEntryName.unit(0, data_names=[data_name], stat_txt=[f'{tbl_name}\x00'], data_names_usage=DAT.DataNamesUsage.combine),
+					expected_name
+				)
 
 	def test_grp_flingy_returns_none_for_out_of_range_id(self) -> None:
 		flingydat = DAT.FlingyDAT()
@@ -375,10 +395,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'Gauss Rifle (Normal) (Gauss Rifle)',
-			'Consume (c<3><3>C<1>onsume)',
-			'Unknown129 (Gauss Rifle)',
-			'Expanded Weapon #130 (General Duke)',
+			'Gauss Rifle (Normal)',
+			'Consume [c<3><3>C<1>onsume]',
+			'Unknown129 [Gauss Rifle]',
+			'Expanded Weapon #130 [General Duke]',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -387,10 +407,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'Gauss Rifle (Normal) (Gauss Rifle)',
+			'Gauss Rifle (Normal)',
 			'Consume',
-			'Unknown129 (Gauss Rifle)',
-			'Expanded Weapon #130 (General Duke)',
+			'Unknown129 [Gauss Rifle]',
+			'Expanded Weapon #130 [General Duke]',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -417,10 +437,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'Gauss Rifle (Normal) (Gauss Rifle) [V1]',
+			'Gauss Rifle (Normal) [V1]',
 			'Consume [V2]',
-			'Unknown129 (Gauss Rifle) [V3]',
-			'Expanded Weapon #130 (General Duke) [V4]',
+			'Unknown129 [Gauss Rifle] [V3]',
+			'Expanded Weapon #130 [General Duke] [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),
@@ -480,10 +500,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'Scourge (zerg\\avenger.grp)',
-			'Building Lifting Dust Type1 (thingy\\dust06.grp)',
-			'Maelstrom Hit (thingy\\MaelHit.grp)',
-			'Expanded Image #999 (zerg\\zavBirth.grp)',
+			'Scourge [zerg\\avenger.grp]',
+			'Building Lifting Dust Type1 [thingy\\dust06.grp]',
+			'Maelstrom Hit [thingy\\MaelHit.grp]',
+			'Expanded Image #999 [zerg\\zavBirth.grp]',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -510,10 +530,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'Scourge (zerg\\avenger.grp) [V1]',
-			'Building Lifting Dust Type1 (thingy\\dust06.grp) [V2]',
-			'Maelstrom Hit (thingy\\MaelHit.grp) [V3]',
-			'Expanded Image #999 (zerg\\zavBirth.grp) [V4]',
+			'Scourge [zerg\\avenger.grp] [V1]',
+			'Building Lifting Dust Type1 [thingy\\dust06.grp] [V2]',
+			'Maelstrom Hit [thingy\\MaelHit.grp] [V3]',
+			'Expanded Image #999 [zerg\\zavBirth.grp] [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),
@@ -577,10 +597,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'2/38 Ash (thingy\\tileset\\AshWorld\\rock01.grp)',
-			'Machine Shop (terran\\machines.grp)',
-			'Khalis (neutral\\Khalis.grp)',
-			'Expanded Sprite #517 (zerg\\zavBirth.grp)',
+			'2/38 Ash [thingy\\tileset\\AshWorld\\rock01.grp]',
+			'Machine Shop [terran\\machines.grp]',
+			'Khalis [neutral\\Khalis.grp]',
+			'Expanded Sprite #517 [zerg\\zavBirth.grp]',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -607,10 +627,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'2/38 Ash (thingy\\tileset\\AshWorld\\rock01.grp) [V1]',
-			'Machine Shop (terran\\machines.grp) [V2]',
-			'Khalis (neutral\\Khalis.grp) [V3]',
-			'Expanded Sprite #517 (zerg\\zavBirth.grp) [V4]',
+			'2/38 Ash [thingy\\tileset\\AshWorld\\rock01.grp] [V1]',
+			'Machine Shop [terran\\machines.grp] [V2]',
+			'Khalis [neutral\\Khalis.grp] [V3]',
+			'Expanded Sprite #517 [zerg\\zavBirth.grp] [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),
@@ -678,10 +698,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'Scourge (zerg\\avenger.grp)',
-			'Bunker (terran\\PillBox.grp)',
-			'Khalis (neutral\\Khalis.grp)',
-			'Expanded Flingy #209 (zerg\\zavBirth.grp)',
+			'Scourge [zerg\\avenger.grp]',
+			'Bunker [terran\\PillBox.grp]',
+			'Khalis [neutral\\Khalis.grp]',
+			'Expanded Flingy #209 [zerg\\zavBirth.grp]',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -708,10 +728,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'Scourge (zerg\\avenger.grp) [V1]',
-			'Bunker (terran\\PillBox.grp) [V2]',
-			'Khalis (neutral\\Khalis.grp) [V3]',
-			'Expanded Flingy #209 (zerg\\zavBirth.grp) [V4]',
+			'Scourge [zerg\\avenger.grp] [V1]',
+			'Bunker [terran\\PillBox.grp] [V2]',
+			'Khalis [neutral\\Khalis.grp] [V3]',
+			'Expanded Flingy #209 [zerg\\zavBirth.grp] [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),
@@ -800,7 +820,7 @@ class Test_Entry_Name(unittest.TestCase):
 			'Terran Infantry Armor',
 			'Grooved Spines',
 			'Unknown Upgrade60',
-			'Expanded Upgrade #61 (General Duke)',
+			'Expanded Upgrade #61 [General Duke]',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -812,7 +832,7 @@ class Test_Entry_Name(unittest.TestCase):
 			'Terran Infantry Armor',
 			'Grooved Spines',
 			'Unknown Upgrade60',
-			'Expanded Upgrade #61 (General Duke)',
+			'Expanded Upgrade #61 [General Duke]',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -842,7 +862,7 @@ class Test_Entry_Name(unittest.TestCase):
 			'Terran Infantry Armor [V1]',
 			'Grooved Spines [V2]',
 			'Unknown Upgrade60 [V3]',
-			'Expanded Upgrade #61 (General Duke) [V4]',
+			'Expanded Upgrade #61 [General Duke] [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),
@@ -931,7 +951,7 @@ class Test_Entry_Name(unittest.TestCase):
 			'Stim Packs',
 			'Recall',
 			'Unknown Tech43',
-			'Expanded Tech #44 (General Duke)',
+			'Expanded Tech #44 [General Duke]',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -943,7 +963,7 @@ class Test_Entry_Name(unittest.TestCase):
 			'Stim Packs',
 			'Recall',
 			'Unknown Tech43',
-			'Expanded Tech #44 (General Duke)',
+			'Expanded Tech #44 [General Duke]',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -973,7 +993,7 @@ class Test_Entry_Name(unittest.TestCase):
 			'Stim Packs [V1]',
 			'Recall [V2]',
 			'Unknown Tech43 [V3]',
-			'Expanded Tech #44 (General Duke) [V4]',
+			'Expanded Tech #44 [General Duke] [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),
@@ -1062,7 +1082,7 @@ class Test_Entry_Name(unittest.TestCase):
 			'No sound',
 			'Protoss\\ARCHON\\PArPss02.WAV',
 			'Protoss\\Artanis\\PAtYes03.wav',
-			'Expanded Sound #1144 (Misc\\Buzz.wav)',
+			'Expanded Sound #1144 [Misc\\Buzz.wav]',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1092,7 +1112,7 @@ class Test_Entry_Name(unittest.TestCase):
 			'No sound [V1]',
 			'Protoss\\ARCHON\\PArPss02.WAV [V2]',
 			'Protoss\\Artanis\\PAtYes03.wav [V3]',
-			'Expanded Sound #1144 (Misc\\Buzz.wav) [V4]',
+			'Expanded Sound #1144 [Misc\\Buzz.wav] [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),
@@ -1166,10 +1186,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'Marine (tmarine\\TMaFid0)',
-			'Gantrithor (UTassadar\\UTaFid0)',
-			'Flag (Blue) (Pl.12) (UFlag12\\UF12Fid0)',
-			'Expanded Portrait #110 (tghost\\TGhFid0)',
+			'Marine [tmarine\\TMaFid0]',
+			'Gantrithor [UTassadar\\UTaFid0]',
+			'Flag (Blue) (Pl.12) [UFlag12\\UF12Fid0]',
+			'Expanded Portrait #110 [tghost\\TGhFid0]',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1196,10 +1216,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'Marine (tmarine\\TMaFid0) [V1]',
-			'Gantrithor (UTassadar\\UTaFid0) [V2]',
-			'Flag (Blue) (Pl.12) (UFlag12\\UF12Fid0) [V3]',
-			'Expanded Portrait #110 (tghost\\TGhFid0) [V4]',
+			'Marine [tmarine\\TMaFid0] [V1]',
+			'Gantrithor [UTassadar\\UTaFid0] [V2]',
+			'Flag (Blue) (Pl.12) [UFlag12\\UF12Fid0] [V3]',
+			'Expanded Portrait #110 [tghost\\TGhFid0] [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),
@@ -1273,10 +1293,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'No map (null)',
-			'BW - protoss01 (campaign\\expprotoss\\protoss01)',
-			'BW - zerg10 (campaign\\expzerg\\zerg10)',
-			'Expanded Map #65 (campaign\\terran\\tutorial)',
+			'No map [null]',
+			'BW - protoss01 [campaign\\expprotoss\\protoss01]',
+			'BW - zerg10 [campaign\\expzerg\\zerg10]',
+			'Expanded Map #65 [campaign\\terran\\tutorial]',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1303,10 +1323,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'No map (null) [V1]',
-			'BW - protoss01 (campaign\\expprotoss\\protoss01) [V2]',
-			'BW - zerg10 (campaign\\expzerg\\zerg10) [V3]',
-			'Expanded Map #65 (campaign\\terran\\tutorial) [V4]',
+			'No map [null] [V1]',
+			'BW - protoss01 [campaign\\expprotoss\\protoss01] [V2]',
+			'BW - zerg10 [campaign\\expzerg\\zerg10] [V3]',
+			'Expanded Map #65 [campaign\\terran\\tutorial] [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),
@@ -1393,9 +1413,9 @@ class Test_Entry_Name(unittest.TestCase):
 
 		expected_names = (
 			'Die',
-			'Load Unit (Mobile Transport) (Pick Up)',
+			'Load Unit (Mobile Transport) [Pick Up]',
 			'Fatal',
-			'Expanded Order #189 (General Duke)',
+			'Expanded Order #189 [General Duke]',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1405,9 +1425,9 @@ class Test_Entry_Name(unittest.TestCase):
 
 		expected_names = (
 			'Die',
-			'Load Unit (Mobile Transport) (Pick Up)',
+			'Load Unit (Mobile Transport) [Pick Up]',
 			'Fatal',
-			'Expanded Order #189 (General Duke)',
+			'Expanded Order #189 [General Duke]',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1435,9 +1455,9 @@ class Test_Entry_Name(unittest.TestCase):
 
 		expected_names = (
 			'Die [V1]',
-			'Load Unit (Mobile Transport) (Pick Up) [V2]',
+			'Load Unit (Mobile Transport) [Pick Up] [V2]',
 			'Fatal [V3]',
-			'Expanded Order #189 (General Duke) [V4]',
+			'Expanded Order #189 [General Duke] [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),

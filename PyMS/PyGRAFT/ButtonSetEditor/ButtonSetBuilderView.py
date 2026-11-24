@@ -52,8 +52,8 @@ class ButtonSetBuilderView(UI.NotebookTab):
 		self.toolbar = UI.Toolbar(buttons_frame)
 		self.add_button_button = self.toolbar.add_button(Assets.get_image('add'), self.add_button, 'Add Button')
 		self.toolbar.add_section()
-		self.copy_button = self.add_clipboard_button('copy', self.copy, 'Copy Buttons', UI.Ctrl.c)
-		self.paste_button = self.add_clipboard_button('paste', self.paste, 'Paste Buttons', UI.Ctrl.v)
+		self.copy_button = self.add_clipboard_button('copy', callback=self.copy_button_code, set_callback=self.copy_button_set, tooltip='Copy Button, hold Shift to copy button set', shortcut=UI.Ctrl.c, set_shortcut=UI.Shift.Ctrl.c)
+		self.paste_button = self.add_clipboard_button('paste', callback=self.paste_button_code, set_callback=self.paste_button_set, tooltip='Paste Button, hold Shift to paste button set', shortcut=UI.Ctrl.v, set_shortcut=UI.Shift.Ctrl.v)
 		self.toolbar.pack(side=UI.TOP, fill=UI.X, padx=2, pady=2)
 		self.scroll_view = UI.ScrollView(buttons_frame, viewport_height=round(ButtonSetBuilderView.VISIBLE_ROWS * ButtonRow.ROW_HEIGHT), fill_width=True)
 		self.scroll_view.pack(fill=UI.BOTH, expand=1, padx=2, pady=(0, 2))
@@ -68,14 +68,24 @@ class ButtonSetBuilderView(UI.NotebookTab):
 
 		self.update_read_only()
 
-	def add_clipboard_button(self, icon: str, callback: Callable[[], None], tooltip: str, shortcut: UI.EventPattern) -> UI.Button:
+	def add_clipboard_button(self, icon: str, *, callback: Callable[[], None], set_callback: Callable[[], None], tooltip: str, shortcut: UI.EventPattern, set_shortcut: UI.EventPattern) -> UI.Button:
+		# `callback` works on the selected button, and `set_callback` (with Shift held, on the shortcut or a click) on the whole button set
 		button = self.toolbar.add_button(Assets.get_image(icon), callback, tooltip, shortcut, bind_shortcut=False)
-		# The Button Sets tab is one of the window's tabs, so the shortcut is added to the window (not replacing the others), and only the visible Builder runs it.
-		# It's left to a focused text field (like a setting's entry, or the Script mode's code), which copies and pastes its own text.
-		def triggered(_event: UI.Event) -> None:
-			if button['state'] != UI.DISABLED and button.winfo_viewable() and not self.focus_has_clipboard():
-				callback()
-		self.winfo_toplevel().bind(shortcut(), triggered, True)
+		# The Button Sets tab is one of the window's tabs, so the shortcuts are added to the window (not replacing the others), and only the visible Builder runs them.
+		# They're left to a focused text field (like a setting's entry, or the Script mode's code), which copies and pastes its own text.
+		def bind_shortcut(pattern: UI.EventPattern, action: Callable[[], None]) -> None:
+			def triggered(_event: UI.Event) -> None:
+				if button['state'] != UI.DISABLED and button.winfo_viewable() and not self.focus_has_clipboard():
+					action()
+			self.winfo_toplevel().bind(pattern(), triggered, True)
+		bind_shortcut(shortcut, callback)
+		bind_shortcut(set_shortcut, set_callback)
+		# A Shift+click runs the set action instead of the button's command (breaking before the button is pressed, so it isn't invoked on release)
+		def shift_clicked(_event: UI.Event) -> str:
+			if button['state'] != UI.DISABLED:
+				set_callback()
+			return UI.EventPropogation.Break
+		button.bind(UI.Shift.Click_Left(), shift_clicked)
 		return button
 
 	@property
@@ -204,7 +214,15 @@ class ButtonSetBuilderView(UI.NotebookTab):
 		self.edited()
 		self.scroll_to_selected()
 
-	def copy(self) -> None:
+	def copy_button_code(self) -> None:
+		# The selected button as code, like the Script mode shows it
+		if self.selected is None:
+			return
+		output = io.StringIO()
+		self.buttons()[self.selected].to_block().serialize(GraftSerializeContext(output, self.data_context))
+		self.clipboard_set(output.getvalue())
+
+	def copy_button_set(self) -> None:
 		# The buttons as code, like the Script mode shows them
 		button_set = self.button_set()
 		if button_set is None:
@@ -213,21 +231,48 @@ class ButtonSetBuilderView(UI.NotebookTab):
 		button_set.serialize(GraftSerializeContext(output, self.data_context))
 		self.clipboard_set(output.getvalue())
 
-	def paste(self) -> None:
-		# Replaces the buttons with the buttons of the code on the clipboard
-		if self.entry_id is None or self.button_set() is None:
-			return
+	def _compile_clipboard(self, set_id: int) -> ButtonSet | None:
+		# The buttons of the code on the clipboard, or `None` when there's nothing to paste, it has an error, or its warnings were cancelled
 		try:
 			code = self.clipboard_get()
 		except UI.TclError:
-			return
+			return None
 		parse_context = GraftParseContext(GraftLexer(code), self.data_context, ButtonsLanguage())
 		try:
-			button_set = ButtonSet.compile(parse_context, self.entry_id)
+			button_set = ButtonSet.compile(parse_context, set_id)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-			return
+			return None
 		if parse_context.warnings and not WarningDialog(self, parse_context.warnings, True).cont:
+			return None
+		return button_set
+
+	def paste_button_code(self) -> None:
+		# Replaces the selected button (or adds it to an empty set) with the one button of the code on the clipboard
+		button_set = self.button_set()
+		if self.entry_id is None or button_set is None:
+			return
+		pasted = self._compile_clipboard(self.entry_id)
+		if pasted is None:
+			return
+		if len(pasted.buttons) != 1:
+			ErrorDialog(self, PyMSError('Paste', f'The clipboard has {len(pasted.buttons)} buttons, but only 1 can be pasted (hold Shift to paste the whole button set)'))
+			return
+		if self.selected is None:
+			button_set.buttons.append(pasted.buttons[0])
+			self.selected = len(button_set.buttons) - 1
+		else:
+			button_set.buttons[self.selected] = pasted.buttons[0]
+		self.sync()
+		self.edited()
+		self.scroll_to_selected()
+
+	def paste_button_set(self) -> None:
+		# Replaces the buttons with the buttons of the code on the clipboard
+		if self.entry_id is None or self.button_set() is None:
+			return
+		button_set = self._compile_clipboard(self.entry_id)
+		if button_set is None:
 			return
 		self.graft_data.graft.set_button_set(self.entry_id, button_set)
 		self.selected = 0 if button_set.buttons else None

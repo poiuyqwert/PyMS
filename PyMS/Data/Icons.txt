@@ -294,9 +294,9 @@ Infantry Armor
 Vehicle Armor
 Gamete Meiosis
 Metasynaptic Node
-Pneumatized Caparace
-Zerg Caparace
-Flyer Caparace
+Pneumatized Carapace
+Zerg Carapace
+Flyer Carapace
 Melee Attacks
 Missile Attacks
 Flyer Attacks
